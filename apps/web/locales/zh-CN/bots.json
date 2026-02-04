@@ -285,6 +285,12 @@
     "deleteKeySuccess": "API 密钥删除成功",
     "error": "操作失败"
   },
+  "noApiKeysDialog": {
+    "title": "尚未配置 API 密钥",
+    "description": "创建 Bot 需要至少配置一个 API 密钥。是否先前往配置 API 密钥？",
+    "goToSecrets": "前往配置",
+    "continueAnyway": "稍后配置"
+  },
   "diagnostics": {
     "title": "诊断",
     "description": "监控系统健康状态和容器指标",

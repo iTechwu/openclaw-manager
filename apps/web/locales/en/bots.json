@@ -285,6 +285,12 @@
     "deleteKeySuccess": "API key deleted successfully",
     "error": "Operation failed"
   },
+  "noApiKeysDialog": {
+    "title": "No API Keys Configured",
+    "description": "Creating a bot requires at least one API key. Would you like to configure an API key first?",
+    "goToSecrets": "Configure Keys",
+    "continueAnyway": "Configure Later"
+  },
   "diagnostics": {
     "title": "Diagnostics",
     "description": "Monitor system health and container metrics",

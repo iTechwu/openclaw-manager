@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useWizard } from '../wizard-context';
 import { POPULAR_CHANNELS, OTHER_CHANNELS, getProvider } from '@/lib/config';
 import { useProviderKeys } from '@/hooks/useProviderKeys';
+import { getUser } from '@/lib/storage';
 import { Input, Badge, Button } from '@repo/ui';
 import { ChevronDown, ChevronUp, Key, Plus, AlertCircle } from 'lucide-react';
-import type { ProviderKey } from '@repo/contracts';
+import type { ProviderKey, UserInfo } from '@repo/contracts';
 
 type SessionScope = 'user' | 'channel' | 'global';
 
@@ -18,6 +19,13 @@ export function Step3Features() {
   const { state, dispatch } = useWizard();
   const { keys: providerKeys, loading: keysLoading } = useProviderKeys();
   const [showAllChannels, setShowAllChannels] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  // Get user info from localStorage
+  useEffect(() => {
+    const storedUser = getUser();
+    setUser(storedUser);
+  }, []);
 
   // Group API keys by vendor
   const keysByVendor = useMemo(() => {
@@ -328,25 +336,27 @@ export function Step3Features() {
         </div>
       </section>
 
-      {/* Session Scope */}
-      <section className="space-y-3">
-        <h4 className="text-sm font-medium">{t('sessionScope')}</h4>
-        <div className="flex gap-4">
-          {(['user', 'channel', 'global'] as SessionScope[]).map((scope) => (
-            <label key={scope} className="flex cursor-pointer items-center gap-2">
-              <input
-                type="radio"
-                name="sessionScope"
-                value={scope}
-                checked={state.features.sessionScope === scope}
-                onChange={() => handleSessionScopeChange(scope)}
-                className="size-4"
-              />
-              <span className="text-sm">{t(`sessionScopes.${scope}`)}</span>
-            </label>
-          ))}
-        </div>
-      </section>
+      {/* Session Scope - Only visible to admin users */}
+      {user?.isAdmin && (
+        <section className="space-y-3">
+          <h4 className="text-sm font-medium">{t('sessionScope')}</h4>
+          <div className="flex gap-4">
+            {(['user', 'channel', 'global'] as SessionScope[]).map((scope) => (
+              <label key={scope} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="sessionScope"
+                  value={scope}
+                  checked={state.features.sessionScope === scope}
+                  onChange={() => handleSessionScopeChange(scope)}
+                  className="size-4"
+                />
+                <span className="text-sm">{t(`sessionScopes.${scope}`)}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* API Routing Tags */}
       <section className="space-y-3">

@@ -88,10 +88,10 @@ export const ChannelConfigSchema = z.object({
 export type ChannelConfig = z.infer<typeof ChannelConfigSchema>;
 
 export const WizardFeaturesSchema = z.object({
-  commands: z.boolean().default(false),
-  tts: z.boolean().default(false),
+  commands: z.boolean().default(true),
+  tts: z.boolean().default(true),
   ttsVoice: z.string().optional(),
-  sandbox: z.boolean().default(false),
+  sandbox: z.boolean().default(true),
   sandboxTimeout: z.number().optional(),
   sessionScope: z.enum(['user', 'channel', 'global']).default('user'),
 });

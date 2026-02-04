@@ -1,19 +1,29 @@
 'use client';
 
 import { useBots } from '@/hooks/useBots';
-import { useProviderKeyHealth } from '@/hooks/useProviderKeys';
+import { useProviderKeys, useProviderKeyHealth } from '@/hooks/useProviderKeys';
 import { useState } from 'react';
 import { CreateBotWizard } from '@/components/bots/create-wizard';
 import { ClientOnly } from '@/components/client-only';
 import { BotCard, BotCardSkeleton, StatusStatsBox } from './components';
-import { Button } from '@repo/ui';
-import { Plus, Key } from 'lucide-react';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@repo/ui';
+import { Plus, Key, AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 
 export default function BotsPage() {
   const t = useTranslations('bots');
+  const router = useRouter();
   const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const [showNoKeysDialog, setShowNoKeysDialog] = useState(false);
 
   const {
     bots,
@@ -24,10 +34,33 @@ export default function BotsPage() {
     actionLoading,
   } = useBots();
   const { health } = useProviderKeyHealth();
+  const { keys, loading: keysLoading } = useProviderKeys();
 
   // Calculate bot statistics
   const runningBots = bots.filter((bot) => bot.status === 'running').length;
   const stoppedBots = bots.filter((bot) => bot.status === 'stopped').length;
+
+  // Handle create bot button click
+  const handleCreateBotClick = () => {
+    // Check if user has any API keys
+    if (!keysLoading && keys.length === 0) {
+      setShowNoKeysDialog(true);
+    } else {
+      setShowCreateWizard(true);
+    }
+  };
+
+  // Handle go to secrets page
+  const handleGoToSecrets = () => {
+    setShowNoKeysDialog(false);
+    router.push('/secrets/add');
+  };
+
+  // Handle continue anyway (close dialog and open wizard)
+  const handleContinueAnyway = () => {
+    setShowNoKeysDialog(false);
+    setShowCreateWizard(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -43,7 +76,7 @@ export default function BotsPage() {
               {t('actions.manageApiKeys')}
             </Link>
           </Button>
-          <Button onClick={() => setShowCreateWizard(true)}>
+          <Button onClick={handleCreateBotClick}>
             <Plus className="mr-2 size-4" />
             {t('actions.createBot')}
           </Button>
@@ -108,6 +141,32 @@ export default function BotsPage() {
         isOpen={showCreateWizard}
         onClose={() => setShowCreateWizard(false)}
       />
+
+      {/* No API Keys Dialog */}
+      <Dialog open={showNoKeysDialog} onOpenChange={setShowNoKeysDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <DialogTitle>{t('noApiKeysDialog.title')}</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              {t('noApiKeysDialog.description')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={handleContinueAnyway}>
+              {t('noApiKeysDialog.continueAnyway')}
+            </Button>
+            <Button onClick={handleGoToSecrets}>
+              <Key className="mr-2 size-4" />
+              {t('noApiKeysDialog.goToSecrets')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

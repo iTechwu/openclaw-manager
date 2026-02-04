@@ -77,9 +77,9 @@ const initialState: WizardState = {
   routingTags: [],
   features: {
     commands: true,
-    tts: false,
+    tts: true,
     ttsVoice: 'alloy',
-    sandbox: false,
+    sandbox: true,
     sandboxTimeout: 30,
     sessionScope: 'user',
   },
