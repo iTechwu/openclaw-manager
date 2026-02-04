@@ -69,8 +69,8 @@ export class KeyringProxyClient implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const adminUrl = this.configService.get<string>('PROXY_ADMIN_URL');
-    const adminToken = this.configService.get<string>('PROXY_ADMIN_TOKEN');
+    const adminUrl = process.env.PROXY_ADMIN_URL; //this.configService.get<string>('PROXY_ADMIN_URL');
+    const adminToken = process.env.PROXY_ADMIN_TOKEN; //this.configService.get<string>('PROXY_ADMIN_TOKEN');
 
     if (adminUrl && adminToken) {
       this.proxyConfig = { adminUrl, adminToken };

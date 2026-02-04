@@ -325,7 +325,16 @@ export class DockerService implements OnModuleInit {
       name: containerName,
       Image: this.botImage,
       // Start OpenClaw gateway on the specified port
-      Cmd: ['openclaw', 'gateway', '--port', String(options.port)],
+      // Use node with openclaw.mjs directly since the bin is not globally installed in the image
+      // --allow-unconfigured: Allow gateway start without gateway.mode=local in config
+      Cmd: [
+        'node',
+        '/app/openclaw.mjs',
+        'gateway',
+        '--port',
+        String(options.port),
+        '--allow-unconfigured',
+      ],
       Env: envVars,
       ExposedPorts: {
         [`${options.port}/tcp`]: {},
