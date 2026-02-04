@@ -6,9 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "postinstall": "prisma generate && node scripts/link-prisma.js",
-    "build": "prisma format && prisma generate && node scripts/generate-db-crud.js && nest build",
-    "build:docker": "node scripts/generate-db-crud.js && nest build",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"libs/**/*.ts\"",
     "start": "cross-env NODE_ENV=dev MICRO_SERVER_NAME=api PROJECT_ROOT=\"$(pwd)\" node -r tsconfig-paths/register dist/apps/api/src/main",
     "dev": "cross-env NODE_ENV=dev MICRO_SERVER_NAME=api PROJECT_ROOT=\"$(pwd)\" nest start --watch --preserveWatchOutput",

@@ -73,15 +73,11 @@ FROM deps AS builder
 # Copy source code (including pre-generated Prisma client in apps/api/generated/)
 COPY . .
 
-# Create symlink for Prisma client runtime resolution
-# Note: prisma generate is NOT needed - we use pre-generated files from development
-RUN cd apps/api && node scripts/link-prisma.js
-
 # Build shared packages first
 RUN pnpm turbo run build --filter=@repo/validators --filter=@repo/constants --filter=@repo/utils --filter=@repo/contracts
 
-# Build API without prisma generate (use pre-generated files)
-RUN cd apps/api && pnpm run build:docker
+# Build API (uses pre-generated Prisma client and DB modules)
+RUN cd apps/api && pnpm run build
 
 # Build web app
 RUN pnpm turbo run build --filter=@repo/web
@@ -125,16 +121,13 @@ RUN pnpm install --ignore-scripts --prod
 # Copy built files from builder (including generated Prisma client)
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/generated ./apps/api/generated
-COPY --from=builder /app/apps/api/scripts/link-prisma.js ./apps/api/scripts/
+COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/
 COPY --from=builder /app/packages/config/dist ./packages/config/dist
 COPY --from=builder /app/packages/constants/dist ./packages/constants/dist
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/packages/types/dist ./packages/types/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
-
-# Create symlink for Prisma client runtime resolution
-RUN cd apps/api && node scripts/link-prisma.js
 
 # Environment
 ENV NODE_ENV=production

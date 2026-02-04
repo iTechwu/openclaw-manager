@@ -82,7 +82,7 @@ services:
     volumes:
       - api-logs:/app/apps/api/logs
     networks:
-      - clawbot-network
+      - common_network
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     healthcheck:
@@ -118,7 +118,7 @@ services:
       api:
         condition: service_healthy
     networks:
-      - clawbot-network
+      - common_network
     healthcheck:
       <<: *healthcheck
       test: ['CMD', 'curl', '-f', 'http://localhost:3000']
@@ -127,9 +127,8 @@ services:
 # Networks
 # =============================================================================
 networks:
-  clawbot-network:
-    name: clawbot-network
-    driver: bridge
+  common_network:
+    external: true
 
 # =============================================================================
 # Volumes
