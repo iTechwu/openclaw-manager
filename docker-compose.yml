@@ -2,8 +2,8 @@
 # ClawBot Manager - Docker Compose Configuration
 # =============================================================================
 # Services:
-#   - api: NestJS backend (port 3200)
-#   - web: Next.js frontend (port 3000)
+#   - api: NestJS backend (internal: 3200, external: 13100)
+#   - web: Next.js frontend (internal: 3000, external: 13000)
 #   - botenv: Bot environment image (build profile only)
 #
 # Prerequisites:
@@ -78,7 +78,7 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3200
     ports:
-      - '${API_PORT:-3200}:3200'
+      - '${API_PORT:-13100}:3200'
     volumes:
       - api-logs:/app/apps/api/logs
     networks:
@@ -111,9 +111,9 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://api:3100/api}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://api:3200/api}
     ports:
-      - '${WEB_PORT:-3000}:3000'
+      - '${WEB_PORT:-13000}:3000'
     depends_on:
       api:
         condition: service_healthy

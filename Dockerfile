@@ -83,9 +83,9 @@ RUN cd apps/api && pnpm run build
 RUN pnpm turbo run build --filter=@repo/web
 
 # -----------------------------------------------------------------------------
-# API Production stage: NestJS backend
+# Production runtime base: Common runtime setup for production stages
 # -----------------------------------------------------------------------------
-FROM ${BASE_NODE_IMAGE} AS api
+FROM ${BASE_NODE_IMAGE} AS prod-runtime
 
 ARG NPM_REGISTRY
 
@@ -104,7 +104,45 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy package files
+# -----------------------------------------------------------------------------
+# Production dependencies stage: Install prod deps once, reuse for api/web
+# -----------------------------------------------------------------------------
+FROM prod-runtime AS prod-deps
+
+# Copy package files for dependency installation
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY turbo.json ./
+
+# Copy all package.json files from workspaces
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY packages/config/package.json ./packages/config/
+COPY packages/constants/package.json ./packages/constants/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/types/package.json ./packages/types/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/validators/package.json ./packages/validators/
+
+# Install production dependencies only (--ignore-scripts: postinstall 需要源码)
+RUN pnpm install --ignore-scripts --prod
+
+# -----------------------------------------------------------------------------
+# API Production stage: NestJS backend
+# -----------------------------------------------------------------------------
+FROM prod-runtime AS api
+
+# Copy production dependencies from prod-deps stage (避免重复 pnpm install)
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=prod-deps /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=prod-deps /app/packages/constants/node_modules ./packages/constants/node_modules
+COPY --from=prod-deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
+COPY --from=prod-deps /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=prod-deps /app/packages/utils/node_modules ./packages/utils/node_modules
+COPY --from=prod-deps /app/packages/validators/node_modules ./packages/validators/node_modules
+
+# Copy package.json files for pnpm workspace resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY apps/api/package.json ./apps/api/
@@ -114,9 +152,6 @@ COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validators/package.json ./packages/validators/
-
-# Install production dependencies only (--ignore-scripts: 跳过 postinstall)
-RUN pnpm install --ignore-scripts --prod
 
 # Copy built files from builder (including generated Prisma client)
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
@@ -131,9 +166,9 @@ COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
 
 # Environment
 ENV NODE_ENV=production
-ENV PORT=3100
+ENV PORT=3200
 
-EXPOSE 3100
+EXPOSE 3200
 
 WORKDIR /app/apps/api
 
@@ -142,25 +177,20 @@ CMD ["node", "-r", "tsconfig-paths/register", "dist/apps/api/src/main"]
 # -----------------------------------------------------------------------------
 # Web Production stage: Next.js frontend
 # -----------------------------------------------------------------------------
-FROM ${BASE_NODE_IMAGE} AS web
+FROM prod-runtime AS web
 
-ARG NPM_REGISTRY
+# Copy production dependencies from prod-deps stage (避免重复 pnpm install)
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=prod-deps /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=prod-deps /app/packages/constants/node_modules ./packages/constants/node_modules
+COPY --from=prod-deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
+COPY --from=prod-deps /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=prod-deps /app/packages/ui/node_modules ./packages/ui/node_modules
+COPY --from=prod-deps /app/packages/utils/node_modules ./packages/utils/node_modules
+COPY --from=prod-deps /app/packages/validators/node_modules ./packages/validators/node_modules
 
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
-
-# Configure npm/pnpm registry
-RUN npm config set registry ${NPM_REGISTRY} \
-    && pnpm config set registry ${NPM_REGISTRY}
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy package files
+# Copy package.json files for pnpm workspace resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY apps/web/package.json ./apps/web/
@@ -171,9 +201,6 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validators/package.json ./packages/validators/
-
-# Install production dependencies only (--ignore-scripts: 跳过 postinstall，使用 builder 的预构建文件)
-RUN pnpm install --ignore-scripts
 
 # Copy built files from builder
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
