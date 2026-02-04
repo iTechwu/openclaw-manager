@@ -209,21 +209,23 @@ export class PrismaErrorHandler {
 
     // 处理 Prisma 验证错误
     if (error instanceof Prisma.PrismaClientValidationError) {
+      const validationError = error as Prisma.PrismaClientValidationError;
       return {
         type: PrismaErrorType.VALIDATION_ERROR,
         description:
           ERROR_TYPE_DESCRIPTION_MAP[PrismaErrorType.VALIDATION_ERROR],
-        originalMessage: error.message,
+        originalMessage: validationError.message,
       };
     }
 
     // 处理 Prisma 初始化/连接错误
     if (error instanceof Prisma.PrismaClientInitializationError) {
+      const initError = error as Prisma.PrismaClientInitializationError;
       return {
         type: PrismaErrorType.CONNECTION_ERROR,
         description:
           ERROR_TYPE_DESCRIPTION_MAP[PrismaErrorType.CONNECTION_ERROR],
-        originalMessage: error.message,
+        originalMessage: initError.message,
       };
     }
 
@@ -303,9 +305,10 @@ export class PrismaErrorHandler {
    */
   static isRetryableError(error: unknown): boolean {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaError = error as Prisma.PrismaClientKnownRequestError;
       // P2034: 写冲突或死锁
       // P2028: 事务 API 错误
-      return ['P2034', 'P2028'].includes(error.code);
+      return ['P2034', 'P2028'].includes(prismaError.code);
     }
     return false;
   }
@@ -314,30 +317,33 @@ export class PrismaErrorHandler {
    * 判断是否为唯一约束冲突错误
    */
   static isUniqueConstraintError(error: unknown): boolean {
-    return (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaError = error as Prisma.PrismaClientKnownRequestError;
+      return prismaError.code === 'P2002';
+    }
+    return false;
   }
 
   /**
    * 判断是否为记录不存在错误
    */
   static isRecordNotFoundError(error: unknown): boolean {
-    return (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2025'
-    );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaError = error as Prisma.PrismaClientKnownRequestError;
+      return prismaError.code === 'P2025';
+    }
+    return false;
   }
 
   /**
    * 判断是否为外键约束错误
    */
   static isForeignKeyError(error: unknown): boolean {
-    return (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2003'
-    );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaError = error as Prisma.PrismaClientKnownRequestError;
+      return prismaError.code === 'P2003';
+    }
+    return false;
   }
 
   /**

@@ -15,22 +15,25 @@
 #   OPENCLAW_BASE_IMAGE: OpenClaw 基础镜像 (botenv)
 #   NPM_REGISTRY: npm 镜像源 (默认 npmmirror.com)
 #
-# Troubleshooting "connection refused" to 127.0.0.1:7990:
-#   Docker 代理不可用，构建时使用 network: host 尝试绕过。
-#   若仍失败，请:
-#   1. Docker Desktop: Settings -> Resources -> Proxies -> 关闭或修正代理
-#   2. 或在构建前执行: unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
-#   3. 或检查 ~/.docker/config.json 中的 "proxies" 并移除
+# Troubleshooting network issues during build:
+#   1. 如果遇到 ECONNRESET 错误，Dockerfile 会自动重试并回退到官方 npm registry
+#   2. 可以手动设置 NPM_REGISTRY=https://registry.npmjs.org 使用官方源
+#   3. Docker Desktop: Settings -> Resources -> Proxies -> 关闭或修正代理
+#   4. 或在构建前执行: unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
 #
 # Usage:
-#   docker compose up -d              # Start all services
-#   docker compose up -d api web      # Start only api and web
-#   docker compose --profile build up # Build botenv image
+#   docker compose build                 # Build images only
+#   docker compose up -d                 # Start all services (builds if needed)
+#   docker compose up -d api web         # Start only api and web
+#   docker compose --profile build up    # Build botenv image
 # =============================================================================
 
 x-common: &common
   platform: ${DOCKER_PLATFORM:-linux/arm64}
   restart: unless-stopped
+  dns:
+    - 8.8.8.8
+    - 114.114.114.114
 
 x-healthcheck: &healthcheck
   interval: 30s

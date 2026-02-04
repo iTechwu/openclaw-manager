@@ -27,9 +27,14 @@ ARG NPM_REGISTRY
 # Install pnpm globally
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
-# Configure npm/pnpm registry for faster downloads in China
+# Configure npm/pnpm registry with retry and timeout settings for reliability
 RUN npm config set registry ${NPM_REGISTRY} \
-    && pnpm config set registry ${NPM_REGISTRY}
+    && pnpm config set registry ${NPM_REGISTRY} \
+    && pnpm config set fetch-retries 5 \
+    && pnpm config set fetch-retry-mintimeout 20000 \
+    && pnpm config set fetch-retry-maxtimeout 120000 \
+    && pnpm config set fetch-timeout 300000 \
+    && pnpm config set network-concurrency 4
 
 # Install build dependencies for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -62,21 +67,29 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validators/package.json ./packages/validators/
 
-# Install all dependencies (--ignore-scripts: postinstall 需要源码，在 builder 阶段执行)
-RUN pnpm install --ignore-scripts
+# Install all dependencies with retry logic
+# If npmmirror fails, fallback to official registry
+RUN pnpm install --ignore-scripts || \
+    (echo "Retrying with official npm registry..." && \
+     pnpm config set registry https://registry.npmjs.org && \
+     pnpm install --ignore-scripts)
 
 # -----------------------------------------------------------------------------
 # Builder stage: Build all packages and apps
 # -----------------------------------------------------------------------------
 FROM deps AS builder
 
-# Copy source code (including pre-generated Prisma client in apps/api/generated/)
+# Copy source code
 COPY . .
+
+# Generate Prisma client (required for TypeScript compilation)
+# This generates types to apps/api/generated/prisma-client
+RUN cd apps/api && pnpm exec prisma generate
 
 # Build shared packages first
 RUN pnpm turbo run build --filter=@repo/validators --filter=@repo/constants --filter=@repo/utils --filter=@repo/contracts
 
-# Build API (uses pre-generated Prisma client and DB modules)
+# Build API
 RUN cd apps/api && pnpm run build
 
 # Build web app
@@ -91,9 +104,14 @@ ARG NPM_REGISTRY
 
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
-# Configure npm/pnpm registry
+# Configure npm/pnpm registry with retry and timeout settings
 RUN npm config set registry ${NPM_REGISTRY} \
-    && pnpm config set registry ${NPM_REGISTRY}
+    && pnpm config set registry ${NPM_REGISTRY} \
+    && pnpm config set fetch-retries 5 \
+    && pnpm config set fetch-retry-mintimeout 20000 \
+    && pnpm config set fetch-retry-maxtimeout 120000 \
+    && pnpm config set fetch-timeout 300000 \
+    && pnpm config set network-concurrency 4
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -124,23 +142,21 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validators/package.json ./packages/validators/
 
-# Install production dependencies only (--ignore-scripts: postinstall 需要源码)
-RUN pnpm install --ignore-scripts --prod
+# Install production dependencies with retry logic
+# Use shamefully-hoist to ensure all deps are in root node_modules for easier copying
+RUN pnpm install --ignore-scripts --prod --shamefully-hoist || \
+    (echo "Retrying with official npm registry..." && \
+     pnpm config set registry https://registry.npmjs.org && \
+     pnpm install --ignore-scripts --prod --shamefully-hoist)
 
 # -----------------------------------------------------------------------------
 # API Production stage: NestJS backend
 # -----------------------------------------------------------------------------
 FROM prod-runtime AS api
 
-# Copy production dependencies from prod-deps stage (避免重复 pnpm install)
+# Copy production dependencies from prod-deps stage
+# Only copy root node_modules since we use shamefully-hoist
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=prod-deps /app/packages/config/node_modules ./packages/config/node_modules
-COPY --from=prod-deps /app/packages/constants/node_modules ./packages/constants/node_modules
-COPY --from=prod-deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
-COPY --from=prod-deps /app/packages/types/node_modules ./packages/types/node_modules
-COPY --from=prod-deps /app/packages/utils/node_modules ./packages/utils/node_modules
-COPY --from=prod-deps /app/packages/validators/node_modules ./packages/validators/node_modules
 
 # Copy package.json files for pnpm workspace resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -179,16 +195,9 @@ CMD ["node", "-r", "tsconfig-paths/register", "dist/apps/api/src/main"]
 # -----------------------------------------------------------------------------
 FROM prod-runtime AS web
 
-# Copy production dependencies from prod-deps stage (避免重复 pnpm install)
+# Copy production dependencies from prod-deps stage
+# Only copy root node_modules since we use shamefully-hoist
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=prod-deps /app/packages/config/node_modules ./packages/config/node_modules
-COPY --from=prod-deps /app/packages/constants/node_modules ./packages/constants/node_modules
-COPY --from=prod-deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
-COPY --from=prod-deps /app/packages/types/node_modules ./packages/types/node_modules
-COPY --from=prod-deps /app/packages/ui/node_modules ./packages/ui/node_modules
-COPY --from=prod-deps /app/packages/utils/node_modules ./packages/utils/node_modules
-COPY --from=prod-deps /app/packages/validators/node_modules ./packages/validators/node_modules
 
 # Copy package.json files for pnpm workspace resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
