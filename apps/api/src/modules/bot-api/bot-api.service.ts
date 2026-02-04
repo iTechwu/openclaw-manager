@@ -13,7 +13,7 @@ import {
   PersonaTemplateService,
 } from '@app/db';
 import { ProviderVerifyClient } from '@app/clients/internal/provider-verify';
-import { KeyringProxyClient } from '@app/clients/internal/keyring-proxy';
+import { KeyringProxyService } from '../proxy/services/keyring-proxy.service';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
@@ -29,6 +29,7 @@ import type {
   VerifyProviderKeyResponse,
 } from '@repo/contracts';
 import { PROVIDER_CONFIGS } from '@repo/contracts';
+import enviromentUtil from 'libs/infra/utils/enviroment.util';
 
 @Injectable()
 export class BotApiService {
@@ -46,10 +47,14 @@ export class BotApiService {
     private readonly operateLogService: OperateLogService,
     private readonly personaTemplateService: PersonaTemplateService,
     private readonly providerVerifyClient: ProviderVerifyClient,
-    private readonly keyringProxyClient: KeyringProxyClient,
+    private readonly keyringProxyService: KeyringProxyService,
   ) {
-    // Get proxy URL for bot containers (different from admin URL)
-    this.proxyUrl = this.configService.get<string>('PROXY_BOT_URL');
+    // Get internal API URL for bot containers to reach the proxy
+    this.proxyUrl = enviromentUtil.generateEnvironmentUrls().internalApi;
+    // this.configService.get<string>(
+    //   'INTERNAL_API_BASE_URL',
+    //   'http://clawbot-api:3200',
+    // );
   }
 
   // ============================================================================
@@ -181,9 +186,8 @@ export class BotApiService {
     let proxyToken: string | undefined;
     let proxyTokenHash: string | undefined;
 
-    // Check if zero-trust mode is available (keyring-proxy configured and healthy)
-    const useZeroTrust =
-      this.keyringProxyClient.isConfigured() && this.proxyUrl;
+    // Check if zero-trust mode is enabled
+    const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
 
     if (primaryProvider.keyId) {
       try {
@@ -191,21 +195,13 @@ export class BotApiService {
           id: primaryProvider.keyId,
         });
         if (providerKey && providerKey.createdById === userId) {
-          if (useZeroTrust) {
-            // Zero-trust mode: Register bot with proxy, don't pass API key to container
-            // The proxy will inject the API key at request time
-            this.logger.log(`Using zero-trust mode for bot ${input.hostname}`);
+          apiBaseUrl = providerKey.baseUrl || undefined;
 
-            // Note: In zero-trust mode, the API key is managed by the proxy
-            // We need to ensure the key is registered with the proxy
-            // For now, we'll use the custom baseUrl if provided, otherwise use proxy
-            apiBaseUrl = providerKey.baseUrl || undefined;
-          } else {
+          if (!useZeroTrust) {
             // Direct mode: Decrypt and pass API key to container
             apiKey = this.encryptionService.decrypt(
               Buffer.from(providerKey.secretEncrypted),
             );
-            apiBaseUrl = providerKey.baseUrl || undefined;
 
             // Write API key to secrets directory for the bot
             await this.workspaceService.writeApiKey(
@@ -214,6 +210,7 @@ export class BotApiService {
               apiKey,
             );
           }
+          // In zero-trust mode, API key is managed by the proxy
 
           this.logger.log(
             `Provider key ${primaryProvider.keyId} configured for bot ${input.hostname}`,
@@ -227,48 +224,8 @@ export class BotApiService {
       }
     }
 
-    // Register bot with keyring-proxy if in zero-trust mode
-    if (useZeroTrust) {
-      try {
-        const registration = await this.keyringProxyClient.registerBot(
-          input.hostname, // Use hostname as botId for now
-          input.hostname,
-          input.tags,
-        );
-        proxyToken = registration.token;
-        // Hash the token for storage (we don't store the raw token)
-        proxyTokenHash = this.encryptionService.hashToken(proxyToken);
-        this.logger.log(`Bot ${input.hostname} registered with keyring-proxy`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to register bot with keyring-proxy, falling back to direct mode:`,
-          error,
-        );
-        // Fall back to direct mode if proxy registration fails
-        if (primaryProvider.keyId && !apiKey) {
-          try {
-            const providerKey = await this.providerKeyService.get({
-              id: primaryProvider.keyId,
-            });
-            if (providerKey && providerKey.createdById === userId) {
-              apiKey = this.encryptionService.decrypt(
-                Buffer.from(providerKey.secretEncrypted),
-              );
-              await this.workspaceService.writeApiKey(
-                input.hostname,
-                providerKey.vendor,
-                apiKey,
-              );
-            }
-          } catch (keyError) {
-            this.logger.warn(
-              `Failed to get provider key for fallback:`,
-              keyError,
-            );
-          }
-        }
-      }
-    }
+    // Note: Bot registration with proxy will happen after bot is created in database
+    // This is because we need the bot ID for the ProxyToken model
 
     // Create container
     let containerId: string | null = null;
@@ -339,6 +296,62 @@ export class BotApiService {
       }
     }
 
+    // Register bot with proxy if in zero-trust mode
+    if (useZeroTrust && primaryProvider.keyId) {
+      try {
+        const registration = await this.keyringProxyService.registerBot(
+          bot.id,
+          primaryProvider.providerId,
+          primaryProvider.keyId,
+          input.tags,
+        );
+        proxyToken = registration.token;
+        proxyTokenHash = this.encryptionService.hashToken(proxyToken);
+
+        // Update bot with proxyTokenHash
+        await this.botService.update({ id: bot.id }, { proxyTokenHash });
+
+        // Update container environment with proxy token if container exists
+        if (containerId) {
+          // Note: Container needs to be recreated with proxy token
+          // For now, we'll need to restart the bot to apply the proxy token
+          this.logger.log(
+            `Bot ${input.hostname} registered with proxy. Restart required to apply proxy token.`,
+          );
+        }
+
+        this.logger.log(`Bot ${input.hostname} registered with proxy`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to register bot with proxy, falling back to direct mode:`,
+          error,
+        );
+        // Fall back to direct mode if proxy registration fails
+        if (!apiKey) {
+          try {
+            const providerKey = await this.providerKeyService.get({
+              id: primaryProvider.keyId,
+            });
+            if (providerKey && providerKey.createdById === userId) {
+              apiKey = this.encryptionService.decrypt(
+                Buffer.from(providerKey.secretEncrypted),
+              );
+              await this.workspaceService.writeApiKey(
+                input.hostname,
+                providerKey.vendor,
+                apiKey,
+              );
+            }
+          } catch (keyError) {
+            this.logger.warn(
+              `Failed to get provider key for fallback:`,
+              keyError,
+            );
+          }
+        }
+      }
+    }
+
     // Log operation
     await this.operateLogService.create({
       user: { connect: { id: userId } },
@@ -369,13 +382,13 @@ export class BotApiService {
       }
     }
 
-    // Revoke bot from keyring-proxy if configured
-    if (this.keyringProxyClient.isConfigured() && bot.proxyTokenHash) {
+    // Revoke bot from proxy if in zero-trust mode
+    if (this.keyringProxyService.isZeroTrustEnabled()) {
       try {
-        await this.keyringProxyClient.revokeBot(bot.id);
-        this.logger.log(`Bot ${hostname} revoked from keyring-proxy`);
+        await this.keyringProxyService.deleteByBotId(bot.id);
+        this.logger.log(`Bot ${hostname} revoked from proxy`);
       } catch (error) {
-        this.logger.warn(`Failed to revoke bot from keyring-proxy:`, error);
+        this.logger.warn(`Failed to revoke bot from proxy:`, error);
       }
     }
 
@@ -429,9 +442,8 @@ export class BotApiService {
           isPrimary: true,
         });
 
-        // Check if zero-trust mode is available
-        const useZeroTrust =
-          this.keyringProxyClient.isConfigured() && this.proxyUrl;
+        // Check if zero-trust mode is enabled
+        const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
 
         if (botProviderKey) {
           try {
@@ -451,9 +463,10 @@ export class BotApiService {
                 // Zero-trust mode: Register bot with proxy
                 try {
                   const registration =
-                    await this.keyringProxyClient.registerBot(
+                    await this.keyringProxyService.registerBot(
                       bot.id,
-                      hostname,
+                      providerKey.vendor,
+                      botProviderKey.providerKeyId,
                       bot.tags,
                     );
                   proxyToken = registration.token;
@@ -465,11 +478,11 @@ export class BotApiService {
                     { proxyTokenHash },
                   );
                   this.logger.log(
-                    `Bot ${hostname} registered with keyring-proxy for start`,
+                    `Bot ${hostname} registered with proxy for start`,
                   );
                 } catch (proxyError) {
                   this.logger.warn(
-                    `Failed to register bot with keyring-proxy, falling back to direct mode:`,
+                    `Failed to register bot with proxy, falling back to direct mode:`,
                     proxyError,
                   );
                   // Fall back to direct mode

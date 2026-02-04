@@ -343,6 +343,21 @@ exports.Prisma.BotUsageLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ProxyTokenScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  tokenHash: 'tokenHash',
+  vendor: 'vendor',
+  keyId: 'keyId',
+  tags: 'tags',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  lastUsedAt: 'lastUsedAt',
+  requestCount: 'requestCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.MessageScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -521,6 +536,7 @@ exports.Prisma.ModelName = {
   ProviderKey: 'ProviderKey',
   BotProviderKey: 'BotProviderKey',
   BotUsageLog: 'BotUsageLog',
+  ProxyToken: 'ProxyToken',
   Message: 'Message',
   MessageRecipient: 'MessageRecipient',
   OperateLog: 'OperateLog',

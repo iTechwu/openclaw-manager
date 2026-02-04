@@ -99,6 +99,13 @@ export type BotProviderKey = $Result.DefaultSelection<Prisma.$BotProviderKeyPayl
  */
 export type BotUsageLog = $Result.DefaultSelection<Prisma.$BotUsageLogPayload>
 /**
+ * Model ProxyToken
+ * ProxyToken - Zero-Trust 模式的代理令牌
+ * Bot 容器使用此令牌通过 Proxy 访问 AI API，而不直接持有 API Key
+ * 核心安全原则：Bot 容器永远不持有真实的 API Key
+ */
+export type ProxyToken = $Result.DefaultSelection<Prisma.$ProxyTokenPayload>
+/**
  * Model Message
  * User Message System
  * 用户消息系统 - 支持系统通知、用户间消息等
@@ -520,6 +527,16 @@ export class PrismaClient<
     * ```
     */
   get botUsageLog(): Prisma.BotUsageLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.proxyToken`: Exposes CRUD operations for the **ProxyToken** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProxyTokens
+    * const proxyTokens = await prisma.proxyToken.findMany()
+    * ```
+    */
+  get proxyToken(): Prisma.ProxyTokenDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.message`: Exposes CRUD operations for the **Message** model.
@@ -1019,6 +1036,7 @@ export namespace Prisma {
     ProviderKey: 'ProviderKey',
     BotProviderKey: 'BotProviderKey',
     BotUsageLog: 'BotUsageLog',
+    ProxyToken: 'ProxyToken',
     Message: 'Message',
     MessageRecipient: 'MessageRecipient',
     OperateLog: 'OperateLog',
@@ -1039,7 +1057,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2153,6 +2171,80 @@ export namespace Prisma {
           }
         }
       }
+      ProxyToken: {
+        payload: Prisma.$ProxyTokenPayload<ExtArgs>
+        fields: Prisma.ProxyTokenFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProxyTokenFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProxyTokenFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          findFirst: {
+            args: Prisma.ProxyTokenFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProxyTokenFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          findMany: {
+            args: Prisma.ProxyTokenFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>[]
+          }
+          create: {
+            args: Prisma.ProxyTokenCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          createMany: {
+            args: Prisma.ProxyTokenCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProxyTokenCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>[]
+          }
+          delete: {
+            args: Prisma.ProxyTokenDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          update: {
+            args: Prisma.ProxyTokenUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProxyTokenDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProxyTokenUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProxyTokenUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProxyTokenUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProxyTokenPayload>
+          }
+          aggregate: {
+            args: Prisma.ProxyTokenAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProxyToken>
+          }
+          groupBy: {
+            args: Prisma.ProxyTokenGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProxyTokenGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProxyTokenCountArgs<ExtArgs>
+            result: $Utils.Optional<ProxyTokenCountAggregateOutputType> | number
+          }
+        }
+      }
       Message: {
         payload: Prisma.$MessagePayload<ExtArgs>
         fields: Prisma.MessageFieldRefs
@@ -2646,6 +2738,7 @@ export namespace Prisma {
     providerKey?: ProviderKeyOmit
     botProviderKey?: BotProviderKeyOmit
     botUsageLog?: BotUsageLogOmit
+    proxyToken?: ProxyTokenOmit
     message?: MessageOmit
     messageRecipient?: MessageRecipientOmit
     operateLog?: OperateLogOmit
@@ -2929,11 +3022,13 @@ export namespace Prisma {
   export type ProviderKeyCountOutputType = {
     botProviderKeys: number
     usageLogs: number
+    proxyTokens: number
   }
 
   export type ProviderKeyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     botProviderKeys?: boolean | ProviderKeyCountOutputTypeCountBotProviderKeysArgs
     usageLogs?: boolean | ProviderKeyCountOutputTypeCountUsageLogsArgs
+    proxyTokens?: boolean | ProviderKeyCountOutputTypeCountProxyTokensArgs
   }
 
   // Custom InputTypes
@@ -2959,6 +3054,13 @@ export namespace Prisma {
    */
   export type ProviderKeyCountOutputTypeCountUsageLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BotUsageLogWhereInput
+  }
+
+  /**
+   * ProviderKeyCountOutputType without action
+   */
+  export type ProviderKeyCountOutputTypeCountProxyTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProxyTokenWhereInput
   }
 
 
@@ -16389,6 +16491,7 @@ export namespace Prisma {
     avatarFile?: boolean | Bot$avatarFileArgs<ExtArgs>
     providerKeys?: boolean | Bot$providerKeysArgs<ExtArgs>
     usageLogs?: boolean | Bot$usageLogsArgs<ExtArgs>
+    proxyToken?: boolean | Bot$proxyTokenArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["bot"]>
 
@@ -16477,6 +16580,7 @@ export namespace Prisma {
     avatarFile?: boolean | Bot$avatarFileArgs<ExtArgs>
     providerKeys?: boolean | Bot$providerKeysArgs<ExtArgs>
     usageLogs?: boolean | Bot$usageLogsArgs<ExtArgs>
+    proxyToken?: boolean | Bot$proxyTokenArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16498,6 +16602,7 @@ export namespace Prisma {
       avatarFile: Prisma.$FileSourcePayload<ExtArgs> | null
       providerKeys: Prisma.$BotProviderKeyPayload<ExtArgs>[]
       usageLogs: Prisma.$BotUsageLogPayload<ExtArgs>[]
+      proxyToken: Prisma.$ProxyTokenPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -16920,6 +17025,7 @@ export namespace Prisma {
     avatarFile<T extends Bot$avatarFileArgs<ExtArgs> = {}>(args?: Subset<T, Bot$avatarFileArgs<ExtArgs>>): Prisma__FileSourceClient<$Result.GetResult<Prisma.$FileSourcePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     providerKeys<T extends Bot$providerKeysArgs<ExtArgs> = {}>(args?: Subset<T, Bot$providerKeysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProviderKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     usageLogs<T extends Bot$usageLogsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$usageLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotUsageLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proxyToken<T extends Bot$proxyTokenArgs<ExtArgs> = {}>(args?: Subset<T, Bot$proxyTokenArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17452,6 +17558,25 @@ export namespace Prisma {
   }
 
   /**
+   * Bot.proxyToken
+   */
+  export type Bot$proxyTokenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    where?: ProxyTokenWhereInput
+  }
+
+  /**
    * Bot without action
    */
   export type BotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17693,6 +17818,7 @@ export namespace Prisma {
     createdBy?: boolean | UserInfoDefaultArgs<ExtArgs>
     botProviderKeys?: boolean | ProviderKey$botProviderKeysArgs<ExtArgs>
     usageLogs?: boolean | ProviderKey$usageLogsArgs<ExtArgs>
+    proxyTokens?: boolean | ProviderKey$proxyTokensArgs<ExtArgs>
     _count?: boolean | ProviderKeyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["providerKey"]>
 
@@ -17748,6 +17874,7 @@ export namespace Prisma {
     createdBy?: boolean | UserInfoDefaultArgs<ExtArgs>
     botProviderKeys?: boolean | ProviderKey$botProviderKeysArgs<ExtArgs>
     usageLogs?: boolean | ProviderKey$usageLogsArgs<ExtArgs>
+    proxyTokens?: boolean | ProviderKey$proxyTokensArgs<ExtArgs>
     _count?: boolean | ProviderKeyCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProviderKeyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17763,6 +17890,7 @@ export namespace Prisma {
       createdBy: Prisma.$UserInfoPayload<ExtArgs>
       botProviderKeys: Prisma.$BotProviderKeyPayload<ExtArgs>[]
       usageLogs: Prisma.$BotUsageLogPayload<ExtArgs>[]
+      proxyTokens: Prisma.$ProxyTokenPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       /**
@@ -18199,6 +18327,7 @@ export namespace Prisma {
     createdBy<T extends UserInfoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserInfoDefaultArgs<ExtArgs>>): Prisma__UserInfoClient<$Result.GetResult<Prisma.$UserInfoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     botProviderKeys<T extends ProviderKey$botProviderKeysArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$botProviderKeysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProviderKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     usageLogs<T extends ProviderKey$usageLogsArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$usageLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotUsageLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proxyTokens<T extends ProviderKey$proxyTokensArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$proxyTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -18681,6 +18810,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BotUsageLogScalarFieldEnum | BotUsageLogScalarFieldEnum[]
+  }
+
+  /**
+   * ProviderKey.proxyTokens
+   */
+  export type ProviderKey$proxyTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    where?: ProxyTokenWhereInput
+    orderBy?: ProxyTokenOrderByWithRelationInput | ProxyTokenOrderByWithRelationInput[]
+    cursor?: ProxyTokenWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProxyTokenScalarFieldEnum | ProxyTokenScalarFieldEnum[]
   }
 
   /**
@@ -20931,6 +21084,1220 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BotUsageLogInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProxyToken
+   */
+
+  export type AggregateProxyToken = {
+    _count: ProxyTokenCountAggregateOutputType | null
+    _avg: ProxyTokenAvgAggregateOutputType | null
+    _sum: ProxyTokenSumAggregateOutputType | null
+    _min: ProxyTokenMinAggregateOutputType | null
+    _max: ProxyTokenMaxAggregateOutputType | null
+  }
+
+  export type ProxyTokenAvgAggregateOutputType = {
+    requestCount: number | null
+  }
+
+  export type ProxyTokenSumAggregateOutputType = {
+    requestCount: number | null
+  }
+
+  export type ProxyTokenMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    tokenHash: string | null
+    vendor: string | null
+    keyId: string | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    lastUsedAt: Date | null
+    requestCount: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProxyTokenMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    tokenHash: string | null
+    vendor: string | null
+    keyId: string | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    lastUsedAt: Date | null
+    requestCount: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProxyTokenCountAggregateOutputType = {
+    id: number
+    botId: number
+    tokenHash: number
+    vendor: number
+    keyId: number
+    tags: number
+    expiresAt: number
+    revokedAt: number
+    lastUsedAt: number
+    requestCount: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ProxyTokenAvgAggregateInputType = {
+    requestCount?: true
+  }
+
+  export type ProxyTokenSumAggregateInputType = {
+    requestCount?: true
+  }
+
+  export type ProxyTokenMinAggregateInputType = {
+    id?: true
+    botId?: true
+    tokenHash?: true
+    vendor?: true
+    keyId?: true
+    expiresAt?: true
+    revokedAt?: true
+    lastUsedAt?: true
+    requestCount?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProxyTokenMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    tokenHash?: true
+    vendor?: true
+    keyId?: true
+    expiresAt?: true
+    revokedAt?: true
+    lastUsedAt?: true
+    requestCount?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProxyTokenCountAggregateInputType = {
+    id?: true
+    botId?: true
+    tokenHash?: true
+    vendor?: true
+    keyId?: true
+    tags?: true
+    expiresAt?: true
+    revokedAt?: true
+    lastUsedAt?: true
+    requestCount?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ProxyTokenAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProxyToken to aggregate.
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProxyTokens to fetch.
+     */
+    orderBy?: ProxyTokenOrderByWithRelationInput | ProxyTokenOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProxyTokenWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProxyTokens from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProxyTokens.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProxyTokens
+    **/
+    _count?: true | ProxyTokenCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ProxyTokenAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ProxyTokenSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProxyTokenMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProxyTokenMaxAggregateInputType
+  }
+
+  export type GetProxyTokenAggregateType<T extends ProxyTokenAggregateArgs> = {
+        [P in keyof T & keyof AggregateProxyToken]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProxyToken[P]>
+      : GetScalarType<T[P], AggregateProxyToken[P]>
+  }
+
+
+
+
+  export type ProxyTokenGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProxyTokenWhereInput
+    orderBy?: ProxyTokenOrderByWithAggregationInput | ProxyTokenOrderByWithAggregationInput[]
+    by: ProxyTokenScalarFieldEnum[] | ProxyTokenScalarFieldEnum
+    having?: ProxyTokenScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProxyTokenCountAggregateInputType | true
+    _avg?: ProxyTokenAvgAggregateInputType
+    _sum?: ProxyTokenSumAggregateInputType
+    _min?: ProxyTokenMinAggregateInputType
+    _max?: ProxyTokenMaxAggregateInputType
+  }
+
+  export type ProxyTokenGroupByOutputType = {
+    id: string
+    botId: string
+    tokenHash: string
+    vendor: string
+    keyId: string
+    tags: string[]
+    expiresAt: Date | null
+    revokedAt: Date | null
+    lastUsedAt: Date | null
+    requestCount: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ProxyTokenCountAggregateOutputType | null
+    _avg: ProxyTokenAvgAggregateOutputType | null
+    _sum: ProxyTokenSumAggregateOutputType | null
+    _min: ProxyTokenMinAggregateOutputType | null
+    _max: ProxyTokenMaxAggregateOutputType | null
+  }
+
+  type GetProxyTokenGroupByPayload<T extends ProxyTokenGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProxyTokenGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProxyTokenGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProxyTokenGroupByOutputType[P]>
+            : GetScalarType<T[P], ProxyTokenGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProxyTokenSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    tokenHash?: boolean
+    vendor?: boolean
+    keyId?: boolean
+    tags?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    lastUsedAt?: boolean
+    requestCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proxyToken"]>
+
+  export type ProxyTokenSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    tokenHash?: boolean
+    vendor?: boolean
+    keyId?: boolean
+    tags?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    lastUsedAt?: boolean
+    requestCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proxyToken"]>
+
+  export type ProxyTokenSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    tokenHash?: boolean
+    vendor?: boolean
+    keyId?: boolean
+    tags?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    lastUsedAt?: boolean
+    requestCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proxyToken"]>
+
+  export type ProxyTokenSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    tokenHash?: boolean
+    vendor?: boolean
+    keyId?: boolean
+    tags?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    lastUsedAt?: boolean
+    requestCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ProxyTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "tokenHash" | "vendor" | "keyId" | "tags" | "expiresAt" | "revokedAt" | "lastUsedAt" | "requestCount" | "createdAt" | "updatedAt", ExtArgs["result"]["proxyToken"]>
+  export type ProxyTokenInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+  export type ProxyTokenIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+  export type ProxyTokenIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+
+  export type $ProxyTokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProxyToken"
+    objects: {
+      bot: Prisma.$BotPayload<ExtArgs>
+      providerKey: Prisma.$ProviderKeyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 关联的 Bot ID（一对一关系）
+       */
+      botId: string
+      /**
+       * Token 的 SHA-256 哈希值（永不存储原始 Token）
+       */
+      tokenHash: string
+      /**
+       * AI 服务商标识（openai, anthropic, google 等）
+       */
+      vendor: string
+      /**
+       * 关联的 ProviderKey ID
+       */
+      keyId: string
+      /**
+       * 访问控制标签
+       */
+      tags: string[]
+      /**
+       * Token 过期时间（可选）
+       */
+      expiresAt: Date | null
+      /**
+       * Token 撤销时间（null 表示有效）
+       */
+      revokedAt: Date | null
+      /**
+       * 最后使用时间
+       */
+      lastUsedAt: Date | null
+      /**
+       * 请求计数
+       */
+      requestCount: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["proxyToken"]>
+    composites: {}
+  }
+
+  type ProxyTokenGetPayload<S extends boolean | null | undefined | ProxyTokenDefaultArgs> = $Result.GetResult<Prisma.$ProxyTokenPayload, S>
+
+  type ProxyTokenCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProxyTokenFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProxyTokenCountAggregateInputType | true
+    }
+
+  export interface ProxyTokenDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProxyToken'], meta: { name: 'ProxyToken' } }
+    /**
+     * Find zero or one ProxyToken that matches the filter.
+     * @param {ProxyTokenFindUniqueArgs} args - Arguments to find a ProxyToken
+     * @example
+     * // Get one ProxyToken
+     * const proxyToken = await prisma.proxyToken.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProxyTokenFindUniqueArgs>(args: SelectSubset<T, ProxyTokenFindUniqueArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProxyToken that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProxyTokenFindUniqueOrThrowArgs} args - Arguments to find a ProxyToken
+     * @example
+     * // Get one ProxyToken
+     * const proxyToken = await prisma.proxyToken.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProxyTokenFindUniqueOrThrowArgs>(args: SelectSubset<T, ProxyTokenFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProxyToken that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenFindFirstArgs} args - Arguments to find a ProxyToken
+     * @example
+     * // Get one ProxyToken
+     * const proxyToken = await prisma.proxyToken.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProxyTokenFindFirstArgs>(args?: SelectSubset<T, ProxyTokenFindFirstArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProxyToken that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenFindFirstOrThrowArgs} args - Arguments to find a ProxyToken
+     * @example
+     * // Get one ProxyToken
+     * const proxyToken = await prisma.proxyToken.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProxyTokenFindFirstOrThrowArgs>(args?: SelectSubset<T, ProxyTokenFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProxyTokens that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProxyTokens
+     * const proxyTokens = await prisma.proxyToken.findMany()
+     * 
+     * // Get first 10 ProxyTokens
+     * const proxyTokens = await prisma.proxyToken.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const proxyTokenWithIdOnly = await prisma.proxyToken.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProxyTokenFindManyArgs>(args?: SelectSubset<T, ProxyTokenFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProxyToken.
+     * @param {ProxyTokenCreateArgs} args - Arguments to create a ProxyToken.
+     * @example
+     * // Create one ProxyToken
+     * const ProxyToken = await prisma.proxyToken.create({
+     *   data: {
+     *     // ... data to create a ProxyToken
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProxyTokenCreateArgs>(args: SelectSubset<T, ProxyTokenCreateArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProxyTokens.
+     * @param {ProxyTokenCreateManyArgs} args - Arguments to create many ProxyTokens.
+     * @example
+     * // Create many ProxyTokens
+     * const proxyToken = await prisma.proxyToken.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProxyTokenCreateManyArgs>(args?: SelectSubset<T, ProxyTokenCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProxyTokens and returns the data saved in the database.
+     * @param {ProxyTokenCreateManyAndReturnArgs} args - Arguments to create many ProxyTokens.
+     * @example
+     * // Create many ProxyTokens
+     * const proxyToken = await prisma.proxyToken.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProxyTokens and only return the `id`
+     * const proxyTokenWithIdOnly = await prisma.proxyToken.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProxyTokenCreateManyAndReturnArgs>(args?: SelectSubset<T, ProxyTokenCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProxyToken.
+     * @param {ProxyTokenDeleteArgs} args - Arguments to delete one ProxyToken.
+     * @example
+     * // Delete one ProxyToken
+     * const ProxyToken = await prisma.proxyToken.delete({
+     *   where: {
+     *     // ... filter to delete one ProxyToken
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProxyTokenDeleteArgs>(args: SelectSubset<T, ProxyTokenDeleteArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProxyToken.
+     * @param {ProxyTokenUpdateArgs} args - Arguments to update one ProxyToken.
+     * @example
+     * // Update one ProxyToken
+     * const proxyToken = await prisma.proxyToken.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProxyTokenUpdateArgs>(args: SelectSubset<T, ProxyTokenUpdateArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProxyTokens.
+     * @param {ProxyTokenDeleteManyArgs} args - Arguments to filter ProxyTokens to delete.
+     * @example
+     * // Delete a few ProxyTokens
+     * const { count } = await prisma.proxyToken.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProxyTokenDeleteManyArgs>(args?: SelectSubset<T, ProxyTokenDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProxyTokens.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProxyTokens
+     * const proxyToken = await prisma.proxyToken.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProxyTokenUpdateManyArgs>(args: SelectSubset<T, ProxyTokenUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProxyTokens and returns the data updated in the database.
+     * @param {ProxyTokenUpdateManyAndReturnArgs} args - Arguments to update many ProxyTokens.
+     * @example
+     * // Update many ProxyTokens
+     * const proxyToken = await prisma.proxyToken.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProxyTokens and only return the `id`
+     * const proxyTokenWithIdOnly = await prisma.proxyToken.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProxyTokenUpdateManyAndReturnArgs>(args: SelectSubset<T, ProxyTokenUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProxyToken.
+     * @param {ProxyTokenUpsertArgs} args - Arguments to update or create a ProxyToken.
+     * @example
+     * // Update or create a ProxyToken
+     * const proxyToken = await prisma.proxyToken.upsert({
+     *   create: {
+     *     // ... data to create a ProxyToken
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProxyToken we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProxyTokenUpsertArgs>(args: SelectSubset<T, ProxyTokenUpsertArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProxyTokens.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenCountArgs} args - Arguments to filter ProxyTokens to count.
+     * @example
+     * // Count the number of ProxyTokens
+     * const count = await prisma.proxyToken.count({
+     *   where: {
+     *     // ... the filter for the ProxyTokens we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProxyTokenCountArgs>(
+      args?: Subset<T, ProxyTokenCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProxyTokenCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProxyToken.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProxyTokenAggregateArgs>(args: Subset<T, ProxyTokenAggregateArgs>): Prisma.PrismaPromise<GetProxyTokenAggregateType<T>>
+
+    /**
+     * Group by ProxyToken.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProxyTokenGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProxyTokenGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProxyTokenGroupByArgs['orderBy'] }
+        : { orderBy?: ProxyTokenGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProxyTokenGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProxyTokenGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProxyToken model
+   */
+  readonly fields: ProxyTokenFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProxyToken.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProxyTokenClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    bot<T extends BotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotDefaultArgs<ExtArgs>>): Prisma__BotClient<$Result.GetResult<Prisma.$BotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    providerKey<T extends ProviderKeyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKeyDefaultArgs<ExtArgs>>): Prisma__ProviderKeyClient<$Result.GetResult<Prisma.$ProviderKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProxyToken model
+   */
+  interface ProxyTokenFieldRefs {
+    readonly id: FieldRef<"ProxyToken", 'String'>
+    readonly botId: FieldRef<"ProxyToken", 'String'>
+    readonly tokenHash: FieldRef<"ProxyToken", 'String'>
+    readonly vendor: FieldRef<"ProxyToken", 'String'>
+    readonly keyId: FieldRef<"ProxyToken", 'String'>
+    readonly tags: FieldRef<"ProxyToken", 'String[]'>
+    readonly expiresAt: FieldRef<"ProxyToken", 'DateTime'>
+    readonly revokedAt: FieldRef<"ProxyToken", 'DateTime'>
+    readonly lastUsedAt: FieldRef<"ProxyToken", 'DateTime'>
+    readonly requestCount: FieldRef<"ProxyToken", 'Int'>
+    readonly createdAt: FieldRef<"ProxyToken", 'DateTime'>
+    readonly updatedAt: FieldRef<"ProxyToken", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProxyToken findUnique
+   */
+  export type ProxyTokenFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter, which ProxyToken to fetch.
+     */
+    where: ProxyTokenWhereUniqueInput
+  }
+
+  /**
+   * ProxyToken findUniqueOrThrow
+   */
+  export type ProxyTokenFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter, which ProxyToken to fetch.
+     */
+    where: ProxyTokenWhereUniqueInput
+  }
+
+  /**
+   * ProxyToken findFirst
+   */
+  export type ProxyTokenFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter, which ProxyToken to fetch.
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProxyTokens to fetch.
+     */
+    orderBy?: ProxyTokenOrderByWithRelationInput | ProxyTokenOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProxyTokens.
+     */
+    cursor?: ProxyTokenWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProxyTokens from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProxyTokens.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProxyTokens.
+     */
+    distinct?: ProxyTokenScalarFieldEnum | ProxyTokenScalarFieldEnum[]
+  }
+
+  /**
+   * ProxyToken findFirstOrThrow
+   */
+  export type ProxyTokenFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter, which ProxyToken to fetch.
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProxyTokens to fetch.
+     */
+    orderBy?: ProxyTokenOrderByWithRelationInput | ProxyTokenOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProxyTokens.
+     */
+    cursor?: ProxyTokenWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProxyTokens from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProxyTokens.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProxyTokens.
+     */
+    distinct?: ProxyTokenScalarFieldEnum | ProxyTokenScalarFieldEnum[]
+  }
+
+  /**
+   * ProxyToken findMany
+   */
+  export type ProxyTokenFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter, which ProxyTokens to fetch.
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProxyTokens to fetch.
+     */
+    orderBy?: ProxyTokenOrderByWithRelationInput | ProxyTokenOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProxyTokens.
+     */
+    cursor?: ProxyTokenWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProxyTokens from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProxyTokens.
+     */
+    skip?: number
+    distinct?: ProxyTokenScalarFieldEnum | ProxyTokenScalarFieldEnum[]
+  }
+
+  /**
+   * ProxyToken create
+   */
+  export type ProxyTokenCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProxyToken.
+     */
+    data: XOR<ProxyTokenCreateInput, ProxyTokenUncheckedCreateInput>
+  }
+
+  /**
+   * ProxyToken createMany
+   */
+  export type ProxyTokenCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProxyTokens.
+     */
+    data: ProxyTokenCreateManyInput | ProxyTokenCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProxyToken createManyAndReturn
+   */
+  export type ProxyTokenCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProxyTokens.
+     */
+    data: ProxyTokenCreateManyInput | ProxyTokenCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProxyToken update
+   */
+  export type ProxyTokenUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProxyToken.
+     */
+    data: XOR<ProxyTokenUpdateInput, ProxyTokenUncheckedUpdateInput>
+    /**
+     * Choose, which ProxyToken to update.
+     */
+    where: ProxyTokenWhereUniqueInput
+  }
+
+  /**
+   * ProxyToken updateMany
+   */
+  export type ProxyTokenUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProxyTokens.
+     */
+    data: XOR<ProxyTokenUpdateManyMutationInput, ProxyTokenUncheckedUpdateManyInput>
+    /**
+     * Filter which ProxyTokens to update
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * Limit how many ProxyTokens to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProxyToken updateManyAndReturn
+   */
+  export type ProxyTokenUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * The data used to update ProxyTokens.
+     */
+    data: XOR<ProxyTokenUpdateManyMutationInput, ProxyTokenUncheckedUpdateManyInput>
+    /**
+     * Filter which ProxyTokens to update
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * Limit how many ProxyTokens to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProxyToken upsert
+   */
+  export type ProxyTokenUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProxyToken to update in case it exists.
+     */
+    where: ProxyTokenWhereUniqueInput
+    /**
+     * In case the ProxyToken found by the `where` argument doesn't exist, create a new ProxyToken with this data.
+     */
+    create: XOR<ProxyTokenCreateInput, ProxyTokenUncheckedCreateInput>
+    /**
+     * In case the ProxyToken was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProxyTokenUpdateInput, ProxyTokenUncheckedUpdateInput>
+  }
+
+  /**
+   * ProxyToken delete
+   */
+  export type ProxyTokenDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
+    /**
+     * Filter which ProxyToken to delete.
+     */
+    where: ProxyTokenWhereUniqueInput
+  }
+
+  /**
+   * ProxyToken deleteMany
+   */
+  export type ProxyTokenDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProxyTokens to delete
+     */
+    where?: ProxyTokenWhereInput
+    /**
+     * Limit how many ProxyTokens to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProxyToken without action
+   */
+  export type ProxyTokenDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProxyToken
+     */
+    select?: ProxyTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProxyToken
+     */
+    omit?: ProxyTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProxyTokenInclude<ExtArgs> | null
   }
 
 
@@ -27008,6 +28375,24 @@ export namespace Prisma {
   export type BotUsageLogScalarFieldEnum = (typeof BotUsageLogScalarFieldEnum)[keyof typeof BotUsageLogScalarFieldEnum]
 
 
+  export const ProxyTokenScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    tokenHash: 'tokenHash',
+    vendor: 'vendor',
+    keyId: 'keyId',
+    tags: 'tags',
+    expiresAt: 'expiresAt',
+    revokedAt: 'revokedAt',
+    lastUsedAt: 'lastUsedAt',
+    requestCount: 'requestCount',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ProxyTokenScalarFieldEnum = (typeof ProxyTokenScalarFieldEnum)[keyof typeof ProxyTokenScalarFieldEnum]
+
+
   export const MessageScalarFieldEnum: {
     id: 'id',
     type: 'type',
@@ -28416,6 +29801,7 @@ export namespace Prisma {
     avatarFile?: XOR<FileSourceNullableScalarRelationFilter, FileSourceWhereInput> | null
     providerKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
+    proxyToken?: XOR<ProxyTokenNullableScalarRelationFilter, ProxyTokenWhereInput> | null
   }
 
   export type BotOrderByWithRelationInput = {
@@ -28445,6 +29831,7 @@ export namespace Prisma {
     avatarFile?: FileSourceOrderByWithRelationInput
     providerKeys?: BotProviderKeyOrderByRelationAggregateInput
     usageLogs?: BotUsageLogOrderByRelationAggregateInput
+    proxyToken?: ProxyTokenOrderByWithRelationInput
   }
 
   export type BotWhereUniqueInput = Prisma.AtLeast<{
@@ -28477,6 +29864,7 @@ export namespace Prisma {
     avatarFile?: XOR<FileSourceNullableScalarRelationFilter, FileSourceWhereInput> | null
     providerKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
+    proxyToken?: XOR<ProxyTokenNullableScalarRelationFilter, ProxyTokenWhereInput> | null
   }, "id">
 
   export type BotOrderByWithAggregationInput = {
@@ -28554,6 +29942,7 @@ export namespace Prisma {
     createdBy?: XOR<UserInfoScalarRelationFilter, UserInfoWhereInput>
     botProviderKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
+    proxyTokens?: ProxyTokenListRelationFilter
   }
 
   export type ProviderKeyOrderByWithRelationInput = {
@@ -28572,6 +29961,7 @@ export namespace Prisma {
     createdBy?: UserInfoOrderByWithRelationInput
     botProviderKeys?: BotProviderKeyOrderByRelationAggregateInput
     usageLogs?: BotUsageLogOrderByRelationAggregateInput
+    proxyTokens?: ProxyTokenOrderByRelationAggregateInput
   }
 
   export type ProviderKeyWhereUniqueInput = Prisma.AtLeast<{
@@ -28594,6 +29984,7 @@ export namespace Prisma {
     createdBy?: XOR<UserInfoScalarRelationFilter, UserInfoWhereInput>
     botProviderKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
+    proxyTokens?: ProxyTokenListRelationFilter
   }, "id" | "provider_key_user_label_unique">
 
   export type ProviderKeyOrderByWithAggregationInput = {
@@ -28764,6 +30155,101 @@ export namespace Prisma {
     requestTokens?: IntNullableWithAggregatesFilter<"BotUsageLog"> | number | null
     responseTokens?: IntNullableWithAggregatesFilter<"BotUsageLog"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"BotUsageLog"> | Date | string
+  }
+
+  export type ProxyTokenWhereInput = {
+    AND?: ProxyTokenWhereInput | ProxyTokenWhereInput[]
+    OR?: ProxyTokenWhereInput[]
+    NOT?: ProxyTokenWhereInput | ProxyTokenWhereInput[]
+    id?: UuidFilter<"ProxyToken"> | string
+    botId?: UuidFilter<"ProxyToken"> | string
+    tokenHash?: StringFilter<"ProxyToken"> | string
+    vendor?: StringFilter<"ProxyToken"> | string
+    keyId?: UuidFilter<"ProxyToken"> | string
+    tags?: StringNullableListFilter<"ProxyToken">
+    expiresAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    revokedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    requestCount?: IntFilter<"ProxyToken"> | number
+    createdAt?: DateTimeFilter<"ProxyToken"> | Date | string
+    updatedAt?: DateTimeFilter<"ProxyToken"> | Date | string
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
+  }
+
+  export type ProxyTokenOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    tokenHash?: SortOrder
+    vendor?: SortOrder
+    keyId?: SortOrder
+    tags?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    requestCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    bot?: BotOrderByWithRelationInput
+    providerKey?: ProviderKeyOrderByWithRelationInput
+  }
+
+  export type ProxyTokenWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId?: string
+    tokenHash?: string
+    AND?: ProxyTokenWhereInput | ProxyTokenWhereInput[]
+    OR?: ProxyTokenWhereInput[]
+    NOT?: ProxyTokenWhereInput | ProxyTokenWhereInput[]
+    vendor?: StringFilter<"ProxyToken"> | string
+    keyId?: UuidFilter<"ProxyToken"> | string
+    tags?: StringNullableListFilter<"ProxyToken">
+    expiresAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    revokedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    requestCount?: IntFilter<"ProxyToken"> | number
+    createdAt?: DateTimeFilter<"ProxyToken"> | Date | string
+    updatedAt?: DateTimeFilter<"ProxyToken"> | Date | string
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
+  }, "id" | "botId" | "tokenHash">
+
+  export type ProxyTokenOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    tokenHash?: SortOrder
+    vendor?: SortOrder
+    keyId?: SortOrder
+    tags?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    requestCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ProxyTokenCountOrderByAggregateInput
+    _avg?: ProxyTokenAvgOrderByAggregateInput
+    _max?: ProxyTokenMaxOrderByAggregateInput
+    _min?: ProxyTokenMinOrderByAggregateInput
+    _sum?: ProxyTokenSumOrderByAggregateInput
+  }
+
+  export type ProxyTokenScalarWhereWithAggregatesInput = {
+    AND?: ProxyTokenScalarWhereWithAggregatesInput | ProxyTokenScalarWhereWithAggregatesInput[]
+    OR?: ProxyTokenScalarWhereWithAggregatesInput[]
+    NOT?: ProxyTokenScalarWhereWithAggregatesInput | ProxyTokenScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ProxyToken"> | string
+    botId?: UuidWithAggregatesFilter<"ProxyToken"> | string
+    tokenHash?: StringWithAggregatesFilter<"ProxyToken"> | string
+    vendor?: StringWithAggregatesFilter<"ProxyToken"> | string
+    keyId?: UuidWithAggregatesFilter<"ProxyToken"> | string
+    tags?: StringNullableListFilter<"ProxyToken">
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"ProxyToken"> | Date | string | null
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"ProxyToken"> | Date | string | null
+    lastUsedAt?: DateTimeNullableWithAggregatesFilter<"ProxyToken"> | Date | string | null
+    requestCount?: IntWithAggregatesFilter<"ProxyToken"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ProxyToken"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ProxyToken"> | Date | string
   }
 
   export type MessageWhereInput = {
@@ -30429,6 +31915,7 @@ export namespace Prisma {
     avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
     providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateInput = {
@@ -30455,6 +31942,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotUpdateInput = {
@@ -30481,6 +31969,7 @@ export namespace Prisma {
     avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
     providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateInput = {
@@ -30507,6 +31996,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type BotCreateManyInput = {
@@ -30593,6 +32083,7 @@ export namespace Prisma {
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateInput = {
@@ -30610,6 +32101,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUpdateInput = {
@@ -30627,6 +32119,7 @@ export namespace Prisma {
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateInput = {
@@ -30644,6 +32137,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyCreateManyInput = {
@@ -30817,6 +32311,109 @@ export namespace Prisma {
     requestTokens?: NullableIntFieldUpdateOperationsInput | number | null
     responseTokens?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProxyTokenCreateInput = {
+    id?: string
+    tokenHash: string
+    vendor: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bot: BotCreateNestedOneWithoutProxyTokenInput
+    providerKey: ProviderKeyCreateNestedOneWithoutProxyTokensInput
+  }
+
+  export type ProxyTokenUncheckedCreateInput = {
+    id?: string
+    botId: string
+    tokenHash: string
+    vendor: string
+    keyId: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProxyTokenUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bot?: BotUpdateOneRequiredWithoutProxyTokenNestedInput
+    providerKey?: ProviderKeyUpdateOneRequiredWithoutProxyTokensNestedInput
+  }
+
+  export type ProxyTokenUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    keyId?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProxyTokenCreateManyInput = {
+    id?: string
+    botId: string
+    tokenHash: string
+    vendor: string
+    keyId: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProxyTokenUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProxyTokenUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    keyId?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageCreateInput = {
@@ -32374,6 +33971,11 @@ export namespace Prisma {
     none?: BotUsageLogWhereInput
   }
 
+  export type ProxyTokenNullableScalarRelationFilter = {
+    is?: ProxyTokenWhereInput | null
+    isNot?: ProxyTokenWhereInput | null
+  }
+
   export type BotProviderKeyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -32491,6 +34093,16 @@ export namespace Prisma {
     in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
     notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
     not?: NestedBytesFilter<$PrismaModel> | Bytes
+  }
+
+  export type ProxyTokenListRelationFilter = {
+    every?: ProxyTokenWhereInput
+    some?: ProxyTokenWhereInput
+    none?: ProxyTokenWhereInput
+  }
+
+  export type ProxyTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type ProviderKeyProvider_key_user_label_uniqueCompoundUniqueInput = {
@@ -32640,6 +34252,57 @@ export namespace Prisma {
     statusCode?: SortOrder
     requestTokens?: SortOrder
     responseTokens?: SortOrder
+  }
+
+  export type ProxyTokenCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    tokenHash?: SortOrder
+    vendor?: SortOrder
+    keyId?: SortOrder
+    tags?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    requestCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProxyTokenAvgOrderByAggregateInput = {
+    requestCount?: SortOrder
+  }
+
+  export type ProxyTokenMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    tokenHash?: SortOrder
+    vendor?: SortOrder
+    keyId?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    requestCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProxyTokenMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    tokenHash?: SortOrder
+    vendor?: SortOrder
+    keyId?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    requestCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProxyTokenSumOrderByAggregateInput = {
+    requestCount?: SortOrder
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -33771,6 +35434,12 @@ export namespace Prisma {
     connect?: BotUsageLogWhereUniqueInput | BotUsageLogWhereUniqueInput[]
   }
 
+  export type ProxyTokenCreateNestedOneWithoutBotInput = {
+    create?: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutBotInput
+    connect?: ProxyTokenWhereUniqueInput
+  }
+
   export type BotProviderKeyUncheckedCreateNestedManyWithoutBotInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -33783,6 +35452,12 @@ export namespace Prisma {
     connectOrCreate?: BotUsageLogCreateOrConnectWithoutBotInput | BotUsageLogCreateOrConnectWithoutBotInput[]
     createMany?: BotUsageLogCreateManyBotInputEnvelope
     connect?: BotUsageLogWhereUniqueInput | BotUsageLogWhereUniqueInput[]
+  }
+
+  export type ProxyTokenUncheckedCreateNestedOneWithoutBotInput = {
+    create?: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutBotInput
+    connect?: ProxyTokenWhereUniqueInput
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -33858,6 +35533,16 @@ export namespace Prisma {
     deleteMany?: BotUsageLogScalarWhereInput | BotUsageLogScalarWhereInput[]
   }
 
+  export type ProxyTokenUpdateOneWithoutBotNestedInput = {
+    create?: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutBotInput
+    upsert?: ProxyTokenUpsertWithoutBotInput
+    disconnect?: ProxyTokenWhereInput | boolean
+    delete?: ProxyTokenWhereInput | boolean
+    connect?: ProxyTokenWhereUniqueInput
+    update?: XOR<XOR<ProxyTokenUpdateToOneWithWhereWithoutBotInput, ProxyTokenUpdateWithoutBotInput>, ProxyTokenUncheckedUpdateWithoutBotInput>
+  }
+
   export type BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -33886,6 +35571,16 @@ export namespace Prisma {
     deleteMany?: BotUsageLogScalarWhereInput | BotUsageLogScalarWhereInput[]
   }
 
+  export type ProxyTokenUncheckedUpdateOneWithoutBotNestedInput = {
+    create?: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutBotInput
+    upsert?: ProxyTokenUpsertWithoutBotInput
+    disconnect?: ProxyTokenWhereInput | boolean
+    delete?: ProxyTokenWhereInput | boolean
+    connect?: ProxyTokenWhereUniqueInput
+    update?: XOR<XOR<ProxyTokenUpdateToOneWithWhereWithoutBotInput, ProxyTokenUpdateWithoutBotInput>, ProxyTokenUncheckedUpdateWithoutBotInput>
+  }
+
   export type UserInfoCreateNestedOneWithoutProviderKeysInput = {
     create?: XOR<UserInfoCreateWithoutProviderKeysInput, UserInfoUncheckedCreateWithoutProviderKeysInput>
     connectOrCreate?: UserInfoCreateOrConnectWithoutProviderKeysInput
@@ -33906,6 +35601,13 @@ export namespace Prisma {
     connect?: BotUsageLogWhereUniqueInput | BotUsageLogWhereUniqueInput[]
   }
 
+  export type ProxyTokenCreateNestedManyWithoutProviderKeyInput = {
+    create?: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput> | ProxyTokenCreateWithoutProviderKeyInput[] | ProxyTokenUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutProviderKeyInput | ProxyTokenCreateOrConnectWithoutProviderKeyInput[]
+    createMany?: ProxyTokenCreateManyProviderKeyInputEnvelope
+    connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+  }
+
   export type BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput = {
     create?: XOR<BotProviderKeyCreateWithoutProviderKeyInput, BotProviderKeyUncheckedCreateWithoutProviderKeyInput> | BotProviderKeyCreateWithoutProviderKeyInput[] | BotProviderKeyUncheckedCreateWithoutProviderKeyInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutProviderKeyInput | BotProviderKeyCreateOrConnectWithoutProviderKeyInput[]
@@ -33918,6 +35620,13 @@ export namespace Prisma {
     connectOrCreate?: BotUsageLogCreateOrConnectWithoutProviderKeyInput | BotUsageLogCreateOrConnectWithoutProviderKeyInput[]
     createMany?: BotUsageLogCreateManyProviderKeyInputEnvelope
     connect?: BotUsageLogWhereUniqueInput | BotUsageLogWhereUniqueInput[]
+  }
+
+  export type ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput = {
+    create?: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput> | ProxyTokenCreateWithoutProviderKeyInput[] | ProxyTokenUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutProviderKeyInput | ProxyTokenCreateOrConnectWithoutProviderKeyInput[]
+    createMany?: ProxyTokenCreateManyProviderKeyInputEnvelope
+    connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
   }
 
   export type BytesFieldUpdateOperationsInput = {
@@ -33960,6 +35669,20 @@ export namespace Prisma {
     deleteMany?: BotUsageLogScalarWhereInput | BotUsageLogScalarWhereInput[]
   }
 
+  export type ProxyTokenUpdateManyWithoutProviderKeyNestedInput = {
+    create?: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput> | ProxyTokenCreateWithoutProviderKeyInput[] | ProxyTokenUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutProviderKeyInput | ProxyTokenCreateOrConnectWithoutProviderKeyInput[]
+    upsert?: ProxyTokenUpsertWithWhereUniqueWithoutProviderKeyInput | ProxyTokenUpsertWithWhereUniqueWithoutProviderKeyInput[]
+    createMany?: ProxyTokenCreateManyProviderKeyInputEnvelope
+    set?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    disconnect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    delete?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    update?: ProxyTokenUpdateWithWhereUniqueWithoutProviderKeyInput | ProxyTokenUpdateWithWhereUniqueWithoutProviderKeyInput[]
+    updateMany?: ProxyTokenUpdateManyWithWhereWithoutProviderKeyInput | ProxyTokenUpdateManyWithWhereWithoutProviderKeyInput[]
+    deleteMany?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
+  }
+
   export type BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput = {
     create?: XOR<BotProviderKeyCreateWithoutProviderKeyInput, BotProviderKeyUncheckedCreateWithoutProviderKeyInput> | BotProviderKeyCreateWithoutProviderKeyInput[] | BotProviderKeyUncheckedCreateWithoutProviderKeyInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutProviderKeyInput | BotProviderKeyCreateOrConnectWithoutProviderKeyInput[]
@@ -33986,6 +35709,20 @@ export namespace Prisma {
     update?: BotUsageLogUpdateWithWhereUniqueWithoutProviderKeyInput | BotUsageLogUpdateWithWhereUniqueWithoutProviderKeyInput[]
     updateMany?: BotUsageLogUpdateManyWithWhereWithoutProviderKeyInput | BotUsageLogUpdateManyWithWhereWithoutProviderKeyInput[]
     deleteMany?: BotUsageLogScalarWhereInput | BotUsageLogScalarWhereInput[]
+  }
+
+  export type ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput = {
+    create?: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput> | ProxyTokenCreateWithoutProviderKeyInput[] | ProxyTokenUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ProxyTokenCreateOrConnectWithoutProviderKeyInput | ProxyTokenCreateOrConnectWithoutProviderKeyInput[]
+    upsert?: ProxyTokenUpsertWithWhereUniqueWithoutProviderKeyInput | ProxyTokenUpsertWithWhereUniqueWithoutProviderKeyInput[]
+    createMany?: ProxyTokenCreateManyProviderKeyInputEnvelope
+    set?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    disconnect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    delete?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+    update?: ProxyTokenUpdateWithWhereUniqueWithoutProviderKeyInput | ProxyTokenUpdateWithWhereUniqueWithoutProviderKeyInput[]
+    updateMany?: ProxyTokenUpdateManyWithWhereWithoutProviderKeyInput | ProxyTokenUpdateManyWithWhereWithoutProviderKeyInput[]
+    deleteMany?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
   }
 
   export type BotCreateNestedOneWithoutProviderKeysInput = {
@@ -34044,6 +35781,43 @@ export namespace Prisma {
     delete?: ProviderKeyWhereInput | boolean
     connect?: ProviderKeyWhereUniqueInput
     update?: XOR<XOR<ProviderKeyUpdateToOneWithWhereWithoutUsageLogsInput, ProviderKeyUpdateWithoutUsageLogsInput>, ProviderKeyUncheckedUpdateWithoutUsageLogsInput>
+  }
+
+  export type ProxyTokenCreatetagsInput = {
+    set: string[]
+  }
+
+  export type BotCreateNestedOneWithoutProxyTokenInput = {
+    create?: XOR<BotCreateWithoutProxyTokenInput, BotUncheckedCreateWithoutProxyTokenInput>
+    connectOrCreate?: BotCreateOrConnectWithoutProxyTokenInput
+    connect?: BotWhereUniqueInput
+  }
+
+  export type ProviderKeyCreateNestedOneWithoutProxyTokensInput = {
+    create?: XOR<ProviderKeyCreateWithoutProxyTokensInput, ProviderKeyUncheckedCreateWithoutProxyTokensInput>
+    connectOrCreate?: ProviderKeyCreateOrConnectWithoutProxyTokensInput
+    connect?: ProviderKeyWhereUniqueInput
+  }
+
+  export type ProxyTokenUpdatetagsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BotUpdateOneRequiredWithoutProxyTokenNestedInput = {
+    create?: XOR<BotCreateWithoutProxyTokenInput, BotUncheckedCreateWithoutProxyTokenInput>
+    connectOrCreate?: BotCreateOrConnectWithoutProxyTokenInput
+    upsert?: BotUpsertWithoutProxyTokenInput
+    connect?: BotWhereUniqueInput
+    update?: XOR<XOR<BotUpdateToOneWithWhereWithoutProxyTokenInput, BotUpdateWithoutProxyTokenInput>, BotUncheckedUpdateWithoutProxyTokenInput>
+  }
+
+  export type ProviderKeyUpdateOneRequiredWithoutProxyTokensNestedInput = {
+    create?: XOR<ProviderKeyCreateWithoutProxyTokensInput, ProviderKeyUncheckedCreateWithoutProxyTokensInput>
+    connectOrCreate?: ProviderKeyCreateOrConnectWithoutProxyTokensInput
+    upsert?: ProviderKeyUpsertWithoutProxyTokensInput
+    connect?: ProviderKeyWhereUniqueInput
+    update?: XOR<XOR<ProviderKeyUpdateToOneWithWhereWithoutProxyTokensInput, ProviderKeyUpdateWithoutProxyTokensInput>, ProviderKeyUncheckedUpdateWithoutProxyTokensInput>
   }
 
   export type UserInfoCreateNestedOneWithoutSentMessagesInput = {
@@ -34969,6 +36743,7 @@ export namespace Prisma {
     avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
     providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutCreatedByInput = {
@@ -34994,6 +36769,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutCreatedByInput = {
@@ -35020,6 +36796,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutCreatedByInput = {
@@ -35036,6 +36813,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutCreatedByInput = {
@@ -35728,6 +37506,7 @@ export namespace Prisma {
     avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
     providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPersonaTemplateInput = {
@@ -35753,6 +37532,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPersonaTemplateInput = {
@@ -36788,6 +38568,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
     providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutAvatarFileInput = {
@@ -36813,6 +38594,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutAvatarFileInput = {
@@ -37125,6 +38907,39 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ProxyTokenCreateWithoutBotInput = {
+    id?: string
+    tokenHash: string
+    vendor: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    providerKey: ProviderKeyCreateNestedOneWithoutProxyTokensInput
+  }
+
+  export type ProxyTokenUncheckedCreateWithoutBotInput = {
+    id?: string
+    tokenHash: string
+    vendor: string
+    keyId: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProxyTokenCreateOrConnectWithoutBotInput = {
+    where: ProxyTokenWhereUniqueInput
+    create: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+  }
+
   export type UserInfoUpsertWithoutBotsInput = {
     update: XOR<UserInfoUpdateWithoutBotsInput, UserInfoUncheckedUpdateWithoutBotsInput>
     create: XOR<UserInfoCreateWithoutBotsInput, UserInfoUncheckedCreateWithoutBotsInput>
@@ -37373,6 +39188,45 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"BotUsageLog"> | Date | string
   }
 
+  export type ProxyTokenUpsertWithoutBotInput = {
+    update: XOR<ProxyTokenUpdateWithoutBotInput, ProxyTokenUncheckedUpdateWithoutBotInput>
+    create: XOR<ProxyTokenCreateWithoutBotInput, ProxyTokenUncheckedCreateWithoutBotInput>
+    where?: ProxyTokenWhereInput
+  }
+
+  export type ProxyTokenUpdateToOneWithWhereWithoutBotInput = {
+    where?: ProxyTokenWhereInput
+    data: XOR<ProxyTokenUpdateWithoutBotInput, ProxyTokenUncheckedUpdateWithoutBotInput>
+  }
+
+  export type ProxyTokenUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerKey?: ProviderKeyUpdateOneRequiredWithoutProxyTokensNestedInput
+  }
+
+  export type ProxyTokenUncheckedUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    keyId?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserInfoCreateWithoutProviderKeysInput = {
     id?: string
     nickname?: string
@@ -37496,6 +39350,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ProxyTokenCreateWithoutProviderKeyInput = {
+    id?: string
+    tokenHash: string
+    vendor: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bot: BotCreateNestedOneWithoutProxyTokenInput
+  }
+
+  export type ProxyTokenUncheckedCreateWithoutProviderKeyInput = {
+    id?: string
+    botId: string
+    tokenHash: string
+    vendor: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProxyTokenCreateOrConnectWithoutProviderKeyInput = {
+    where: ProxyTokenWhereUniqueInput
+    create: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput>
+  }
+
+  export type ProxyTokenCreateManyProviderKeyInputEnvelope = {
+    data: ProxyTokenCreateManyProviderKeyInput | ProxyTokenCreateManyProviderKeyInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserInfoUpsertWithoutProviderKeysInput = {
     update: XOR<UserInfoUpdateWithoutProviderKeysInput, UserInfoUncheckedUpdateWithoutProviderKeysInput>
     create: XOR<UserInfoCreateWithoutProviderKeysInput, UserInfoUncheckedCreateWithoutProviderKeysInput>
@@ -37603,6 +39495,40 @@ export namespace Prisma {
     data: XOR<BotUsageLogUpdateManyMutationInput, BotUsageLogUncheckedUpdateManyWithoutProviderKeyInput>
   }
 
+  export type ProxyTokenUpsertWithWhereUniqueWithoutProviderKeyInput = {
+    where: ProxyTokenWhereUniqueInput
+    update: XOR<ProxyTokenUpdateWithoutProviderKeyInput, ProxyTokenUncheckedUpdateWithoutProviderKeyInput>
+    create: XOR<ProxyTokenCreateWithoutProviderKeyInput, ProxyTokenUncheckedCreateWithoutProviderKeyInput>
+  }
+
+  export type ProxyTokenUpdateWithWhereUniqueWithoutProviderKeyInput = {
+    where: ProxyTokenWhereUniqueInput
+    data: XOR<ProxyTokenUpdateWithoutProviderKeyInput, ProxyTokenUncheckedUpdateWithoutProviderKeyInput>
+  }
+
+  export type ProxyTokenUpdateManyWithWhereWithoutProviderKeyInput = {
+    where: ProxyTokenScalarWhereInput
+    data: XOR<ProxyTokenUpdateManyMutationInput, ProxyTokenUncheckedUpdateManyWithoutProviderKeyInput>
+  }
+
+  export type ProxyTokenScalarWhereInput = {
+    AND?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
+    OR?: ProxyTokenScalarWhereInput[]
+    NOT?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
+    id?: UuidFilter<"ProxyToken"> | string
+    botId?: UuidFilter<"ProxyToken"> | string
+    tokenHash?: StringFilter<"ProxyToken"> | string
+    vendor?: StringFilter<"ProxyToken"> | string
+    keyId?: UuidFilter<"ProxyToken"> | string
+    tags?: StringNullableListFilter<"ProxyToken">
+    expiresAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    revokedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ProxyToken"> | Date | string | null
+    requestCount?: IntFilter<"ProxyToken"> | number
+    createdAt?: DateTimeFilter<"ProxyToken"> | Date | string
+    updatedAt?: DateTimeFilter<"ProxyToken"> | Date | string
+  }
+
   export type BotCreateWithoutProviderKeysInput = {
     id?: string
     name: string
@@ -37626,6 +39552,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
     avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProviderKeysInput = {
@@ -37651,6 +39578,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProviderKeysInput = {
@@ -37672,6 +39600,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutBotProviderKeysInput = {
@@ -37688,6 +39617,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutBotProviderKeysInput = {
@@ -37729,6 +39659,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
     avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProviderKeysInput = {
@@ -37754,6 +39685,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutBotProviderKeysInput = {
@@ -37781,6 +39713,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutBotProviderKeysInput = {
@@ -37797,6 +39730,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type BotCreateWithoutUsageLogsInput = {
@@ -37822,6 +39756,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
     avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
     providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutUsageLogsInput = {
@@ -37847,6 +39782,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutUsageLogsInput = {
@@ -37868,6 +39804,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutUsageLogsInput = {
@@ -37884,6 +39821,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutUsageLogsInput = {
@@ -37925,6 +39863,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
     avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
     providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutUsageLogsInput = {
@@ -37950,6 +39889,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutUsageLogsInput = {
@@ -37977,6 +39917,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutUsageLogsInput = {
@@ -37993,6 +39934,211 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
+  }
+
+  export type BotCreateWithoutProxyTokenInput = {
+    id?: string
+    name: string
+    hostname: string
+    aiProvider: string
+    model: string
+    channelType: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    emoji?: string | null
+    soulMarkdown?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutBotsInput
+    personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
+    avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
+    providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+  }
+
+  export type BotUncheckedCreateWithoutProxyTokenInput = {
+    id?: string
+    name: string
+    hostname: string
+    aiProvider: string
+    model: string
+    channelType: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    createdById: string
+    personaTemplateId?: string | null
+    emoji?: string | null
+    avatarFileId?: string | null
+    soulMarkdown?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+  }
+
+  export type BotCreateOrConnectWithoutProxyTokenInput = {
+    where: BotWhereUniqueInput
+    create: XOR<BotCreateWithoutProxyTokenInput, BotUncheckedCreateWithoutProxyTokenInput>
+  }
+
+  export type ProviderKeyCreateWithoutProxyTokensInput = {
+    id?: string
+    vendor: string
+    apiType?: string | null
+    secretEncrypted: Bytes
+    label: string
+    tag?: string | null
+    baseUrl?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
+    botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+  }
+
+  export type ProviderKeyUncheckedCreateWithoutProxyTokensInput = {
+    id?: string
+    vendor: string
+    apiType?: string | null
+    secretEncrypted: Bytes
+    label: string
+    tag?: string | null
+    baseUrl?: string | null
+    createdById: string
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+  }
+
+  export type ProviderKeyCreateOrConnectWithoutProxyTokensInput = {
+    where: ProviderKeyWhereUniqueInput
+    create: XOR<ProviderKeyCreateWithoutProxyTokensInput, ProviderKeyUncheckedCreateWithoutProxyTokensInput>
+  }
+
+  export type BotUpsertWithoutProxyTokenInput = {
+    update: XOR<BotUpdateWithoutProxyTokenInput, BotUncheckedUpdateWithoutProxyTokenInput>
+    create: XOR<BotCreateWithoutProxyTokenInput, BotUncheckedCreateWithoutProxyTokenInput>
+    where?: BotWhereInput
+  }
+
+  export type BotUpdateToOneWithWhereWithoutProxyTokenInput = {
+    where?: BotWhereInput
+    data: XOR<BotUpdateWithoutProxyTokenInput, BotUncheckedUpdateWithoutProxyTokenInput>
+  }
+
+  export type BotUpdateWithoutProxyTokenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    aiProvider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutBotsNestedInput
+    personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
+    avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
+    providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+  }
+
+  export type BotUncheckedUpdateWithoutProxyTokenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    aiProvider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    createdById?: StringFieldUpdateOperationsInput | string
+    personaTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+  }
+
+  export type ProviderKeyUpsertWithoutProxyTokensInput = {
+    update: XOR<ProviderKeyUpdateWithoutProxyTokensInput, ProviderKeyUncheckedUpdateWithoutProxyTokensInput>
+    create: XOR<ProviderKeyCreateWithoutProxyTokensInput, ProviderKeyUncheckedCreateWithoutProxyTokensInput>
+    where?: ProviderKeyWhereInput
+  }
+
+  export type ProviderKeyUpdateToOneWithWhereWithoutProxyTokensInput = {
+    where?: ProviderKeyWhereInput
+    data: XOR<ProviderKeyUpdateWithoutProxyTokensInput, ProviderKeyUncheckedUpdateWithoutProxyTokensInput>
+  }
+
+  export type ProviderKeyUpdateWithoutProxyTokensInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    apiType?: NullableStringFieldUpdateOperationsInput | string | null
+    secretEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    label?: StringFieldUpdateOperationsInput | string
+    tag?: NullableStringFieldUpdateOperationsInput | string | null
+    baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
+    botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+  }
+
+  export type ProviderKeyUncheckedUpdateWithoutProxyTokensInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    apiType?: NullableStringFieldUpdateOperationsInput | string | null
+    secretEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    label?: StringFieldUpdateOperationsInput | string
+    tag?: NullableStringFieldUpdateOperationsInput | string | null
+    baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type UserInfoCreateWithoutSentMessagesInput = {
@@ -38876,6 +41022,7 @@ export namespace Prisma {
     avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
     providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutCreatedByInput = {
@@ -38901,6 +41048,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutCreatedByInput = {
@@ -38940,6 +41088,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutCreatedByInput = {
@@ -38956,6 +41105,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateManyWithoutCreatedByInput = {
@@ -39101,6 +41251,7 @@ export namespace Prisma {
     avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
     providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPersonaTemplateInput = {
@@ -39126,6 +41277,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutPersonaTemplateInput = {
@@ -39365,6 +41517,7 @@ export namespace Prisma {
     personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
     providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutAvatarFileInput = {
@@ -39390,6 +41543,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutAvatarFileInput = {
@@ -39500,6 +41654,20 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type ProxyTokenCreateManyProviderKeyInput = {
+    id?: string
+    botId: string
+    tokenHash: string
+    vendor: string
+    tags?: ProxyTokenCreatetagsInput | string[]
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type BotProviderKeyUpdateWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
@@ -39549,6 +41717,48 @@ export namespace Prisma {
     requestTokens?: NullableIntFieldUpdateOperationsInput | number | null
     responseTokens?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProxyTokenUpdateWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bot?: BotUpdateOneRequiredWithoutProxyTokenNestedInput
+  }
+
+  export type ProxyTokenUncheckedUpdateWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProxyTokenUncheckedUpdateManyWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    tags?: ProxyTokenUpdatetagsInput | string[]
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageRecipientCreateManyMessageInput = {

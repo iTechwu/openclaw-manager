@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { ServerResponse } from 'http';
 import { BotService, BotUsageLogService } from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
 import { KeyringService } from './keyring.service';
+import { KeyringProxyService } from './keyring-proxy.service';
 import { UpstreamService } from './upstream.service';
 import { QuotaService } from './quota.service';
 import {
@@ -38,7 +40,7 @@ export interface ProxyResult {
  * ProxyService - 代理业务服务
  *
  * 负责代理请求的业务逻辑：
- * - Bot 认证
+ * - Bot 认证（支持 Direct Mode 和 Zero-Trust Mode）
  * - 密钥选择
  * - 请求转发
  * - 使用日志记录
@@ -47,16 +49,21 @@ export interface ProxyResult {
 export class ProxyService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: ConfigService,
     private readonly botService: BotService,
     private readonly botUsageLogService: BotUsageLogService,
     private readonly encryptionService: EncryptionService,
     private readonly keyringService: KeyringService,
+    private readonly keyringProxyService: KeyringProxyService,
     private readonly upstreamService: UpstreamService,
     private readonly quotaService: QuotaService,
   ) {}
 
   /**
    * 处理代理请求（流式响应）
+   * 支持两种模式：
+   * - Zero-Trust Mode: 使用 ProxyToken 模型验证，API Key 由 Proxy 注入
+   * - Direct Mode: 使用 Bot.proxyTokenHash 验证，动态选择 API Key
    */
   async handleProxyRequest(
     params: ProxyRequestParams,
@@ -64,46 +71,75 @@ export class ProxyService {
   ): Promise<ProxyResult> {
     const { vendor, path, method, headers, body, botToken } = params;
 
-    // 1. 验证 Bot token
-    const tokenHash = this.encryptionService.hashToken(botToken);
-    const bot = await this.botService.getByProxyTokenHash(tokenHash);
+    // 检查是否启用 Zero-Trust Mode
+    const isZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
 
-    if (!bot) {
-      return { success: false, error: 'Invalid bot token' };
+    let botId: string;
+    let keyId: string;
+    let apiKey: string;
+    let baseUrl: string | null | undefined;
+
+    if (isZeroTrust) {
+      // Zero-Trust Mode: 使用 ProxyToken 验证
+      const validation = await this.keyringProxyService.validateToken(botToken);
+      if (!validation.valid) {
+        return { success: false, error: 'Invalid or expired proxy token' };
+      }
+
+      // 验证 vendor 匹配
+      if (validation.vendor !== vendor) {
+        return {
+          success: false,
+          error: `Token not authorized for vendor: ${vendor}`,
+        };
+      }
+
+      botId = validation.botId!;
+      keyId = validation.keyId!;
+      apiKey = validation.apiKey!;
+      baseUrl = validation.baseUrl;
+    } else {
+      // Direct Mode: 使用 Bot.proxyTokenHash 验证
+      const tokenHash = this.encryptionService.hashToken(botToken);
+      const bot = await this.botService.getByProxyTokenHash(tokenHash);
+
+      if (!bot) {
+        return { success: false, error: 'Invalid bot token' };
+      }
+
+      botId = bot.id;
+
+      // 选择 API 密钥
+      const keySelection = await this.keyringService.selectKeyForBot(
+        vendor,
+        bot.tags,
+      );
+
+      if (!keySelection) {
+        return {
+          success: false,
+          error: `No API keys available for vendor: ${vendor}`,
+        };
+      }
+
+      keyId = keySelection.keyId;
+      apiKey = keySelection.secret;
+      baseUrl = keySelection.baseUrl;
     }
 
-    // 2. 选择 API 密钥（包含 baseUrl 信息）
-    const keySelection = await this.keyringService.selectKeyForBot(
-      vendor,
-      bot.tags,
-    );
-
-    if (!keySelection) {
-      return {
-        success: false,
-        error: `No API keys available for vendor: ${vendor}`,
-      };
-    }
-
-    // 3. 获取 vendor 配置（支持自定义 URL）
-    // 如果 ProviderKey 有自定义 baseUrl，使用自定义配置
+    // 获取 vendor 配置
     const providerConfig =
       PROVIDER_CONFIGS[vendor as keyof typeof PROVIDER_CONFIGS];
     const apiType = providerConfig?.apiType;
-    const vendorConfig = getVendorConfigWithCustomUrl(
-      vendor,
-      keySelection.baseUrl,
-      apiType,
-    );
+    const vendorConfig = getVendorConfigWithCustomUrl(vendor, baseUrl, apiType);
 
     if (!vendorConfig) {
-      // 如果没有预定义配置且没有自定义 URL，返回错误
-      if (!keySelection.baseUrl) {
+      if (!baseUrl) {
         return { success: false, error: `Unknown vendor: ${vendor}` };
       }
     }
 
-    // 4. 转发请求到上游
+    // 转发请求到上游
     try {
       const statusCode = await this.upstreamService.forwardToUpstream(
         {
@@ -112,17 +148,17 @@ export class ProxyService {
           method,
           headers,
           body,
-          apiKey: keySelection.secret,
-          customUrl: keySelection.baseUrl || undefined,
+          apiKey,
+          customUrl: baseUrl || undefined,
         },
         rawResponse,
       );
 
-      // 5. 记录使用日志
-      await this.logUsage(bot.id, vendor, keySelection.keyId, statusCode);
+      // 记录使用日志
+      await this.logUsage(botId, vendor, keyId, statusCode);
 
-      // 6. 检查配额并发送通知（异步，不阻塞响应）
-      this.quotaService.checkAndNotify(bot.id).catch((err) => {
+      // 检查配额并发送通知（异步，不阻塞响应）
+      this.quotaService.checkAndNotify(botId).catch((err) => {
         this.logger.error('Failed to check quota:', err);
       });
 
@@ -130,10 +166,10 @@ export class ProxyService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Upstream error for bot ${bot.id}:`, error);
+      this.logger.error(`Upstream error for bot ${botId}:`, error);
 
       // 记录失败日志
-      await this.logUsage(bot.id, vendor, keySelection.keyId, null);
+      await this.logUsage(botId, vendor, keyId, null);
 
       return { success: false, error: `Upstream error: ${errorMessage}` };
     }

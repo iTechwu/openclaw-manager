@@ -12,7 +12,7 @@ import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
 import { ProviderVerifyModule } from '@app/clients/internal/provider-verify';
-import { KeyringProxyModule } from '@app/clients/internal/keyring-proxy';
+import { ProxyModule } from '../proxy/proxy.module';
 import { BotApiController } from './bot-api.controller';
 import { BotApiService } from './bot-api.service';
 import { EncryptionService } from './services/encryption.service';
@@ -33,7 +33,7 @@ import { ReconciliationService } from './services/reconciliation.service';
     RedisModule,
     PersonaTemplateModule,
     ProviderVerifyModule,
-    KeyringProxyModule,
+    ProxyModule,
   ],
   controllers: [BotApiController],
   providers: [

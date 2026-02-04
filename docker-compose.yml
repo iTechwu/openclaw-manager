@@ -10,6 +10,13 @@
 #   - PostgreSQL and Redis should be running externally
 #   - Configure DATABASE_URL and REDIS_URL in environment or .env files
 #
+# Zero-Trust Mode:
+#   Bot containers access AI APIs through the proxy endpoint:
+#   - Bot containers must be on the same network (common_network)
+#   - INTERNAL_API_BASE_URL should be set to http://clawbot-api:3200/api
+#   - Bot containers use proxy tokens instead of real API keys
+#   - Proxy endpoint: /proxy/v1/{vendor}/*
+#
 # Build args (在 .env 中配置，不配置则使用默认值):
 #   BASE_NODE_IMAGE: Node 基础镜像
 #   OPENCLAW_BASE_IMAGE: OpenClaw 基础镜像 (botenv)

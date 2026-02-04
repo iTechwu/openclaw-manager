@@ -392,6 +392,7 @@ model Bot {
   avatarFile      FileSource?      @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
   providerKeys    BotProviderKey[]
   usageLogs       BotUsageLog[]
+  proxyToken      ProxyToken?
 
   @@index([status])
   @@index([hostname])
@@ -435,6 +436,7 @@ model ProviderKey {
   createdBy       UserInfo         @relation(fields: [createdById], references: [id])
   botProviderKeys BotProviderKey[]
   usageLogs       BotUsageLog[]
+  proxyTokens     ProxyToken[]
 
   @@unique([createdById, label], name: "provider_key_user_label_unique")
   @@index([vendor])
@@ -479,6 +481,50 @@ model BotUsageLog {
   @@index([createdAt])
   @@index([vendor])
   @@map("b_usage_log")
+}
+
+// ============================================================================
+// Zero-Trust Mode - Proxy Token System
+// ============================================================================
+
+/// ProxyToken - Zero-Trust 模式的代理令牌
+/// Bot 容器使用此令牌通过 Proxy 访问 AI API，而不直接持有 API Key
+/// 核心安全原则：Bot 容器永远不持有真实的 API Key
+model ProxyToken {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 Bot ID（一对一关系）
+  botId        String    @unique @map("bot_id") @db.Uuid
+  /// Token 的 SHA-256 哈希值（永不存储原始 Token）
+  tokenHash    String    @unique @map("token_hash") @db.VarChar(64)
+  /// AI 服务商标识（openai, anthropic, google 等）
+  vendor       String    @db.VarChar(50)
+  /// 关联的 ProviderKey ID
+  keyId        String    @map("key_id") @db.Uuid
+  /// 访问控制标签
+  tags         String[]
+  /// Token 过期时间（可选）
+  expiresAt    DateTime? @map("expires_at") @db.Timestamptz(6)
+  /// Token 撤销时间（null 表示有效）
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(6)
+  /// 最后使用时间
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(6)
+  /// 请求计数
+  requestCount Int       @default(0) @map("request_count")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  bot         Bot         @relation(fields: [botId], references: [id], onDelete: Cascade)
+  providerKey ProviderKey @relation(fields: [keyId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([botId])
+  @@index([keyId])
+  @@index([vendor])
+  @@index([expiresAt])
+  @@index([revokedAt])
+  @@map("b_proxy_token")
 }
 
 /// User Message System

@@ -40,38 +40,6 @@ export class BotService extends TransactionalServiceBase {
     });
   }
 
-  /**
-   * Get bot by hostname (only active bots, not soft-deleted)
-   * Uses findFirst since hostname uniqueness is enforced at database level
-   * with a partial unique index (WHERE isDeleted = false)
-   */
-  @HandlePrismaError(DbOperationType.QUERY)
-  async getByHostname(
-    hostname: string,
-    additional?: { select?: Prisma.BotSelect },
-  ): Promise<Bot | null> {
-    return this.getReadClient().bot.findFirst({
-      where: { hostname, isDeleted: false },
-      ...additional,
-    });
-  }
-
-  /**
-   * Get bot by proxy token hash (only active bots, not soft-deleted)
-   * Uses findFirst since proxyTokenHash uniqueness is enforced at database level
-   * with a partial unique index (WHERE isDeleted = false AND proxyTokenHash IS NOT NULL)
-   */
-  @HandlePrismaError(DbOperationType.QUERY)
-  async getByProxyTokenHash(
-    proxyTokenHash: string,
-    additional?: { select?: Prisma.BotSelect },
-  ): Promise<Bot | null> {
-    return this.getReadClient().bot.findFirst({
-      where: { proxyTokenHash, isDeleted: false },
-      ...additional,
-    });
-  }
-
   @HandlePrismaError(DbOperationType.QUERY)
   async list(
     where: Prisma.BotWhereInput,
@@ -129,5 +97,33 @@ export class BotService extends TransactionalServiceBase {
   @HandlePrismaError(DbOperationType.DELETE)
   async delete(where: Prisma.BotWhereUniqueInput): Promise<Bot> {
     return this.getWriteClient().bot.delete({ where });
+  }
+
+  /**
+   * 通过 hostname 查找 Bot
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async getByHostname(
+    hostname: string,
+    additional?: { select?: Prisma.BotSelect },
+  ): Promise<Bot | null> {
+    return this.getReadClient().bot.findFirst({
+      where: { hostname, isDeleted: false },
+      ...additional,
+    });
+  }
+
+  /**
+   * 通过 proxyTokenHash 查找 Bot
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async getByProxyTokenHash(
+    proxyTokenHash: string,
+    additional?: { select?: Prisma.BotSelect },
+  ): Promise<Bot | null> {
+    return this.getReadClient().bot.findFirst({
+      where: { proxyTokenHash, isDeleted: false },
+      ...additional,
+    });
   }
 }

@@ -22,3 +22,4 @@ export * from './modules/persona-template';
 export * from './modules/operate-log';
 export * from './modules/channel-definition';
 export * from './modules/channel-credential-field';
+export * from './modules/proxy-token';
