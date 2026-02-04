@@ -324,6 +324,8 @@ export class DockerService implements OnModuleInit {
     const container = await this.docker.createContainer({
       name: containerName,
       Image: this.botImage,
+      // Start OpenClaw gateway on the specified port
+      Cmd: ['openclaw', 'gateway', '--port', String(options.port)],
       Env: envVars,
       ExposedPorts: {
         [`${options.port}/tcp`]: {},
