@@ -40,7 +40,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       acc[namespace] = messages;
       return acc;
     },
-    {} as Record<string, any>,
+    {} as Record<string, unknown>,
   );
 
   return {

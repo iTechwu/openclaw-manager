@@ -1,5 +1,6 @@
 export * from './analytics.contract';
 export * from './bot.contract';
+export * from './channel.contract';
 export * from './download.contract';
 export * from './message.contract';
 export * from './operate-log.contract';

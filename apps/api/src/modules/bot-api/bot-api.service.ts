@@ -143,7 +143,7 @@ export class BotApiService {
       hostname: input.hostname,
       name: input.name,
       aiProvider: primaryProvider.providerId,
-      model: primaryProvider.model,
+      model: primaryProvider.primaryModel || primaryProvider.models[0],
       channelType: input.channels[0].channelType,
       persona: input.persona,
       features: input.features,
@@ -260,7 +260,7 @@ export class BotApiService {
         port,
         gatewayToken,
         aiProvider: primaryProvider.providerId,
-        model: primaryProvider.model,
+        model: primaryProvider.primaryModel || primaryProvider.models[0],
         channelType: input.channels[0].channelType,
         workspacePath,
         apiKey,
@@ -282,7 +282,7 @@ export class BotApiService {
       name: input.name,
       hostname: input.hostname,
       aiProvider: primaryProvider.providerId,
-      model: primaryProvider.model,
+      model: primaryProvider.primaryModel || primaryProvider.models[0],
       channelType: input.channels[0].channelType,
       containerId,
       port: typeof port === 'number' ? port : Number(port),
@@ -725,6 +725,31 @@ export class BotApiService {
     return this.providerVerifyClient.verify(input);
   }
 
+  /**
+   * Get models for an existing provider key by ID
+   */
+  async getProviderKeyModels(
+    keyId: string,
+    userId: string,
+  ): Promise<VerifyProviderKeyResponse> {
+    const key = await this.providerKeyService.get({ id: keyId });
+    if (!key || key.createdById !== userId) {
+      throw new NotFoundException(`Provider key with id "${keyId}" not found`);
+    }
+
+    // Decrypt the secret
+    const secret = this.encryptionService.decrypt(
+      Buffer.from(key.secretEncrypted),
+    );
+
+    // Use the verify client to get models
+    return this.providerVerifyClient.verify({
+      vendor: key.vendor as VerifyProviderKeyInput['vendor'],
+      secret,
+      baseUrl: key.baseUrl || undefined,
+    });
+  }
+
   // ============================================================================
   // Helper Methods
   // ============================================================================
@@ -733,6 +758,7 @@ export class BotApiService {
     return {
       id: key.id,
       vendor: key.vendor as ProviderKeyDto['vendor'],
+      apiType: (key.apiType as ProviderKeyDto['apiType']) || null,
       label: key.label,
       tag: key.tag,
       baseUrl: key.baseUrl,

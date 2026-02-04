@@ -581,3 +581,59 @@ model OperateLog {
   @@index([createdAt(sort: Desc)])
   @@map("operate_log")
 }
+
+// ============================================================================
+// Channel Definition System - 渠道定义系统
+// ============================================================================
+
+/// ChannelDefinition - 渠道定义
+/// 存储各种消息渠道的配置信息，包括所需的凭证字段
+model ChannelDefinition {
+  id               String  @id @db.VarChar(50) // e.g., "feishu", "telegram", "discord"
+  label            String  @db.VarChar(100) // Display name
+  icon             String  @db.VarChar(10) // Emoji or short icon code
+  popular          Boolean @default(false) // Whether to show in popular section
+  tokenHint        String  @map("token_hint") @db.VarChar(500) // Help text for token
+  tokenPlaceholder String  @map("token_placeholder") @db.VarChar(255) // Placeholder text
+  helpUrl          String? @map("help_url") @db.VarChar(500) // Documentation URL
+  helpText         String? @map("help_text") @db.VarChar(255) // Help link text
+  sortOrder        Int     @default(0) @map("sort_order") // Display order
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  credentialFields ChannelCredentialField[]
+
+  @@index([popular])
+  @@index([sortOrder])
+  @@index([isDeleted])
+  @@map("b_channel_definition")
+}
+
+/// ChannelCredentialField - 渠道凭证字段
+/// 定义每个渠道所需的凭证字段配置
+model ChannelCredentialField {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  channelId   String  @map("channel_id") @db.VarChar(50)
+  key         String  @db.VarChar(50) // Field key, e.g., "appId", "appSecret"
+  label       String  @db.VarChar(100) // Display label
+  placeholder String  @db.VarChar(255) // Placeholder text
+  fieldType   String  @default("text") @map("field_type") @db.VarChar(20) // "text" or "password"
+  required    Boolean @default(true) // Whether field is required
+  sortOrder   Int     @default(0) @map("sort_order") // Display order within channel
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  channel ChannelDefinition @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, key])
+  @@index([channelId])
+  @@index([sortOrder])
+  @@index([isDeleted])
+  @@map("b_channel_credential_field")
+}

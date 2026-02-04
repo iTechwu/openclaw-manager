@@ -170,4 +170,16 @@ export class BotApiController {
       return success(result);
     });
   }
+
+  @TsRestHandler(pkc.getModels)
+  async getProviderKeyModels(@Req() req: AuthenticatedRequest): Promise<any> {
+    return tsRestHandler(pkc.getModels, async ({ params }) => {
+      const userId = req.userId;
+      const result = await this.botApiService.getProviderKeyModels(
+        params.id,
+        userId,
+      );
+      return success(result);
+    });
+  }
 }

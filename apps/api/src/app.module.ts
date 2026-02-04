@@ -41,6 +41,9 @@ import { MessageApiModule } from './modules/message-api/message-api.module';
 /** operate-log-api module */
 import { OperateLogApiModule } from './modules/operate-log-api/operate-log-api.module';
 
+/** channel-api module */
+import { ChannelApiModule } from './modules/channel-api/channel-api.module';
+
 /** i18n */
 import {
   AcceptLanguageResolver,
@@ -198,6 +201,7 @@ import { DbMetricsService } from '@app/prisma/db-metrics/src/db-metrics.service'
     UserApiModule,
     MessageApiModule,
     OperateLogApiModule,
+    ChannelApiModule,
   ],
   providers: [
     {

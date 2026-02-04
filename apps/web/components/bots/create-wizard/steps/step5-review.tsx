@@ -121,7 +121,7 @@ export function Step5Review() {
                       {provider?.label || providerId}
                     </div>
                     <div className="text-muted-foreground text-xs">
-                      {t('modelLabel', { model: config?.model || t('defaultModel') })}
+                      {t('modelLabel', { model: config?.primaryModel || config?.models?.[0] || t('defaultModel') })}
                     </div>
                   </div>
                 </div>

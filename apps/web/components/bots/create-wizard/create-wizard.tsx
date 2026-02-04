@@ -127,7 +127,9 @@ function WizardContent({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Step Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">{renderStepContent()}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {renderStepContent()}
+      </div>
 
       {/* Error */}
       {error && (
@@ -169,7 +171,7 @@ export function CreateBotWizard({ isOpen, onClose }: CreateBotWizardProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex h-[600px] max-w-2xl flex-col overflow-hidden">
+      <DialogContent className="flex h-[700px] max-w-4xl flex-col overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>{t('wizard.title')}</DialogTitle>
         </DialogHeader>

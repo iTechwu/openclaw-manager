@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { providerKeyApi, providerKeyClient } from '@/lib/api/contracts/client';
 import type {
@@ -49,7 +50,7 @@ export function useProviderKeys() {
   const responseBody = keysQuery.data?.body;
   const keys: ProviderKey[] =
     responseBody && 'data' in responseBody && responseBody.data
-      ? (responseBody.data as { keys: ProviderKey[] }).keys ?? []
+      ? ((responseBody.data as { keys: ProviderKey[] }).keys ?? [])
       : [];
 
   return {
@@ -103,7 +104,8 @@ export function useProviderKeyHealth() {
   return {
     health,
     loading: healthQuery.isLoading,
-    error: healthQuery.error instanceof Error ? healthQuery.error.message : null,
+    error:
+      healthQuery.error instanceof Error ? healthQuery.error.message : null,
     refresh: () => healthQuery.refetch(),
   };
 }
@@ -127,6 +129,50 @@ export function useVerifyProviderKey() {
   return {
     verify,
     loading: verifyMutation.isPending,
-    error: verifyMutation.error instanceof Error ? verifyMutation.error.message : null,
+    error:
+      verifyMutation.error instanceof Error
+        ? verifyMutation.error.message
+        : null,
+  };
+}
+
+/**
+ * Hook for fetching models for an existing provider key
+ */
+export function useProviderKeyModels() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getModels = async (
+    keyId: string,
+  ): Promise<VerifyProviderKeyResponse | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await providerKeyClient.getModels({
+        params: { id: keyId },
+      });
+      if (
+        result.body &&
+        typeof result.body === 'object' &&
+        'data' in result.body
+      ) {
+        return result.body.data as VerifyProviderKeyResponse;
+      }
+      return null;
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch models';
+      setError(errorMsg);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    getModels,
+    loading,
+    error,
   };
 }

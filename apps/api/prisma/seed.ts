@@ -16,6 +16,9 @@ const prisma = new PrismaClient({ adapter });
 // Country codes data
 import { codeOfCountries } from '../scripts/country-codes.data';
 
+// Channel definitions data
+import { CHANNEL_DEFINITIONS } from '../scripts/channel-definitions.data';
+
 // ============================================================================
 // System Persona Templates
 // ============================================================================
@@ -383,11 +386,81 @@ async function seedCountryCodes() {
   console.log(`🌍 Country codes seeding completed! (${count} records)`);
 }
 
+async function seedChannelDefinitions() {
+  console.log('\n📡 Seeding channel definitions...');
+
+  for (const channelData of CHANNEL_DEFINITIONS) {
+    const { credentials, ...channelInfo } = channelData;
+
+    // Check if channel already exists
+    const existing = await prisma.channelDefinition.findUnique({
+      where: { id: channelInfo.id },
+    });
+
+    if (existing) {
+      // Update existing channel
+      await prisma.channelDefinition.update({
+        where: { id: channelInfo.id },
+        data: {
+          ...channelInfo,
+          isDeleted: false,
+        },
+      });
+      console.log(`  ⏭️  Updated existing: ${channelInfo.label}`);
+    } else {
+      // Create new channel
+      await prisma.channelDefinition.create({
+        data: channelInfo,
+      });
+      console.log(`  ✅ Created: ${channelInfo.label}`);
+    }
+
+    // Upsert credential fields
+    for (const field of credentials) {
+      const existingField = await prisma.channelCredentialField.findFirst({
+        where: {
+          channelId: channelInfo.id,
+          key: field.key,
+        },
+      });
+
+      if (existingField) {
+        await prisma.channelCredentialField.update({
+          where: { id: existingField.id },
+          data: {
+            ...field,
+            channelId: channelInfo.id,
+            isDeleted: false,
+          },
+        });
+      } else {
+        await prisma.channelCredentialField.create({
+          data: {
+            ...field,
+            channelId: channelInfo.id,
+          },
+        });
+      }
+    }
+  }
+
+  const channelCount = await prisma.channelDefinition.count({
+    where: { isDeleted: false },
+  });
+  const fieldCount = await prisma.channelCredentialField.count({
+    where: { isDeleted: false },
+  });
+  console.log(
+    `📡 Channel definitions seeding completed! (${channelCount} channels, ${fieldCount} credential fields)`,
+  );
+}
+
 async function main() {
   console.log('🌱 Starting database seeding...\n');
 
   await seedPersonaTemplates();
   await seedCountryCodes();
+  await seedChannelDefinitions();
 
   console.log('\n✅ Database seeding completed successfully!');
 }

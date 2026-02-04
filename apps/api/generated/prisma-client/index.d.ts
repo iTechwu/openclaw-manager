@@ -116,6 +116,18 @@ export type MessageRecipient = $Result.DefaultSelection<Prisma.$MessageRecipient
  * 记录用户的操作行为，用于审计和追踪
  */
 export type OperateLog = $Result.DefaultSelection<Prisma.$OperateLogPayload>
+/**
+ * Model ChannelDefinition
+ * ChannelDefinition - 渠道定义
+ * 存储各种消息渠道的配置信息，包括所需的凭证字段
+ */
+export type ChannelDefinition = $Result.DefaultSelection<Prisma.$ChannelDefinitionPayload>
+/**
+ * Model ChannelCredentialField
+ * ChannelCredentialField - 渠道凭证字段
+ * 定义每个渠道所需的凭证字段配置
+ */
+export type ChannelCredentialField = $Result.DefaultSelection<Prisma.$ChannelCredentialFieldPayload>
 
 /**
  * Enums
@@ -538,6 +550,26 @@ export class PrismaClient<
     * ```
     */
   get operateLog(): Prisma.OperateLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.channelDefinition`: Exposes CRUD operations for the **ChannelDefinition** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChannelDefinitions
+    * const channelDefinitions = await prisma.channelDefinition.findMany()
+    * ```
+    */
+  get channelDefinition(): Prisma.ChannelDefinitionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.channelCredentialField`: Exposes CRUD operations for the **ChannelCredentialField** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChannelCredentialFields
+    * const channelCredentialFields = await prisma.channelCredentialField.findMany()
+    * ```
+    */
+  get channelCredentialField(): Prisma.ChannelCredentialFieldDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -989,7 +1021,9 @@ export namespace Prisma {
     BotUsageLog: 'BotUsageLog',
     Message: 'Message',
     MessageRecipient: 'MessageRecipient',
-    OperateLog: 'OperateLog'
+    OperateLog: 'OperateLog',
+    ChannelDefinition: 'ChannelDefinition',
+    ChannelCredentialField: 'ChannelCredentialField'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1005,7 +1039,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "message" | "messageRecipient" | "operateLog"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2341,6 +2375,154 @@ export namespace Prisma {
           }
         }
       }
+      ChannelDefinition: {
+        payload: Prisma.$ChannelDefinitionPayload<ExtArgs>
+        fields: Prisma.ChannelDefinitionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ChannelDefinitionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ChannelDefinitionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          findFirst: {
+            args: Prisma.ChannelDefinitionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ChannelDefinitionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          findMany: {
+            args: Prisma.ChannelDefinitionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>[]
+          }
+          create: {
+            args: Prisma.ChannelDefinitionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          createMany: {
+            args: Prisma.ChannelDefinitionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ChannelDefinitionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>[]
+          }
+          delete: {
+            args: Prisma.ChannelDefinitionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          update: {
+            args: Prisma.ChannelDefinitionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          deleteMany: {
+            args: Prisma.ChannelDefinitionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ChannelDefinitionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ChannelDefinitionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>[]
+          }
+          upsert: {
+            args: Prisma.ChannelDefinitionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelDefinitionPayload>
+          }
+          aggregate: {
+            args: Prisma.ChannelDefinitionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateChannelDefinition>
+          }
+          groupBy: {
+            args: Prisma.ChannelDefinitionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ChannelDefinitionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ChannelDefinitionCountArgs<ExtArgs>
+            result: $Utils.Optional<ChannelDefinitionCountAggregateOutputType> | number
+          }
+        }
+      }
+      ChannelCredentialField: {
+        payload: Prisma.$ChannelCredentialFieldPayload<ExtArgs>
+        fields: Prisma.ChannelCredentialFieldFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ChannelCredentialFieldFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ChannelCredentialFieldFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          findFirst: {
+            args: Prisma.ChannelCredentialFieldFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ChannelCredentialFieldFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          findMany: {
+            args: Prisma.ChannelCredentialFieldFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>[]
+          }
+          create: {
+            args: Prisma.ChannelCredentialFieldCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          createMany: {
+            args: Prisma.ChannelCredentialFieldCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ChannelCredentialFieldCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>[]
+          }
+          delete: {
+            args: Prisma.ChannelCredentialFieldDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          update: {
+            args: Prisma.ChannelCredentialFieldUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          deleteMany: {
+            args: Prisma.ChannelCredentialFieldDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ChannelCredentialFieldUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ChannelCredentialFieldUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>[]
+          }
+          upsert: {
+            args: Prisma.ChannelCredentialFieldUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelCredentialFieldPayload>
+          }
+          aggregate: {
+            args: Prisma.ChannelCredentialFieldAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateChannelCredentialField>
+          }
+          groupBy: {
+            args: Prisma.ChannelCredentialFieldGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ChannelCredentialFieldGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ChannelCredentialFieldCountArgs<ExtArgs>
+            result: $Utils.Optional<ChannelCredentialFieldCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2467,6 +2649,8 @@ export namespace Prisma {
     message?: MessageOmit
     messageRecipient?: MessageRecipientOmit
     operateLog?: OperateLogOmit
+    channelDefinition?: ChannelDefinitionOmit
+    channelCredentialField?: ChannelCredentialFieldOmit
   }
 
   /* Types for Logging */
@@ -2806,6 +2990,37 @@ export namespace Prisma {
    */
   export type MessageCountOutputTypeCountRecipientsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MessageRecipientWhereInput
+  }
+
+
+  /**
+   * Count Type ChannelDefinitionCountOutputType
+   */
+
+  export type ChannelDefinitionCountOutputType = {
+    credentialFields: number
+  }
+
+  export type ChannelDefinitionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    credentialFields?: boolean | ChannelDefinitionCountOutputTypeCountCredentialFieldsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ChannelDefinitionCountOutputType without action
+   */
+  export type ChannelDefinitionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinitionCountOutputType
+     */
+    select?: ChannelDefinitionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ChannelDefinitionCountOutputType without action
+   */
+  export type ChannelDefinitionCountOutputTypeCountCredentialFieldsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChannelCredentialFieldWhereInput
   }
 
 
@@ -24121,6 +24336,2397 @@ export namespace Prisma {
 
 
   /**
+   * Model ChannelDefinition
+   */
+
+  export type AggregateChannelDefinition = {
+    _count: ChannelDefinitionCountAggregateOutputType | null
+    _avg: ChannelDefinitionAvgAggregateOutputType | null
+    _sum: ChannelDefinitionSumAggregateOutputType | null
+    _min: ChannelDefinitionMinAggregateOutputType | null
+    _max: ChannelDefinitionMaxAggregateOutputType | null
+  }
+
+  export type ChannelDefinitionAvgAggregateOutputType = {
+    sortOrder: number | null
+  }
+
+  export type ChannelDefinitionSumAggregateOutputType = {
+    sortOrder: number | null
+  }
+
+  export type ChannelDefinitionMinAggregateOutputType = {
+    id: string | null
+    label: string | null
+    icon: string | null
+    popular: boolean | null
+    tokenHint: string | null
+    tokenPlaceholder: string | null
+    helpUrl: string | null
+    helpText: string | null
+    sortOrder: number | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ChannelDefinitionMaxAggregateOutputType = {
+    id: string | null
+    label: string | null
+    icon: string | null
+    popular: boolean | null
+    tokenHint: string | null
+    tokenPlaceholder: string | null
+    helpUrl: string | null
+    helpText: string | null
+    sortOrder: number | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ChannelDefinitionCountAggregateOutputType = {
+    id: number
+    label: number
+    icon: number
+    popular: number
+    tokenHint: number
+    tokenPlaceholder: number
+    helpUrl: number
+    helpText: number
+    sortOrder: number
+    isDeleted: number
+    createdAt: number
+    updatedAt: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type ChannelDefinitionAvgAggregateInputType = {
+    sortOrder?: true
+  }
+
+  export type ChannelDefinitionSumAggregateInputType = {
+    sortOrder?: true
+  }
+
+  export type ChannelDefinitionMinAggregateInputType = {
+    id?: true
+    label?: true
+    icon?: true
+    popular?: true
+    tokenHint?: true
+    tokenPlaceholder?: true
+    helpUrl?: true
+    helpText?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ChannelDefinitionMaxAggregateInputType = {
+    id?: true
+    label?: true
+    icon?: true
+    popular?: true
+    tokenHint?: true
+    tokenPlaceholder?: true
+    helpUrl?: true
+    helpText?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ChannelDefinitionCountAggregateInputType = {
+    id?: true
+    label?: true
+    icon?: true
+    popular?: true
+    tokenHint?: true
+    tokenPlaceholder?: true
+    helpUrl?: true
+    helpText?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type ChannelDefinitionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelDefinition to aggregate.
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelDefinitions to fetch.
+     */
+    orderBy?: ChannelDefinitionOrderByWithRelationInput | ChannelDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ChannelDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ChannelDefinitions
+    **/
+    _count?: true | ChannelDefinitionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ChannelDefinitionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ChannelDefinitionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ChannelDefinitionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ChannelDefinitionMaxAggregateInputType
+  }
+
+  export type GetChannelDefinitionAggregateType<T extends ChannelDefinitionAggregateArgs> = {
+        [P in keyof T & keyof AggregateChannelDefinition]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateChannelDefinition[P]>
+      : GetScalarType<T[P], AggregateChannelDefinition[P]>
+  }
+
+
+
+
+  export type ChannelDefinitionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChannelDefinitionWhereInput
+    orderBy?: ChannelDefinitionOrderByWithAggregationInput | ChannelDefinitionOrderByWithAggregationInput[]
+    by: ChannelDefinitionScalarFieldEnum[] | ChannelDefinitionScalarFieldEnum
+    having?: ChannelDefinitionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ChannelDefinitionCountAggregateInputType | true
+    _avg?: ChannelDefinitionAvgAggregateInputType
+    _sum?: ChannelDefinitionSumAggregateInputType
+    _min?: ChannelDefinitionMinAggregateInputType
+    _max?: ChannelDefinitionMaxAggregateInputType
+  }
+
+  export type ChannelDefinitionGroupByOutputType = {
+    id: string
+    label: string
+    icon: string
+    popular: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl: string | null
+    helpText: string | null
+    sortOrder: number
+    isDeleted: boolean
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    _count: ChannelDefinitionCountAggregateOutputType | null
+    _avg: ChannelDefinitionAvgAggregateOutputType | null
+    _sum: ChannelDefinitionSumAggregateOutputType | null
+    _min: ChannelDefinitionMinAggregateOutputType | null
+    _max: ChannelDefinitionMaxAggregateOutputType | null
+  }
+
+  type GetChannelDefinitionGroupByPayload<T extends ChannelDefinitionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ChannelDefinitionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ChannelDefinitionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ChannelDefinitionGroupByOutputType[P]>
+            : GetScalarType<T[P], ChannelDefinitionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ChannelDefinitionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    label?: boolean
+    icon?: boolean
+    popular?: boolean
+    tokenHint?: boolean
+    tokenPlaceholder?: boolean
+    helpUrl?: boolean
+    helpText?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    credentialFields?: boolean | ChannelDefinition$credentialFieldsArgs<ExtArgs>
+    _count?: boolean | ChannelDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["channelDefinition"]>
+
+  export type ChannelDefinitionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    label?: boolean
+    icon?: boolean
+    popular?: boolean
+    tokenHint?: boolean
+    tokenPlaceholder?: boolean
+    helpUrl?: boolean
+    helpText?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["channelDefinition"]>
+
+  export type ChannelDefinitionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    label?: boolean
+    icon?: boolean
+    popular?: boolean
+    tokenHint?: boolean
+    tokenPlaceholder?: boolean
+    helpUrl?: boolean
+    helpText?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["channelDefinition"]>
+
+  export type ChannelDefinitionSelectScalar = {
+    id?: boolean
+    label?: boolean
+    icon?: boolean
+    popular?: boolean
+    tokenHint?: boolean
+    tokenPlaceholder?: boolean
+    helpUrl?: boolean
+    helpText?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }
+
+  export type ChannelDefinitionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "label" | "icon" | "popular" | "tokenHint" | "tokenPlaceholder" | "helpUrl" | "helpText" | "sortOrder" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["channelDefinition"]>
+  export type ChannelDefinitionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    credentialFields?: boolean | ChannelDefinition$credentialFieldsArgs<ExtArgs>
+    _count?: boolean | ChannelDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ChannelDefinitionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ChannelDefinitionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $ChannelDefinitionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ChannelDefinition"
+    objects: {
+      credentialFields: Prisma.$ChannelCredentialFieldPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      label: string
+      icon: string
+      popular: boolean
+      tokenHint: string
+      tokenPlaceholder: string
+      helpUrl: string | null
+      helpText: string | null
+      sortOrder: number
+      isDeleted: boolean
+      createdAt: Date
+      updatedAt: Date
+      deletedAt: Date | null
+    }, ExtArgs["result"]["channelDefinition"]>
+    composites: {}
+  }
+
+  type ChannelDefinitionGetPayload<S extends boolean | null | undefined | ChannelDefinitionDefaultArgs> = $Result.GetResult<Prisma.$ChannelDefinitionPayload, S>
+
+  type ChannelDefinitionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ChannelDefinitionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ChannelDefinitionCountAggregateInputType | true
+    }
+
+  export interface ChannelDefinitionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ChannelDefinition'], meta: { name: 'ChannelDefinition' } }
+    /**
+     * Find zero or one ChannelDefinition that matches the filter.
+     * @param {ChannelDefinitionFindUniqueArgs} args - Arguments to find a ChannelDefinition
+     * @example
+     * // Get one ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ChannelDefinitionFindUniqueArgs>(args: SelectSubset<T, ChannelDefinitionFindUniqueArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ChannelDefinition that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ChannelDefinitionFindUniqueOrThrowArgs} args - Arguments to find a ChannelDefinition
+     * @example
+     * // Get one ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ChannelDefinitionFindUniqueOrThrowArgs>(args: SelectSubset<T, ChannelDefinitionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelDefinition that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionFindFirstArgs} args - Arguments to find a ChannelDefinition
+     * @example
+     * // Get one ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ChannelDefinitionFindFirstArgs>(args?: SelectSubset<T, ChannelDefinitionFindFirstArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelDefinition that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionFindFirstOrThrowArgs} args - Arguments to find a ChannelDefinition
+     * @example
+     * // Get one ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ChannelDefinitionFindFirstOrThrowArgs>(args?: SelectSubset<T, ChannelDefinitionFindFirstOrThrowArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ChannelDefinitions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ChannelDefinitions
+     * const channelDefinitions = await prisma.channelDefinition.findMany()
+     * 
+     * // Get first 10 ChannelDefinitions
+     * const channelDefinitions = await prisma.channelDefinition.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const channelDefinitionWithIdOnly = await prisma.channelDefinition.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ChannelDefinitionFindManyArgs>(args?: SelectSubset<T, ChannelDefinitionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ChannelDefinition.
+     * @param {ChannelDefinitionCreateArgs} args - Arguments to create a ChannelDefinition.
+     * @example
+     * // Create one ChannelDefinition
+     * const ChannelDefinition = await prisma.channelDefinition.create({
+     *   data: {
+     *     // ... data to create a ChannelDefinition
+     *   }
+     * })
+     * 
+     */
+    create<T extends ChannelDefinitionCreateArgs>(args: SelectSubset<T, ChannelDefinitionCreateArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ChannelDefinitions.
+     * @param {ChannelDefinitionCreateManyArgs} args - Arguments to create many ChannelDefinitions.
+     * @example
+     * // Create many ChannelDefinitions
+     * const channelDefinition = await prisma.channelDefinition.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ChannelDefinitionCreateManyArgs>(args?: SelectSubset<T, ChannelDefinitionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ChannelDefinitions and returns the data saved in the database.
+     * @param {ChannelDefinitionCreateManyAndReturnArgs} args - Arguments to create many ChannelDefinitions.
+     * @example
+     * // Create many ChannelDefinitions
+     * const channelDefinition = await prisma.channelDefinition.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ChannelDefinitions and only return the `id`
+     * const channelDefinitionWithIdOnly = await prisma.channelDefinition.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ChannelDefinitionCreateManyAndReturnArgs>(args?: SelectSubset<T, ChannelDefinitionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ChannelDefinition.
+     * @param {ChannelDefinitionDeleteArgs} args - Arguments to delete one ChannelDefinition.
+     * @example
+     * // Delete one ChannelDefinition
+     * const ChannelDefinition = await prisma.channelDefinition.delete({
+     *   where: {
+     *     // ... filter to delete one ChannelDefinition
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ChannelDefinitionDeleteArgs>(args: SelectSubset<T, ChannelDefinitionDeleteArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ChannelDefinition.
+     * @param {ChannelDefinitionUpdateArgs} args - Arguments to update one ChannelDefinition.
+     * @example
+     * // Update one ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ChannelDefinitionUpdateArgs>(args: SelectSubset<T, ChannelDefinitionUpdateArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ChannelDefinitions.
+     * @param {ChannelDefinitionDeleteManyArgs} args - Arguments to filter ChannelDefinitions to delete.
+     * @example
+     * // Delete a few ChannelDefinitions
+     * const { count } = await prisma.channelDefinition.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ChannelDefinitionDeleteManyArgs>(args?: SelectSubset<T, ChannelDefinitionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ChannelDefinitions
+     * const channelDefinition = await prisma.channelDefinition.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ChannelDefinitionUpdateManyArgs>(args: SelectSubset<T, ChannelDefinitionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelDefinitions and returns the data updated in the database.
+     * @param {ChannelDefinitionUpdateManyAndReturnArgs} args - Arguments to update many ChannelDefinitions.
+     * @example
+     * // Update many ChannelDefinitions
+     * const channelDefinition = await prisma.channelDefinition.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ChannelDefinitions and only return the `id`
+     * const channelDefinitionWithIdOnly = await prisma.channelDefinition.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ChannelDefinitionUpdateManyAndReturnArgs>(args: SelectSubset<T, ChannelDefinitionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ChannelDefinition.
+     * @param {ChannelDefinitionUpsertArgs} args - Arguments to update or create a ChannelDefinition.
+     * @example
+     * // Update or create a ChannelDefinition
+     * const channelDefinition = await prisma.channelDefinition.upsert({
+     *   create: {
+     *     // ... data to create a ChannelDefinition
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ChannelDefinition we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ChannelDefinitionUpsertArgs>(args: SelectSubset<T, ChannelDefinitionUpsertArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ChannelDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionCountArgs} args - Arguments to filter ChannelDefinitions to count.
+     * @example
+     * // Count the number of ChannelDefinitions
+     * const count = await prisma.channelDefinition.count({
+     *   where: {
+     *     // ... the filter for the ChannelDefinitions we want to count
+     *   }
+     * })
+    **/
+    count<T extends ChannelDefinitionCountArgs>(
+      args?: Subset<T, ChannelDefinitionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ChannelDefinitionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ChannelDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ChannelDefinitionAggregateArgs>(args: Subset<T, ChannelDefinitionAggregateArgs>): Prisma.PrismaPromise<GetChannelDefinitionAggregateType<T>>
+
+    /**
+     * Group by ChannelDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelDefinitionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ChannelDefinitionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ChannelDefinitionGroupByArgs['orderBy'] }
+        : { orderBy?: ChannelDefinitionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ChannelDefinitionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetChannelDefinitionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ChannelDefinition model
+   */
+  readonly fields: ChannelDefinitionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ChannelDefinition.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ChannelDefinitionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    credentialFields<T extends ChannelDefinition$credentialFieldsArgs<ExtArgs> = {}>(args?: Subset<T, ChannelDefinition$credentialFieldsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ChannelDefinition model
+   */
+  interface ChannelDefinitionFieldRefs {
+    readonly id: FieldRef<"ChannelDefinition", 'String'>
+    readonly label: FieldRef<"ChannelDefinition", 'String'>
+    readonly icon: FieldRef<"ChannelDefinition", 'String'>
+    readonly popular: FieldRef<"ChannelDefinition", 'Boolean'>
+    readonly tokenHint: FieldRef<"ChannelDefinition", 'String'>
+    readonly tokenPlaceholder: FieldRef<"ChannelDefinition", 'String'>
+    readonly helpUrl: FieldRef<"ChannelDefinition", 'String'>
+    readonly helpText: FieldRef<"ChannelDefinition", 'String'>
+    readonly sortOrder: FieldRef<"ChannelDefinition", 'Int'>
+    readonly isDeleted: FieldRef<"ChannelDefinition", 'Boolean'>
+    readonly createdAt: FieldRef<"ChannelDefinition", 'DateTime'>
+    readonly updatedAt: FieldRef<"ChannelDefinition", 'DateTime'>
+    readonly deletedAt: FieldRef<"ChannelDefinition", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ChannelDefinition findUnique
+   */
+  export type ChannelDefinitionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelDefinition to fetch.
+     */
+    where: ChannelDefinitionWhereUniqueInput
+  }
+
+  /**
+   * ChannelDefinition findUniqueOrThrow
+   */
+  export type ChannelDefinitionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelDefinition to fetch.
+     */
+    where: ChannelDefinitionWhereUniqueInput
+  }
+
+  /**
+   * ChannelDefinition findFirst
+   */
+  export type ChannelDefinitionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelDefinition to fetch.
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelDefinitions to fetch.
+     */
+    orderBy?: ChannelDefinitionOrderByWithRelationInput | ChannelDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelDefinitions.
+     */
+    cursor?: ChannelDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelDefinitions.
+     */
+    distinct?: ChannelDefinitionScalarFieldEnum | ChannelDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelDefinition findFirstOrThrow
+   */
+  export type ChannelDefinitionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelDefinition to fetch.
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelDefinitions to fetch.
+     */
+    orderBy?: ChannelDefinitionOrderByWithRelationInput | ChannelDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelDefinitions.
+     */
+    cursor?: ChannelDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelDefinitions.
+     */
+    distinct?: ChannelDefinitionScalarFieldEnum | ChannelDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelDefinition findMany
+   */
+  export type ChannelDefinitionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelDefinitions to fetch.
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelDefinitions to fetch.
+     */
+    orderBy?: ChannelDefinitionOrderByWithRelationInput | ChannelDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ChannelDefinitions.
+     */
+    cursor?: ChannelDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelDefinitions.
+     */
+    skip?: number
+    distinct?: ChannelDefinitionScalarFieldEnum | ChannelDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelDefinition create
+   */
+  export type ChannelDefinitionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ChannelDefinition.
+     */
+    data: XOR<ChannelDefinitionCreateInput, ChannelDefinitionUncheckedCreateInput>
+  }
+
+  /**
+   * ChannelDefinition createMany
+   */
+  export type ChannelDefinitionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ChannelDefinitions.
+     */
+    data: ChannelDefinitionCreateManyInput | ChannelDefinitionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChannelDefinition createManyAndReturn
+   */
+  export type ChannelDefinitionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * The data used to create many ChannelDefinitions.
+     */
+    data: ChannelDefinitionCreateManyInput | ChannelDefinitionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChannelDefinition update
+   */
+  export type ChannelDefinitionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ChannelDefinition.
+     */
+    data: XOR<ChannelDefinitionUpdateInput, ChannelDefinitionUncheckedUpdateInput>
+    /**
+     * Choose, which ChannelDefinition to update.
+     */
+    where: ChannelDefinitionWhereUniqueInput
+  }
+
+  /**
+   * ChannelDefinition updateMany
+   */
+  export type ChannelDefinitionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ChannelDefinitions.
+     */
+    data: XOR<ChannelDefinitionUpdateManyMutationInput, ChannelDefinitionUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelDefinitions to update
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * Limit how many ChannelDefinitions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelDefinition updateManyAndReturn
+   */
+  export type ChannelDefinitionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * The data used to update ChannelDefinitions.
+     */
+    data: XOR<ChannelDefinitionUpdateManyMutationInput, ChannelDefinitionUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelDefinitions to update
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * Limit how many ChannelDefinitions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelDefinition upsert
+   */
+  export type ChannelDefinitionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ChannelDefinition to update in case it exists.
+     */
+    where: ChannelDefinitionWhereUniqueInput
+    /**
+     * In case the ChannelDefinition found by the `where` argument doesn't exist, create a new ChannelDefinition with this data.
+     */
+    create: XOR<ChannelDefinitionCreateInput, ChannelDefinitionUncheckedCreateInput>
+    /**
+     * In case the ChannelDefinition was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ChannelDefinitionUpdateInput, ChannelDefinitionUncheckedUpdateInput>
+  }
+
+  /**
+   * ChannelDefinition delete
+   */
+  export type ChannelDefinitionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter which ChannelDefinition to delete.
+     */
+    where: ChannelDefinitionWhereUniqueInput
+  }
+
+  /**
+   * ChannelDefinition deleteMany
+   */
+  export type ChannelDefinitionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelDefinitions to delete
+     */
+    where?: ChannelDefinitionWhereInput
+    /**
+     * Limit how many ChannelDefinitions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelDefinition.credentialFields
+   */
+  export type ChannelDefinition$credentialFieldsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    where?: ChannelCredentialFieldWhereInput
+    orderBy?: ChannelCredentialFieldOrderByWithRelationInput | ChannelCredentialFieldOrderByWithRelationInput[]
+    cursor?: ChannelCredentialFieldWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ChannelCredentialFieldScalarFieldEnum | ChannelCredentialFieldScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelDefinition without action
+   */
+  export type ChannelDefinitionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelDefinition
+     */
+    select?: ChannelDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelDefinition
+     */
+    omit?: ChannelDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelDefinitionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ChannelCredentialField
+   */
+
+  export type AggregateChannelCredentialField = {
+    _count: ChannelCredentialFieldCountAggregateOutputType | null
+    _avg: ChannelCredentialFieldAvgAggregateOutputType | null
+    _sum: ChannelCredentialFieldSumAggregateOutputType | null
+    _min: ChannelCredentialFieldMinAggregateOutputType | null
+    _max: ChannelCredentialFieldMaxAggregateOutputType | null
+  }
+
+  export type ChannelCredentialFieldAvgAggregateOutputType = {
+    sortOrder: number | null
+  }
+
+  export type ChannelCredentialFieldSumAggregateOutputType = {
+    sortOrder: number | null
+  }
+
+  export type ChannelCredentialFieldMinAggregateOutputType = {
+    id: string | null
+    channelId: string | null
+    key: string | null
+    label: string | null
+    placeholder: string | null
+    fieldType: string | null
+    required: boolean | null
+    sortOrder: number | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ChannelCredentialFieldMaxAggregateOutputType = {
+    id: string | null
+    channelId: string | null
+    key: string | null
+    label: string | null
+    placeholder: string | null
+    fieldType: string | null
+    required: boolean | null
+    sortOrder: number | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ChannelCredentialFieldCountAggregateOutputType = {
+    id: number
+    channelId: number
+    key: number
+    label: number
+    placeholder: number
+    fieldType: number
+    required: number
+    sortOrder: number
+    isDeleted: number
+    createdAt: number
+    updatedAt: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type ChannelCredentialFieldAvgAggregateInputType = {
+    sortOrder?: true
+  }
+
+  export type ChannelCredentialFieldSumAggregateInputType = {
+    sortOrder?: true
+  }
+
+  export type ChannelCredentialFieldMinAggregateInputType = {
+    id?: true
+    channelId?: true
+    key?: true
+    label?: true
+    placeholder?: true
+    fieldType?: true
+    required?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ChannelCredentialFieldMaxAggregateInputType = {
+    id?: true
+    channelId?: true
+    key?: true
+    label?: true
+    placeholder?: true
+    fieldType?: true
+    required?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ChannelCredentialFieldCountAggregateInputType = {
+    id?: true
+    channelId?: true
+    key?: true
+    label?: true
+    placeholder?: true
+    fieldType?: true
+    required?: true
+    sortOrder?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type ChannelCredentialFieldAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelCredentialField to aggregate.
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelCredentialFields to fetch.
+     */
+    orderBy?: ChannelCredentialFieldOrderByWithRelationInput | ChannelCredentialFieldOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ChannelCredentialFieldWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelCredentialFields from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelCredentialFields.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ChannelCredentialFields
+    **/
+    _count?: true | ChannelCredentialFieldCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ChannelCredentialFieldAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ChannelCredentialFieldSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ChannelCredentialFieldMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ChannelCredentialFieldMaxAggregateInputType
+  }
+
+  export type GetChannelCredentialFieldAggregateType<T extends ChannelCredentialFieldAggregateArgs> = {
+        [P in keyof T & keyof AggregateChannelCredentialField]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateChannelCredentialField[P]>
+      : GetScalarType<T[P], AggregateChannelCredentialField[P]>
+  }
+
+
+
+
+  export type ChannelCredentialFieldGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChannelCredentialFieldWhereInput
+    orderBy?: ChannelCredentialFieldOrderByWithAggregationInput | ChannelCredentialFieldOrderByWithAggregationInput[]
+    by: ChannelCredentialFieldScalarFieldEnum[] | ChannelCredentialFieldScalarFieldEnum
+    having?: ChannelCredentialFieldScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ChannelCredentialFieldCountAggregateInputType | true
+    _avg?: ChannelCredentialFieldAvgAggregateInputType
+    _sum?: ChannelCredentialFieldSumAggregateInputType
+    _min?: ChannelCredentialFieldMinAggregateInputType
+    _max?: ChannelCredentialFieldMaxAggregateInputType
+  }
+
+  export type ChannelCredentialFieldGroupByOutputType = {
+    id: string
+    channelId: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType: string
+    required: boolean
+    sortOrder: number
+    isDeleted: boolean
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    _count: ChannelCredentialFieldCountAggregateOutputType | null
+    _avg: ChannelCredentialFieldAvgAggregateOutputType | null
+    _sum: ChannelCredentialFieldSumAggregateOutputType | null
+    _min: ChannelCredentialFieldMinAggregateOutputType | null
+    _max: ChannelCredentialFieldMaxAggregateOutputType | null
+  }
+
+  type GetChannelCredentialFieldGroupByPayload<T extends ChannelCredentialFieldGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ChannelCredentialFieldGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ChannelCredentialFieldGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ChannelCredentialFieldGroupByOutputType[P]>
+            : GetScalarType<T[P], ChannelCredentialFieldGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ChannelCredentialFieldSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channelId?: boolean
+    key?: boolean
+    label?: boolean
+    placeholder?: boolean
+    fieldType?: boolean
+    required?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["channelCredentialField"]>
+
+  export type ChannelCredentialFieldSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channelId?: boolean
+    key?: boolean
+    label?: boolean
+    placeholder?: boolean
+    fieldType?: boolean
+    required?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["channelCredentialField"]>
+
+  export type ChannelCredentialFieldSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channelId?: boolean
+    key?: boolean
+    label?: boolean
+    placeholder?: boolean
+    fieldType?: boolean
+    required?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["channelCredentialField"]>
+
+  export type ChannelCredentialFieldSelectScalar = {
+    id?: boolean
+    channelId?: boolean
+    key?: boolean
+    label?: boolean
+    placeholder?: boolean
+    fieldType?: boolean
+    required?: boolean
+    sortOrder?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }
+
+  export type ChannelCredentialFieldOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "channelId" | "key" | "label" | "placeholder" | "fieldType" | "required" | "sortOrder" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["channelCredentialField"]>
+  export type ChannelCredentialFieldInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }
+  export type ChannelCredentialFieldIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }
+  export type ChannelCredentialFieldIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    channel?: boolean | ChannelDefinitionDefaultArgs<ExtArgs>
+  }
+
+  export type $ChannelCredentialFieldPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ChannelCredentialField"
+    objects: {
+      channel: Prisma.$ChannelDefinitionPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      channelId: string
+      key: string
+      label: string
+      placeholder: string
+      fieldType: string
+      required: boolean
+      sortOrder: number
+      isDeleted: boolean
+      createdAt: Date
+      updatedAt: Date
+      deletedAt: Date | null
+    }, ExtArgs["result"]["channelCredentialField"]>
+    composites: {}
+  }
+
+  type ChannelCredentialFieldGetPayload<S extends boolean | null | undefined | ChannelCredentialFieldDefaultArgs> = $Result.GetResult<Prisma.$ChannelCredentialFieldPayload, S>
+
+  type ChannelCredentialFieldCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ChannelCredentialFieldFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ChannelCredentialFieldCountAggregateInputType | true
+    }
+
+  export interface ChannelCredentialFieldDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ChannelCredentialField'], meta: { name: 'ChannelCredentialField' } }
+    /**
+     * Find zero or one ChannelCredentialField that matches the filter.
+     * @param {ChannelCredentialFieldFindUniqueArgs} args - Arguments to find a ChannelCredentialField
+     * @example
+     * // Get one ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ChannelCredentialFieldFindUniqueArgs>(args: SelectSubset<T, ChannelCredentialFieldFindUniqueArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ChannelCredentialField that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ChannelCredentialFieldFindUniqueOrThrowArgs} args - Arguments to find a ChannelCredentialField
+     * @example
+     * // Get one ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ChannelCredentialFieldFindUniqueOrThrowArgs>(args: SelectSubset<T, ChannelCredentialFieldFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelCredentialField that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldFindFirstArgs} args - Arguments to find a ChannelCredentialField
+     * @example
+     * // Get one ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ChannelCredentialFieldFindFirstArgs>(args?: SelectSubset<T, ChannelCredentialFieldFindFirstArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelCredentialField that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldFindFirstOrThrowArgs} args - Arguments to find a ChannelCredentialField
+     * @example
+     * // Get one ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ChannelCredentialFieldFindFirstOrThrowArgs>(args?: SelectSubset<T, ChannelCredentialFieldFindFirstOrThrowArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ChannelCredentialFields that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ChannelCredentialFields
+     * const channelCredentialFields = await prisma.channelCredentialField.findMany()
+     * 
+     * // Get first 10 ChannelCredentialFields
+     * const channelCredentialFields = await prisma.channelCredentialField.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const channelCredentialFieldWithIdOnly = await prisma.channelCredentialField.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ChannelCredentialFieldFindManyArgs>(args?: SelectSubset<T, ChannelCredentialFieldFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ChannelCredentialField.
+     * @param {ChannelCredentialFieldCreateArgs} args - Arguments to create a ChannelCredentialField.
+     * @example
+     * // Create one ChannelCredentialField
+     * const ChannelCredentialField = await prisma.channelCredentialField.create({
+     *   data: {
+     *     // ... data to create a ChannelCredentialField
+     *   }
+     * })
+     * 
+     */
+    create<T extends ChannelCredentialFieldCreateArgs>(args: SelectSubset<T, ChannelCredentialFieldCreateArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ChannelCredentialFields.
+     * @param {ChannelCredentialFieldCreateManyArgs} args - Arguments to create many ChannelCredentialFields.
+     * @example
+     * // Create many ChannelCredentialFields
+     * const channelCredentialField = await prisma.channelCredentialField.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ChannelCredentialFieldCreateManyArgs>(args?: SelectSubset<T, ChannelCredentialFieldCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ChannelCredentialFields and returns the data saved in the database.
+     * @param {ChannelCredentialFieldCreateManyAndReturnArgs} args - Arguments to create many ChannelCredentialFields.
+     * @example
+     * // Create many ChannelCredentialFields
+     * const channelCredentialField = await prisma.channelCredentialField.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ChannelCredentialFields and only return the `id`
+     * const channelCredentialFieldWithIdOnly = await prisma.channelCredentialField.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ChannelCredentialFieldCreateManyAndReturnArgs>(args?: SelectSubset<T, ChannelCredentialFieldCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ChannelCredentialField.
+     * @param {ChannelCredentialFieldDeleteArgs} args - Arguments to delete one ChannelCredentialField.
+     * @example
+     * // Delete one ChannelCredentialField
+     * const ChannelCredentialField = await prisma.channelCredentialField.delete({
+     *   where: {
+     *     // ... filter to delete one ChannelCredentialField
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ChannelCredentialFieldDeleteArgs>(args: SelectSubset<T, ChannelCredentialFieldDeleteArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ChannelCredentialField.
+     * @param {ChannelCredentialFieldUpdateArgs} args - Arguments to update one ChannelCredentialField.
+     * @example
+     * // Update one ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ChannelCredentialFieldUpdateArgs>(args: SelectSubset<T, ChannelCredentialFieldUpdateArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ChannelCredentialFields.
+     * @param {ChannelCredentialFieldDeleteManyArgs} args - Arguments to filter ChannelCredentialFields to delete.
+     * @example
+     * // Delete a few ChannelCredentialFields
+     * const { count } = await prisma.channelCredentialField.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ChannelCredentialFieldDeleteManyArgs>(args?: SelectSubset<T, ChannelCredentialFieldDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelCredentialFields.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ChannelCredentialFields
+     * const channelCredentialField = await prisma.channelCredentialField.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ChannelCredentialFieldUpdateManyArgs>(args: SelectSubset<T, ChannelCredentialFieldUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelCredentialFields and returns the data updated in the database.
+     * @param {ChannelCredentialFieldUpdateManyAndReturnArgs} args - Arguments to update many ChannelCredentialFields.
+     * @example
+     * // Update many ChannelCredentialFields
+     * const channelCredentialField = await prisma.channelCredentialField.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ChannelCredentialFields and only return the `id`
+     * const channelCredentialFieldWithIdOnly = await prisma.channelCredentialField.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ChannelCredentialFieldUpdateManyAndReturnArgs>(args: SelectSubset<T, ChannelCredentialFieldUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ChannelCredentialField.
+     * @param {ChannelCredentialFieldUpsertArgs} args - Arguments to update or create a ChannelCredentialField.
+     * @example
+     * // Update or create a ChannelCredentialField
+     * const channelCredentialField = await prisma.channelCredentialField.upsert({
+     *   create: {
+     *     // ... data to create a ChannelCredentialField
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ChannelCredentialField we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ChannelCredentialFieldUpsertArgs>(args: SelectSubset<T, ChannelCredentialFieldUpsertArgs<ExtArgs>>): Prisma__ChannelCredentialFieldClient<$Result.GetResult<Prisma.$ChannelCredentialFieldPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ChannelCredentialFields.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldCountArgs} args - Arguments to filter ChannelCredentialFields to count.
+     * @example
+     * // Count the number of ChannelCredentialFields
+     * const count = await prisma.channelCredentialField.count({
+     *   where: {
+     *     // ... the filter for the ChannelCredentialFields we want to count
+     *   }
+     * })
+    **/
+    count<T extends ChannelCredentialFieldCountArgs>(
+      args?: Subset<T, ChannelCredentialFieldCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ChannelCredentialFieldCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ChannelCredentialField.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ChannelCredentialFieldAggregateArgs>(args: Subset<T, ChannelCredentialFieldAggregateArgs>): Prisma.PrismaPromise<GetChannelCredentialFieldAggregateType<T>>
+
+    /**
+     * Group by ChannelCredentialField.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelCredentialFieldGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ChannelCredentialFieldGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ChannelCredentialFieldGroupByArgs['orderBy'] }
+        : { orderBy?: ChannelCredentialFieldGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ChannelCredentialFieldGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetChannelCredentialFieldGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ChannelCredentialField model
+   */
+  readonly fields: ChannelCredentialFieldFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ChannelCredentialField.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ChannelCredentialFieldClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    channel<T extends ChannelDefinitionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChannelDefinitionDefaultArgs<ExtArgs>>): Prisma__ChannelDefinitionClient<$Result.GetResult<Prisma.$ChannelDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ChannelCredentialField model
+   */
+  interface ChannelCredentialFieldFieldRefs {
+    readonly id: FieldRef<"ChannelCredentialField", 'String'>
+    readonly channelId: FieldRef<"ChannelCredentialField", 'String'>
+    readonly key: FieldRef<"ChannelCredentialField", 'String'>
+    readonly label: FieldRef<"ChannelCredentialField", 'String'>
+    readonly placeholder: FieldRef<"ChannelCredentialField", 'String'>
+    readonly fieldType: FieldRef<"ChannelCredentialField", 'String'>
+    readonly required: FieldRef<"ChannelCredentialField", 'Boolean'>
+    readonly sortOrder: FieldRef<"ChannelCredentialField", 'Int'>
+    readonly isDeleted: FieldRef<"ChannelCredentialField", 'Boolean'>
+    readonly createdAt: FieldRef<"ChannelCredentialField", 'DateTime'>
+    readonly updatedAt: FieldRef<"ChannelCredentialField", 'DateTime'>
+    readonly deletedAt: FieldRef<"ChannelCredentialField", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ChannelCredentialField findUnique
+   */
+  export type ChannelCredentialFieldFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelCredentialField to fetch.
+     */
+    where: ChannelCredentialFieldWhereUniqueInput
+  }
+
+  /**
+   * ChannelCredentialField findUniqueOrThrow
+   */
+  export type ChannelCredentialFieldFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelCredentialField to fetch.
+     */
+    where: ChannelCredentialFieldWhereUniqueInput
+  }
+
+  /**
+   * ChannelCredentialField findFirst
+   */
+  export type ChannelCredentialFieldFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelCredentialField to fetch.
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelCredentialFields to fetch.
+     */
+    orderBy?: ChannelCredentialFieldOrderByWithRelationInput | ChannelCredentialFieldOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelCredentialFields.
+     */
+    cursor?: ChannelCredentialFieldWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelCredentialFields from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelCredentialFields.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelCredentialFields.
+     */
+    distinct?: ChannelCredentialFieldScalarFieldEnum | ChannelCredentialFieldScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelCredentialField findFirstOrThrow
+   */
+  export type ChannelCredentialFieldFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelCredentialField to fetch.
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelCredentialFields to fetch.
+     */
+    orderBy?: ChannelCredentialFieldOrderByWithRelationInput | ChannelCredentialFieldOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelCredentialFields.
+     */
+    cursor?: ChannelCredentialFieldWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelCredentialFields from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelCredentialFields.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelCredentialFields.
+     */
+    distinct?: ChannelCredentialFieldScalarFieldEnum | ChannelCredentialFieldScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelCredentialField findMany
+   */
+  export type ChannelCredentialFieldFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter, which ChannelCredentialFields to fetch.
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelCredentialFields to fetch.
+     */
+    orderBy?: ChannelCredentialFieldOrderByWithRelationInput | ChannelCredentialFieldOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ChannelCredentialFields.
+     */
+    cursor?: ChannelCredentialFieldWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelCredentialFields from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelCredentialFields.
+     */
+    skip?: number
+    distinct?: ChannelCredentialFieldScalarFieldEnum | ChannelCredentialFieldScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelCredentialField create
+   */
+  export type ChannelCredentialFieldCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ChannelCredentialField.
+     */
+    data: XOR<ChannelCredentialFieldCreateInput, ChannelCredentialFieldUncheckedCreateInput>
+  }
+
+  /**
+   * ChannelCredentialField createMany
+   */
+  export type ChannelCredentialFieldCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ChannelCredentialFields.
+     */
+    data: ChannelCredentialFieldCreateManyInput | ChannelCredentialFieldCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChannelCredentialField createManyAndReturn
+   */
+  export type ChannelCredentialFieldCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * The data used to create many ChannelCredentialFields.
+     */
+    data: ChannelCredentialFieldCreateManyInput | ChannelCredentialFieldCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ChannelCredentialField update
+   */
+  export type ChannelCredentialFieldUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ChannelCredentialField.
+     */
+    data: XOR<ChannelCredentialFieldUpdateInput, ChannelCredentialFieldUncheckedUpdateInput>
+    /**
+     * Choose, which ChannelCredentialField to update.
+     */
+    where: ChannelCredentialFieldWhereUniqueInput
+  }
+
+  /**
+   * ChannelCredentialField updateMany
+   */
+  export type ChannelCredentialFieldUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ChannelCredentialFields.
+     */
+    data: XOR<ChannelCredentialFieldUpdateManyMutationInput, ChannelCredentialFieldUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelCredentialFields to update
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * Limit how many ChannelCredentialFields to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelCredentialField updateManyAndReturn
+   */
+  export type ChannelCredentialFieldUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * The data used to update ChannelCredentialFields.
+     */
+    data: XOR<ChannelCredentialFieldUpdateManyMutationInput, ChannelCredentialFieldUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelCredentialFields to update
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * Limit how many ChannelCredentialFields to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ChannelCredentialField upsert
+   */
+  export type ChannelCredentialFieldUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ChannelCredentialField to update in case it exists.
+     */
+    where: ChannelCredentialFieldWhereUniqueInput
+    /**
+     * In case the ChannelCredentialField found by the `where` argument doesn't exist, create a new ChannelCredentialField with this data.
+     */
+    create: XOR<ChannelCredentialFieldCreateInput, ChannelCredentialFieldUncheckedCreateInput>
+    /**
+     * In case the ChannelCredentialField was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ChannelCredentialFieldUpdateInput, ChannelCredentialFieldUncheckedUpdateInput>
+  }
+
+  /**
+   * ChannelCredentialField delete
+   */
+  export type ChannelCredentialFieldDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+    /**
+     * Filter which ChannelCredentialField to delete.
+     */
+    where: ChannelCredentialFieldWhereUniqueInput
+  }
+
+  /**
+   * ChannelCredentialField deleteMany
+   */
+  export type ChannelCredentialFieldDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelCredentialFields to delete
+     */
+    where?: ChannelCredentialFieldWhereInput
+    /**
+     * Limit how many ChannelCredentialFields to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelCredentialField without action
+   */
+  export type ChannelCredentialFieldDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelCredentialField
+     */
+    select?: ChannelCredentialFieldSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelCredentialField
+     */
+    omit?: ChannelCredentialFieldOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChannelCredentialFieldInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -24447,6 +27053,43 @@ export namespace Prisma {
   };
 
   export type OperateLogScalarFieldEnum = (typeof OperateLogScalarFieldEnum)[keyof typeof OperateLogScalarFieldEnum]
+
+
+  export const ChannelDefinitionScalarFieldEnum: {
+    id: 'id',
+    label: 'label',
+    icon: 'icon',
+    popular: 'popular',
+    tokenHint: 'tokenHint',
+    tokenPlaceholder: 'tokenPlaceholder',
+    helpUrl: 'helpUrl',
+    helpText: 'helpText',
+    sortOrder: 'sortOrder',
+    isDeleted: 'isDeleted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
+  };
+
+  export type ChannelDefinitionScalarFieldEnum = (typeof ChannelDefinitionScalarFieldEnum)[keyof typeof ChannelDefinitionScalarFieldEnum]
+
+
+  export const ChannelCredentialFieldScalarFieldEnum: {
+    id: 'id',
+    channelId: 'channelId',
+    key: 'key',
+    label: 'label',
+    placeholder: 'placeholder',
+    fieldType: 'fieldType',
+    required: 'required',
+    sortOrder: 'sortOrder',
+    isDeleted: 'isDeleted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
+  };
+
+  export type ChannelCredentialFieldScalarFieldEnum = (typeof ChannelCredentialFieldScalarFieldEnum)[keyof typeof ChannelCredentialFieldScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -26365,6 +29008,196 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"OperateLog"> | Date | string
   }
 
+  export type ChannelDefinitionWhereInput = {
+    AND?: ChannelDefinitionWhereInput | ChannelDefinitionWhereInput[]
+    OR?: ChannelDefinitionWhereInput[]
+    NOT?: ChannelDefinitionWhereInput | ChannelDefinitionWhereInput[]
+    id?: StringFilter<"ChannelDefinition"> | string
+    label?: StringFilter<"ChannelDefinition"> | string
+    icon?: StringFilter<"ChannelDefinition"> | string
+    popular?: BoolFilter<"ChannelDefinition"> | boolean
+    tokenHint?: StringFilter<"ChannelDefinition"> | string
+    tokenPlaceholder?: StringFilter<"ChannelDefinition"> | string
+    helpUrl?: StringNullableFilter<"ChannelDefinition"> | string | null
+    helpText?: StringNullableFilter<"ChannelDefinition"> | string | null
+    sortOrder?: IntFilter<"ChannelDefinition"> | number
+    isDeleted?: BoolFilter<"ChannelDefinition"> | boolean
+    createdAt?: DateTimeFilter<"ChannelDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"ChannelDefinition"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ChannelDefinition"> | Date | string | null
+    credentialFields?: ChannelCredentialFieldListRelationFilter
+  }
+
+  export type ChannelDefinitionOrderByWithRelationInput = {
+    id?: SortOrder
+    label?: SortOrder
+    icon?: SortOrder
+    popular?: SortOrder
+    tokenHint?: SortOrder
+    tokenPlaceholder?: SortOrder
+    helpUrl?: SortOrderInput | SortOrder
+    helpText?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    credentialFields?: ChannelCredentialFieldOrderByRelationAggregateInput
+  }
+
+  export type ChannelDefinitionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ChannelDefinitionWhereInput | ChannelDefinitionWhereInput[]
+    OR?: ChannelDefinitionWhereInput[]
+    NOT?: ChannelDefinitionWhereInput | ChannelDefinitionWhereInput[]
+    label?: StringFilter<"ChannelDefinition"> | string
+    icon?: StringFilter<"ChannelDefinition"> | string
+    popular?: BoolFilter<"ChannelDefinition"> | boolean
+    tokenHint?: StringFilter<"ChannelDefinition"> | string
+    tokenPlaceholder?: StringFilter<"ChannelDefinition"> | string
+    helpUrl?: StringNullableFilter<"ChannelDefinition"> | string | null
+    helpText?: StringNullableFilter<"ChannelDefinition"> | string | null
+    sortOrder?: IntFilter<"ChannelDefinition"> | number
+    isDeleted?: BoolFilter<"ChannelDefinition"> | boolean
+    createdAt?: DateTimeFilter<"ChannelDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"ChannelDefinition"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ChannelDefinition"> | Date | string | null
+    credentialFields?: ChannelCredentialFieldListRelationFilter
+  }, "id">
+
+  export type ChannelDefinitionOrderByWithAggregationInput = {
+    id?: SortOrder
+    label?: SortOrder
+    icon?: SortOrder
+    popular?: SortOrder
+    tokenHint?: SortOrder
+    tokenPlaceholder?: SortOrder
+    helpUrl?: SortOrderInput | SortOrder
+    helpText?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    _count?: ChannelDefinitionCountOrderByAggregateInput
+    _avg?: ChannelDefinitionAvgOrderByAggregateInput
+    _max?: ChannelDefinitionMaxOrderByAggregateInput
+    _min?: ChannelDefinitionMinOrderByAggregateInput
+    _sum?: ChannelDefinitionSumOrderByAggregateInput
+  }
+
+  export type ChannelDefinitionScalarWhereWithAggregatesInput = {
+    AND?: ChannelDefinitionScalarWhereWithAggregatesInput | ChannelDefinitionScalarWhereWithAggregatesInput[]
+    OR?: ChannelDefinitionScalarWhereWithAggregatesInput[]
+    NOT?: ChannelDefinitionScalarWhereWithAggregatesInput | ChannelDefinitionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ChannelDefinition"> | string
+    label?: StringWithAggregatesFilter<"ChannelDefinition"> | string
+    icon?: StringWithAggregatesFilter<"ChannelDefinition"> | string
+    popular?: BoolWithAggregatesFilter<"ChannelDefinition"> | boolean
+    tokenHint?: StringWithAggregatesFilter<"ChannelDefinition"> | string
+    tokenPlaceholder?: StringWithAggregatesFilter<"ChannelDefinition"> | string
+    helpUrl?: StringNullableWithAggregatesFilter<"ChannelDefinition"> | string | null
+    helpText?: StringNullableWithAggregatesFilter<"ChannelDefinition"> | string | null
+    sortOrder?: IntWithAggregatesFilter<"ChannelDefinition"> | number
+    isDeleted?: BoolWithAggregatesFilter<"ChannelDefinition"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"ChannelDefinition"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ChannelDefinition"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"ChannelDefinition"> | Date | string | null
+  }
+
+  export type ChannelCredentialFieldWhereInput = {
+    AND?: ChannelCredentialFieldWhereInput | ChannelCredentialFieldWhereInput[]
+    OR?: ChannelCredentialFieldWhereInput[]
+    NOT?: ChannelCredentialFieldWhereInput | ChannelCredentialFieldWhereInput[]
+    id?: UuidFilter<"ChannelCredentialField"> | string
+    channelId?: StringFilter<"ChannelCredentialField"> | string
+    key?: StringFilter<"ChannelCredentialField"> | string
+    label?: StringFilter<"ChannelCredentialField"> | string
+    placeholder?: StringFilter<"ChannelCredentialField"> | string
+    fieldType?: StringFilter<"ChannelCredentialField"> | string
+    required?: BoolFilter<"ChannelCredentialField"> | boolean
+    sortOrder?: IntFilter<"ChannelCredentialField"> | number
+    isDeleted?: BoolFilter<"ChannelCredentialField"> | boolean
+    createdAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    updatedAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ChannelCredentialField"> | Date | string | null
+    channel?: XOR<ChannelDefinitionScalarRelationFilter, ChannelDefinitionWhereInput>
+  }
+
+  export type ChannelCredentialFieldOrderByWithRelationInput = {
+    id?: SortOrder
+    channelId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    placeholder?: SortOrder
+    fieldType?: SortOrder
+    required?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    channel?: ChannelDefinitionOrderByWithRelationInput
+  }
+
+  export type ChannelCredentialFieldWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    channelId_key?: ChannelCredentialFieldChannelIdKeyCompoundUniqueInput
+    AND?: ChannelCredentialFieldWhereInput | ChannelCredentialFieldWhereInput[]
+    OR?: ChannelCredentialFieldWhereInput[]
+    NOT?: ChannelCredentialFieldWhereInput | ChannelCredentialFieldWhereInput[]
+    channelId?: StringFilter<"ChannelCredentialField"> | string
+    key?: StringFilter<"ChannelCredentialField"> | string
+    label?: StringFilter<"ChannelCredentialField"> | string
+    placeholder?: StringFilter<"ChannelCredentialField"> | string
+    fieldType?: StringFilter<"ChannelCredentialField"> | string
+    required?: BoolFilter<"ChannelCredentialField"> | boolean
+    sortOrder?: IntFilter<"ChannelCredentialField"> | number
+    isDeleted?: BoolFilter<"ChannelCredentialField"> | boolean
+    createdAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    updatedAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ChannelCredentialField"> | Date | string | null
+    channel?: XOR<ChannelDefinitionScalarRelationFilter, ChannelDefinitionWhereInput>
+  }, "id" | "channelId_key">
+
+  export type ChannelCredentialFieldOrderByWithAggregationInput = {
+    id?: SortOrder
+    channelId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    placeholder?: SortOrder
+    fieldType?: SortOrder
+    required?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    _count?: ChannelCredentialFieldCountOrderByAggregateInput
+    _avg?: ChannelCredentialFieldAvgOrderByAggregateInput
+    _max?: ChannelCredentialFieldMaxOrderByAggregateInput
+    _min?: ChannelCredentialFieldMinOrderByAggregateInput
+    _sum?: ChannelCredentialFieldSumOrderByAggregateInput
+  }
+
+  export type ChannelCredentialFieldScalarWhereWithAggregatesInput = {
+    AND?: ChannelCredentialFieldScalarWhereWithAggregatesInput | ChannelCredentialFieldScalarWhereWithAggregatesInput[]
+    OR?: ChannelCredentialFieldScalarWhereWithAggregatesInput[]
+    NOT?: ChannelCredentialFieldScalarWhereWithAggregatesInput | ChannelCredentialFieldScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ChannelCredentialField"> | string
+    channelId?: StringWithAggregatesFilter<"ChannelCredentialField"> | string
+    key?: StringWithAggregatesFilter<"ChannelCredentialField"> | string
+    label?: StringWithAggregatesFilter<"ChannelCredentialField"> | string
+    placeholder?: StringWithAggregatesFilter<"ChannelCredentialField"> | string
+    fieldType?: StringWithAggregatesFilter<"ChannelCredentialField"> | string
+    required?: BoolWithAggregatesFilter<"ChannelCredentialField"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"ChannelCredentialField"> | number
+    isDeleted?: BoolWithAggregatesFilter<"ChannelCredentialField"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"ChannelCredentialField"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ChannelCredentialField"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"ChannelCredentialField"> | Date | string | null
+  }
+
   export type UserInfoCreateInput = {
     id?: string
     nickname?: string
@@ -28252,6 +31085,226 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ChannelDefinitionCreateInput = {
+    id: string
+    label: string
+    icon: string
+    popular?: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl?: string | null
+    helpText?: string | null
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    credentialFields?: ChannelCredentialFieldCreateNestedManyWithoutChannelInput
+  }
+
+  export type ChannelDefinitionUncheckedCreateInput = {
+    id: string
+    label: string
+    icon: string
+    popular?: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl?: string | null
+    helpText?: string | null
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    credentialFields?: ChannelCredentialFieldUncheckedCreateNestedManyWithoutChannelInput
+  }
+
+  export type ChannelDefinitionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    credentialFields?: ChannelCredentialFieldUpdateManyWithoutChannelNestedInput
+  }
+
+  export type ChannelDefinitionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    credentialFields?: ChannelCredentialFieldUncheckedUpdateManyWithoutChannelNestedInput
+  }
+
+  export type ChannelDefinitionCreateManyInput = {
+    id: string
+    label: string
+    icon: string
+    popular?: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl?: string | null
+    helpText?: string | null
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelDefinitionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelDefinitionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldCreateInput = {
+    id?: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    channel: ChannelDefinitionCreateNestedOneWithoutCredentialFieldsInput
+  }
+
+  export type ChannelCredentialFieldUncheckedCreateInput = {
+    id?: string
+    channelId: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelCredentialFieldUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    channel?: ChannelDefinitionUpdateOneRequiredWithoutCredentialFieldsNestedInput
+  }
+
+  export type ChannelCredentialFieldUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldCreateManyInput = {
+    id?: string
+    channelId: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelCredentialFieldUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type UuidFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -29790,6 +32843,135 @@ export namespace Prisma {
     _max?: NestedEnumOperateTargetFilter<$PrismaModel>
   }
 
+  export type ChannelCredentialFieldListRelationFilter = {
+    every?: ChannelCredentialFieldWhereInput
+    some?: ChannelCredentialFieldWhereInput
+    none?: ChannelCredentialFieldWhereInput
+  }
+
+  export type ChannelCredentialFieldOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ChannelDefinitionCountOrderByAggregateInput = {
+    id?: SortOrder
+    label?: SortOrder
+    icon?: SortOrder
+    popular?: SortOrder
+    tokenHint?: SortOrder
+    tokenPlaceholder?: SortOrder
+    helpUrl?: SortOrder
+    helpText?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelDefinitionAvgOrderByAggregateInput = {
+    sortOrder?: SortOrder
+  }
+
+  export type ChannelDefinitionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    label?: SortOrder
+    icon?: SortOrder
+    popular?: SortOrder
+    tokenHint?: SortOrder
+    tokenPlaceholder?: SortOrder
+    helpUrl?: SortOrder
+    helpText?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelDefinitionMinOrderByAggregateInput = {
+    id?: SortOrder
+    label?: SortOrder
+    icon?: SortOrder
+    popular?: SortOrder
+    tokenHint?: SortOrder
+    tokenPlaceholder?: SortOrder
+    helpUrl?: SortOrder
+    helpText?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelDefinitionSumOrderByAggregateInput = {
+    sortOrder?: SortOrder
+  }
+
+  export type ChannelDefinitionScalarRelationFilter = {
+    is?: ChannelDefinitionWhereInput
+    isNot?: ChannelDefinitionWhereInput
+  }
+
+  export type ChannelCredentialFieldChannelIdKeyCompoundUniqueInput = {
+    channelId: string
+    key: string
+  }
+
+  export type ChannelCredentialFieldCountOrderByAggregateInput = {
+    id?: SortOrder
+    channelId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    placeholder?: SortOrder
+    fieldType?: SortOrder
+    required?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelCredentialFieldAvgOrderByAggregateInput = {
+    sortOrder?: SortOrder
+  }
+
+  export type ChannelCredentialFieldMaxOrderByAggregateInput = {
+    id?: SortOrder
+    channelId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    placeholder?: SortOrder
+    fieldType?: SortOrder
+    required?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelCredentialFieldMinOrderByAggregateInput = {
+    id?: SortOrder
+    channelId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    placeholder?: SortOrder
+    fieldType?: SortOrder
+    required?: SortOrder
+    sortOrder?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ChannelCredentialFieldSumOrderByAggregateInput = {
+    sortOrder?: SortOrder
+  }
+
   export type FileSourceCreateNestedOneWithoutUserAvatarsInput = {
     create?: XOR<FileSourceCreateWithoutUserAvatarsInput, FileSourceUncheckedCreateWithoutUserAvatarsInput>
     connectOrCreate?: FileSourceCreateOrConnectWithoutUserAvatarsInput
@@ -30970,6 +34152,62 @@ export namespace Prisma {
     upsert?: UserInfoUpsertWithoutOperateLogsInput
     connect?: UserInfoWhereUniqueInput
     update?: XOR<XOR<UserInfoUpdateToOneWithWhereWithoutOperateLogsInput, UserInfoUpdateWithoutOperateLogsInput>, UserInfoUncheckedUpdateWithoutOperateLogsInput>
+  }
+
+  export type ChannelCredentialFieldCreateNestedManyWithoutChannelInput = {
+    create?: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput> | ChannelCredentialFieldCreateWithoutChannelInput[] | ChannelCredentialFieldUncheckedCreateWithoutChannelInput[]
+    connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
+    createMany?: ChannelCredentialFieldCreateManyChannelInputEnvelope
+    connect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+  }
+
+  export type ChannelCredentialFieldUncheckedCreateNestedManyWithoutChannelInput = {
+    create?: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput> | ChannelCredentialFieldCreateWithoutChannelInput[] | ChannelCredentialFieldUncheckedCreateWithoutChannelInput[]
+    connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
+    createMany?: ChannelCredentialFieldCreateManyChannelInputEnvelope
+    connect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+  }
+
+  export type ChannelCredentialFieldUpdateManyWithoutChannelNestedInput = {
+    create?: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput> | ChannelCredentialFieldCreateWithoutChannelInput[] | ChannelCredentialFieldUncheckedCreateWithoutChannelInput[]
+    connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
+    upsert?: ChannelCredentialFieldUpsertWithWhereUniqueWithoutChannelInput | ChannelCredentialFieldUpsertWithWhereUniqueWithoutChannelInput[]
+    createMany?: ChannelCredentialFieldCreateManyChannelInputEnvelope
+    set?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    disconnect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    delete?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    connect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    update?: ChannelCredentialFieldUpdateWithWhereUniqueWithoutChannelInput | ChannelCredentialFieldUpdateWithWhereUniqueWithoutChannelInput[]
+    updateMany?: ChannelCredentialFieldUpdateManyWithWhereWithoutChannelInput | ChannelCredentialFieldUpdateManyWithWhereWithoutChannelInput[]
+    deleteMany?: ChannelCredentialFieldScalarWhereInput | ChannelCredentialFieldScalarWhereInput[]
+  }
+
+  export type ChannelCredentialFieldUncheckedUpdateManyWithoutChannelNestedInput = {
+    create?: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput> | ChannelCredentialFieldCreateWithoutChannelInput[] | ChannelCredentialFieldUncheckedCreateWithoutChannelInput[]
+    connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
+    upsert?: ChannelCredentialFieldUpsertWithWhereUniqueWithoutChannelInput | ChannelCredentialFieldUpsertWithWhereUniqueWithoutChannelInput[]
+    createMany?: ChannelCredentialFieldCreateManyChannelInputEnvelope
+    set?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    disconnect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    delete?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    connect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+    update?: ChannelCredentialFieldUpdateWithWhereUniqueWithoutChannelInput | ChannelCredentialFieldUpdateWithWhereUniqueWithoutChannelInput[]
+    updateMany?: ChannelCredentialFieldUpdateManyWithWhereWithoutChannelInput | ChannelCredentialFieldUpdateManyWithWhereWithoutChannelInput[]
+    deleteMany?: ChannelCredentialFieldScalarWhereInput | ChannelCredentialFieldScalarWhereInput[]
+  }
+
+  export type ChannelDefinitionCreateNestedOneWithoutCredentialFieldsInput = {
+    create?: XOR<ChannelDefinitionCreateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedCreateWithoutCredentialFieldsInput>
+    connectOrCreate?: ChannelDefinitionCreateOrConnectWithoutCredentialFieldsInput
+    connect?: ChannelDefinitionWhereUniqueInput
+  }
+
+  export type ChannelDefinitionUpdateOneRequiredWithoutCredentialFieldsNestedInput = {
+    create?: XOR<ChannelDefinitionCreateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedCreateWithoutCredentialFieldsInput>
+    connectOrCreate?: ChannelDefinitionCreateOrConnectWithoutCredentialFieldsInput
+    upsert?: ChannelDefinitionUpsertWithoutCredentialFieldsInput
+    connect?: ChannelDefinitionWhereUniqueInput
+    update?: XOR<XOR<ChannelDefinitionUpdateToOneWithWhereWithoutCredentialFieldsInput, ChannelDefinitionUpdateWithoutCredentialFieldsInput>, ChannelDefinitionUncheckedUpdateWithoutCredentialFieldsInput>
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -35305,6 +38543,158 @@ export namespace Prisma {
     personaTemplates?: PersonaTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   }
 
+  export type ChannelCredentialFieldCreateWithoutChannelInput = {
+    id?: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelCredentialFieldUncheckedCreateWithoutChannelInput = {
+    id?: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelCredentialFieldCreateOrConnectWithoutChannelInput = {
+    where: ChannelCredentialFieldWhereUniqueInput
+    create: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput>
+  }
+
+  export type ChannelCredentialFieldCreateManyChannelInputEnvelope = {
+    data: ChannelCredentialFieldCreateManyChannelInput | ChannelCredentialFieldCreateManyChannelInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ChannelCredentialFieldUpsertWithWhereUniqueWithoutChannelInput = {
+    where: ChannelCredentialFieldWhereUniqueInput
+    update: XOR<ChannelCredentialFieldUpdateWithoutChannelInput, ChannelCredentialFieldUncheckedUpdateWithoutChannelInput>
+    create: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput>
+  }
+
+  export type ChannelCredentialFieldUpdateWithWhereUniqueWithoutChannelInput = {
+    where: ChannelCredentialFieldWhereUniqueInput
+    data: XOR<ChannelCredentialFieldUpdateWithoutChannelInput, ChannelCredentialFieldUncheckedUpdateWithoutChannelInput>
+  }
+
+  export type ChannelCredentialFieldUpdateManyWithWhereWithoutChannelInput = {
+    where: ChannelCredentialFieldScalarWhereInput
+    data: XOR<ChannelCredentialFieldUpdateManyMutationInput, ChannelCredentialFieldUncheckedUpdateManyWithoutChannelInput>
+  }
+
+  export type ChannelCredentialFieldScalarWhereInput = {
+    AND?: ChannelCredentialFieldScalarWhereInput | ChannelCredentialFieldScalarWhereInput[]
+    OR?: ChannelCredentialFieldScalarWhereInput[]
+    NOT?: ChannelCredentialFieldScalarWhereInput | ChannelCredentialFieldScalarWhereInput[]
+    id?: UuidFilter<"ChannelCredentialField"> | string
+    channelId?: StringFilter<"ChannelCredentialField"> | string
+    key?: StringFilter<"ChannelCredentialField"> | string
+    label?: StringFilter<"ChannelCredentialField"> | string
+    placeholder?: StringFilter<"ChannelCredentialField"> | string
+    fieldType?: StringFilter<"ChannelCredentialField"> | string
+    required?: BoolFilter<"ChannelCredentialField"> | boolean
+    sortOrder?: IntFilter<"ChannelCredentialField"> | number
+    isDeleted?: BoolFilter<"ChannelCredentialField"> | boolean
+    createdAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    updatedAt?: DateTimeFilter<"ChannelCredentialField"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ChannelCredentialField"> | Date | string | null
+  }
+
+  export type ChannelDefinitionCreateWithoutCredentialFieldsInput = {
+    id: string
+    label: string
+    icon: string
+    popular?: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl?: string | null
+    helpText?: string | null
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelDefinitionUncheckedCreateWithoutCredentialFieldsInput = {
+    id: string
+    label: string
+    icon: string
+    popular?: boolean
+    tokenHint: string
+    tokenPlaceholder: string
+    helpUrl?: string | null
+    helpText?: string | null
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelDefinitionCreateOrConnectWithoutCredentialFieldsInput = {
+    where: ChannelDefinitionWhereUniqueInput
+    create: XOR<ChannelDefinitionCreateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedCreateWithoutCredentialFieldsInput>
+  }
+
+  export type ChannelDefinitionUpsertWithoutCredentialFieldsInput = {
+    update: XOR<ChannelDefinitionUpdateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedUpdateWithoutCredentialFieldsInput>
+    create: XOR<ChannelDefinitionCreateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedCreateWithoutCredentialFieldsInput>
+    where?: ChannelDefinitionWhereInput
+  }
+
+  export type ChannelDefinitionUpdateToOneWithWhereWithoutCredentialFieldsInput = {
+    where?: ChannelDefinitionWhereInput
+    data: XOR<ChannelDefinitionUpdateWithoutCredentialFieldsInput, ChannelDefinitionUncheckedUpdateWithoutCredentialFieldsInput>
+  }
+
+  export type ChannelDefinitionUpdateWithoutCredentialFieldsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelDefinitionUncheckedUpdateWithoutCredentialFieldsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    popular?: BoolFieldUpdateOperationsInput | boolean
+    tokenHint?: StringFieldUpdateOperationsInput | string
+    tokenPlaceholder?: StringFieldUpdateOperationsInput | string
+    helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    helpText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type MessageCreateManySenderInput = {
     id?: string
     type: string
@@ -36202,6 +39592,62 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldCreateManyChannelInput = {
+    id?: string
+    key: string
+    label: string
+    placeholder: string
+    fieldType?: string
+    required?: boolean
+    sortOrder?: number
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ChannelCredentialFieldUpdateWithoutChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldUncheckedUpdateWithoutChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ChannelCredentialFieldUncheckedUpdateManyWithoutChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    placeholder?: StringFieldUpdateOperationsInput | string
+    fieldType?: StringFieldUpdateOperationsInput | string
+    required?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 

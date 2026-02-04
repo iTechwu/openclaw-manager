@@ -381,6 +381,37 @@ exports.Prisma.OperateLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ChannelDefinitionScalarFieldEnum = {
+  id: 'id',
+  label: 'label',
+  icon: 'icon',
+  popular: 'popular',
+  tokenHint: 'tokenHint',
+  tokenPlaceholder: 'tokenPlaceholder',
+  helpUrl: 'helpUrl',
+  helpText: 'helpText',
+  sortOrder: 'sortOrder',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
+exports.Prisma.ChannelCredentialFieldScalarFieldEnum = {
+  id: 'id',
+  channelId: 'channelId',
+  key: 'key',
+  label: 'label',
+  placeholder: 'placeholder',
+  fieldType: 'fieldType',
+  required: 'required',
+  sortOrder: 'sortOrder',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -492,7 +523,9 @@ exports.Prisma.ModelName = {
   BotUsageLog: 'BotUsageLog',
   Message: 'Message',
   MessageRecipient: 'MessageRecipient',
-  OperateLog: 'OperateLog'
+  OperateLog: 'OperateLog',
+  ChannelDefinition: 'ChannelDefinition',
+  ChannelCredentialField: 'ChannelCredentialField'
 };
 
 /**

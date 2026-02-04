@@ -4,6 +4,7 @@ export * from './prisma-enums.generated';
 // Domain schemas (alphabetically ordered)
 export * from './analytics.schema';
 export * from './bot.schema';
+export * from './channel.schema';
 export * from './download.schema';
 export * from './message.schema';
 export * from './operate-log.schema';

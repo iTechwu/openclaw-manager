@@ -244,6 +244,20 @@ export const providerKeyContract = c.router(
       },
       summary: '验证 API key 并获取模型列表',
     },
+
+    /**
+     * GET /provider-key/:id/models - 获取已存储 API key 的模型列表
+     */
+    getModels: {
+      method: 'GET',
+      path: '/:id/models',
+      pathParams: z.object({ id: z.string().uuid() }),
+      responses: {
+        200: ApiResponseSchema(VerifyProviderKeyResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取已存储 API key 的模型列表',
+    },
   },
   {
     pathPrefix: '/provider-key',

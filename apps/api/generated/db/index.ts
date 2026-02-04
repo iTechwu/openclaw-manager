@@ -20,3 +20,5 @@ export * from './modules/bot-provider-key';
 export * from './modules/bot-usage-log';
 export * from './modules/persona-template';
 export * from './modules/operate-log';
+export * from './modules/channel-definition';
+export * from './modules/channel-credential-field';

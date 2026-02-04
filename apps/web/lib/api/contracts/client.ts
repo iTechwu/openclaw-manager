@@ -16,6 +16,7 @@ import {
   providerKeyContract,
   systemContract,
   personaTemplateContract,
+  channelContract,
 } from '@repo/contracts';
 import { getHeaders } from '@repo/utils/headers';
 import { API_VERSION_HEADER, APP_BUILD_HEADER } from '@repo/constants';
@@ -388,6 +389,16 @@ export const personaTemplateApi = initQueryClient(
   clientOptions,
 );
 
+/**
+ * Channel API - Direct client
+ */
+export const channelClient = initClient(channelContract, clientOptions);
+
+/**
+ * Channel API - React Query hooks
+ */
+export const channelApi = initQueryClient(channelContract, clientOptions);
+
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
 // ============================================================================
@@ -413,10 +424,12 @@ export const tsRestClient = {
   providerKey: providerKeyApi,
   system: systemApi,
   personaTemplate: personaTemplateApi,
+  channel: channelApi,
   // Direct clients (for imperative calls)
   analyticsClient,
   botClient,
   providerKeyClient,
   systemClient,
   personaTemplateClient,
+  channelClient,
 };

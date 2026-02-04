@@ -71,7 +71,8 @@ export type Bot = z.infer<typeof BotSchema>;
 
 export const BotProviderConfigSchema = z.object({
   providerId: z.string(),
-  model: z.string(),
+  models: z.array(z.string()).min(1, 'At least one model is required'),
+  primaryModel: z.string().optional(),
   keyId: z.string().uuid().optional(),
 });
 
@@ -82,7 +83,7 @@ export const ProviderConfigSchema = BotProviderConfigSchema;
 
 export const ChannelConfigSchema = z.object({
   channelType: z.string(),
-  token: z.string(),
+  credentials: z.record(z.string(), z.string()),
 });
 
 export type ChannelConfig = z.infer<typeof ChannelConfigSchema>;
@@ -111,7 +112,8 @@ export type Persona = z.infer<typeof PersonaSchema>;
 export const CreateBotInputSchema = z.object({
   name: z.string().min(1).max(255),
   hostname: z.string().regex(/^[a-z0-9-]{1,64}$/, {
-    message: 'Hostname must be lowercase alphanumeric with hyphens, max 64 chars',
+    message:
+      'Hostname must be lowercase alphanumeric with hyphens, max 64 chars',
   }),
   providers: z.array(BotProviderConfigSchema).min(1),
   primaryProvider: z.string().optional(),
@@ -239,7 +241,9 @@ export const VerifyProviderKeyInputSchema = z.object({
     .transform((val) => (val?.trim() === '' ? undefined : val)),
 });
 
-export type VerifyProviderKeyInput = z.infer<typeof VerifyProviderKeyInputSchema>;
+export type VerifyProviderKeyInput = z.infer<
+  typeof VerifyProviderKeyInputSchema
+>;
 
 /**
  * Model info returned from provider API
@@ -263,4 +267,6 @@ export const VerifyProviderKeyResponseSchema = z.object({
   error: z.string().optional(),
 });
 
-export type VerifyProviderKeyResponse = z.infer<typeof VerifyProviderKeyResponseSchema>;
+export type VerifyProviderKeyResponse = z.infer<
+  typeof VerifyProviderKeyResponseSchema
+>;
