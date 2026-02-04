@@ -22,6 +22,16 @@ export interface CreateContainerOptions {
   model: string;
   channelType: string;
   workspacePath: string;
+  /** API key for the provider (will be passed as environment variable) - used in direct mode */
+  apiKey?: string;
+  /** Custom API base URL for the provider - used in direct mode */
+  apiBaseUrl?: string;
+  /** Proxy URL for zero-trust mode (e.g., http://keyring-proxy:8080) */
+  proxyUrl?: string;
+  /** Bot token for proxy authentication - used in zero-trust mode */
+  proxyToken?: string;
+  /** API type for the provider (openai, anthropic, gemini, etc.) */
+  apiType?: string;
 }
 
 @Injectable()
@@ -88,18 +98,111 @@ export class DockerService implements OnModuleInit {
       // Container doesn't exist, which is expected
     }
 
+    // Build environment variables
+    const envVars = [
+      `BOT_HOSTNAME=${options.hostname}`,
+      `BOT_NAME=${options.name}`,
+      `BOT_PORT=${options.port}`,
+      `GATEWAY_TOKEN=${options.gatewayToken}`,
+      `AI_PROVIDER=${options.aiProvider}`,
+      `AI_MODEL=${options.model}`,
+      `CHANNEL_TYPE=${options.channelType}`,
+    ];
+
+    // Add API type if provided
+    if (options.apiType) {
+      envVars.push(`AI_API_TYPE=${options.apiType}`);
+    }
+
+    // Zero-trust mode: Use proxy URL and token instead of direct API key
+    if (options.proxyUrl && options.proxyToken) {
+      // Pass proxy configuration to container
+      envVars.push(`PROXY_URL=${options.proxyUrl}`);
+      envVars.push(`PROXY_TOKEN=${options.proxyToken}`);
+
+      // Build proxy endpoint based on API type
+      const apiType = options.apiType || 'openai';
+      const proxyEndpoint = `${options.proxyUrl}/v1/${apiType}`;
+
+      // Map provider to standard base URL environment variable names
+      // All providers will use the proxy endpoint as their base URL
+      const baseUrlEnvMap: Record<string, string> = {
+        openai: 'OPENAI_BASE_URL',
+        anthropic: 'ANTHROPIC_BASE_URL',
+        google: 'GOOGLE_BASE_URL',
+        'azure-openai': 'AZURE_OPENAI_ENDPOINT',
+        groq: 'GROQ_BASE_URL',
+        mistral: 'MISTRAL_BASE_URL',
+        deepseek: 'DEEPSEEK_BASE_URL',
+        venice: 'VENICE_BASE_URL',
+        openrouter: 'OPENROUTER_BASE_URL',
+        together: 'TOGETHER_BASE_URL',
+        fireworks: 'FIREWORKS_BASE_URL',
+        perplexity: 'PERPLEXITY_BASE_URL',
+        cohere: 'COHERE_BASE_URL',
+        ollama: 'OLLAMA_BASE_URL',
+      };
+
+      const baseUrlEnvName = baseUrlEnvMap[options.aiProvider] || `${options.aiProvider.toUpperCase().replace(/-/g, '_')}_BASE_URL`;
+      envVars.push(`${baseUrlEnvName}=${proxyEndpoint}`);
+
+      this.logger.log(`Container ${options.hostname} configured in zero-trust mode with proxy: ${proxyEndpoint}`);
+    } else {
+      // Direct mode: Pass API key and base URL directly
+      // Add provider-specific environment variables based on vendor
+      if (options.apiKey) {
+        // Map provider to standard environment variable names
+        const providerEnvMap: Record<string, string> = {
+          openai: 'OPENAI_API_KEY',
+          anthropic: 'ANTHROPIC_API_KEY',
+          google: 'GOOGLE_API_KEY',
+          'azure-openai': 'AZURE_OPENAI_API_KEY',
+          groq: 'GROQ_API_KEY',
+          mistral: 'MISTRAL_API_KEY',
+          deepseek: 'DEEPSEEK_API_KEY',
+          venice: 'VENICE_API_KEY',
+          openrouter: 'OPENROUTER_API_KEY',
+          together: 'TOGETHER_API_KEY',
+          fireworks: 'FIREWORKS_API_KEY',
+          perplexity: 'PERPLEXITY_API_KEY',
+          cohere: 'COHERE_API_KEY',
+          ollama: 'OLLAMA_API_KEY',
+        };
+
+        const envKeyName = providerEnvMap[options.aiProvider] || `${options.aiProvider.toUpperCase().replace(/-/g, '_')}_API_KEY`;
+        envVars.push(`${envKeyName}=${options.apiKey}`);
+      }
+
+      // Add custom base URL if provided
+      if (options.apiBaseUrl) {
+        const baseUrlEnvMap: Record<string, string> = {
+          openai: 'OPENAI_BASE_URL',
+          anthropic: 'ANTHROPIC_BASE_URL',
+          google: 'GOOGLE_BASE_URL',
+          'azure-openai': 'AZURE_OPENAI_ENDPOINT',
+          groq: 'GROQ_BASE_URL',
+          mistral: 'MISTRAL_BASE_URL',
+          deepseek: 'DEEPSEEK_BASE_URL',
+          venice: 'VENICE_BASE_URL',
+          openrouter: 'OPENROUTER_BASE_URL',
+          together: 'TOGETHER_BASE_URL',
+          fireworks: 'FIREWORKS_BASE_URL',
+          perplexity: 'PERPLEXITY_BASE_URL',
+          cohere: 'COHERE_BASE_URL',
+          ollama: 'OLLAMA_BASE_URL',
+        };
+
+        const baseUrlEnvName = baseUrlEnvMap[options.aiProvider] || `${options.aiProvider.toUpperCase().replace(/-/g, '_')}_BASE_URL`;
+        envVars.push(`${baseUrlEnvName}=${options.apiBaseUrl}`);
+      }
+
+      this.logger.log(`Container ${options.hostname} configured in direct mode`);
+    }
+
     const container = await this.docker.createContainer({
       name: containerName,
       Image: this.botImage,
-      Env: [
-        `BOT_HOSTNAME=${options.hostname}`,
-        `BOT_NAME=${options.name}`,
-        `BOT_PORT=${options.port}`,
-        `GATEWAY_TOKEN=${options.gatewayToken}`,
-        `AI_PROVIDER=${options.aiProvider}`,
-        `AI_MODEL=${options.model}`,
-        `CHANNEL_TYPE=${options.channelType}`,
-      ],
+      Env: envVars,
       ExposedPorts: {
         [`${options.port}/tcp`]: {},
       },
