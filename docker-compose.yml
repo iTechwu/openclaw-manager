@@ -80,10 +80,15 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3200
+      # Config file name (defaults to config.local.yaml if not set)
+      YAML_CONFIG_FILENAME: ${YAML_CONFIG_FILENAME:-config.local.yaml}
     ports:
       - '${API_PORT:-13100}:3200'
     volumes:
       - api-logs:/app/apps/api/logs
+      # Mount config files from host (these are not baked into the image)
+      - ./apps/api/config.local.yaml:/app/apps/api/config.local.yaml:ro
+      - ./apps/api/keys:/app/apps/api/keys:ro
     networks:
       - common_network
     extra_hosts:

@@ -38,11 +38,6 @@ RUN npm config set registry ${NPM_REGISTRY} \
 
 # Install build dependencies for native modules and git (required by Next.js build)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    make \
-    g++ \
-    git \
-    openssl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -80,17 +75,14 @@ RUN pnpm install --ignore-scripts || \
 # -----------------------------------------------------------------------------
 FROM deps AS builder
 
-# Copy source code
+# Copy source code (including pre-generated Prisma client in apps/api/generated/)
 COPY . .
 
-# Generate Prisma client (required for TypeScript compilation)
-# This generates types to apps/api/generated/prisma-client
-RUN cd apps/api && pnpm exec prisma generate
-
-# Build shared packages first
+# Build shared packages that produce dist output
+# Note: @repo/config, @repo/types, @repo/ui don't have build scripts (they export source files directly)
 RUN pnpm turbo run build --filter=@repo/validators --filter=@repo/constants --filter=@repo/utils --filter=@repo/contracts
 
-# Build API
+# Build API (uses pre-generated Prisma client)
 RUN cd apps/api && pnpm run build
 
 # Build web app
@@ -174,10 +166,11 @@ COPY packages/validators/package.json ./packages/validators/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/generated ./apps/api/generated
 COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/
-COPY --from=builder /app/packages/config/dist ./packages/config/dist
+# Note: config.local.yaml and keys/config.json are mounted at runtime via docker-compose volumes
+# Copy only packages that produce dist output (constants, contracts, utils, validators)
+# Note: @repo/config and @repo/types don't produce dist (they export source files directly, types are erased at runtime)
 COPY --from=builder /app/packages/constants/dist ./packages/constants/dist
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
-COPY --from=builder /app/packages/types/dist ./packages/types/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
 
@@ -215,11 +208,11 @@ COPY packages/validators/package.json ./packages/validators/
 # Copy built files from builder
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/packages/config/dist ./packages/config/dist
+# Copy only packages that produce dist output (constants, contracts, utils, validators)
+# Note: @repo/config, @repo/types, @repo/ui don't produce dist (they export source files directly)
+# UI components are bundled into .next during build, types are erased at runtime
 COPY --from=builder /app/packages/constants/dist ./packages/constants/dist
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
-COPY --from=builder /app/packages/types/dist ./packages/types/dist
-COPY --from=builder /app/packages/ui/dist ./packages/ui/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
 
