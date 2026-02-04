@@ -7,6 +7,7 @@
 #
 # Build args (由 .env 通过 docker-compose 传入):
 #   BASE_NODE_IMAGE: Node.js 基础镜像
+#   NPM_REGISTRY: npm 镜像源 (默认使用 npmmirror.com)
 #
 # Usage:
 #   docker build --target api -t clawbot-api .
@@ -14,14 +15,21 @@
 # =============================================================================
 
 ARG BASE_NODE_IMAGE=node:24.1-slim
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 
 # -----------------------------------------------------------------------------
 # Base stage: Common dependencies and pnpm setup
 # -----------------------------------------------------------------------------
 FROM ${BASE_NODE_IMAGE} AS base
 
+ARG NPM_REGISTRY
+
 # Install pnpm globally
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+# Configure npm/pnpm registry for faster downloads in China
+RUN npm config set registry ${NPM_REGISTRY} \
+    && pnpm config set registry ${NPM_REGISTRY}
 
 # Install build dependencies for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -62,22 +70,34 @@ RUN pnpm install --ignore-scripts
 # -----------------------------------------------------------------------------
 FROM deps AS builder
 
-# Copy source code
+# Copy source code (including pre-generated Prisma client in apps/api/generated/)
 COPY . .
 
-# Run postinstall scripts that were skipped in deps stage
-# apps/api postinstall: prisma generate && node scripts/link-prisma.js
-RUN cd apps/api && pnpm exec prisma generate && node scripts/link-prisma.js
+# Create symlink for Prisma client runtime resolution
+# Note: prisma generate is NOT needed - we use pre-generated files from development
+RUN cd apps/api && node scripts/link-prisma.js
 
-# Build all packages and apps
-RUN pnpm build
+# Build shared packages first
+RUN pnpm turbo run build --filter=@repo/validators --filter=@repo/constants --filter=@repo/utils --filter=@repo/contracts
+
+# Build API without prisma generate (use pre-generated files)
+RUN cd apps/api && pnpm run build:docker
+
+# Build web app
+RUN pnpm turbo run build --filter=@repo/web
 
 # -----------------------------------------------------------------------------
 # API Production stage: NestJS backend
 # -----------------------------------------------------------------------------
 FROM ${BASE_NODE_IMAGE} AS api
 
+ARG NPM_REGISTRY
+
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+# Configure npm/pnpm registry
+RUN npm config set registry ${NPM_REGISTRY} \
+    && pnpm config set registry ${NPM_REGISTRY}
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -99,32 +119,22 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validators/package.json ./packages/validators/
 
-# Copy Prisma schema & scripts so postinstall (prisma generate && link-prisma) can run
-COPY apps/api/prisma ./apps/api/prisma
-COPY apps/api/scripts ./apps/api/scripts
-COPY apps/api/prisma.config.ts ./apps/api/
+# Install production dependencies only (--ignore-scripts: 跳过 postinstall)
+RUN pnpm install --ignore-scripts --prod
 
-# DATABASE_URL for prisma.config.ts (prisma generate): 优先从 apps/api/.env 读取，否则用 build-arg 或 .env.example
-ARG DATABASE_URL
-# .env* 会复制 .env.example 以及（若存在）apps/api/.env（.dockerignore 已放行 !apps/api/.env）
-COPY apps/api/.env* ./apps/api/
-RUN if [ -n "$DATABASE_URL" ]; then echo "DATABASE_URL=$DATABASE_URL" > ./apps/api/.env; elif [ ! -f ./apps/api/.env ]; then cp ./apps/api/.env.example ./apps/api/.env; fi
-
-# 安装依赖（含 devDependencies 以安装 prisma CLI），再执行 prisma generate
-# --ignore-scripts: 跳过 postinstall，手动执行 prisma generate
-ENV NODE_ENV=development
-RUN pnpm install --ignore-scripts \
-  && cd apps/api && pnpm exec prisma generate && node scripts/link-prisma.js
-ENV NODE_ENV=production
-
-# Copy built files from builder
+# Copy built files from builder (including generated Prisma client)
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/generated ./apps/api/generated
+COPY --from=builder /app/apps/api/scripts/link-prisma.js ./apps/api/scripts/
 COPY --from=builder /app/packages/config/dist ./packages/config/dist
 COPY --from=builder /app/packages/constants/dist ./packages/constants/dist
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/packages/types/dist ./packages/types/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
+
+# Create symlink for Prisma client runtime resolution
+RUN cd apps/api && node scripts/link-prisma.js
 
 # Environment
 ENV NODE_ENV=production
@@ -141,7 +151,13 @@ CMD ["node", "-r", "tsconfig-paths/register", "dist/apps/api/src/main"]
 # -----------------------------------------------------------------------------
 FROM ${BASE_NODE_IMAGE} AS web
 
+ARG NPM_REGISTRY
+
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+# Configure npm/pnpm registry
+RUN npm config set registry ${NPM_REGISTRY} \
+    && pnpm config set registry ${NPM_REGISTRY}
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -13,6 +13,7 @@
 # Build args (在 .env 中配置，不配置则使用默认值):
 #   BASE_NODE_IMAGE: Node 基础镜像
 #   OPENCLAW_BASE_IMAGE: OpenClaw 基础镜像 (botenv)
+#   NPM_REGISTRY: npm 镜像源 (默认 npmmirror.com)
 #
 # Troubleshooting "connection refused" to 127.0.0.1:7990:
 #   Docker 代理不可用，构建时使用 network: host 尝试绕过。
@@ -64,6 +65,7 @@ services:
       target: api
       args:
         BASE_NODE_IMAGE: ${BASE_NODE_IMAGE:-node:24.1-slim}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
         # 构建时 prisma generate 需 DATABASE_URL，优先用 apps/api/.env（已放行），或从根 .env 传入
         DATABASE_URL: ${DATABASE_URL:-}
       network: host
@@ -99,6 +101,7 @@ services:
       args:
         # 来自 .env 中的 BASE_NODE_IMAGE
         BASE_NODE_IMAGE: ${BASE_NODE_IMAGE:-node:24.1-slim}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
       network: host
     image: clawbot-web:latest
     container_name: clawbot-web

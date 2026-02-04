@@ -25,8 +25,8 @@ const fs = require('fs');
 const path = require('path');
 
 const SCHEMA_PATH = path.resolve(__dirname, '../prisma/schema.prisma');
-const MODULES_DIR = path.resolve(__dirname, '../libs/domain/db/src/modules');
-const DB_INDEX_PATH = path.resolve(__dirname, '../libs/domain/db/src/index.ts');
+const MODULES_DIR = path.resolve(__dirname, '../generated/db/modules');
+const DB_INDEX_PATH = path.resolve(__dirname, '../generated/db/index.ts');
 
 // 不生成、保留手写逻辑的 model（可在此增加）
 const EXCLUDE_MODELS = new Set([
@@ -35,6 +35,7 @@ const EXCLUDE_MODELS = new Set([
   'UserInfo',
   'CountryCode',
   'PersonaTemplate',
+  'BotUsageLog',
 ]);
 
 function pascalToKebab(str) {

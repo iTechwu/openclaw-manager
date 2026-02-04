@@ -7,38 +7,16 @@ import { z } from 'zod';
 import { PaginationQuerySchema, PaginatedResponseSchema } from '../base';
 
 // ============================================================================
-// OperateLog Enums - 操作日志枚举
+// OperateLog Enums - 从 Prisma 生成的枚举导入
 // ============================================================================
 
-/**
- * 操作类型枚举
- */
-export const OperateTypeSchema = z.enum([
-  'CREATE',
-  'UPDATE',
-  'DELETE',
-  'LOGIN',
-  'LOGOUT',
-  'START',
-  'STOP',
-  'EXPORT',
-  'IMPORT',
-]);
-
-export type OperateType = z.infer<typeof OperateTypeSchema>;
-
-/**
- * 操作目标枚举
- */
-export const OperateTargetSchema = z.enum([
-  'BOT',
-  'PROVIDER_KEY',
-  'USER',
-  'PERSONA_TEMPLATE',
-  'SYSTEM',
-]);
-
-export type OperateTarget = z.infer<typeof OperateTargetSchema>;
+// Note: OperateTypeSchema, OperateType, OperateTargetSchema, OperateTarget
+// are exported from prisma-enums.generated.ts (auto-generated from Prisma schema)
+// Import them here for local use in this file
+import {
+  OperateTypeSchema,
+  OperateTargetSchema,
+} from './prisma-enums.generated';
 
 // ============================================================================
 // OperateLog Schemas - 操作日志

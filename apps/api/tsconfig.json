@@ -44,6 +44,10 @@
     "paths": {
       "*": ["./*"],
 
+      // Prisma Client - 使用本地生成的客户端
+      "@prisma/client": ["./generated/prisma-client"],
+      "@prisma/client/*": ["./generated/prisma-client/*"],
+
       // src 模块路径 (用于跨模块引用)
       "src/*": ["./src/*"],
 
@@ -85,8 +89,8 @@
       "@/utils/*": ["./libs/infra/utils/*"],
       "@/shared-db/*": ["./libs/infra/shared-db/*"],
 
-      // === 业务层 db 模块（domain） ===
-      "@/db/*": ["./libs/domain/db/src/modules/*"],
+      // === 业务层 db 模块（generated） ===
+      "@/db/*": ["./generated/db/modules/*"],
 
       // === 通用 libs 兜底（仅保留未单独列出的情况） ===
       "@/libs/*": ["./libs/*"],
@@ -94,8 +98,8 @@
       // === Nest 库别名 @app/*（infra + domain） ===
       "@app/auth": ["./libs/domain/auth/src"],
       "@app/auth/*": ["./libs/domain/auth/src/*"],
-      "@app/db": ["./libs/domain/db/src"],
-      "@app/db/*": ["./libs/domain/db/src/*"],
+      "@app/db": ["./generated/db"],
+      "@app/db/*": ["./generated/db/*"],
 
       "@app/shared-db": ["./libs/infra/shared-db"],
       "@app/shared-db/*": ["./libs/infra/shared-db/*"],
@@ -122,6 +126,6 @@
       "@app/services/ip-info": ["./libs/domain/services/ip-info"]
     }
   },
-  "include": ["src/**/*", "libs/**/*"],
+  "include": ["src/**/*", "libs/**/*", "generated/**/*"],
   "exclude": ["node_modules", "dist"]
 }

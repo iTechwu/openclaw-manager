@@ -1,0 +1,568 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma-client"
+  previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [uuid_ossp(map: "uuid-ossp")]
+}
+
+// ============================================================================
+// User System - 用户系统
+// ============================================================================
+enum SexType {
+  UNKNOWN
+  MALE
+  FEMALE
+
+  @@map("sex_type")
+}
+
+model UserInfo {
+  id           String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  nickname     String  @default("") @db.VarChar(255)
+  code         String? @unique @db.VarChar(255)
+  avatarFileId String? @map("avatar_file_id") @db.Uuid
+  sex          SexType @default(UNKNOWN)
+  locale       String? @db.VarChar(20)
+  isAnonymity  Boolean @default(false) @map("is_anonymity")
+  isAdmin      Boolean @default(false) @map("is_admin")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Account Identifiers (登录标识)
+  deviceId      String? @unique @map("device_id") @db.VarChar(255)
+  wechatOpenid  String? @unique @map("wechat_openid") @db.VarChar(255)
+  wechatUnionId String? @unique @map("wechat_union_id") @db.VarChar(255)
+  googleSub     String? @unique @map("google_sub") @db.VarChar(255)
+  discordId     String? @unique @map("discord_id") @db.VarChar(255)
+  mobile        String? @unique @map("mobile") @db.VarChar(40)
+  email         String? @unique @map("email") @db.VarChar(255)
+
+  // Relations
+  avatarFile       FileSource?        @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  wechatAuth       WechatAuth?
+  googleAuth       GoogleAuth?
+  discordAuth      DiscordAuth?
+  mobileAuth       MobileAuth?
+  emailAuth        EmailAuth?
+  sentMessages     Message[]          @relation("SentMessages")
+  receivedMessages MessageRecipient[] @relation("ReceivedMessages")
+  bots             Bot[]
+  providerKeys     ProviderKey[]
+  personaTemplates PersonaTemplate[]
+  operateLogs      OperateLog[]
+
+  @@index([code])
+  @@index([isDeleted, isAdmin])
+  @@index([createdAt(sort: Desc)])
+  @@index([nickname])
+  @@index([avatarFileId])
+  @@index([deviceId])
+  @@index([wechatOpenid])
+  @@index([googleSub])
+  @@index([discordId])
+  @@index([mobile])
+  @@index([email])
+  @@map("u_user_info")
+}
+
+// ============================================================================
+// Persona Template System - 人格模板系统（须在 UserInfo 后、被引用前定义）
+// ============================================================================
+
+/// PersonaTemplate - 人格模板
+/// 支持系统预设模板和用户自定义模板
+/// 图标支持两种形式（二选一）：
+/// - emoji: emoji 字符串（如 "🤖"）
+/// - avatarFileId: 上传的头像文件 ID（关联 FileSource）
+model PersonaTemplate {
+  id           String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String  @db.VarChar(255)
+  emoji        String? @db.VarChar(10)
+  avatarFileId String? @map("avatar_file_id") @db.Uuid
+  tagline      String  @db.VarChar(500)
+  soulMarkdown String  @map("soul_markdown") @db.Text
+  soulPreview  String? @map("soul_preview") @db.VarChar(500)
+  isSystem     Boolean @default(false) @map("is_system")
+  createdById  String? @map("created_by_id") @db.Uuid
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdBy  UserInfo?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  avatarFile FileSource? @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  bots       Bot[]
+
+  @@index([isSystem])
+  @@index([createdById])
+  @@index([avatarFileId])
+  @@index([isDeleted])
+  @@index([createdAt(sort: Desc)])
+  @@map("b_persona_template")
+}
+
+// ============================================================================
+// Auth Tables - 认证信息表（只存 token/password，不存 userId）
+// ============================================================================
+
+model WechatAuth {
+  openid       String    @unique @db.VarChar(255)
+  sessionKey   String?   @map("session_key") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [openid], references: [wechatOpenid], onDelete: Cascade)
+
+  @@index([openid])
+  @@map("u_wechat_auth")
+}
+
+model GoogleAuth {
+  sub           String    @unique @db.VarChar(255)
+  email         String    @db.VarChar(255)
+  verifiedEmail Boolean   @default(true) @map("verified_email")
+  atHash        String?   @map("at_hash") @db.VarChar(255)
+  name          String?   @db.VarChar(255)
+  picture       String?   @db.Text
+  givenName     String?   @map("given_name") @db.VarChar(255)
+  familyName    String?   @map("family_name") @db.VarChar(255)
+  exp           Int
+  iat           Int
+  isDeleted     Boolean   @default(false) @map("is_deleted")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [sub], references: [googleSub], onDelete: Cascade)
+
+  @@index([sub])
+  @@index([email])
+  @@map("u_google_auth")
+}
+
+model DiscordAuth {
+  discordId     String    @unique @map("discord_id") @db.VarChar(255)
+  email         String    @db.VarChar(255)
+  verifiedEmail Boolean   @default(true) @map("verified_email")
+  name          String?   @db.VarChar(255)
+  accessToken   String?   @map("access_token") @db.Text
+  refreshToken  String?   @map("refresh_token") @db.Text
+  isDeleted     Boolean   @default(false) @map("is_deleted")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [discordId], references: [discordId], onDelete: Cascade)
+
+  @@index([discordId])
+  @@index([email])
+  @@map("u_discord_auth")
+}
+
+model MobileAuth {
+  mobile    String    @unique @db.VarChar(40)
+  password  String    @db.VarChar(255)
+  verified  Boolean   @default(false)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [mobile], references: [mobile], onDelete: Cascade)
+
+  @@index([mobile])
+  @@map("u_mobile_auth")
+}
+
+model EmailAuth {
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  verified  Boolean   @default(false)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@index([email])
+  @@map("u_email_auth")
+}
+
+// ============================================================================
+// Risk Detection - 风险检测记录
+// ============================================================================
+
+model RiskDetectionRecord {
+  id        String    @id @db.VarChar(255)
+  action    String    @db.VarChar(100)
+  data      Json?
+  status    Int       @default(0)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([action])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("risk_detection_record")
+}
+
+// ============================================================================
+// System Task Queue - 系统任务队列（短信/邮件发送历史）
+// RabbitMQ + BullMQ（队列调度层）
+// SystemTaskQueue 只在任务最终完成（成功/失败）后写入，用于审计、统计、用户查询发送历史
+// 不参与队列调度和重试逻辑
+// ============================================================================
+
+enum TaskType {
+  SMS
+  EMAIL
+  PUSH
+
+  @@map("task_type")
+}
+
+enum TaskStatus {
+  SUCCESS
+  FAILED
+
+  @@map("task_status")
+}
+
+model SystemTaskQueue {
+  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  taskType     TaskType   @map("task_type")
+  status       TaskStatus
+  recipient    String     @db.VarChar(255)
+  templateCode String?    @map("template_code") @db.VarChar(100)
+  templateData Json?      @map("template_data")
+  content      String?    @db.Text
+  subject      String?    @db.VarChar(500)
+  retryCount   Int        @default(0) @map("retry_count")
+  processedAt  DateTime   @map("processed_at") @db.Timestamptz(6)
+  errorMessage String?    @map("error_message") @db.Text
+  metadata     Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([taskType, status])
+  @@index([recipient, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("system_task_queue")
+}
+
+enum FileBucketVendor {
+  oss
+  us3
+  qiniu
+  s3
+  gcs
+  tos
+  tencent
+  ksyun
+
+  @@map("file_bucket_vendor")
+}
+
+enum FileEnvType {
+  dev
+  test
+  prod
+  produs
+  prodap
+
+  @@map("file_env_type")
+}
+
+model FileSource {
+  id                        String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  isUploaded                Boolean          @default(false) @map("is_uploaded")
+  bucket                    String           @db.VarChar(255)
+  key                       String           @unique @db.VarChar(255)
+  hash                      String?          @db.VarChar(255)
+  thumbImg                  String?          @map("thumb_img") @db.VarChar(255)
+  fsize                     Float            @default(0)
+  mimeType                  String           @default("") @map("mime_type") @db.VarChar(255)
+  type                      Int              @default(0)
+  endUser                   String?          @map("end_user") @db.VarChar(255)
+  status                    Int              @default(0)
+  sha256                    String?          @db.VarChar(255)
+  parts                     Int[]
+  ext                       String           @default("") @db.VarChar(255)
+  expireAt                  DateTime?        @map("expire_at") @db.Timestamptz(6)
+  transitionToIaAt          DateTime?        @map("transition_to_ia_at") @db.Timestamptz(6)
+  transitionToArchiveAt     DateTime?        @map("transition_to_archive_at") @db.Timestamptz(6)
+  transitionToDeepArchiveAt DateTime?        @map("transition_to_deep_archive_at") @db.Timestamptz(6)
+  transitionToArchiveIRAt   DateTime?        @map("transition_to_archive_ir_at") @db.Timestamptz(6)
+  env                       FileEnvType      @default(prod)
+  vendor                    FileBucketVendor @default(us3)
+  region                    String           @default("cn-beijing")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  userAvatars      UserInfo[]
+  personaTemplates PersonaTemplate[]
+  botAvatars       Bot[]
+
+  @@index([fsize, sha256])
+  @@index([isDeleted])
+  @@index([isUploaded])
+  @@index([bucket])
+  @@index([key])
+  @@map("f_file_source")
+}
+
+model CountryCode {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  continent String    @db.VarChar(10) // us, eu, ap, cn
+  code      String    @db.VarChar(10) // 国家代码，如 CN, US, SG
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@unique([continent, code])
+  @@index([continent])
+  @@index([code])
+  @@map("country_code")
+}
+
+// ============================================================================
+// Bot Management System - Bot 管理系统
+// ============================================================================
+
+enum BotStatus {
+  created
+  starting
+  running
+  stopped
+  error
+
+  @@map("bot_status")
+}
+
+/// Bot - 机器人实体
+/// 管理 AI 机器人的生命周期和配置
+model Bot {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String    @db.VarChar(255)
+  hostname          String    @unique @db.VarChar(64)
+  aiProvider        String    @map("ai_provider") @db.VarChar(50)
+  model             String    @db.VarChar(100)
+  channelType       String    @map("channel_type") @db.VarChar(50)
+  containerId       String?   @map("container_id") @db.VarChar(255)
+  port              Int?
+  gatewayToken      String?   @map("gateway_token") @db.VarChar(255)
+  proxyTokenHash    String?   @unique @map("proxy_token_hash") @db.VarChar(64)
+  tags              String[]
+  status            BotStatus @default(created)
+  createdById       String    @map("created_by_id") @db.Uuid
+  personaTemplateId String?   @map("persona_template_id") @db.Uuid
+  emoji             String?   @db.VarChar(10)
+  avatarFileId      String?   @map("avatar_file_id") @db.Uuid
+  soulMarkdown      String?   @map("soul_markdown") @db.Text
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  createdBy       UserInfo         @relation(fields: [createdById], references: [id])
+  personaTemplate PersonaTemplate? @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
+  avatarFile      FileSource?      @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  providerKeys    BotProviderKey[]
+  usageLogs       BotUsageLog[]
+
+  @@index([status])
+  @@index([hostname])
+  @@index([createdById])
+  @@index([personaTemplateId])
+  @@index([avatarFileId])
+  @@index([isDeleted])
+  @@map("b_bot")
+}
+
+/// ProviderKey - AI 提供商 API 密钥
+/// 存储加密的 API 密钥，支持多提供商和标签路由
+model ProviderKey {
+  id              String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vendor          String  @db.VarChar(50) // openai, anthropic, google, venice, deepseek, groq
+  secretEncrypted Bytes   @map("secret_encrypted") // AES-256-GCM encrypted
+  label           String? @db.VarChar(255)
+  tag             String? @db.VarChar(100) // For routing
+  baseUrl         String? @map("base_url") @db.VarChar(500) // Custom API base URL
+  createdById     String  @map("created_by_id") @db.Uuid
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  createdBy       UserInfo         @relation(fields: [createdById], references: [id])
+  botProviderKeys BotProviderKey[]
+  usageLogs       BotUsageLog[]
+
+  @@index([vendor])
+  @@index([tag])
+  @@index([createdById])
+  @@index([isDeleted])
+  @@map("b_provider_key")
+}
+
+/// BotProviderKey - Bot 与 ProviderKey 的关联表
+model BotProviderKey {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId         String   @map("bot_id") @db.Uuid
+  providerKeyId String   @map("provider_key_id") @db.Uuid
+  isPrimary     Boolean  @default(false) @map("is_primary")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bot         Bot         @relation(fields: [botId], references: [id], onDelete: Cascade)
+  providerKey ProviderKey @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, providerKeyId])
+  @@map("b_bot_provider_key")
+}
+
+/// BotUsageLog - Bot API 使用日志
+/// 记录每次 API 调用的使用情况
+model BotUsageLog {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId          String   @map("bot_id") @db.Uuid
+  vendor         String   @db.VarChar(50)
+  providerKeyId  String?  @map("provider_key_id") @db.Uuid
+  statusCode     Int?     @map("status_code")
+  requestTokens  Int?     @map("request_tokens")
+  responseTokens Int?     @map("response_tokens")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bot         Bot          @relation(fields: [botId], references: [id], onDelete: Cascade)
+  providerKey ProviderKey? @relation(fields: [providerKeyId], references: [id], onDelete: SetNull)
+
+  @@index([botId])
+  @@index([createdAt])
+  @@index([vendor])
+  @@map("b_usage_log")
+}
+
+/// User Message System
+/// 用户消息系统 - 支持系统通知、用户间消息等
+model Message {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type      String    @db.VarChar(50) // SYSTEM, USER, NOTIFICATION, MILESTONE, ACHIEVEMENT
+  title     String?   @db.VarChar(255)
+  content   Json // 消息内容（支持富文本、多语言）
+  senderId  String?   @map("sender_id") @db.Uuid // null for system messages
+  metadata  Json? // 额外元数据（如关联的问题ID、徽章ID等）
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  sender     UserInfo?          @relation("SentMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  recipients MessageRecipient[]
+
+  @@index([type])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([isDeleted])
+  @@map("message")
+}
+
+/// Message Recipient - 消息接收记录
+/// 记录每个用户接收到的消息及其阅读状态
+model MessageRecipient {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  messageId String    @map("message_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at") @db.Timestamptz(6)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  message Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    UserInfo @relation("ReceivedMessages", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId, isRead])
+  @@index([messageId])
+  @@index([isDeleted])
+  @@index([userId, isRead, isDeleted]) // Composite index for unread message count queries
+  @@map("message_recipient")
+}
+
+// ============================================================================
+// Operation Log System - 操作日志系统
+// ============================================================================
+
+enum OperateType {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  START
+  STOP
+  EXPORT
+  IMPORT
+
+  @@map("operate_type")
+}
+
+enum OperateTarget {
+  BOT
+  PROVIDER_KEY
+  USER
+  PERSONA_TEMPLATE
+  SYSTEM
+
+  @@map("operate_target")
+}
+
+/// OperateLog - 操作日志
+/// 记录用户的操作行为，用于审计和追踪
+model OperateLog {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  operateType OperateType   @map("operate_type")
+  target      OperateTarget
+  targetId    String?       @map("target_id") @db.Uuid
+  targetName  String?       @map("target_name") @db.VarChar(255)
+  detail      Json?
+  ipAddress   String?       @map("ip_address") @db.VarChar(45)
+  userAgent   String?       @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user UserInfo @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([operateType])
+  @@index([target])
+  @@index([targetId])
+  @@index([createdAt(sort: Desc)])
+  @@map("operate_log")
+}
