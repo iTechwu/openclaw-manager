@@ -10,6 +10,7 @@ import {
   OperateLogService,
   PersonaTemplateService,
 } from '@app/db';
+import { ProviderVerifyClient } from '@app/clients/internal/provider-verify';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
@@ -21,6 +22,8 @@ import type {
   ContainerStats,
   OrphanReport,
   CleanupReport,
+  VerifyProviderKeyInput,
+  VerifyProviderKeyResponse,
 } from '@repo/contracts';
 
 @Injectable()
@@ -35,6 +38,7 @@ export class BotApiService {
     private readonly workspaceService: WorkspaceService,
     private readonly operateLogService: OperateLogService,
     private readonly personaTemplateService: PersonaTemplateService,
+    private readonly providerVerifyClient: ProviderVerifyClient,
   ) {}
 
   // ============================================================================
@@ -471,6 +475,15 @@ export class BotApiService {
       keyCount,
       botCount,
     };
+  }
+
+  /**
+   * Verify a provider key and get available models
+   */
+  async verifyProviderKey(
+    input: VerifyProviderKeyInput,
+  ): Promise<VerifyProviderKeyResponse> {
+    return this.providerVerifyClient.verify(input);
   }
 
   // ============================================================================

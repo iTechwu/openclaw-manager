@@ -162,4 +162,12 @@ export class BotApiController {
       return success(health);
     });
   }
+
+  @TsRestHandler(pkc.verify)
+  async verifyProviderKey(): Promise<any> {
+    return tsRestHandler(pkc.verify, async ({ body }) => {
+      const result = await this.botApiService.verifyProviderKey(body);
+      return success(result);
+    });
+  }
 }

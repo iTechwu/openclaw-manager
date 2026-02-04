@@ -10,6 +10,7 @@ import {
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
+import { ProviderVerifyModule } from '@app/clients/internal/provider-verify';
 import { BotApiController } from './bot-api.controller';
 import { BotApiService } from './bot-api.service';
 import { EncryptionService } from './services/encryption.service';
@@ -28,6 +29,7 @@ import { ReconciliationService } from './services/reconciliation.service';
     JwtModule,
     RedisModule,
     PersonaTemplateModule,
+    ProviderVerifyModule,
   ],
   controllers: [BotApiController],
   providers: [

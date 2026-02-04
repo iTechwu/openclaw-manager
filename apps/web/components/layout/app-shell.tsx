@@ -19,8 +19,10 @@ export function AppShell({ children }: AppShellProps) {
         <SidebarProvider defaultOpen={true}>
           <AppSidebar />
           <SidebarInset className="bg-background">
-            <main className="flex-1 overflow-auto">
-              <div className="container mx-auto max-w-6xl p-6">{children}</div>
+            <main className="flex h-full flex-1 flex-col overflow-hidden">
+              <div className="container mx-auto h-full max-w-6xl flex-1 overflow-auto p-6">
+                {children}
+              </div>
             </main>
           </SidebarInset>
         </SidebarProvider>

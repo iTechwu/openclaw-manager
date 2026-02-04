@@ -215,3 +215,47 @@ export const ProviderKeyHealthSchema = z.object({
 });
 
 export type ProviderKeyHealth = z.infer<typeof ProviderKeyHealthSchema>;
+
+// ============================================================================
+// Provider Key Verify Schemas
+// ============================================================================
+
+/**
+ * Schema for verifying a provider key.
+ * Used to test if an API key is valid and get available models.
+ */
+export const VerifyProviderKeyInputSchema = z.object({
+  vendor: ProviderVendorSchema,
+  secret: z.string().min(1, 'API key is required'),
+  baseUrl: z
+    .string()
+    .url({ message: 'Must be a valid URL' })
+    .optional()
+    .transform((val) => (val?.trim() === '' ? undefined : val)),
+});
+
+export type VerifyProviderKeyInput = z.infer<typeof VerifyProviderKeyInputSchema>;
+
+/**
+ * Model info returned from provider API
+ */
+export const ProviderModelSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  created: z.number().optional(),
+  owned_by: z.string().optional(),
+});
+
+export type ProviderModel = z.infer<typeof ProviderModelSchema>;
+
+/**
+ * Response from verify endpoint
+ */
+export const VerifyProviderKeyResponseSchema = z.object({
+  valid: z.boolean(),
+  latency: z.number().optional(),
+  models: z.array(ProviderModelSchema).optional(),
+  error: z.string().optional(),
+});
+
+export type VerifyProviderKeyResponse = z.infer<typeof VerifyProviderKeyResponseSchema>;

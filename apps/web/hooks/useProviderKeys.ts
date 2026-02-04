@@ -1,8 +1,13 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { providerKeyApi } from '@/lib/api/contracts/client';
-import type { AddProviderKeyInput, ProviderKey } from '@repo/contracts';
+import { providerKeyApi, providerKeyClient } from '@/lib/api/contracts/client';
+import type {
+  AddProviderKeyInput,
+  ProviderKey,
+  VerifyProviderKeyInput,
+  VerifyProviderKeyResponse,
+} from '@repo/contracts';
 
 /**
  * Query keys for provider key-related queries
@@ -100,5 +105,28 @@ export function useProviderKeyHealth() {
     loading: healthQuery.isLoading,
     error: healthQuery.error instanceof Error ? healthQuery.error.message : null,
     refresh: () => healthQuery.refetch(),
+  };
+}
+
+/**
+ * Hook for verifying provider key and getting models
+ */
+export function useVerifyProviderKey() {
+  const verifyMutation = providerKeyApi.verify.useMutation();
+
+  const verify = async (
+    input: VerifyProviderKeyInput,
+  ): Promise<VerifyProviderKeyResponse | null> => {
+    const result = await verifyMutation.mutateAsync({ body: input });
+    if (result.body && 'data' in result.body) {
+      return result.body.data as VerifyProviderKeyResponse;
+    }
+    return null;
+  };
+
+  return {
+    verify,
+    loading: verifyMutation.isPending,
+    error: verifyMutation.error instanceof Error ? verifyMutation.error.message : null,
   };
 }

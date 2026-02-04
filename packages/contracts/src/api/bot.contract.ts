@@ -15,6 +15,8 @@ import {
   ProviderKeySchema,
   AddProviderKeyInputSchema,
   ProviderKeyHealthSchema,
+  VerifyProviderKeyInputSchema,
+  VerifyProviderKeyResponseSchema,
 } from '../schemas/bot.schema';
 
 const c = initContract();
@@ -228,6 +230,19 @@ export const providerKeyContract = c.router(
         200: ApiResponseSchema(ProviderKeyHealthSchema),
       },
       summary: '健康检查',
+    },
+
+    /**
+     * POST /provider-key/verify - 验证 API key 并获取模型列表
+     */
+    verify: {
+      method: 'POST',
+      path: '/verify',
+      body: VerifyProviderKeyInputSchema,
+      responses: {
+        200: ApiResponseSchema(VerifyProviderKeyResponseSchema),
+      },
+      summary: '验证 API key 并获取模型列表',
     },
   },
   {

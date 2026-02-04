@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
@@ -32,6 +32,12 @@ export function NotificationDropdown() {
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid Radix-generated ids on server so SSR and client HTML match (hydration-safe).
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch unread count
   // ts-rest v4 API: useQuery(queryKey, args, options)
@@ -92,6 +98,22 @@ export function NotificationDropdown() {
     if (content?.text) return content.text;
     return JSON.stringify(content);
   };
+
+  // Placeholder until mounted so Radix never runs on server (avoids non-deterministic id).
+  // No badge in placeholder so server and client render identical HTML.
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8 relative"
+        type="button"
+      >
+        <Bell className="size-4" />
+        <span className="sr-only">{t('title')}</span>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
