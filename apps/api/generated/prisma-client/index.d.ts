@@ -159,6 +159,13 @@ export type Skill = $Result.DefaultSelection<Prisma.$SkillPayload>
  * 记录 Bot 安装的技能及其配置
  */
 export type BotSkill = $Result.DefaultSelection<Prisma.$BotSkillPayload>
+/**
+ * Model BotChannel
+ * BotChannel - Bot 渠道配置
+ * 存储 Bot 的渠道连接配置，包括加密的凭证
+ * 一个 Bot 可以连接多个渠道（如同时连接飞书和 Telegram）
+ */
+export type BotChannel = $Result.DefaultSelection<Prisma.$BotChannelPayload>
 
 /**
  * Enums
@@ -273,6 +280,16 @@ export const PluginCategory: {
 
 export type PluginCategory = (typeof PluginCategory)[keyof typeof PluginCategory]
 
+
+export const ChannelConnectionStatus: {
+  DISCONNECTED: 'DISCONNECTED',
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED',
+  ERROR: 'ERROR'
+};
+
+export type ChannelConnectionStatus = (typeof ChannelConnectionStatus)[keyof typeof ChannelConnectionStatus]
+
 }
 
 export type SexType = $Enums.SexType
@@ -314,6 +331,10 @@ export const OperateTarget: typeof $Enums.OperateTarget
 export type PluginCategory = $Enums.PluginCategory
 
 export const PluginCategory: typeof $Enums.PluginCategory
+
+export type ChannelConnectionStatus = $Enums.ChannelConnectionStatus
+
+export const ChannelConnectionStatus: typeof $Enums.ChannelConnectionStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -681,6 +702,16 @@ export class PrismaClient<
     * ```
     */
   get botSkill(): Prisma.BotSkillDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botChannel`: Exposes CRUD operations for the **BotChannel** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotChannels
+    * const botChannels = await prisma.botChannel.findMany()
+    * ```
+    */
+  get botChannel(): Prisma.BotChannelDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1139,7 +1170,8 @@ export namespace Prisma {
     Plugin: 'Plugin',
     BotPlugin: 'BotPlugin',
     Skill: 'Skill',
-    BotSkill: 'BotSkill'
+    BotSkill: 'BotSkill',
+    BotChannel: 'BotChannel'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1155,7 +1187,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skill" | "botSkill"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skill" | "botSkill" | "botChannel"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3009,6 +3041,80 @@ export namespace Prisma {
           }
         }
       }
+      BotChannel: {
+        payload: Prisma.$BotChannelPayload<ExtArgs>
+        fields: Prisma.BotChannelFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotChannelFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotChannelFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          findFirst: {
+            args: Prisma.BotChannelFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotChannelFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          findMany: {
+            args: Prisma.BotChannelFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>[]
+          }
+          create: {
+            args: Prisma.BotChannelCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          createMany: {
+            args: Prisma.BotChannelCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotChannelCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>[]
+          }
+          delete: {
+            args: Prisma.BotChannelDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          update: {
+            args: Prisma.BotChannelUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotChannelDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotChannelUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotChannelUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotChannelUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotChannelPayload>
+          }
+          aggregate: {
+            args: Prisma.BotChannelAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotChannel>
+          }
+          groupBy: {
+            args: Prisma.BotChannelGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotChannelGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotChannelCountArgs<ExtArgs>
+            result: $Utils.Optional<BotChannelCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3142,6 +3248,7 @@ export namespace Prisma {
     botPlugin?: BotPluginOmit
     skill?: SkillOmit
     botSkill?: BotSkillOmit
+    botChannel?: BotChannelOmit
   }
 
   /* Types for Logging */
@@ -3382,6 +3489,7 @@ export namespace Prisma {
     usageLogs: number
     plugins: number
     skills: number
+    channels: number
   }
 
   export type BotCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3389,6 +3497,7 @@ export namespace Prisma {
     usageLogs?: boolean | BotCountOutputTypeCountUsageLogsArgs
     plugins?: boolean | BotCountOutputTypeCountPluginsArgs
     skills?: boolean | BotCountOutputTypeCountSkillsArgs
+    channels?: boolean | BotCountOutputTypeCountChannelsArgs
   }
 
   // Custom InputTypes
@@ -3428,6 +3537,13 @@ export namespace Prisma {
    */
   export type BotCountOutputTypeCountSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BotSkillWhereInput
+  }
+
+  /**
+   * BotCountOutputType without action
+   */
+  export type BotCountOutputTypeCountChannelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotChannelWhereInput
   }
 
 
@@ -16988,6 +17104,7 @@ export namespace Prisma {
     proxyToken?: boolean | Bot$proxyTokenArgs<ExtArgs>
     plugins?: boolean | Bot$pluginsArgs<ExtArgs>
     skills?: boolean | Bot$skillsArgs<ExtArgs>
+    channels?: boolean | Bot$channelsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["bot"]>
 
@@ -17085,6 +17202,7 @@ export namespace Prisma {
     proxyToken?: boolean | Bot$proxyTokenArgs<ExtArgs>
     plugins?: boolean | Bot$pluginsArgs<ExtArgs>
     skills?: boolean | Bot$skillsArgs<ExtArgs>
+    channels?: boolean | Bot$channelsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17109,6 +17227,7 @@ export namespace Prisma {
       proxyToken: Prisma.$ProxyTokenPayload<ExtArgs> | null
       plugins: Prisma.$BotPluginPayload<ExtArgs>[]
       skills: Prisma.$BotSkillPayload<ExtArgs>[]
+      channels: Prisma.$BotChannelPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -17536,6 +17655,7 @@ export namespace Prisma {
     proxyToken<T extends Bot$proxyTokenArgs<ExtArgs> = {}>(args?: Subset<T, Bot$proxyTokenArgs<ExtArgs>>): Prisma__ProxyTokenClient<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     plugins<T extends Bot$pluginsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$pluginsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotPluginPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     skills<T extends Bot$skillsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$skillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    channels<T extends Bot$channelsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -18134,6 +18254,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BotSkillScalarFieldEnum | BotSkillScalarFieldEnum[]
+  }
+
+  /**
+   * Bot.channels
+   */
+  export type Bot$channelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    where?: BotChannelWhereInput
+    orderBy?: BotChannelOrderByWithRelationInput | BotChannelOrderByWithRelationInput[]
+    cursor?: BotChannelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BotChannelScalarFieldEnum | BotChannelScalarFieldEnum[]
   }
 
   /**
@@ -33331,6 +33475,1177 @@ export namespace Prisma {
 
 
   /**
+   * Model BotChannel
+   */
+
+  export type AggregateBotChannel = {
+    _count: BotChannelCountAggregateOutputType | null
+    _min: BotChannelMinAggregateOutputType | null
+    _max: BotChannelMaxAggregateOutputType | null
+  }
+
+  export type BotChannelMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    channelType: string | null
+    name: string | null
+    credentialsEncrypted: Bytes | null
+    isEnabled: boolean | null
+    connectionStatus: $Enums.ChannelConnectionStatus | null
+    lastConnectedAt: Date | null
+    lastError: string | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type BotChannelMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    channelType: string | null
+    name: string | null
+    credentialsEncrypted: Bytes | null
+    isEnabled: boolean | null
+    connectionStatus: $Enums.ChannelConnectionStatus | null
+    lastConnectedAt: Date | null
+    lastError: string | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type BotChannelCountAggregateOutputType = {
+    id: number
+    botId: number
+    channelType: number
+    name: number
+    credentialsEncrypted: number
+    config: number
+    isEnabled: number
+    connectionStatus: number
+    lastConnectedAt: number
+    lastError: number
+    isDeleted: number
+    createdAt: number
+    updatedAt: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type BotChannelMinAggregateInputType = {
+    id?: true
+    botId?: true
+    channelType?: true
+    name?: true
+    credentialsEncrypted?: true
+    isEnabled?: true
+    connectionStatus?: true
+    lastConnectedAt?: true
+    lastError?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type BotChannelMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    channelType?: true
+    name?: true
+    credentialsEncrypted?: true
+    isEnabled?: true
+    connectionStatus?: true
+    lastConnectedAt?: true
+    lastError?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type BotChannelCountAggregateInputType = {
+    id?: true
+    botId?: true
+    channelType?: true
+    name?: true
+    credentialsEncrypted?: true
+    config?: true
+    isEnabled?: true
+    connectionStatus?: true
+    lastConnectedAt?: true
+    lastError?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type BotChannelAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotChannel to aggregate.
+     */
+    where?: BotChannelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotChannels to fetch.
+     */
+    orderBy?: BotChannelOrderByWithRelationInput | BotChannelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotChannelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotChannels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotChannels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotChannels
+    **/
+    _count?: true | BotChannelCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotChannelMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotChannelMaxAggregateInputType
+  }
+
+  export type GetBotChannelAggregateType<T extends BotChannelAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotChannel]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotChannel[P]>
+      : GetScalarType<T[P], AggregateBotChannel[P]>
+  }
+
+
+
+
+  export type BotChannelGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotChannelWhereInput
+    orderBy?: BotChannelOrderByWithAggregationInput | BotChannelOrderByWithAggregationInput[]
+    by: BotChannelScalarFieldEnum[] | BotChannelScalarFieldEnum
+    having?: BotChannelScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotChannelCountAggregateInputType | true
+    _min?: BotChannelMinAggregateInputType
+    _max?: BotChannelMaxAggregateInputType
+  }
+
+  export type BotChannelGroupByOutputType = {
+    id: string
+    botId: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config: JsonValue | null
+    isEnabled: boolean
+    connectionStatus: $Enums.ChannelConnectionStatus
+    lastConnectedAt: Date | null
+    lastError: string | null
+    isDeleted: boolean
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    _count: BotChannelCountAggregateOutputType | null
+    _min: BotChannelMinAggregateOutputType | null
+    _max: BotChannelMaxAggregateOutputType | null
+  }
+
+  type GetBotChannelGroupByPayload<T extends BotChannelGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotChannelGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotChannelGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotChannelGroupByOutputType[P]>
+            : GetScalarType<T[P], BotChannelGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotChannelSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    channelType?: boolean
+    name?: boolean
+    credentialsEncrypted?: boolean
+    config?: boolean
+    isEnabled?: boolean
+    connectionStatus?: boolean
+    lastConnectedAt?: boolean
+    lastError?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botChannel"]>
+
+  export type BotChannelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    channelType?: boolean
+    name?: boolean
+    credentialsEncrypted?: boolean
+    config?: boolean
+    isEnabled?: boolean
+    connectionStatus?: boolean
+    lastConnectedAt?: boolean
+    lastError?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botChannel"]>
+
+  export type BotChannelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    channelType?: boolean
+    name?: boolean
+    credentialsEncrypted?: boolean
+    config?: boolean
+    isEnabled?: boolean
+    connectionStatus?: boolean
+    lastConnectedAt?: boolean
+    lastError?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botChannel"]>
+
+  export type BotChannelSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    channelType?: boolean
+    name?: boolean
+    credentialsEncrypted?: boolean
+    config?: boolean
+    isEnabled?: boolean
+    connectionStatus?: boolean
+    lastConnectedAt?: boolean
+    lastError?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }
+
+  export type BotChannelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "channelType" | "name" | "credentialsEncrypted" | "config" | "isEnabled" | "connectionStatus" | "lastConnectedAt" | "lastError" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["botChannel"]>
+  export type BotChannelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+  export type BotChannelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+  export type BotChannelIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+
+  export type $BotChannelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotChannel"
+    objects: {
+      bot: Prisma.$BotPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      channelType: string
+      name: string
+      credentialsEncrypted: Prisma.Bytes
+      config: Prisma.JsonValue | null
+      isEnabled: boolean
+      connectionStatus: $Enums.ChannelConnectionStatus
+      lastConnectedAt: Date | null
+      lastError: string | null
+      isDeleted: boolean
+      createdAt: Date
+      updatedAt: Date
+      deletedAt: Date | null
+    }, ExtArgs["result"]["botChannel"]>
+    composites: {}
+  }
+
+  type BotChannelGetPayload<S extends boolean | null | undefined | BotChannelDefaultArgs> = $Result.GetResult<Prisma.$BotChannelPayload, S>
+
+  type BotChannelCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotChannelFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotChannelCountAggregateInputType | true
+    }
+
+  export interface BotChannelDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotChannel'], meta: { name: 'BotChannel' } }
+    /**
+     * Find zero or one BotChannel that matches the filter.
+     * @param {BotChannelFindUniqueArgs} args - Arguments to find a BotChannel
+     * @example
+     * // Get one BotChannel
+     * const botChannel = await prisma.botChannel.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotChannelFindUniqueArgs>(args: SelectSubset<T, BotChannelFindUniqueArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotChannel that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotChannelFindUniqueOrThrowArgs} args - Arguments to find a BotChannel
+     * @example
+     * // Get one BotChannel
+     * const botChannel = await prisma.botChannel.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotChannelFindUniqueOrThrowArgs>(args: SelectSubset<T, BotChannelFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotChannel that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelFindFirstArgs} args - Arguments to find a BotChannel
+     * @example
+     * // Get one BotChannel
+     * const botChannel = await prisma.botChannel.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotChannelFindFirstArgs>(args?: SelectSubset<T, BotChannelFindFirstArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotChannel that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelFindFirstOrThrowArgs} args - Arguments to find a BotChannel
+     * @example
+     * // Get one BotChannel
+     * const botChannel = await prisma.botChannel.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotChannelFindFirstOrThrowArgs>(args?: SelectSubset<T, BotChannelFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotChannels that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotChannels
+     * const botChannels = await prisma.botChannel.findMany()
+     * 
+     * // Get first 10 BotChannels
+     * const botChannels = await prisma.botChannel.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botChannelWithIdOnly = await prisma.botChannel.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotChannelFindManyArgs>(args?: SelectSubset<T, BotChannelFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotChannel.
+     * @param {BotChannelCreateArgs} args - Arguments to create a BotChannel.
+     * @example
+     * // Create one BotChannel
+     * const BotChannel = await prisma.botChannel.create({
+     *   data: {
+     *     // ... data to create a BotChannel
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotChannelCreateArgs>(args: SelectSubset<T, BotChannelCreateArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotChannels.
+     * @param {BotChannelCreateManyArgs} args - Arguments to create many BotChannels.
+     * @example
+     * // Create many BotChannels
+     * const botChannel = await prisma.botChannel.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotChannelCreateManyArgs>(args?: SelectSubset<T, BotChannelCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotChannels and returns the data saved in the database.
+     * @param {BotChannelCreateManyAndReturnArgs} args - Arguments to create many BotChannels.
+     * @example
+     * // Create many BotChannels
+     * const botChannel = await prisma.botChannel.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotChannels and only return the `id`
+     * const botChannelWithIdOnly = await prisma.botChannel.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotChannelCreateManyAndReturnArgs>(args?: SelectSubset<T, BotChannelCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotChannel.
+     * @param {BotChannelDeleteArgs} args - Arguments to delete one BotChannel.
+     * @example
+     * // Delete one BotChannel
+     * const BotChannel = await prisma.botChannel.delete({
+     *   where: {
+     *     // ... filter to delete one BotChannel
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotChannelDeleteArgs>(args: SelectSubset<T, BotChannelDeleteArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotChannel.
+     * @param {BotChannelUpdateArgs} args - Arguments to update one BotChannel.
+     * @example
+     * // Update one BotChannel
+     * const botChannel = await prisma.botChannel.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotChannelUpdateArgs>(args: SelectSubset<T, BotChannelUpdateArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotChannels.
+     * @param {BotChannelDeleteManyArgs} args - Arguments to filter BotChannels to delete.
+     * @example
+     * // Delete a few BotChannels
+     * const { count } = await prisma.botChannel.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotChannelDeleteManyArgs>(args?: SelectSubset<T, BotChannelDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotChannels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotChannels
+     * const botChannel = await prisma.botChannel.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotChannelUpdateManyArgs>(args: SelectSubset<T, BotChannelUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotChannels and returns the data updated in the database.
+     * @param {BotChannelUpdateManyAndReturnArgs} args - Arguments to update many BotChannels.
+     * @example
+     * // Update many BotChannels
+     * const botChannel = await prisma.botChannel.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotChannels and only return the `id`
+     * const botChannelWithIdOnly = await prisma.botChannel.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotChannelUpdateManyAndReturnArgs>(args: SelectSubset<T, BotChannelUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotChannel.
+     * @param {BotChannelUpsertArgs} args - Arguments to update or create a BotChannel.
+     * @example
+     * // Update or create a BotChannel
+     * const botChannel = await prisma.botChannel.upsert({
+     *   create: {
+     *     // ... data to create a BotChannel
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotChannel we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotChannelUpsertArgs>(args: SelectSubset<T, BotChannelUpsertArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotChannels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelCountArgs} args - Arguments to filter BotChannels to count.
+     * @example
+     * // Count the number of BotChannels
+     * const count = await prisma.botChannel.count({
+     *   where: {
+     *     // ... the filter for the BotChannels we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotChannelCountArgs>(
+      args?: Subset<T, BotChannelCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotChannelCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotChannel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotChannelAggregateArgs>(args: Subset<T, BotChannelAggregateArgs>): Prisma.PrismaPromise<GetBotChannelAggregateType<T>>
+
+    /**
+     * Group by BotChannel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotChannelGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotChannelGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotChannelGroupByArgs['orderBy'] }
+        : { orderBy?: BotChannelGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotChannelGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotChannelGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotChannel model
+   */
+  readonly fields: BotChannelFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotChannel.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotChannelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    bot<T extends BotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotDefaultArgs<ExtArgs>>): Prisma__BotClient<$Result.GetResult<Prisma.$BotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotChannel model
+   */
+  interface BotChannelFieldRefs {
+    readonly id: FieldRef<"BotChannel", 'String'>
+    readonly botId: FieldRef<"BotChannel", 'String'>
+    readonly channelType: FieldRef<"BotChannel", 'String'>
+    readonly name: FieldRef<"BotChannel", 'String'>
+    readonly credentialsEncrypted: FieldRef<"BotChannel", 'Bytes'>
+    readonly config: FieldRef<"BotChannel", 'Json'>
+    readonly isEnabled: FieldRef<"BotChannel", 'Boolean'>
+    readonly connectionStatus: FieldRef<"BotChannel", 'ChannelConnectionStatus'>
+    readonly lastConnectedAt: FieldRef<"BotChannel", 'DateTime'>
+    readonly lastError: FieldRef<"BotChannel", 'String'>
+    readonly isDeleted: FieldRef<"BotChannel", 'Boolean'>
+    readonly createdAt: FieldRef<"BotChannel", 'DateTime'>
+    readonly updatedAt: FieldRef<"BotChannel", 'DateTime'>
+    readonly deletedAt: FieldRef<"BotChannel", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotChannel findUnique
+   */
+  export type BotChannelFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotChannel to fetch.
+     */
+    where: BotChannelWhereUniqueInput
+  }
+
+  /**
+   * BotChannel findUniqueOrThrow
+   */
+  export type BotChannelFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotChannel to fetch.
+     */
+    where: BotChannelWhereUniqueInput
+  }
+
+  /**
+   * BotChannel findFirst
+   */
+  export type BotChannelFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotChannel to fetch.
+     */
+    where?: BotChannelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotChannels to fetch.
+     */
+    orderBy?: BotChannelOrderByWithRelationInput | BotChannelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotChannels.
+     */
+    cursor?: BotChannelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotChannels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotChannels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotChannels.
+     */
+    distinct?: BotChannelScalarFieldEnum | BotChannelScalarFieldEnum[]
+  }
+
+  /**
+   * BotChannel findFirstOrThrow
+   */
+  export type BotChannelFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotChannel to fetch.
+     */
+    where?: BotChannelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotChannels to fetch.
+     */
+    orderBy?: BotChannelOrderByWithRelationInput | BotChannelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotChannels.
+     */
+    cursor?: BotChannelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotChannels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotChannels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotChannels.
+     */
+    distinct?: BotChannelScalarFieldEnum | BotChannelScalarFieldEnum[]
+  }
+
+  /**
+   * BotChannel findMany
+   */
+  export type BotChannelFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotChannels to fetch.
+     */
+    where?: BotChannelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotChannels to fetch.
+     */
+    orderBy?: BotChannelOrderByWithRelationInput | BotChannelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotChannels.
+     */
+    cursor?: BotChannelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotChannels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotChannels.
+     */
+    skip?: number
+    distinct?: BotChannelScalarFieldEnum | BotChannelScalarFieldEnum[]
+  }
+
+  /**
+   * BotChannel create
+   */
+  export type BotChannelCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BotChannel.
+     */
+    data: XOR<BotChannelCreateInput, BotChannelUncheckedCreateInput>
+  }
+
+  /**
+   * BotChannel createMany
+   */
+  export type BotChannelCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotChannels.
+     */
+    data: BotChannelCreateManyInput | BotChannelCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotChannel createManyAndReturn
+   */
+  export type BotChannelCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotChannels.
+     */
+    data: BotChannelCreateManyInput | BotChannelCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotChannel update
+   */
+  export type BotChannelUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BotChannel.
+     */
+    data: XOR<BotChannelUpdateInput, BotChannelUncheckedUpdateInput>
+    /**
+     * Choose, which BotChannel to update.
+     */
+    where: BotChannelWhereUniqueInput
+  }
+
+  /**
+   * BotChannel updateMany
+   */
+  export type BotChannelUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotChannels.
+     */
+    data: XOR<BotChannelUpdateManyMutationInput, BotChannelUncheckedUpdateManyInput>
+    /**
+     * Filter which BotChannels to update
+     */
+    where?: BotChannelWhereInput
+    /**
+     * Limit how many BotChannels to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotChannel updateManyAndReturn
+   */
+  export type BotChannelUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * The data used to update BotChannels.
+     */
+    data: XOR<BotChannelUpdateManyMutationInput, BotChannelUncheckedUpdateManyInput>
+    /**
+     * Filter which BotChannels to update
+     */
+    where?: BotChannelWhereInput
+    /**
+     * Limit how many BotChannels to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotChannel upsert
+   */
+  export type BotChannelUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BotChannel to update in case it exists.
+     */
+    where: BotChannelWhereUniqueInput
+    /**
+     * In case the BotChannel found by the `where` argument doesn't exist, create a new BotChannel with this data.
+     */
+    create: XOR<BotChannelCreateInput, BotChannelUncheckedCreateInput>
+    /**
+     * In case the BotChannel was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotChannelUpdateInput, BotChannelUncheckedUpdateInput>
+  }
+
+  /**
+   * BotChannel delete
+   */
+  export type BotChannelDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+    /**
+     * Filter which BotChannel to delete.
+     */
+    where: BotChannelWhereUniqueInput
+  }
+
+  /**
+   * BotChannel deleteMany
+   */
+  export type BotChannelDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotChannels to delete
+     */
+    where?: BotChannelWhereInput
+    /**
+     * Limit how many BotChannels to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotChannel without action
+   */
+  export type BotChannelDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannel
+     */
+    select?: BotChannelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotChannel
+     */
+    omit?: BotChannelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotChannelInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -33793,6 +35108,26 @@ export namespace Prisma {
   export type BotSkillScalarFieldEnum = (typeof BotSkillScalarFieldEnum)[keyof typeof BotSkillScalarFieldEnum]
 
 
+  export const BotChannelScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    channelType: 'channelType',
+    name: 'name',
+    credentialsEncrypted: 'credentialsEncrypted',
+    config: 'config',
+    isEnabled: 'isEnabled',
+    connectionStatus: 'connectionStatus',
+    lastConnectedAt: 'lastConnectedAt',
+    lastError: 'lastError',
+    isDeleted: 'isDeleted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
+  };
+
+  export type BotChannelScalarFieldEnum = (typeof BotChannelScalarFieldEnum)[keyof typeof BotChannelScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -34074,6 +35409,20 @@ export namespace Prisma {
    * Reference to a field of type 'PluginCategory[]'
    */
   export type ListEnumPluginCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PluginCategory[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'ChannelConnectionStatus'
+   */
+  export type EnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelConnectionStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ChannelConnectionStatus[]'
+   */
+  export type ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelConnectionStatus[]'>
     
   /**
    * Deep Input Types
@@ -35150,6 +36499,7 @@ export namespace Prisma {
     proxyToken?: XOR<ProxyTokenNullableScalarRelationFilter, ProxyTokenWhereInput> | null
     plugins?: BotPluginListRelationFilter
     skills?: BotSkillListRelationFilter
+    channels?: BotChannelListRelationFilter
   }
 
   export type BotOrderByWithRelationInput = {
@@ -35184,6 +36534,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenOrderByWithRelationInput
     plugins?: BotPluginOrderByRelationAggregateInput
     skills?: BotSkillOrderByRelationAggregateInput
+    channels?: BotChannelOrderByRelationAggregateInput
   }
 
   export type BotWhereUniqueInput = Prisma.AtLeast<{
@@ -35221,6 +36572,7 @@ export namespace Prisma {
     proxyToken?: XOR<ProxyTokenNullableScalarRelationFilter, ProxyTokenWhereInput> | null
     plugins?: BotPluginListRelationFilter
     skills?: BotSkillListRelationFilter
+    channels?: BotChannelListRelationFilter
   }, "id">
 
   export type BotOrderByWithAggregationInput = {
@@ -36436,6 +37788,107 @@ export namespace Prisma {
     isEnabled?: BoolWithAggregatesFilter<"BotSkill"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
+  }
+
+  export type BotChannelWhereInput = {
+    AND?: BotChannelWhereInput | BotChannelWhereInput[]
+    OR?: BotChannelWhereInput[]
+    NOT?: BotChannelWhereInput | BotChannelWhereInput[]
+    id?: UuidFilter<"BotChannel"> | string
+    botId?: UuidFilter<"BotChannel"> | string
+    channelType?: StringFilter<"BotChannel"> | string
+    name?: StringFilter<"BotChannel"> | string
+    credentialsEncrypted?: BytesFilter<"BotChannel"> | Bytes
+    config?: JsonNullableFilter<"BotChannel">
+    isEnabled?: BoolFilter<"BotChannel"> | boolean
+    connectionStatus?: EnumChannelConnectionStatusFilter<"BotChannel"> | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+    lastError?: StringNullableFilter<"BotChannel"> | string | null
+    isDeleted?: BoolFilter<"BotChannel"> | boolean
+    createdAt?: DateTimeFilter<"BotChannel"> | Date | string
+    updatedAt?: DateTimeFilter<"BotChannel"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+  }
+
+  export type BotChannelOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    channelType?: SortOrder
+    name?: SortOrder
+    credentialsEncrypted?: SortOrder
+    config?: SortOrderInput | SortOrder
+    isEnabled?: SortOrder
+    connectionStatus?: SortOrder
+    lastConnectedAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    bot?: BotOrderByWithRelationInput
+  }
+
+  export type BotChannelWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId_channelType_name?: BotChannelBotIdChannelTypeNameCompoundUniqueInput
+    AND?: BotChannelWhereInput | BotChannelWhereInput[]
+    OR?: BotChannelWhereInput[]
+    NOT?: BotChannelWhereInput | BotChannelWhereInput[]
+    botId?: UuidFilter<"BotChannel"> | string
+    channelType?: StringFilter<"BotChannel"> | string
+    name?: StringFilter<"BotChannel"> | string
+    credentialsEncrypted?: BytesFilter<"BotChannel"> | Bytes
+    config?: JsonNullableFilter<"BotChannel">
+    isEnabled?: BoolFilter<"BotChannel"> | boolean
+    connectionStatus?: EnumChannelConnectionStatusFilter<"BotChannel"> | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+    lastError?: StringNullableFilter<"BotChannel"> | string | null
+    isDeleted?: BoolFilter<"BotChannel"> | boolean
+    createdAt?: DateTimeFilter<"BotChannel"> | Date | string
+    updatedAt?: DateTimeFilter<"BotChannel"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+  }, "id" | "botId_channelType_name">
+
+  export type BotChannelOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    channelType?: SortOrder
+    name?: SortOrder
+    credentialsEncrypted?: SortOrder
+    config?: SortOrderInput | SortOrder
+    isEnabled?: SortOrder
+    connectionStatus?: SortOrder
+    lastConnectedAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    _count?: BotChannelCountOrderByAggregateInput
+    _max?: BotChannelMaxOrderByAggregateInput
+    _min?: BotChannelMinOrderByAggregateInput
+  }
+
+  export type BotChannelScalarWhereWithAggregatesInput = {
+    AND?: BotChannelScalarWhereWithAggregatesInput | BotChannelScalarWhereWithAggregatesInput[]
+    OR?: BotChannelScalarWhereWithAggregatesInput[]
+    NOT?: BotChannelScalarWhereWithAggregatesInput | BotChannelScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"BotChannel"> | string
+    botId?: UuidWithAggregatesFilter<"BotChannel"> | string
+    channelType?: StringWithAggregatesFilter<"BotChannel"> | string
+    name?: StringWithAggregatesFilter<"BotChannel"> | string
+    credentialsEncrypted?: BytesWithAggregatesFilter<"BotChannel"> | Bytes
+    config?: JsonNullableWithAggregatesFilter<"BotChannel">
+    isEnabled?: BoolWithAggregatesFilter<"BotChannel"> | boolean
+    connectionStatus?: EnumChannelConnectionStatusWithAggregatesFilter<"BotChannel"> | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: DateTimeNullableWithAggregatesFilter<"BotChannel"> | Date | string | null
+    lastError?: StringNullableWithAggregatesFilter<"BotChannel"> | string | null
+    isDeleted?: BoolWithAggregatesFilter<"BotChannel"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"BotChannel"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BotChannel"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"BotChannel"> | Date | string | null
   }
 
   export type UserInfoCreateInput = {
@@ -37674,6 +39127,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateInput = {
@@ -37705,6 +39159,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotUpdateInput = {
@@ -37736,6 +39191,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateInput = {
@@ -37767,6 +39223,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateManyInput = {
@@ -39137,6 +40594,124 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type BotChannelCreateInput = {
+    id?: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    bot: BotCreateNestedOneWithoutChannelsInput
+  }
+
+  export type BotChannelUncheckedCreateInput = {
+    id?: string
+    botId: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type BotChannelUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bot?: BotUpdateOneRequiredWithoutChannelsNestedInput
+  }
+
+  export type BotChannelUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotChannelCreateManyInput = {
+    id?: string
+    botId: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type BotChannelUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotChannelUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type UuidFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -40230,6 +41805,12 @@ export namespace Prisma {
     none?: BotSkillWhereInput
   }
 
+  export type BotChannelListRelationFilter = {
+    every?: BotChannelWhereInput
+    some?: BotChannelWhereInput
+    none?: BotChannelWhereInput
+  }
+
   export type BotProviderKeyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -40243,6 +41824,10 @@ export namespace Prisma {
   }
 
   export type BotSkillOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type BotChannelOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -41138,6 +42723,78 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type EnumChannelConnectionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ChannelConnectionStatus | EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumChannelConnectionStatusFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+  }
+
+  export type BotChannelBotIdChannelTypeNameCompoundUniqueInput = {
+    botId: string
+    channelType: string
+    name: string
+  }
+
+  export type BotChannelCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    channelType?: SortOrder
+    name?: SortOrder
+    credentialsEncrypted?: SortOrder
+    config?: SortOrder
+    isEnabled?: SortOrder
+    connectionStatus?: SortOrder
+    lastConnectedAt?: SortOrder
+    lastError?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type BotChannelMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    channelType?: SortOrder
+    name?: SortOrder
+    credentialsEncrypted?: SortOrder
+    isEnabled?: SortOrder
+    connectionStatus?: SortOrder
+    lastConnectedAt?: SortOrder
+    lastError?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type BotChannelMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    channelType?: SortOrder
+    name?: SortOrder
+    credentialsEncrypted?: SortOrder
+    isEnabled?: SortOrder
+    connectionStatus?: SortOrder
+    lastConnectedAt?: SortOrder
+    lastError?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type EnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ChannelConnectionStatus | EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+    _max?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+  }
+
   export type FileSourceCreateNestedOneWithoutUserAvatarsInput = {
     create?: XOR<FileSourceCreateWithoutUserAvatarsInput, FileSourceUncheckedCreateWithoutUserAvatarsInput>
     connectOrCreate?: FileSourceCreateOrConnectWithoutUserAvatarsInput
@@ -41957,6 +43614,13 @@ export namespace Prisma {
     connect?: BotSkillWhereUniqueInput | BotSkillWhereUniqueInput[]
   }
 
+  export type BotChannelCreateNestedManyWithoutBotInput = {
+    create?: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput> | BotChannelCreateWithoutBotInput[] | BotChannelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotChannelCreateOrConnectWithoutBotInput | BotChannelCreateOrConnectWithoutBotInput[]
+    createMany?: BotChannelCreateManyBotInputEnvelope
+    connect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+  }
+
   export type BotProviderKeyUncheckedCreateNestedManyWithoutBotInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -41989,6 +43653,13 @@ export namespace Prisma {
     connectOrCreate?: BotSkillCreateOrConnectWithoutBotInput | BotSkillCreateOrConnectWithoutBotInput[]
     createMany?: BotSkillCreateManyBotInputEnvelope
     connect?: BotSkillWhereUniqueInput | BotSkillWhereUniqueInput[]
+  }
+
+  export type BotChannelUncheckedCreateNestedManyWithoutBotInput = {
+    create?: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput> | BotChannelCreateWithoutBotInput[] | BotChannelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotChannelCreateOrConnectWithoutBotInput | BotChannelCreateOrConnectWithoutBotInput[]
+    createMany?: BotChannelCreateManyBotInputEnvelope
+    connect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -42106,6 +43777,20 @@ export namespace Prisma {
     deleteMany?: BotSkillScalarWhereInput | BotSkillScalarWhereInput[]
   }
 
+  export type BotChannelUpdateManyWithoutBotNestedInput = {
+    create?: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput> | BotChannelCreateWithoutBotInput[] | BotChannelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotChannelCreateOrConnectWithoutBotInput | BotChannelCreateOrConnectWithoutBotInput[]
+    upsert?: BotChannelUpsertWithWhereUniqueWithoutBotInput | BotChannelUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: BotChannelCreateManyBotInputEnvelope
+    set?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    disconnect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    delete?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    connect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    update?: BotChannelUpdateWithWhereUniqueWithoutBotInput | BotChannelUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: BotChannelUpdateManyWithWhereWithoutBotInput | BotChannelUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: BotChannelScalarWhereInput | BotChannelScalarWhereInput[]
+  }
+
   export type BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -42170,6 +43855,20 @@ export namespace Prisma {
     update?: BotSkillUpdateWithWhereUniqueWithoutBotInput | BotSkillUpdateWithWhereUniqueWithoutBotInput[]
     updateMany?: BotSkillUpdateManyWithWhereWithoutBotInput | BotSkillUpdateManyWithWhereWithoutBotInput[]
     deleteMany?: BotSkillScalarWhereInput | BotSkillScalarWhereInput[]
+  }
+
+  export type BotChannelUncheckedUpdateManyWithoutBotNestedInput = {
+    create?: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput> | BotChannelCreateWithoutBotInput[] | BotChannelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotChannelCreateOrConnectWithoutBotInput | BotChannelCreateOrConnectWithoutBotInput[]
+    upsert?: BotChannelUpsertWithWhereUniqueWithoutBotInput | BotChannelUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: BotChannelCreateManyBotInputEnvelope
+    set?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    disconnect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    delete?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    connect?: BotChannelWhereUniqueInput | BotChannelWhereUniqueInput[]
+    update?: BotChannelUpdateWithWhereUniqueWithoutBotInput | BotChannelUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: BotChannelUpdateManyWithWhereWithoutBotInput | BotChannelUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: BotChannelScalarWhereInput | BotChannelScalarWhereInput[]
   }
 
   export type UserInfoCreateNestedOneWithoutProviderKeysInput = {
@@ -42719,6 +44418,24 @@ export namespace Prisma {
     update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutInstallationsInput, SkillUpdateWithoutInstallationsInput>, SkillUncheckedUpdateWithoutInstallationsInput>
   }
 
+  export type BotCreateNestedOneWithoutChannelsInput = {
+    create?: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutChannelsInput
+    connect?: BotWhereUniqueInput
+  }
+
+  export type EnumChannelConnectionStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ChannelConnectionStatus
+  }
+
+  export type BotUpdateOneRequiredWithoutChannelsNestedInput = {
+    create?: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutChannelsInput
+    upsert?: BotUpsertWithoutChannelsInput
+    connect?: BotWhereUniqueInput
+    update?: XOR<XOR<BotUpdateToOneWithWhereWithoutChannelsInput, BotUpdateWithoutChannelsInput>, BotUncheckedUpdateWithoutChannelsInput>
+  }
+
   export type NestedUuidFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -43219,6 +44936,23 @@ export namespace Prisma {
     _max?: NestedEnumPluginCategoryFilter<$PrismaModel>
   }
 
+  export type NestedEnumChannelConnectionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ChannelConnectionStatus | EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumChannelConnectionStatusFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+  }
+
+  export type NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ChannelConnectionStatus | EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+    _max?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+  }
+
   export type FileSourceCreateWithoutUserAvatarsInput = {
     id?: string
     isUploaded?: boolean
@@ -43517,6 +45251,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutCreatedByInput = {
@@ -43547,6 +45282,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutCreatedByInput = {
@@ -44290,6 +46026,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPersonaTemplateInput = {
@@ -44320,6 +46057,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPersonaTemplateInput = {
@@ -45360,6 +47098,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutAvatarFileInput = {
@@ -45390,6 +47129,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutAvatarFileInput = {
@@ -45799,6 +47539,48 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type BotChannelCreateWithoutBotInput = {
+    id?: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type BotChannelUncheckedCreateWithoutBotInput = {
+    id?: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type BotChannelCreateOrConnectWithoutBotInput = {
+    where: BotChannelWhereUniqueInput
+    create: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput>
+  }
+
+  export type BotChannelCreateManyBotInputEnvelope = {
+    data: BotChannelCreateManyBotInput | BotChannelCreateManyBotInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserInfoUpsertWithoutBotsInput = {
     update: XOR<UserInfoUpdateWithoutBotsInput, UserInfoUncheckedUpdateWithoutBotsInput>
     create: XOR<UserInfoCreateWithoutBotsInput, UserInfoUncheckedCreateWithoutBotsInput>
@@ -46148,6 +47930,42 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"BotSkill"> | Date | string
   }
 
+  export type BotChannelUpsertWithWhereUniqueWithoutBotInput = {
+    where: BotChannelWhereUniqueInput
+    update: XOR<BotChannelUpdateWithoutBotInput, BotChannelUncheckedUpdateWithoutBotInput>
+    create: XOR<BotChannelCreateWithoutBotInput, BotChannelUncheckedCreateWithoutBotInput>
+  }
+
+  export type BotChannelUpdateWithWhereUniqueWithoutBotInput = {
+    where: BotChannelWhereUniqueInput
+    data: XOR<BotChannelUpdateWithoutBotInput, BotChannelUncheckedUpdateWithoutBotInput>
+  }
+
+  export type BotChannelUpdateManyWithWhereWithoutBotInput = {
+    where: BotChannelScalarWhereInput
+    data: XOR<BotChannelUpdateManyMutationInput, BotChannelUncheckedUpdateManyWithoutBotInput>
+  }
+
+  export type BotChannelScalarWhereInput = {
+    AND?: BotChannelScalarWhereInput | BotChannelScalarWhereInput[]
+    OR?: BotChannelScalarWhereInput[]
+    NOT?: BotChannelScalarWhereInput | BotChannelScalarWhereInput[]
+    id?: UuidFilter<"BotChannel"> | string
+    botId?: UuidFilter<"BotChannel"> | string
+    channelType?: StringFilter<"BotChannel"> | string
+    name?: StringFilter<"BotChannel"> | string
+    credentialsEncrypted?: BytesFilter<"BotChannel"> | Bytes
+    config?: JsonNullableFilter<"BotChannel">
+    isEnabled?: BoolFilter<"BotChannel"> | boolean
+    connectionStatus?: EnumChannelConnectionStatusFilter<"BotChannel"> | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+    lastError?: StringNullableFilter<"BotChannel"> | string | null
+    isDeleted?: BoolFilter<"BotChannel"> | boolean
+    createdAt?: DateTimeFilter<"BotChannel"> | Date | string
+    updatedAt?: DateTimeFilter<"BotChannel"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
+  }
+
   export type UserInfoCreateWithoutProviderKeysInput = {
     id?: string
     nickname?: string
@@ -46486,6 +48304,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProviderKeysInput = {
@@ -46516,6 +48335,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProviderKeysInput = {
@@ -46601,6 +48421,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProviderKeysInput = {
@@ -46631,6 +48452,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutBotProviderKeysInput = {
@@ -46706,6 +48528,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutUsageLogsInput = {
@@ -46736,6 +48559,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutUsageLogsInput = {
@@ -46821,6 +48645,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutUsageLogsInput = {
@@ -46851,6 +48676,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutUsageLogsInput = {
@@ -46926,6 +48752,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProxyTokenInput = {
@@ -46956,6 +48783,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProxyTokenInput = {
@@ -47041,6 +48869,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProxyTokenInput = {
@@ -47071,6 +48900,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutProxyTokensInput = {
@@ -47890,6 +49720,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPluginsInput = {
@@ -47920,6 +49751,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPluginsInput = {
@@ -48017,6 +49849,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPluginsInput = {
@@ -48047,6 +49880,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type PluginUpsertWithoutInstallationsInput = {
@@ -48178,6 +50012,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
     proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
     plugins?: BotPluginCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutSkillsInput = {
@@ -48208,6 +50043,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
     proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
     plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutSkillsInput = {
@@ -48295,6 +50131,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutSkillsInput = {
@@ -48325,6 +50162,7 @@ export namespace Prisma {
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type SkillUpsertWithoutInstallationsInput = {
@@ -48372,6 +50210,146 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotCreateWithoutChannelsInput = {
+    id?: string
+    name: string
+    hostname: string
+    aiProvider: string
+    model: string
+    channelType: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    emoji?: string | null
+    soulMarkdown?: string | null
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutBotsInput
+    personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
+    avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
+    providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
+    plugins?: BotPluginCreateNestedManyWithoutBotInput
+    skills?: BotSkillCreateNestedManyWithoutBotInput
+  }
+
+  export type BotUncheckedCreateWithoutChannelsInput = {
+    id?: string
+    name: string
+    hostname: string
+    aiProvider: string
+    model: string
+    channelType: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    createdById: string
+    personaTemplateId?: string | null
+    emoji?: string | null
+    avatarFileId?: string | null
+    soulMarkdown?: string | null
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
+    plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
+    skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+  }
+
+  export type BotCreateOrConnectWithoutChannelsInput = {
+    where: BotWhereUniqueInput
+    create: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
+  }
+
+  export type BotUpsertWithoutChannelsInput = {
+    update: XOR<BotUpdateWithoutChannelsInput, BotUncheckedUpdateWithoutChannelsInput>
+    create: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
+    where?: BotWhereInput
+  }
+
+  export type BotUpdateToOneWithWhereWithoutChannelsInput = {
+    where?: BotWhereInput
+    data: XOR<BotUpdateWithoutChannelsInput, BotUncheckedUpdateWithoutChannelsInput>
+  }
+
+  export type BotUpdateWithoutChannelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    aiProvider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutBotsNestedInput
+    personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
+    avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
+    providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUpdateManyWithoutBotNestedInput
+  }
+
+  export type BotUncheckedUpdateWithoutChannelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    aiProvider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    createdById?: StringFieldUpdateOperationsInput | string
+    personaTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type MessageCreateManySenderInput = {
@@ -48562,6 +50540,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutCreatedByInput = {
@@ -48592,6 +50571,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutCreatedByInput = {
@@ -48803,6 +50783,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPersonaTemplateInput = {
@@ -48833,6 +50814,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutPersonaTemplateInput = {
@@ -49081,6 +51063,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUpdateManyWithoutBotNestedInput
     skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutAvatarFileInput = {
@@ -49111,6 +51094,7 @@ export namespace Prisma {
     proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
     plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutAvatarFileInput = {
@@ -49175,6 +51159,22 @@ export namespace Prisma {
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type BotChannelCreateManyBotInput = {
+    id?: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
   }
 
   export type BotProviderKeyUpdateWithoutBotInput = {
@@ -49292,6 +51292,54 @@ export namespace Prisma {
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotChannelUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotChannelUncheckedUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotChannelUncheckedUpdateManyWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type BotProviderKeyCreateManyProviderKeyInput = {

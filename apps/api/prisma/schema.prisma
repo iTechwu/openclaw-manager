@@ -408,6 +408,7 @@ model Bot {
   proxyToken      ProxyToken?
   plugins         BotPlugin[]
   skills          BotSkill[]
+  channels        BotChannel[]
 
   @@index([status])
   @@index([hostname])
@@ -845,4 +846,49 @@ model BotSkill {
   @@index([skillId])
   @@index([isEnabled])
   @@map("b_bot_skill")
+}
+
+// ============================================================================
+// Bot Channel System - Bot 渠道系统
+// ============================================================================
+
+/// 渠道连接状态
+enum ChannelConnectionStatus {
+  DISCONNECTED // 未连接
+  CONNECTING   // 连接中
+  CONNECTED    // 已连接
+  ERROR        // 连接错误
+
+  @@map("channel_connection_status")
+}
+
+/// BotChannel - Bot 渠道配置
+/// 存储 Bot 的渠道连接配置，包括加密的凭证
+/// 一个 Bot 可以连接多个渠道（如同时连接飞书和 Telegram）
+model BotChannel {
+  id                   String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId                String                  @map("bot_id") @db.Uuid
+  channelType          String                  @map("channel_type") @db.VarChar(50) // feishu, telegram, discord, etc.
+  name                 String                  @db.VarChar(255) // 渠道名称，用于区分同类型多个渠道
+  credentialsEncrypted Bytes                   @map("credentials_encrypted") // AES-256-GCM 加密的凭证 JSON
+  config               Json?                   // 渠道特定配置（如 requireMention, replyInThread 等）
+  isEnabled            Boolean                 @default(true) @map("is_enabled")
+  connectionStatus     ChannelConnectionStatus @default(DISCONNECTED) @map("connection_status")
+  lastConnectedAt      DateTime?               @map("last_connected_at") @db.Timestamptz(6)
+  lastError            String?                 @map("last_error") @db.Text
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, channelType, name])
+  @@index([botId])
+  @@index([channelType])
+  @@index([isEnabled])
+  @@index([connectionStatus])
+  @@index([isDeleted])
+  @@map("b_bot_channel")
 }

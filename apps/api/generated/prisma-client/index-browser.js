@@ -494,6 +494,23 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BotChannelScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  channelType: 'channelType',
+  name: 'name',
+  credentialsEncrypted: 'credentialsEncrypted',
+  config: 'config',
+  isEnabled: 'isEnabled',
+  connectionStatus: 'connectionStatus',
+  lastConnectedAt: 'lastConnectedAt',
+  lastError: 'lastError',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -603,6 +620,13 @@ exports.PluginCategory = exports.$Enums.PluginCategory = {
   CUSTOM: 'CUSTOM'
 };
 
+exports.ChannelConnectionStatus = exports.$Enums.ChannelConnectionStatus = {
+  DISCONNECTED: 'DISCONNECTED',
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED',
+  ERROR: 'ERROR'
+};
+
 exports.Prisma.ModelName = {
   UserInfo: 'UserInfo',
   PersonaTemplate: 'PersonaTemplate',
@@ -628,7 +652,8 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   BotPlugin: 'BotPlugin',
   Skill: 'Skill',
-  BotSkill: 'BotSkill'
+  BotSkill: 'BotSkill',
+  BotChannel: 'BotChannel'
 };
 
 /**

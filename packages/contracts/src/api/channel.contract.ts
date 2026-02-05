@@ -8,6 +8,11 @@ import {
 import {
   ChannelDefinitionSchema,
   ChannelDefinitionListResponseSchema,
+  BotChannelItemSchema,
+  BotChannelListResponseSchema,
+  CreateBotChannelRequestSchema,
+  UpdateBotChannelRequestSchema,
+  BotChannelConnectionActionSchema,
 } from '../schemas/channel.schema';
 
 const c = initContract();
@@ -50,6 +55,104 @@ export const channelContract = c.router(
 );
 
 /**
+ * Bot Channel API Contract
+ * Bot 渠道配置管理相关的 API 契约定义
+ */
+export const botChannelContract = c.router(
+  {
+    /**
+     * GET /bot/:hostname/channels - 列出 Bot 的所有渠道配置
+     */
+    list: {
+      method: 'GET',
+      path: '',
+      responses: {
+        200: ApiResponseSchema(BotChannelListResponseSchema),
+      },
+      summary: '列出 Bot 的所有渠道配置',
+    },
+
+    /**
+     * GET /bot/:hostname/channels/:channelId - 获取单个渠道配置
+     */
+    getById: {
+      method: 'GET',
+      path: '/:channelId',
+      pathParams: z.object({ channelId: z.string().uuid() }),
+      responses: {
+        200: ApiResponseSchema(BotChannelItemSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取单个渠道配置',
+    },
+
+    /**
+     * POST /bot/:hostname/channels - 添加渠道配置
+     */
+    create: {
+      method: 'POST',
+      path: '',
+      body: CreateBotChannelRequestSchema,
+      responses: {
+        201: ApiResponseSchema(BotChannelItemSchema),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '添加渠道配置',
+    },
+
+    /**
+     * PUT /bot/:hostname/channels/:channelId - 更新渠道配置
+     */
+    update: {
+      method: 'PUT',
+      path: '/:channelId',
+      pathParams: z.object({ channelId: z.string().uuid() }),
+      body: UpdateBotChannelRequestSchema,
+      responses: {
+        200: ApiResponseSchema(BotChannelItemSchema),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '更新渠道配置',
+    },
+
+    /**
+     * DELETE /bot/:hostname/channels/:channelId - 删除渠道配置
+     */
+    delete: {
+      method: 'DELETE',
+      path: '/:channelId',
+      pathParams: z.object({ channelId: z.string().uuid() }),
+      responses: {
+        200: ApiResponseSchema(z.object({ success: z.boolean() })),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '删除渠道配置',
+    },
+
+    /**
+     * POST /bot/:hostname/channels/:channelId/connection - 连接/断开渠道
+     */
+    connection: {
+      method: 'POST',
+      path: '/:channelId/connection',
+      pathParams: z.object({ channelId: z.string().uuid() }),
+      body: z.object({ action: BotChannelConnectionActionSchema }),
+      responses: {
+        200: ApiResponseSchema(BotChannelItemSchema),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '连接或断开渠道',
+    },
+  },
+  {
+    pathPrefix: '/bot/:hostname/channels',
+  },
+);
+
+/**
  * 带版本元数据的 Channel Contract
  */
 export const channelContractVersioned = withVersion(
@@ -60,4 +163,13 @@ export const channelContractVersioned = withVersion(
   },
 );
 
+export const botChannelContractVersioned = withVersion(
+  botChannelContract,
+  {
+    version: API_VERSION.V1,
+    pathPrefix: '/bot/:hostname/channels',
+  },
+);
+
 export type ChannelContract = typeof channelContract;
+export type BotChannelContract = typeof botChannelContract;

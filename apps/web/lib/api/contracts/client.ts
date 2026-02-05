@@ -18,6 +18,7 @@ import {
   systemContract,
   personaTemplateContract,
   channelContract,
+  botChannelContract,
   pluginContract,
   botPluginContract,
   skillContract,
@@ -454,6 +455,16 @@ export const botSkillClient = initClient(botSkillContract, clientOptions);
  */
 export const botSkillApi = initQueryClient(botSkillContract, clientOptions);
 
+/**
+ * Bot Channel API - Direct client
+ */
+export const botChannelClient = initClient(botChannelContract, clientOptions);
+
+/**
+ * Bot Channel API - React Query hooks
+ */
+export const botChannelApi = initQueryClient(botChannelContract, clientOptions);
+
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
 // ============================================================================
@@ -481,6 +492,7 @@ export const tsRestClient = {
   system: systemApi,
   personaTemplate: personaTemplateApi,
   channel: channelApi,
+  botChannel: botChannelApi,
   plugin: pluginApi,
   botPlugin: botPluginApi,
   skill: skillApi,
@@ -493,6 +505,7 @@ export const tsRestClient = {
   systemClient,
   personaTemplateClient,
   channelClient,
+  botChannelClient,
   pluginClient,
   botPluginClient,
   skillClient,

@@ -330,16 +330,62 @@ export class DockerService implements OnModuleInit {
     const container = await this.docker.createContainer({
       name: containerName,
       Image: this.botImage,
-      // Start OpenClaw gateway on the specified port
-      // Use node with openclaw.mjs directly since the bin is not globally installed in the image
-      // --allow-unconfigured: Allow gateway start without gateway.mode=local in config
+      // Start OpenClaw gateway with proper configuration
+      // Use shell to configure OpenClaw before starting the gateway:
+      // 1. Set the model if AI_MODEL is provided
+      // 2. Add API key to auth-profiles.json if provided via environment variable
+      // 3. Start the gateway
+      Entrypoint: ['/bin/sh', '-c'],
       Cmd: [
-        'node',
-        '/app/openclaw.mjs',
-        'gateway',
-        '--port',
-        String(options.port),
-        '--allow-unconfigured',
+        `
+        # Determine the provider for auth configuration
+        PROVIDER="${options.aiProvider}"
+        if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
+          # For custom provider, use the API type as the auth provider
+          # Map common API types to their provider names
+          case "$AI_API_TYPE" in
+            openai) AUTH_PROVIDER="openai" ;;
+            anthropic) AUTH_PROVIDER="anthropic" ;;
+            *) AUTH_PROVIDER="$AI_API_TYPE" ;;
+          esac
+        else
+          AUTH_PROVIDER="$PROVIDER"
+        fi
+
+        # Set the model if AI_MODEL is provided
+        if [ -n "$AI_MODEL" ]; then
+          echo "Setting model to: $AI_MODEL"
+          node /app/openclaw.mjs models set "$AI_MODEL" 2>/dev/null || true
+        fi
+
+        # Configure API key based on provider
+        # Check for provider-specific API key environment variables
+        API_KEY=""
+        case "$AUTH_PROVIDER" in
+          openai) API_KEY="$OPENAI_API_KEY" ;;
+          anthropic) API_KEY="$ANTHROPIC_API_KEY" ;;
+          google) API_KEY="$GOOGLE_API_KEY" ;;
+          groq) API_KEY="$GROQ_API_KEY" ;;
+          mistral) API_KEY="$MISTRAL_API_KEY" ;;
+          deepseek) API_KEY="$DEEPSEEK_API_KEY" ;;
+          zhipu) API_KEY="$ZHIPU_API_KEY" ;;
+          moonshot) API_KEY="$MOONSHOT_API_KEY" ;;
+          dashscope) API_KEY="$DASHSCOPE_API_KEY" ;;
+          doubao) API_KEY="$DOUBAO_API_KEY" ;;
+          silicon) API_KEY="$SILICONFLOW_API_KEY" ;;
+          custom) API_KEY="$CUSTOM_API_KEY" ;;
+          *) API_KEY="" ;;
+        esac
+
+        # Add API key to auth-profiles.json if available
+        if [ -n "$API_KEY" ]; then
+          echo "Configuring API key for provider: $AUTH_PROVIDER"
+          echo "$API_KEY" | node /app/openclaw.mjs models auth paste-token --provider "$AUTH_PROVIDER" 2>/dev/null || true
+        fi
+
+        # Start the gateway
+        exec node /app/openclaw.mjs gateway --port ${options.port} --allow-unconfigured
+        `,
       ],
       Env: envVars,
       ExposedPorts: {

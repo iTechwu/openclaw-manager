@@ -50,6 +50,9 @@ import { PluginApiModule } from './modules/plugin-api/plugin-api.module';
 /** skill-api module */
 import { SkillApiModule } from './modules/skill-api/skill-api.module';
 
+/** bot-channel-api module */
+import { BotChannelApiModule } from './modules/bot-channel-api/bot-channel-api.module';
+
 /** i18n */
 import {
   AcceptLanguageResolver,
@@ -210,6 +213,7 @@ import { DbMetricsService } from '@app/prisma/db-metrics/src/db-metrics.service'
     ChannelApiModule,
     PluginApiModule,
     SkillApiModule,
+    BotChannelApiModule,
   ],
   providers: [
     {

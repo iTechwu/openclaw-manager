@@ -27,3 +27,4 @@ export * from './modules/plugin';
 export * from './modules/bot-plugin';
 export * from './modules/skill';
 export * from './modules/bot-skill';
+export * from './modules/bot-channel';

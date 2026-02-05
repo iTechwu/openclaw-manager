@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common';
+import { BotChannelService } from './bot-channel.service';
+import { PrismaModule } from '@app/prisma';
+import { RedisModule } from '@app/redis';
+import { ConfigModule } from '@nestjs/config';
+
+@Module({
+  imports: [PrismaModule, RedisModule, ConfigModule],
+  providers: [BotChannelService],
+  exports: [BotChannelService],
+})
+export class BotChannelModule {}
