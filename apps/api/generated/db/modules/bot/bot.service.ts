@@ -98,32 +98,4 @@ export class BotService extends TransactionalServiceBase {
   async delete(where: Prisma.BotWhereUniqueInput): Promise<Bot> {
     return this.getWriteClient().bot.delete({ where });
   }
-
-  /**
-   * 通过 hostname 查找 Bot
-   */
-  @HandlePrismaError(DbOperationType.QUERY)
-  async getByHostname(
-    hostname: string,
-    additional?: { select?: Prisma.BotSelect },
-  ): Promise<Bot | null> {
-    return this.getReadClient().bot.findFirst({
-      where: { hostname, isDeleted: false },
-      ...additional,
-    });
-  }
-
-  /**
-   * 通过 proxyTokenHash 查找 Bot
-   */
-  @HandlePrismaError(DbOperationType.QUERY)
-  async getByProxyTokenHash(
-    proxyTokenHash: string,
-    additional?: { select?: Prisma.BotSelect },
-  ): Promise<Bot | null> {
-    return this.getReadClient().bot.findFirst({
-      where: { proxyTokenHash, isDeleted: false },
-      ...additional,
-    });
-  }
 }

@@ -101,7 +101,7 @@ export class ProxyService {
     } else {
       // Direct Mode: 使用 Bot.proxyTokenHash 验证
       const tokenHash = this.encryptionService.hashToken(botToken);
-      const bot = await this.botService.getByProxyTokenHash(tokenHash);
+      const bot = await this.botService.get({ proxyTokenHash: tokenHash });
 
       if (!bot) {
         return { success: false, error: 'Invalid bot token' };

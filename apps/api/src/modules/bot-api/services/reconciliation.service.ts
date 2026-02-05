@@ -56,6 +56,13 @@ export class ReconciliationService implements OnModuleInit {
   }
 
   /**
+   * 生成用户隔离的唯一标识符（与 WorkspaceService 保持一致）
+   */
+  private getIsolationKey(userId: string, hostname: string): string {
+    return `${userId.slice(0, 8)}-${hostname}`;
+  }
+
+  /**
    * 模块初始化时执行启动协调
    */
   async onModuleInit(): Promise<void> {
@@ -98,7 +105,10 @@ export class ReconciliationService implements OnModuleInit {
     );
     report.botsChecked = total;
 
-    const botHostnames = new Set(bots.map((b) => b.hostname));
+    // 使用 isolation keys 进行多租户隔离
+    const botIsolationKeys = new Set(
+      bots.map((b) => this.getIsolationKey(b.createdById, b.hostname)),
+    );
     const botContainerIds = new Set(
       bots.map((b) => b.containerId).filter((id): id is string => id !== null),
     );
@@ -113,13 +123,14 @@ export class ReconciliationService implements OnModuleInit {
 
     // 获取所有托管容器
     const managedContainers = await this.getManagedContainers();
-    const containerHostnames = new Set(
-      managedContainers.map((c) => c.hostname),
+    const containerIsolationKeys = new Set(
+      managedContainers.map((c) => c.isolationKey),
     );
 
     // 同步每个 Bot 的状态
     for (const bot of bots) {
-      const hasContainer = containerHostnames.has(bot.hostname);
+      const isolationKey = this.getIsolationKey(bot.createdById, bot.hostname);
+      const hasContainer = containerIsolationKeys.has(isolationKey);
       const updated = await this.syncBotStatus(bot, hasContainer);
       if (updated) {
         report.statusUpdated++;
@@ -128,28 +139,28 @@ export class ReconciliationService implements OnModuleInit {
 
     // 检测孤儿容器（在 Docker 中但不在 DB 中）
     for (const container of managedContainers) {
-      if (container.hostname && !botHostnames.has(container.hostname)) {
-        report.orphanedContainers.push(container.hostname);
-        this.logger.warn(`Orphaned container detected: ${container.hostname}`);
+      if (container.isolationKey && !botIsolationKeys.has(container.isolationKey)) {
+        report.orphanedContainers.push(container.isolationKey);
+        this.logger.warn(`Orphaned container detected: ${container.isolationKey}`);
       }
     }
 
-    // 检测孤儿工作空间
-    const workspaceHostnames =
-      await this.workspaceService.listWorkspaceHostnames();
-    for (const hostname of workspaceHostnames) {
-      if (!botHostnames.has(hostname)) {
-        report.orphanedWorkspaces.push(hostname);
-        this.logger.warn(`Orphaned workspace detected: ${hostname}`);
+    // 检测孤儿工作空间（使用 isolation keys）
+    const workspaceIsolationKeys =
+      await this.workspaceService.listWorkspaceIsolationKeys();
+    for (const isolationKey of workspaceIsolationKeys) {
+      if (!botIsolationKeys.has(isolationKey)) {
+        report.orphanedWorkspaces.push(isolationKey);
+        this.logger.warn(`Orphaned workspace detected: ${isolationKey}`);
       }
     }
 
-    // 检测孤儿密钥目录
-    const secretHostnames = await this.workspaceService.listSecretHostnames();
-    for (const hostname of secretHostnames) {
-      if (!botHostnames.has(hostname)) {
-        report.orphanedSecrets.push(hostname);
-        this.logger.warn(`Orphaned secrets detected: ${hostname}`);
+    // 检测孤儿密钥目录（使用 isolation keys）
+    const secretIsolationKeys = await this.workspaceService.listSecretIsolationKeys();
+    for (const isolationKey of secretIsolationKeys) {
+      if (!botIsolationKeys.has(isolationKey)) {
+        report.orphanedSecrets.push(isolationKey);
+        this.logger.warn(`Orphaned secrets detected: ${isolationKey}`);
       }
     }
 
@@ -168,44 +179,44 @@ export class ReconciliationService implements OnModuleInit {
       secretsRemoved: 0,
     };
 
-    // 移除孤儿容器
-    for (const hostname of reconciliation.orphanedContainers) {
+    // 移除孤儿容器（使用 isolation key 作为容器名后缀）
+    for (const isolationKey of reconciliation.orphanedContainers) {
       try {
-        const containerName = `clawbot-manager-${hostname}`;
+        const containerName = `clawbot-manager-${isolationKey}`;
         await this.dockerService.removeContainer(containerName);
         report.containersRemoved++;
-        this.logger.log(`Removed orphaned container: ${hostname}`);
+        this.logger.log(`Removed orphaned container: ${isolationKey}`);
       } catch (error) {
         this.logger.warn(
-          `Failed to remove orphaned container ${hostname}:`,
+          `Failed to remove orphaned container ${isolationKey}:`,
           error,
         );
       }
     }
 
-    // 移除孤儿工作空间
-    for (const hostname of reconciliation.orphanedWorkspaces) {
+    // 移除孤儿工作空间（使用 isolation key）
+    for (const isolationKey of reconciliation.orphanedWorkspaces) {
       try {
-        await this.workspaceService.deleteWorkspace(hostname);
+        await this.workspaceService.deleteWorkspaceByKey(isolationKey);
         report.workspacesRemoved++;
-        this.logger.log(`Removed orphaned workspace: ${hostname}`);
+        this.logger.log(`Removed orphaned workspace: ${isolationKey}`);
       } catch (error) {
         this.logger.warn(
-          `Failed to remove orphaned workspace ${hostname}:`,
+          `Failed to remove orphaned workspace ${isolationKey}:`,
           error,
         );
       }
     }
 
-    // 移除孤儿密钥
-    for (const hostname of reconciliation.orphanedSecrets) {
+    // 移除孤儿密钥（使用 isolation key）
+    for (const isolationKey of reconciliation.orphanedSecrets) {
       try {
-        await this.workspaceService.deleteSecrets(hostname);
+        await this.workspaceService.deleteSecretsByKey(isolationKey);
         report.secretsRemoved++;
-        this.logger.log(`Removed orphaned secrets: ${hostname}`);
+        this.logger.log(`Removed orphaned secrets: ${isolationKey}`);
       } catch (error) {
         this.logger.warn(
-          `Failed to remove orphaned secrets ${hostname}:`,
+          `Failed to remove orphaned secrets ${isolationKey}:`,
           error,
         );
       }
@@ -288,15 +299,11 @@ export class ReconciliationService implements OnModuleInit {
    * 获取所有托管容器
    */
   private async getManagedContainers(): Promise<
-    { id: string; hostname: string }[]
+    { id: string; hostname: string; isolationKey: string }[]
   > {
     try {
-      // 使用 DockerService 的方法获取托管容器
-      const stats = await this.dockerService.getAllContainerStats();
-      return stats.map((s) => ({
-        id: s.name,
-        hostname: s.hostname,
-      }));
+      // 使用 DockerService 的方法获取托管容器及其 isolation keys
+      return await this.dockerService.listManagedContainersWithIsolationKeys();
     } catch (error) {
       this.logger.warn('Failed to list managed containers:', error);
       return [];

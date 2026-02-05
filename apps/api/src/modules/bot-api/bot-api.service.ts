@@ -100,8 +100,12 @@ export class BotApiService {
   }
 
   async getBotByHostname(hostname: string, userId: string): Promise<Bot> {
-    const bot = await this.botService.getByHostname(hostname);
-    if (!bot || bot.createdById !== userId) {
+    // Query with userId filter for proper multi-tenant isolation
+    const bot = await this.botService.get({
+      hostname,
+      createdById: userId,
+    });
+    if (!bot) {
       throw new NotFoundException(`Bot with hostname "${hostname}" not found`);
     }
 
@@ -117,8 +121,11 @@ export class BotApiService {
   }
 
   async createBot(input: CreateBotInput, userId: string): Promise<Bot> {
-    // Check if hostname already exists
-    const existing = await this.botService.getByHostname(input.hostname);
+    // Check if hostname already exists for this user (per-user uniqueness)
+    const existing = await this.botService.get({
+      hostname: input.hostname,
+      createdById: userId,
+    });
     if (existing) {
       throw new ConflictException(
         `Bot with hostname "${input.hostname}" already exists`,
@@ -165,6 +172,7 @@ export class BotApiService {
     // Create workspace
     const workspacePath = await this.workspaceService.createWorkspace({
       hostname: input.hostname,
+      userId,
       name: input.name,
       aiProvider: primaryProvider.providerId,
       model: primaryProvider.primaryModel || primaryProvider.models[0],
@@ -172,6 +180,12 @@ export class BotApiService {
       persona: input.persona,
       features: input.features,
     });
+
+    // Get isolation key for multi-tenant resource naming
+    const isolationKey = this.workspaceService.getIsolationKeyForBot(
+      userId,
+      input.hostname,
+    );
 
     // Determine API type from provider config
     const providerConfig =
@@ -205,6 +219,7 @@ export class BotApiService {
 
             // Write API key to secrets directory for the bot
             await this.workspaceService.writeApiKey(
+              userId,
               input.hostname,
               providerKey.vendor,
               apiKey,
@@ -232,6 +247,7 @@ export class BotApiService {
     try {
       containerId = await this.dockerService.createContainer({
         hostname: input.hostname,
+        isolationKey,
         name: input.name,
         port,
         gatewayToken,
@@ -337,6 +353,7 @@ export class BotApiService {
                 Buffer.from(providerKey.secretEncrypted),
               );
               await this.workspaceService.writeApiKey(
+                userId,
                 input.hostname,
                 providerKey.vendor,
                 apiKey,
@@ -394,7 +411,7 @@ export class BotApiService {
 
     // Delete workspace
     try {
-      await this.workspaceService.deleteWorkspace(hostname);
+      await this.workspaceService.deleteWorkspace(userId, hostname);
     } catch (error) {
       this.logger.warn(`Failed to delete workspace for ${hostname}:`, error);
     }
@@ -490,6 +507,7 @@ export class BotApiService {
                     Buffer.from(providerKey.secretEncrypted),
                   );
                   await this.workspaceService.writeApiKey(
+                    userId,
                     hostname,
                     providerKey.vendor,
                     apiKey,
@@ -502,6 +520,7 @@ export class BotApiService {
                 );
                 // Write API key to secrets directory
                 await this.workspaceService.writeApiKey(
+                  userId,
                   hostname,
                   providerKey.vendor,
                   apiKey,
@@ -517,9 +536,17 @@ export class BotApiService {
         }
 
         // Create container if it doesn't exist
-        const workspacePath = this.workspaceService.getWorkspacePath(hostname);
+        const workspacePath = this.workspaceService.getWorkspacePath(
+          userId,
+          hostname,
+        );
+        const isolationKey = this.workspaceService.getIsolationKeyForBot(
+          userId,
+          hostname,
+        );
         const containerId = await this.dockerService.createContainer({
           hostname: bot.hostname,
+          isolationKey,
           name: bot.name,
           port: bot.port || 9200,
           gatewayToken: bot.gatewayToken || '',
@@ -606,14 +633,17 @@ export class BotApiService {
 
   async getOrphanReport(userId: string): Promise<OrphanReport> {
     const { list: bots } = await this.botService.list({ createdById: userId });
-    const knownHostnames = bots.map((b) => b.hostname);
+    // Use isolation keys for multi-tenant resource identification
+    const knownIsolationKeys = bots.map((b) =>
+      this.workspaceService.getIsolationKeyForBot(userId, b.hostname),
+    );
 
     const orphanedContainers =
-      await this.dockerService.findOrphanedContainers(knownHostnames);
+      await this.dockerService.findOrphanedContainers(knownIsolationKeys);
     const orphanedWorkspaces =
-      await this.workspaceService.findOrphanedWorkspaces(knownHostnames);
+      await this.workspaceService.findOrphanedWorkspaces(knownIsolationKeys);
     const orphanedSecrets =
-      await this.workspaceService.findOrphanedSecrets(knownHostnames);
+      await this.workspaceService.findOrphanedSecrets(knownIsolationKeys);
 
     return {
       orphanedContainers,
@@ -628,22 +658,25 @@ export class BotApiService {
 
   async cleanupOrphans(userId: string): Promise<CleanupReport> {
     const { list: bots } = await this.botService.list({ createdById: userId });
-    const knownHostnames = bots.map((b) => b.hostname);
+    // Use isolation keys for multi-tenant resource identification
+    const knownIsolationKeys = bots.map((b) =>
+      this.workspaceService.getIsolationKeyForBot(userId, b.hostname),
+    );
 
     const containerReport =
-      await this.dockerService.cleanupOrphans(knownHostnames);
+      await this.dockerService.cleanupOrphans(knownIsolationKeys);
 
-    // Cleanup orphaned workspaces
+    // Cleanup orphaned workspaces (using isolation keys)
     const orphanedWorkspaces =
-      await this.workspaceService.findOrphanedWorkspaces(knownHostnames);
+      await this.workspaceService.findOrphanedWorkspaces(knownIsolationKeys);
     let workspacesRemoved = 0;
-    for (const hostname of orphanedWorkspaces) {
+    for (const isolationKey of orphanedWorkspaces) {
       try {
-        await this.workspaceService.deleteWorkspace(hostname);
+        await this.workspaceService.deleteWorkspaceByKey(isolationKey);
         workspacesRemoved++;
       } catch (error) {
         this.logger.warn(
-          `Failed to remove orphaned workspace ${hostname}:`,
+          `Failed to remove orphaned workspace ${isolationKey}:`,
           error,
         );
       }

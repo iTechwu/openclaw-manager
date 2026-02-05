@@ -21,6 +21,8 @@ export interface ContainerInfo {
 
 export interface CreateContainerOptions {
   hostname: string;
+  /** Isolation key for multi-tenant support (userId_short-hostname) */
+  isolationKey: string;
   name: string;
   port: number;
   gatewayToken: string;
@@ -124,12 +126,12 @@ export class DockerService implements OnModuleInit {
    * @param workspacePath - Full workspace path (used in host path mode)
    * @returns Array of volume bind strings for Docker
    */
-  private buildVolumeBinds(hostname: string, workspacePath: string): string[] {
+  private buildVolumeBinds(isolationKey: string, workspacePath: string): string[] {
     if (this.dataVolumeName && this.secretsVolumeName) {
       // Containerized mode: use named volumes with subdirectories
       // Format: volume_name/subpath:/container/path:mode
       // Note: Docker doesn't support subpaths in named volumes directly,
-      // so we mount the entire volume and the bot uses hostname as subdirectory
+      // so we mount the entire volume and the bot uses isolationKey as subdirectory
       this.logger.log(
         `Using named volumes: data=${this.dataVolumeName}, secrets=${this.secretsVolumeName}`,
       );
@@ -143,7 +145,7 @@ export class DockerService implements OnModuleInit {
     this.logger.log(`Using host paths: data=${workspacePath}`);
     return [
       `${workspacePath}:/app/workspace:rw`,
-      `${this.secretsDir}/${hostname}:/app/secrets:ro`,
+      `${this.secretsDir}/${isolationKey}:/app/secrets:ro`,
     ];
   }
 
@@ -153,10 +155,11 @@ export class DockerService implements OnModuleInit {
   async createContainer(options: CreateContainerOptions): Promise<string> {
     if (!this.isAvailable()) {
       this.logger.warn('Docker not available, simulating container creation');
-      return `simulated-${options.hostname}`;
+      return `simulated-${options.isolationKey}`;
     }
 
-    const containerName = `${this.containerPrefix}${options.hostname}`;
+    // Use isolationKey for container name to ensure uniqueness across users
+    const containerName = `${this.containerPrefix}${options.isolationKey}`;
 
     // Check if container already exists
     try {
@@ -185,8 +188,8 @@ export class DockerService implements OnModuleInit {
 
     // When using named volumes, bot needs to know its workspace subdirectory
     if (this.dataVolumeName) {
-      envVars.push(`BOT_WORKSPACE_DIR=/data/bots/${options.hostname}`);
-      envVars.push(`BOT_SECRETS_DIR=/data/secrets/${options.hostname}`);
+      envVars.push(`BOT_WORKSPACE_DIR=/data/bots/${options.isolationKey}`);
+      envVars.push(`BOT_SECRETS_DIR=/data/secrets/${options.isolationKey}`);
     } else {
       envVars.push(`BOT_WORKSPACE_DIR=/app/workspace`);
       envVars.push(`BOT_SECRETS_DIR=/app/secrets`);
@@ -320,7 +323,7 @@ export class DockerService implements OnModuleInit {
     // When running in a container with named volumes, use volume names instead of host paths
     // This allows bot containers to access the same data volumes as the manager container
     const binds = this.buildVolumeBinds(
-      options.hostname,
+      options.isolationKey,
       options.workspacePath,
     );
 
@@ -352,6 +355,7 @@ export class DockerService implements OnModuleInit {
       },
       Labels: {
         'clawbot-manager.hostname': options.hostname,
+        'clawbot-manager.isolation-key': options.isolationKey,
         'clawbot-manager.managed': 'true',
       },
     });
@@ -515,9 +519,33 @@ export class DockerService implements OnModuleInit {
   }
 
   /**
-   * Find orphaned containers (containers without corresponding database entries)
+   * List all managed containers with their isolation keys
+   * Used by ReconciliationService for orphan detection
    */
-  async findOrphanedContainers(knownHostnames: string[]): Promise<string[]> {
+  async listManagedContainersWithIsolationKeys(): Promise<
+    { id: string; hostname: string; isolationKey: string }[]
+  > {
+    if (!this.isAvailable()) {
+      return [];
+    }
+
+    const containers = await this.docker.listContainers({
+      all: true,
+      filters: { label: ['clawbot-manager.managed=true'] },
+    });
+
+    return containers.map((c) => ({
+      id: c.Id,
+      hostname: c.Labels['clawbot-manager.hostname'] || 'unknown',
+      isolationKey: c.Labels['clawbot-manager.isolation-key'] || c.Labels['clawbot-manager.hostname'] || 'unknown',
+    }));
+  }
+
+  /**
+   * Find orphaned containers (containers without corresponding database entries)
+   * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
+   */
+  async findOrphanedContainers(knownIsolationKeys: string[]): Promise<string[]> {
     if (!this.isAvailable()) {
       return [];
     }
@@ -529,9 +557,9 @@ export class DockerService implements OnModuleInit {
 
     const orphaned: string[] = [];
     for (const container of containers) {
-      const hostname = container.Labels['clawbot-manager.hostname'];
-      if (hostname && !knownHostnames.includes(hostname)) {
-        orphaned.push(hostname);
+      const isolationKey = container.Labels['clawbot-manager.isolation-key'];
+      if (isolationKey && !knownIsolationKeys.includes(isolationKey)) {
+        orphaned.push(isolationKey);
       }
     }
 
@@ -540,10 +568,11 @@ export class DockerService implements OnModuleInit {
 
   /**
    * Get orphan report
+   * @param knownIsolationKeys - isolation keys of known bots
    */
-  async getOrphanReport(knownHostnames: string[]): Promise<OrphanReport> {
+  async getOrphanReport(knownIsolationKeys: string[]): Promise<OrphanReport> {
     const orphanedContainers =
-      await this.findOrphanedContainers(knownHostnames);
+      await this.findOrphanedContainers(knownIsolationKeys);
 
     // TODO: Implement workspace and secrets orphan detection
     const orphanedWorkspaces: string[] = [];
@@ -562,22 +591,23 @@ export class DockerService implements OnModuleInit {
 
   /**
    * Cleanup orphaned resources
+   * @param knownIsolationKeys - isolation keys of known bots
    */
-  async cleanupOrphans(knownHostnames: string[]): Promise<CleanupReport> {
+  async cleanupOrphans(knownIsolationKeys: string[]): Promise<CleanupReport> {
     const orphanedContainers =
-      await this.findOrphanedContainers(knownHostnames);
+      await this.findOrphanedContainers(knownIsolationKeys);
 
     let containersRemoved = 0;
-    for (const hostname of orphanedContainers) {
+    for (const isolationKey of orphanedContainers) {
       try {
-        const containerName = `${this.containerPrefix}${hostname}`;
+        const containerName = `${this.containerPrefix}${isolationKey}`;
         const container = this.docker.getContainer(containerName);
         await container.remove({ force: true });
         containersRemoved++;
         this.logger.log(`Removed orphaned container: ${containerName}`);
       } catch (error) {
         this.logger.warn(
-          `Failed to remove orphaned container for ${hostname}:`,
+          `Failed to remove orphaned container for ${isolationKey}:`,
           error,
         );
       }

@@ -7,6 +7,7 @@ import { Logger } from 'winston';
 
 export interface BotWorkspaceConfig {
   hostname: string;
+  userId: string;
   name: string;
   aiProvider: string;
   model: string;
@@ -55,20 +56,29 @@ export class WorkspaceService {
   }
 
   /**
+   * 生成用户隔离的唯一标识符
+   * 使用 userId 前8位 + hostname 确保不同用户的 bot 不会冲突
+   */
+  private getIsolationKey(userId: string, hostname: string): string {
+    return `${userId.slice(0, 8)}-${hostname}`;
+  }
+
+  /**
    * Create workspace directory for a bot
    * If workspace already exists (e.g., from a previously deleted bot), it will be cleaned first
    */
   async createWorkspace(config: BotWorkspaceConfig): Promise<string> {
-    const workspacePath = path.join(this.dataDir, config.hostname);
-    const botSecretsPath = path.join(this.secretsDir, config.hostname);
+    const isolationKey = this.getIsolationKey(config.userId, config.hostname);
+    const workspacePath = path.join(this.dataDir, isolationKey);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
 
     try {
       // Clean up any existing workspace/secrets from previously deleted bot
       // This ensures a fresh start when reusing a hostname
-      const workspaceExists = await this.workspaceExists(config.hostname);
+      const workspaceExists = await this.workspaceExistsByKey(isolationKey);
       if (workspaceExists) {
         this.logger.info(
-          `Cleaning up existing workspace for hostname: ${config.hostname}`,
+          `Cleaning up existing workspace for: ${isolationKey}`,
         );
         await fs.rm(workspacePath, { recursive: true, force: true });
         await fs.rm(botSecretsPath, { recursive: true, force: true });
@@ -95,11 +105,11 @@ export class WorkspaceService {
       // Create secrets directory for this bot
       await fs.mkdir(botSecretsPath, { recursive: true });
 
-      this.logger.info(`Workspace created for bot: ${config.hostname}`);
+      this.logger.info(`Workspace created for bot: ${isolationKey}`);
       return workspacePath;
     } catch (error) {
       this.logger.error(
-        `Failed to create workspace for ${config.hostname}:`,
+        `Failed to create workspace for ${isolationKey}:`,
         error,
       );
       throw error;
@@ -110,10 +120,12 @@ export class WorkspaceService {
    * Update workspace configuration
    */
   async updateWorkspace(
+    userId: string,
     hostname: string,
     config: Partial<BotWorkspaceConfig>,
   ): Promise<void> {
-    const workspacePath = path.join(this.dataDir, hostname);
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const workspacePath = path.join(this.dataDir, isolationKey);
     const configPath = path.join(workspacePath, 'config.json');
 
     try {
@@ -141,9 +153,9 @@ export class WorkspaceService {
         );
       }
 
-      this.logger.info(`Workspace updated for bot: ${hostname}`);
+      this.logger.info(`Workspace updated for bot: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to update workspace for ${hostname}:`, error);
+      this.logger.error(`Failed to update workspace for ${isolationKey}:`, error);
       throw error;
     }
   }
@@ -151,9 +163,10 @@ export class WorkspaceService {
   /**
    * Delete workspace directory
    */
-  async deleteWorkspace(hostname: string): Promise<void> {
-    const workspacePath = path.join(this.dataDir, hostname);
-    const botSecretsPath = path.join(this.secretsDir, hostname);
+  async deleteWorkspace(userId: string, hostname: string): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const workspacePath = path.join(this.dataDir, isolationKey);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
 
     try {
       // Remove workspace directory
@@ -162,18 +175,18 @@ export class WorkspaceService {
       // Remove secrets directory
       await fs.rm(botSecretsPath, { recursive: true, force: true });
 
-      this.logger.info(`Workspace deleted for bot: ${hostname}`);
+      this.logger.info(`Workspace deleted for bot: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to delete workspace for ${hostname}:`, error);
+      this.logger.error(`Failed to delete workspace for ${isolationKey}:`, error);
       throw error;
     }
   }
 
   /**
-   * Check if workspace exists
+   * Check if workspace exists by isolation key (internal)
    */
-  async workspaceExists(hostname: string): Promise<boolean> {
-    const workspacePath = path.join(this.dataDir, hostname);
+  private async workspaceExistsByKey(isolationKey: string): Promise<boolean> {
+    const workspacePath = path.join(this.dataDir, isolationKey);
     try {
       await fs.access(workspacePath);
       return true;
@@ -183,30 +196,48 @@ export class WorkspaceService {
   }
 
   /**
+   * Check if workspace exists
+   */
+  async workspaceExists(userId: string, hostname: string): Promise<boolean> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    return this.workspaceExistsByKey(isolationKey);
+  }
+
+  /**
    * Get workspace path
    */
-  getWorkspacePath(hostname: string): string {
-    return path.join(this.dataDir, hostname);
+  getWorkspacePath(userId: string, hostname: string): string {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    return path.join(this.dataDir, isolationKey);
+  }
+
+  /**
+   * Get isolation key for a user's bot (for Docker service)
+   */
+  getIsolationKeyForBot(userId: string, hostname: string): string {
+    return this.getIsolationKey(userId, hostname);
   }
 
   /**
    * Write API key to secrets directory
    */
   async writeApiKey(
+    userId: string,
     hostname: string,
     vendor: string,
     apiKey: string,
   ): Promise<void> {
-    const botSecretsPath = path.join(this.secretsDir, hostname);
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
     const keyPath = path.join(botSecretsPath, `${vendor}.key`);
 
     try {
       await fs.mkdir(botSecretsPath, { recursive: true });
       await fs.writeFile(keyPath, apiKey, { mode: 0o600 });
-      this.logger.info(`API key written for ${hostname}/${vendor}`);
+      this.logger.info(`API key written for ${isolationKey}/${vendor}`);
     } catch (error) {
       this.logger.error(
-        `Failed to write API key for ${hostname}/${vendor}:`,
+        `Failed to write API key for ${isolationKey}/${vendor}:`,
         error,
       );
       throw error;
@@ -216,12 +247,13 @@ export class WorkspaceService {
   /**
    * Remove API key from secrets directory
    */
-  async removeApiKey(hostname: string, vendor: string): Promise<void> {
-    const keyPath = path.join(this.secretsDir, hostname, `${vendor}.key`);
+  async removeApiKey(userId: string, hostname: string, vendor: string): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const keyPath = path.join(this.secretsDir, isolationKey, `${vendor}.key`);
 
     try {
       await fs.unlink(keyPath);
-      this.logger.info(`API key removed for ${hostname}/${vendor}`);
+      this.logger.info(`API key removed for ${isolationKey}/${vendor}`);
     } catch {
       // Ignore if file doesn't exist
     }
@@ -241,16 +273,18 @@ export class WorkspaceService {
 
   /**
    * Find orphaned workspaces (workspaces without corresponding database entries)
+   * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
    */
-  async findOrphanedWorkspaces(knownHostnames: string[]): Promise<string[]> {
+  async findOrphanedWorkspaces(knownIsolationKeys: string[]): Promise<string[]> {
     const workspaces = await this.listWorkspaces();
-    return workspaces.filter((w) => !knownHostnames.includes(w));
+    return workspaces.filter((w) => !knownIsolationKeys.includes(w));
   }
 
   /**
    * Find orphaned secrets directories
+   * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
    */
-  async findOrphanedSecrets(knownHostnames: string[]): Promise<string[]> {
+  async findOrphanedSecrets(knownIsolationKeys: string[]): Promise<string[]> {
     try {
       const entries = await fs.readdir(this.secretsDir, {
         withFileTypes: true,
@@ -258,25 +292,25 @@ export class WorkspaceService {
       const secretDirs = entries
         .filter((e) => e.isDirectory())
         .map((e) => e.name);
-      return secretDirs.filter((s) => !knownHostnames.includes(s));
+      return secretDirs.filter((s) => !knownIsolationKeys.includes(s));
     } catch {
       return [];
     }
   }
 
   /**
-   * List all workspace hostnames
+   * List all workspace isolation keys
    * Used by ReconciliationService for orphan detection
    */
-  async listWorkspaceHostnames(): Promise<string[]> {
+  async listWorkspaceIsolationKeys(): Promise<string[]> {
     return this.listWorkspaces();
   }
 
   /**
-   * List all secret directory hostnames
+   * List all secret directory isolation keys
    * Used by ReconciliationService for orphan detection
    */
-  async listSecretHostnames(): Promise<string[]> {
+  async listSecretIsolationKeys(): Promise<string[]> {
     try {
       const entries = await fs.readdir(this.secretsDir, {
         withFileTypes: true,
@@ -291,13 +325,44 @@ export class WorkspaceService {
    * Delete secrets directory for a bot
    * Used by ReconciliationService for cleanup
    */
-  async deleteSecrets(hostname: string): Promise<void> {
-    const botSecretsPath = path.join(this.secretsDir, hostname);
+  async deleteSecrets(userId: string, hostname: string): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
     try {
       await fs.rm(botSecretsPath, { recursive: true, force: true });
-      this.logger.info(`Secrets deleted for bot: ${hostname}`);
+      this.logger.info(`Secrets deleted for bot: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to delete secrets for ${hostname}:`, error);
+      this.logger.error(`Failed to delete secrets for ${isolationKey}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete secrets directory by isolation key (for orphan cleanup)
+   */
+  async deleteSecretsByKey(isolationKey: string): Promise<void> {
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
+    try {
+      await fs.rm(botSecretsPath, { recursive: true, force: true });
+      this.logger.info(`Secrets deleted for: ${isolationKey}`);
+    } catch (error) {
+      this.logger.error(`Failed to delete secrets for ${isolationKey}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete workspace directory by isolation key (for orphan cleanup)
+   */
+  async deleteWorkspaceByKey(isolationKey: string): Promise<void> {
+    const workspacePath = path.join(this.dataDir, isolationKey);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
+    try {
+      await fs.rm(workspacePath, { recursive: true, force: true });
+      await fs.rm(botSecretsPath, { recursive: true, force: true });
+      this.logger.info(`Workspace deleted for: ${isolationKey}`);
+    } catch (error) {
+      this.logger.error(`Failed to delete workspace for ${isolationKey}:`, error);
       throw error;
     }
   }
@@ -307,20 +372,22 @@ export class WorkspaceService {
    * Used for channel tokens and other secrets
    */
   async writeSecret(
+    userId: string,
     hostname: string,
     name: string,
     value: string,
   ): Promise<void> {
-    const botSecretsPath = path.join(this.secretsDir, hostname);
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const botSecretsPath = path.join(this.secretsDir, isolationKey);
     const secretPath = path.join(botSecretsPath, name);
 
     try {
       await fs.mkdir(botSecretsPath, { recursive: true });
       await fs.writeFile(secretPath, value, { mode: 0o600 });
-      this.logger.info(`Secret written for ${hostname}/${name}`);
+      this.logger.info(`Secret written for ${isolationKey}/${name}`);
     } catch (error) {
       this.logger.error(
-        `Failed to write secret for ${hostname}/${name}:`,
+        `Failed to write secret for ${isolationKey}/${name}:`,
         error,
       );
       throw error;
@@ -330,8 +397,9 @@ export class WorkspaceService {
   /**
    * Read a secret file for a bot
    */
-  async readSecret(hostname: string, name: string): Promise<string | null> {
-    const secretPath = path.join(this.secretsDir, hostname, name);
+  async readSecret(userId: string, hostname: string, name: string): Promise<string | null> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const secretPath = path.join(this.secretsDir, isolationKey, name);
     try {
       return await fs.readFile(secretPath, 'utf-8');
     } catch {
