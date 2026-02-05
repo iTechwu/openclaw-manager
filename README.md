@@ -32,12 +32,31 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 
 ## 🧩 项目阶段
 
-**当前阶段：MVP / 早期可用**
+**当前阶段：MVP / 生产可用**
 
-- ✅ 核心能力：Bot CRUD、Provider Key 管理、AI 代理、Docker 容器编排
-- ✅ 基础设施：用户认证、多登录方式、文件上传、短信、国际化
-- ⏳ 持续迭代：诊断能力、监控告警、高级路由策略
-- ⚠️ 生产部署前需自行评估：密钥备份、高可用、资源限流等
+### 已完成 ✅
+
+- **核心能力**：Bot CRUD、Provider Key 管理、AI 代理、Docker 容器编排
+- **基础设施**：用户认证、多登录方式、文件上传、短信、国际化
+- **诊断运维**：容器统计、孤立资源检测与清理、启动对账
+- **安全机制**：零信任代理模式（Bot 容器不接触 API 密钥）、AES-256-GCM 加密
+- **配额管理**：日/月 Token 限制、80% 阈值警告、超额系统消息
+- **模板系统**：Persona 模板（系统模板 + 用户模板）、Bot 创建向导
+- **审计日志**：操作日志记录（CREATE、START、STOP、DELETE）
+
+### 待实施 ⏳
+
+- **Analytics 分析**：契约已定义，后端实现待完成
+- **通知系统 UI**：后端配额通知已实现，前端 UI 待完成
+- **Webhook 处理器**：契约已定义，处理器待实现
+- **权限系统**：细粒度权限控制待实现
+- **限流验证**：配置已存在，实现待验证
+
+### 生产部署注意 ⚠️
+
+- 密钥备份策略
+- 高可用部署方案
+- 资源限流配置
 
 ---
 
@@ -121,23 +140,46 @@ clawbotmanager/
 
 ### 支持的 AI 提供商
 
-| Vendor      | 说明                 |
-| ----------- | -------------------- |
-| `openai`    | OpenAI API           |
-| `anthropic` | Anthropic Claude     |
-| `google`    | Google Generative AI |
-| `deepseek`  | DeepSeek API         |
-| `groq`      | Groq API             |
-| `venice`    | Venice AI            |
+| 类别 | Vendor | 说明 |
+| ---- | ------ | ---- |
+| **主流** | `openai` | OpenAI API |
+| | `anthropic` | Anthropic Claude |
+| | `google` | Google Generative AI |
+| | `deepseek` | DeepSeek API |
+| | `groq` | Groq API |
+| **云服务** | `azure-openai` | Azure OpenAI |
+| | `mistral` | Mistral AI |
+| | `openrouter` | OpenRouter |
+| | `together` | Together AI |
+| | `fireworks` | Fireworks AI |
+| | `perplexity` | Perplexity AI |
+| | `cohere` | Cohere |
+| **国内** | `zhipu` | 智谱 AI |
+| | `moonshot` | Moonshot AI |
+| | `baichuan` | 百川 AI |
+| | `dashscope` | 阿里通义 |
+| | `stepfun` | 阶跃星辰 |
+| | `doubao` | 字节豆包 |
+| | `minimax` | MiniMax |
+| | `yi` | 零一万物 |
+| | `hunyuan` | 腾讯混元 |
+| | `siliconflow` | 硅基流动 |
+| **其他** | `venice` | Venice AI |
+| | `ollama` | Ollama (本地) |
+| | `custom` | 自定义端点 |
 
 ---
 
 ## ✨ 核心能力
 
 - **Bot 生命周期**：创建、启动、停止、删除，Docker 容器 + 工作区（config.json、soul.md、features.json）
-- **Provider Key 管理**：加密存储、标签路由、Round-robin、自定义 baseUrl
-- **AI 请求代理**：`/v1/:vendor/*` 统一入口，Bot Token 鉴权，流式响应
-- **诊断与运维**：容器统计、孤立资源检测与清理
+- **Provider Key 管理**：加密存储（AES-256-GCM）、标签路由、Round-robin、自定义 baseUrl
+- **AI 请求代理**：`/v1/:vendor/*` 统一入口，Bot Token 鉴权，流式响应（SSE）
+- **零信任模式**：Bot 容器不接触 API 密钥，代理层注入密钥
+- **配额管理**：日/月 Token 限制、阈值警告、超额通知
+- **模板系统**：Persona 模板（系统/用户）、5 步创建向导
+- **诊断与运维**：容器统计、孤立资源检测与清理、启动对账
+- **审计日志**：操作日志记录，支持合规审计
 - **多租户**：按用户隔离 Bot 与 Key，JWT 认证
 
 ---
@@ -248,6 +290,33 @@ pnpm dev:api      # 仅后端
 | ALL  | `/api/v1/:vendor/*` | 转发至对应 AI 提供商（openai、anthropic 等） |
 
 更多示例见 `https/rest-client.http`。
+
+---
+
+## 🗺️ 路线图
+
+### 近期目标
+
+| 功能 | 状态 | 说明 |
+| ---- | ---- | ---- |
+| Analytics 分析后端 | 📋 契约已定义 | 实现 `/analytics/track` 端点，支持使用量统计 |
+| 通知系统 UI | 📋 后端已实现 | 完成前端通知中心、实时推送 |
+| Webhook 处理器 | 📋 契约已定义 | 实现 transcode、audio-transcribe 等回调处理 |
+| 权限系统 | 📋 待设计 | 细粒度权限控制（RBAC） |
+| 限流实现 | 📋 配置已存在 | 验证并完善 @fastify/rate-limit 集成 |
+
+### 中期目标
+
+- **监控告警**：集成 Prometheus/Grafana，Bot 健康监控
+- **高级路由策略**：基于延迟、成本的智能路由
+- **团队协作**：团队空间、成员管理、权限分配
+- **API 用量分析**：Token 消耗统计、成本分析、趋势图表
+
+### 长期愿景
+
+- **多集群部署**：跨区域 Bot 调度
+- **插件系统**：自定义 Bot 能力扩展
+- **Marketplace**：模板市场、Bot 分享
 
 ---
 
