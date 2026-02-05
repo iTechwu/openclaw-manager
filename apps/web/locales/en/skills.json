@@ -1,0 +1,22 @@
+{
+  "title": "Skills",
+  "description": "Create and manage custom skills to extend your Bot's capabilities",
+  "searchPlaceholder": "Search skills...",
+  "allTypes": "All Types",
+  "allSkills": "All Skills",
+  "systemSkills": "System Skills",
+  "customSkills": "Custom Skills",
+  "noSkills": "No skills found",
+  "tryOtherKeywords": "Try searching with different keywords",
+  "system": "System",
+  "custom": "Custom",
+  "noDescription": "No description",
+  "createSkill": "Create Skill",
+  "createSkillDescription": "Create a new custom skill",
+  "comingSoon": "Coming soon",
+  "types": {
+    "tool": "Tool",
+    "prompt": "Prompt",
+    "workflow": "Workflow"
+  }
+}

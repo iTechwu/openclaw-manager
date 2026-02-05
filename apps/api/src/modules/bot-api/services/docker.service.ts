@@ -180,7 +180,7 @@ export class DockerService implements OnModuleInit {
       `BOT_HOSTNAME=${options.hostname}`,
       `BOT_NAME=${options.name}`,
       `BOT_PORT=${options.port}`,
-      `GATEWAY_TOKEN=${options.gatewayToken}`,
+      `OPENCLAW_GATEWAY_TOKEN=${options.gatewayToken}`,
       `AI_PROVIDER=${options.aiProvider}`,
       `AI_MODEL=${options.model}`,
       `CHANNEL_TYPE=${options.channelType}`,

@@ -11,7 +11,7 @@ import {
   Badge,
   Button,
 } from '@repo/ui';
-import { Play, Square, Trash2, BarChart2, Puzzle } from 'lucide-react';
+import { Play, Square, Trash2, BarChart2, Puzzle, Wrench } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
@@ -82,6 +82,12 @@ export function BotCard({
             <Button variant="outline" size="sm" className="w-full">
               <Puzzle className="mr-1 size-4" />
               {t('actions.plugins')}
+            </Button>
+          </Link>
+          <Link href={`/bots/${bot.hostname}/skills`} className="flex-1">
+            <Button variant="outline" size="sm" className="w-full">
+              <Wrench className="mr-1 size-4" />
+              {t('actions.skills')}
             </Button>
           </Link>
         </div>

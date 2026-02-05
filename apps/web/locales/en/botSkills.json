@@ -1,0 +1,26 @@
+{
+  "title": "Skills Management",
+  "addSkill": "Add Skill",
+  "addSkillDescription": "Select skills to install on this Bot",
+  "noInstalledSkills": "No skills installed yet",
+  "addFirstSkill": "Add your first skill",
+  "noAvailableSkills": "No available skills to install",
+  "system": "System",
+  "custom": "Custom",
+  "noDescription": "No description",
+  "configure": "Configure",
+  "uninstall": "Uninstall",
+  "install": "Install",
+  "installSuccess": "Skill installed successfully",
+  "installFailed": "Installation failed",
+  "uninstallSuccess": "Skill uninstalled",
+  "uninstallFailed": "Uninstall failed",
+  "enabled": "Skill enabled",
+  "disabled": "Skill disabled",
+  "operationFailed": "Operation failed",
+  "types": {
+    "tool": "Tool",
+    "prompt": "Prompt",
+    "workflow": "Workflow"
+  }
+}

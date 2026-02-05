@@ -445,7 +445,37 @@ export class BotApiService {
     await this.botService.update({ id: bot.id }, { status: 'starting' });
 
     try {
+      // Check if container exists and is in a healthy state
+      let needsRecreate = false;
       if (bot.containerId) {
+        const containerStatus = await this.dockerService.getContainerStatus(
+          bot.containerId,
+        );
+        if (!containerStatus) {
+          // Container doesn't exist anymore
+          this.logger.log(
+            `Container ${bot.containerId} not found, will recreate`,
+          );
+          needsRecreate = true;
+        } else if (containerStatus.exitCode !== 0 && !containerStatus.running) {
+          // Container exited with error, needs to be recreated
+          this.logger.log(
+            `Container ${bot.containerId} exited with code ${containerStatus.exitCode}, will recreate`,
+          );
+          needsRecreate = true;
+          // Remove the failed container
+          try {
+            await this.dockerService.removeContainer(bot.containerId);
+          } catch (removeError) {
+            this.logger.warn(
+              `Failed to remove container ${bot.containerId}:`,
+              removeError,
+            );
+          }
+        }
+      }
+
+      if (bot.containerId && !needsRecreate) {
         await this.dockerService.startContainer(bot.containerId);
       } else {
         // Get provider key for this bot

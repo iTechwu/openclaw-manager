@@ -55,6 +55,7 @@ const NON_SOFT_DELETE_MODELS = [
   // 关联表（多对多关系，通过 onDelete: Cascade 级联删除）
   'BotProviderKey',
   'BotPlugin',
+  'BotSkill',
   // 日志表（只追加，不删除）
   'BotUsageLog',
   'OperateLog',

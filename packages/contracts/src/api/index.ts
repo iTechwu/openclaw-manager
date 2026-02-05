@@ -10,6 +10,7 @@ export * from './plugin.contract';
 export * from './risk-words.contract';
 export * from './setting.contract';
 export * from './sign.contract';
+export * from './skill.contract';
 export * from './sms.contract';
 export * from './system.contract';
 export * from './task.contract';

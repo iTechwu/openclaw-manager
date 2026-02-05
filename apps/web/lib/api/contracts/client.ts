@@ -20,6 +20,8 @@ import {
   channelContract,
   pluginContract,
   botPluginContract,
+  skillContract,
+  botSkillContract,
 } from '@repo/contracts';
 import { getHeaders } from '@repo/utils/headers';
 import { API_VERSION_HEADER, APP_BUILD_HEADER } from '@repo/constants';
@@ -432,6 +434,26 @@ export const botPluginClient = initClient(botPluginContract, clientOptions);
  */
 export const botPluginApi = initQueryClient(botPluginContract, clientOptions);
 
+/**
+ * Skill API - Direct client
+ */
+export const skillClient = initClient(skillContract, clientOptions);
+
+/**
+ * Skill API - React Query hooks
+ */
+export const skillApi = initQueryClient(skillContract, clientOptions);
+
+/**
+ * Bot Skill API - Direct client
+ */
+export const botSkillClient = initClient(botSkillContract, clientOptions);
+
+/**
+ * Bot Skill API - React Query hooks
+ */
+export const botSkillApi = initQueryClient(botSkillContract, clientOptions);
+
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
 // ============================================================================
@@ -461,6 +483,8 @@ export const tsRestClient = {
   channel: channelApi,
   plugin: pluginApi,
   botPlugin: botPluginApi,
+  skill: skillApi,
+  botSkill: botSkillApi,
   // Direct clients (for imperative calls)
   analyticsClient,
   botClient,
@@ -471,4 +495,6 @@ export const tsRestClient = {
   channelClient,
   pluginClient,
   botPluginClient,
+  skillClient,
+  botSkillClient,
 };

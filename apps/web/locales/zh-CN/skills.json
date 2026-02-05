@@ -1,0 +1,22 @@
+{
+  "title": "技能管理",
+  "description": "创建和管理自定义技能，扩展 Bot 的能力",
+  "searchPlaceholder": "搜索技能...",
+  "allTypes": "全部类型",
+  "allSkills": "全部技能",
+  "systemSkills": "系统技能",
+  "customSkills": "自定义技能",
+  "noSkills": "暂无技能",
+  "tryOtherKeywords": "尝试使用其他关键词搜索",
+  "system": "系统",
+  "custom": "自定义",
+  "noDescription": "暂无描述",
+  "createSkill": "创建技能",
+  "createSkillDescription": "创建新的自定义技能",
+  "comingSoon": "功能开发中，敬请期待",
+  "types": {
+    "tool": "工具",
+    "prompt": "提示词",
+    "workflow": "工作流"
+  }
+}

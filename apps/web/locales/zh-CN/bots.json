@@ -19,7 +19,8 @@
     "delete": "删除",
     "refresh": "刷新",
     "usage": "用量",
-    "plugins": "插件"
+    "plugins": "插件",
+    "skills": "技能"
   },
   "status": {
     "created": "已创建",
