@@ -331,6 +331,8 @@ exports.Prisma.BotProviderKeyScalarFieldEnum = {
   botId: 'botId',
   providerKeyId: 'providerKeyId',
   isPrimary: 'isPrimary',
+  allowedModels: 'allowedModels',
+  primaryModel: 'primaryModel',
   createdAt: 'createdAt'
 };
 
@@ -407,6 +409,7 @@ exports.Prisma.ChannelDefinitionScalarFieldEnum = {
   label: 'label',
   icon: 'icon',
   popular: 'popular',
+  popularLocales: 'popularLocales',
   tokenHint: 'tokenHint',
   tokenPlaceholder: 'tokenPlaceholder',
   helpUrl: 'helpUrl',

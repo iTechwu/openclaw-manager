@@ -293,22 +293,29 @@ export class BotApiService {
 
     this.logger.log(`Bot created: ${input.hostname}`);
 
-    // Create BotProviderKey relationship if keyId is provided
-    if (primaryProvider.keyId) {
-      try {
-        await this.botProviderKeyService.create({
-          bot: { connect: { id: bot.id } },
-          providerKey: { connect: { id: primaryProvider.keyId } },
-          isPrimary: true,
-        });
-        this.logger.log(
-          `BotProviderKey created for bot ${bot.id} with key ${primaryProvider.keyId}`,
-        );
-      } catch (error) {
-        this.logger.warn(
-          `Failed to create BotProviderKey for bot ${bot.id}:`,
-          error,
-        );
+    // Create BotProviderKey relationships for all providers
+    for (const provider of input.providers) {
+      if (provider.keyId) {
+        try {
+          const isPrimary =
+            provider.providerId ===
+            (input.primaryProvider || input.providers[0].providerId);
+          await this.botProviderKeyService.create({
+            bot: { connect: { id: bot.id } },
+            providerKey: { connect: { id: provider.keyId } },
+            isPrimary,
+            allowedModels: provider.models,
+            primaryModel: provider.primaryModel || provider.models[0] || null,
+          });
+          this.logger.log(
+            `BotProviderKey created for bot ${bot.id} with key ${provider.keyId}, models: ${provider.models.join(', ')}`,
+          );
+        } catch (error) {
+          this.logger.warn(
+            `Failed to create BotProviderKey for bot ${bot.id}:`,
+            error,
+          );
+        }
       }
     }
 

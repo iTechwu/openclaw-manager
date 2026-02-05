@@ -8,7 +8,12 @@ import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
 import { BotChannelApiController } from './bot-channel-api.controller';
 import { BotChannelApiService } from './bot-channel-api.service';
-import { BotChannelModule, BotModule, UserInfoModule } from '@app/db';
+import {
+  BotChannelModule,
+  BotModule,
+  UserInfoModule,
+  ChannelDefinitionModule,
+} from '@app/db';
 import { CryptModule } from '@app/clients/internal/crypt';
 import { FeishuClientModule } from '@app/clients/internal/feishu';
 
@@ -18,6 +23,7 @@ import { FeishuClientModule } from '@app/clients/internal/feishu';
     BotChannelModule,
     BotModule,
     UserInfoModule,
+    ChannelDefinitionModule,
     AuthModule,
     JwtModule,
     RedisModule,

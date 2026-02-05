@@ -5,11 +5,21 @@
  * - Bot 渠道配置的 CRUD 操作
  * - 渠道连接管理
  * - 凭证加密/解密
+ * - 凭证验证（基于 ChannelDefinition）
  */
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { BotChannelService, BotService } from '@app/db';
+import {
+  BotChannelService,
+  BotService,
+  ChannelDefinitionService,
+} from '@app/db';
 import { CryptClient } from '@app/clients/internal/crypt';
 import { FeishuClientService } from '@app/clients/internal/feishu';
 import type { Prisma } from '@prisma/client';
@@ -27,6 +37,7 @@ export class BotChannelApiService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botChannelDb: BotChannelService,
     private readonly botDb: BotService,
+    private readonly channelDefinitionDb: ChannelDefinitionService,
     private readonly cryptClient: CryptClient,
     private readonly feishuClientService: FeishuClientService,
   ) {}
@@ -81,6 +92,12 @@ export class BotChannelApiService {
     request: CreateBotChannelRequest,
   ): Promise<BotChannelItem> {
     const bot = await this.getBotByHostname(userId, hostname);
+
+    // 验证渠道类型是否存在
+    await this.validateChannelCredentials(
+      request.channelType,
+      request.credentials,
+    );
 
     // 加密凭证
     const credentialsEncrypted = this.cryptClient.encrypt(
@@ -330,6 +347,57 @@ export class BotChannelApiService {
 
     // 建立 WebSocket 连接
     await this.feishuClientService.connect(channel.id);
+  }
+
+  /**
+   * 验证渠道凭证
+   * 根据 ChannelDefinition 验证必填字段
+   */
+  private async validateChannelCredentials(
+    channelType: string,
+    credentials: Record<string, string>,
+  ): Promise<void> {
+    // 获取渠道定义（使用类型断言处理关联查询结果）
+    const channelDefinition = (await this.channelDefinitionDb.get(
+      { id: channelType },
+      {
+        select: {
+          id: true,
+          label: true,
+          credentialFields: {
+            where: { isDeleted: false },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              key: true,
+              label: true,
+              required: true,
+            },
+          },
+        },
+      },
+    )) as unknown as {
+      id: string;
+      label: string;
+      credentialFields: Array<{ key: string; label: string; required: boolean }>;
+    } | null;
+
+    if (!channelDefinition) {
+      throw new BadRequestException(`Unsupported channel type: ${channelType}`);
+    }
+
+    // 验证必填字段
+    const missingFields: string[] = [];
+    for (const field of channelDefinition.credentialFields) {
+      if (field.required && !credentials[field.key]?.trim()) {
+        missingFields.push(field.label);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      throw new BadRequestException(
+        `Missing required credentials: ${missingFields.join(', ')}`,
+      );
+    }
   }
 
   /**

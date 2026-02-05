@@ -90,6 +90,7 @@ export type ProviderKey = $Result.DefaultSelection<Prisma.$ProviderKeyPayload>
 /**
  * Model BotProviderKey
  * BotProviderKey - Bot 与 ProviderKey 的关联表
+ * 存储 Bot 与 ProviderKey 的关联关系，以及该关联允许使用的模型列表
  */
 export type BotProviderKey = $Result.DefaultSelection<Prisma.$BotProviderKeyPayload>
 /**
@@ -19574,6 +19575,7 @@ export namespace Prisma {
     botId: string | null
     providerKeyId: string | null
     isPrimary: boolean | null
+    primaryModel: string | null
     createdAt: Date | null
   }
 
@@ -19582,6 +19584,7 @@ export namespace Prisma {
     botId: string | null
     providerKeyId: string | null
     isPrimary: boolean | null
+    primaryModel: string | null
     createdAt: Date | null
   }
 
@@ -19590,6 +19593,8 @@ export namespace Prisma {
     botId: number
     providerKeyId: number
     isPrimary: number
+    allowedModels: number
+    primaryModel: number
     createdAt: number
     _all: number
   }
@@ -19600,6 +19605,7 @@ export namespace Prisma {
     botId?: true
     providerKeyId?: true
     isPrimary?: true
+    primaryModel?: true
     createdAt?: true
   }
 
@@ -19608,6 +19614,7 @@ export namespace Prisma {
     botId?: true
     providerKeyId?: true
     isPrimary?: true
+    primaryModel?: true
     createdAt?: true
   }
 
@@ -19616,6 +19623,8 @@ export namespace Prisma {
     botId?: true
     providerKeyId?: true
     isPrimary?: true
+    allowedModels?: true
+    primaryModel?: true
     createdAt?: true
     _all?: true
   }
@@ -19697,6 +19706,8 @@ export namespace Prisma {
     botId: string
     providerKeyId: string
     isPrimary: boolean
+    allowedModels: string[]
+    primaryModel: string | null
     createdAt: Date
     _count: BotProviderKeyCountAggregateOutputType | null
     _min: BotProviderKeyMinAggregateOutputType | null
@@ -19722,6 +19733,8 @@ export namespace Prisma {
     botId?: boolean
     providerKeyId?: boolean
     isPrimary?: boolean
+    allowedModels?: boolean
+    primaryModel?: boolean
     createdAt?: boolean
     bot?: boolean | BotDefaultArgs<ExtArgs>
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -19732,6 +19745,8 @@ export namespace Prisma {
     botId?: boolean
     providerKeyId?: boolean
     isPrimary?: boolean
+    allowedModels?: boolean
+    primaryModel?: boolean
     createdAt?: boolean
     bot?: boolean | BotDefaultArgs<ExtArgs>
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -19742,6 +19757,8 @@ export namespace Prisma {
     botId?: boolean
     providerKeyId?: boolean
     isPrimary?: boolean
+    allowedModels?: boolean
+    primaryModel?: boolean
     createdAt?: boolean
     bot?: boolean | BotDefaultArgs<ExtArgs>
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -19752,10 +19769,12 @@ export namespace Prisma {
     botId?: boolean
     providerKeyId?: boolean
     isPrimary?: boolean
+    allowedModels?: boolean
+    primaryModel?: boolean
     createdAt?: boolean
   }
 
-  export type BotProviderKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "providerKeyId" | "isPrimary" | "createdAt", ExtArgs["result"]["botProviderKey"]>
+  export type BotProviderKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "providerKeyId" | "isPrimary" | "allowedModels" | "primaryModel" | "createdAt", ExtArgs["result"]["botProviderKey"]>
   export type BotProviderKeyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bot?: boolean | BotDefaultArgs<ExtArgs>
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -19780,6 +19799,14 @@ export namespace Prisma {
       botId: string
       providerKeyId: string
       isPrimary: boolean
+      /**
+       * 允许使用的模型列表
+       */
+      allowedModels: string[]
+      /**
+       * 主要模型（默认使用的模型）
+       */
+      primaryModel: string | null
       createdAt: Date
     }, ExtArgs["result"]["botProviderKey"]>
     composites: {}
@@ -20210,6 +20237,8 @@ export namespace Prisma {
     readonly botId: FieldRef<"BotProviderKey", 'String'>
     readonly providerKeyId: FieldRef<"BotProviderKey", 'String'>
     readonly isPrimary: FieldRef<"BotProviderKey", 'Boolean'>
+    readonly allowedModels: FieldRef<"BotProviderKey", 'String[]'>
+    readonly primaryModel: FieldRef<"BotProviderKey", 'String'>
     readonly createdAt: FieldRef<"BotProviderKey", 'DateTime'>
   }
     
@@ -26519,6 +26548,7 @@ export namespace Prisma {
     label: number
     icon: number
     popular: number
+    popularLocales: number
     tokenHint: number
     tokenPlaceholder: number
     helpUrl: number
@@ -26577,6 +26607,7 @@ export namespace Prisma {
     label?: true
     icon?: true
     popular?: true
+    popularLocales?: true
     tokenHint?: true
     tokenPlaceholder?: true
     helpUrl?: true
@@ -26680,6 +26711,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular: boolean
+    popularLocales: string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl: string | null
@@ -26715,6 +26747,7 @@ export namespace Prisma {
     label?: boolean
     icon?: boolean
     popular?: boolean
+    popularLocales?: boolean
     tokenHint?: boolean
     tokenPlaceholder?: boolean
     helpUrl?: boolean
@@ -26733,6 +26766,7 @@ export namespace Prisma {
     label?: boolean
     icon?: boolean
     popular?: boolean
+    popularLocales?: boolean
     tokenHint?: boolean
     tokenPlaceholder?: boolean
     helpUrl?: boolean
@@ -26749,6 +26783,7 @@ export namespace Prisma {
     label?: boolean
     icon?: boolean
     popular?: boolean
+    popularLocales?: boolean
     tokenHint?: boolean
     tokenPlaceholder?: boolean
     helpUrl?: boolean
@@ -26765,6 +26800,7 @@ export namespace Prisma {
     label?: boolean
     icon?: boolean
     popular?: boolean
+    popularLocales?: boolean
     tokenHint?: boolean
     tokenPlaceholder?: boolean
     helpUrl?: boolean
@@ -26776,7 +26812,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type ChannelDefinitionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "label" | "icon" | "popular" | "tokenHint" | "tokenPlaceholder" | "helpUrl" | "helpText" | "sortOrder" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["channelDefinition"]>
+  export type ChannelDefinitionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "label" | "icon" | "popular" | "popularLocales" | "tokenHint" | "tokenPlaceholder" | "helpUrl" | "helpText" | "sortOrder" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["channelDefinition"]>
   export type ChannelDefinitionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     credentialFields?: boolean | ChannelDefinition$credentialFieldsArgs<ExtArgs>
     _count?: boolean | ChannelDefinitionCountOutputTypeDefaultArgs<ExtArgs>
@@ -26794,6 +26830,7 @@ export namespace Prisma {
       label: string
       icon: string
       popular: boolean
+      popularLocales: string[]
       tokenHint: string
       tokenPlaceholder: string
       helpUrl: string | null
@@ -27231,6 +27268,7 @@ export namespace Prisma {
     readonly label: FieldRef<"ChannelDefinition", 'String'>
     readonly icon: FieldRef<"ChannelDefinition", 'String'>
     readonly popular: FieldRef<"ChannelDefinition", 'Boolean'>
+    readonly popularLocales: FieldRef<"ChannelDefinition", 'String[]'>
     readonly tokenHint: FieldRef<"ChannelDefinition", 'String'>
     readonly tokenPlaceholder: FieldRef<"ChannelDefinition", 'String'>
     readonly helpUrl: FieldRef<"ChannelDefinition", 'String'>
@@ -34909,6 +34947,8 @@ export namespace Prisma {
     botId: 'botId',
     providerKeyId: 'providerKeyId',
     isPrimary: 'isPrimary',
+    allowedModels: 'allowedModels',
+    primaryModel: 'primaryModel',
     createdAt: 'createdAt'
   };
 
@@ -35003,6 +35043,7 @@ export namespace Prisma {
     label: 'label',
     icon: 'icon',
     popular: 'popular',
+    popularLocales: 'popularLocales',
     tokenHint: 'tokenHint',
     tokenPlaceholder: 'tokenPlaceholder',
     helpUrl: 'helpUrl',
@@ -36743,6 +36784,8 @@ export namespace Prisma {
     botId?: UuidFilter<"BotProviderKey"> | string
     providerKeyId?: UuidFilter<"BotProviderKey"> | string
     isPrimary?: BoolFilter<"BotProviderKey"> | boolean
+    allowedModels?: StringNullableListFilter<"BotProviderKey">
+    primaryModel?: StringNullableFilter<"BotProviderKey"> | string | null
     createdAt?: DateTimeFilter<"BotProviderKey"> | Date | string
     bot?: XOR<BotScalarRelationFilter, BotWhereInput>
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -36753,6 +36796,8 @@ export namespace Prisma {
     botId?: SortOrder
     providerKeyId?: SortOrder
     isPrimary?: SortOrder
+    allowedModels?: SortOrder
+    primaryModel?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     bot?: BotOrderByWithRelationInput
     providerKey?: ProviderKeyOrderByWithRelationInput
@@ -36767,6 +36812,8 @@ export namespace Prisma {
     botId?: UuidFilter<"BotProviderKey"> | string
     providerKeyId?: UuidFilter<"BotProviderKey"> | string
     isPrimary?: BoolFilter<"BotProviderKey"> | boolean
+    allowedModels?: StringNullableListFilter<"BotProviderKey">
+    primaryModel?: StringNullableFilter<"BotProviderKey"> | string | null
     createdAt?: DateTimeFilter<"BotProviderKey"> | Date | string
     bot?: XOR<BotScalarRelationFilter, BotWhereInput>
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -36777,6 +36824,8 @@ export namespace Prisma {
     botId?: SortOrder
     providerKeyId?: SortOrder
     isPrimary?: SortOrder
+    allowedModels?: SortOrder
+    primaryModel?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: BotProviderKeyCountOrderByAggregateInput
     _max?: BotProviderKeyMaxOrderByAggregateInput
@@ -36791,6 +36840,8 @@ export namespace Prisma {
     botId?: UuidWithAggregatesFilter<"BotProviderKey"> | string
     providerKeyId?: UuidWithAggregatesFilter<"BotProviderKey"> | string
     isPrimary?: BoolWithAggregatesFilter<"BotProviderKey"> | boolean
+    allowedModels?: StringNullableListFilter<"BotProviderKey">
+    primaryModel?: StringNullableWithAggregatesFilter<"BotProviderKey"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"BotProviderKey"> | Date | string
   }
 
@@ -37234,6 +37285,7 @@ export namespace Prisma {
     label?: StringFilter<"ChannelDefinition"> | string
     icon?: StringFilter<"ChannelDefinition"> | string
     popular?: BoolFilter<"ChannelDefinition"> | boolean
+    popularLocales?: StringNullableListFilter<"ChannelDefinition">
     tokenHint?: StringFilter<"ChannelDefinition"> | string
     tokenPlaceholder?: StringFilter<"ChannelDefinition"> | string
     helpUrl?: StringNullableFilter<"ChannelDefinition"> | string | null
@@ -37251,6 +37303,7 @@ export namespace Prisma {
     label?: SortOrder
     icon?: SortOrder
     popular?: SortOrder
+    popularLocales?: SortOrder
     tokenHint?: SortOrder
     tokenPlaceholder?: SortOrder
     helpUrl?: SortOrderInput | SortOrder
@@ -37271,6 +37324,7 @@ export namespace Prisma {
     label?: StringFilter<"ChannelDefinition"> | string
     icon?: StringFilter<"ChannelDefinition"> | string
     popular?: BoolFilter<"ChannelDefinition"> | boolean
+    popularLocales?: StringNullableListFilter<"ChannelDefinition">
     tokenHint?: StringFilter<"ChannelDefinition"> | string
     tokenPlaceholder?: StringFilter<"ChannelDefinition"> | string
     helpUrl?: StringNullableFilter<"ChannelDefinition"> | string | null
@@ -37288,6 +37342,7 @@ export namespace Prisma {
     label?: SortOrder
     icon?: SortOrder
     popular?: SortOrder
+    popularLocales?: SortOrder
     tokenHint?: SortOrder
     tokenPlaceholder?: SortOrder
     helpUrl?: SortOrderInput | SortOrder
@@ -37312,6 +37367,7 @@ export namespace Prisma {
     label?: StringWithAggregatesFilter<"ChannelDefinition"> | string
     icon?: StringWithAggregatesFilter<"ChannelDefinition"> | string
     popular?: BoolWithAggregatesFilter<"ChannelDefinition"> | boolean
+    popularLocales?: StringNullableListFilter<"ChannelDefinition">
     tokenHint?: StringWithAggregatesFilter<"ChannelDefinition"> | string
     tokenPlaceholder?: StringWithAggregatesFilter<"ChannelDefinition"> | string
     helpUrl?: StringNullableWithAggregatesFilter<"ChannelDefinition"> | string | null
@@ -39420,6 +39476,8 @@ export namespace Prisma {
   export type BotProviderKeyCreateInput = {
     id?: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
     bot: BotCreateNestedOneWithoutProviderKeysInput
     providerKey: ProviderKeyCreateNestedOneWithoutBotProviderKeysInput
@@ -39430,12 +39488,16 @@ export namespace Prisma {
     botId: string
     providerKeyId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
   export type BotProviderKeyUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bot?: BotUpdateOneRequiredWithoutProviderKeysNestedInput
     providerKey?: ProviderKeyUpdateOneRequiredWithoutBotProviderKeysNestedInput
@@ -39446,6 +39508,8 @@ export namespace Prisma {
     botId?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -39454,12 +39518,16 @@ export namespace Prisma {
     botId: string
     providerKeyId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
   export type BotProviderKeyUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -39468,6 +39536,8 @@ export namespace Prisma {
     botId?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -39948,6 +40018,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular?: boolean
+    popularLocales?: ChannelDefinitionCreatepopularLocalesInput | string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl?: string | null
@@ -39965,6 +40036,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular?: boolean
+    popularLocales?: ChannelDefinitionCreatepopularLocalesInput | string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl?: string | null
@@ -39982,6 +40054,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39999,6 +40072,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40016,6 +40090,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular?: boolean
+    popularLocales?: ChannelDefinitionCreatepopularLocalesInput | string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl?: string | null
@@ -40032,6 +40107,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40048,6 +40124,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42048,6 +42125,8 @@ export namespace Prisma {
     botId?: SortOrder
     providerKeyId?: SortOrder
     isPrimary?: SortOrder
+    allowedModels?: SortOrder
+    primaryModel?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -42056,6 +42135,7 @@ export namespace Prisma {
     botId?: SortOrder
     providerKeyId?: SortOrder
     isPrimary?: SortOrder
+    primaryModel?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -42064,6 +42144,7 @@ export namespace Prisma {
     botId?: SortOrder
     providerKeyId?: SortOrder
     isPrimary?: SortOrder
+    primaryModel?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -42398,6 +42479,7 @@ export namespace Prisma {
     label?: SortOrder
     icon?: SortOrder
     popular?: SortOrder
+    popularLocales?: SortOrder
     tokenHint?: SortOrder
     tokenPlaceholder?: SortOrder
     helpUrl?: SortOrder
@@ -44015,6 +44097,10 @@ export namespace Prisma {
     deleteMany?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
   }
 
+  export type BotProviderKeyCreateallowedModelsInput = {
+    set: string[]
+  }
+
   export type BotCreateNestedOneWithoutProviderKeysInput = {
     create?: XOR<BotCreateWithoutProviderKeysInput, BotUncheckedCreateWithoutProviderKeysInput>
     connectOrCreate?: BotCreateOrConnectWithoutProviderKeysInput
@@ -44025,6 +44111,11 @@ export namespace Prisma {
     create?: XOR<ProviderKeyCreateWithoutBotProviderKeysInput, ProviderKeyUncheckedCreateWithoutBotProviderKeysInput>
     connectOrCreate?: ProviderKeyCreateOrConnectWithoutBotProviderKeysInput
     connect?: ProviderKeyWhereUniqueInput
+  }
+
+  export type BotProviderKeyUpdateallowedModelsInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type BotUpdateOneRequiredWithoutProviderKeysNestedInput = {
@@ -44218,6 +44309,10 @@ export namespace Prisma {
     update?: XOR<XOR<UserInfoUpdateToOneWithWhereWithoutOperateLogsInput, UserInfoUpdateWithoutOperateLogsInput>, UserInfoUncheckedUpdateWithoutOperateLogsInput>
   }
 
+  export type ChannelDefinitionCreatepopularLocalesInput = {
+    set: string[]
+  }
+
   export type ChannelCredentialFieldCreateNestedManyWithoutChannelInput = {
     create?: XOR<ChannelCredentialFieldCreateWithoutChannelInput, ChannelCredentialFieldUncheckedCreateWithoutChannelInput> | ChannelCredentialFieldCreateWithoutChannelInput[] | ChannelCredentialFieldUncheckedCreateWithoutChannelInput[]
     connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
@@ -44230,6 +44325,11 @@ export namespace Prisma {
     connectOrCreate?: ChannelCredentialFieldCreateOrConnectWithoutChannelInput | ChannelCredentialFieldCreateOrConnectWithoutChannelInput[]
     createMany?: ChannelCredentialFieldCreateManyChannelInputEnvelope
     connect?: ChannelCredentialFieldWhereUniqueInput | ChannelCredentialFieldWhereUniqueInput[]
+  }
+
+  export type ChannelDefinitionUpdatepopularLocalesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type ChannelCredentialFieldUpdateManyWithoutChannelNestedInput = {
@@ -47391,6 +47491,8 @@ export namespace Prisma {
   export type BotProviderKeyCreateWithoutBotInput = {
     id?: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutBotProviderKeysInput
   }
@@ -47399,6 +47501,8 @@ export namespace Prisma {
     id?: string
     providerKeyId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
@@ -47796,6 +47900,8 @@ export namespace Prisma {
     botId?: UuidFilter<"BotProviderKey"> | string
     providerKeyId?: UuidFilter<"BotProviderKey"> | string
     isPrimary?: BoolFilter<"BotProviderKey"> | boolean
+    allowedModels?: StringNullableListFilter<"BotProviderKey">
+    primaryModel?: StringNullableFilter<"BotProviderKey"> | string | null
     createdAt?: DateTimeFilter<"BotProviderKey"> | Date | string
   }
 
@@ -48038,6 +48144,8 @@ export namespace Prisma {
   export type BotProviderKeyCreateWithoutProviderKeyInput = {
     id?: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
     bot: BotCreateNestedOneWithoutProviderKeysInput
   }
@@ -48046,6 +48154,8 @@ export namespace Prisma {
     id?: string
     botId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
@@ -49573,6 +49683,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular?: boolean
+    popularLocales?: ChannelDefinitionCreatepopularLocalesInput | string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl?: string | null
@@ -49589,6 +49700,7 @@ export namespace Prisma {
     label: string
     icon: string
     popular?: boolean
+    popularLocales?: ChannelDefinitionCreatepopularLocalesInput | string[]
     tokenHint: string
     tokenPlaceholder: string
     helpUrl?: string | null
@@ -49621,6 +49733,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -49637,6 +49750,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     icon?: StringFieldUpdateOperationsInput | string
     popular?: BoolFieldUpdateOperationsInput | boolean
+    popularLocales?: ChannelDefinitionUpdatepopularLocalesInput | string[]
     tokenHint?: StringFieldUpdateOperationsInput | string
     tokenPlaceholder?: StringFieldUpdateOperationsInput | string
     helpUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -51126,6 +51240,8 @@ export namespace Prisma {
     id?: string
     providerKeyId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
@@ -51180,6 +51296,8 @@ export namespace Prisma {
   export type BotProviderKeyUpdateWithoutBotInput = {
     id?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutBotProviderKeysNestedInput
   }
@@ -51188,6 +51306,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -51195,6 +51315,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -51346,6 +51468,8 @@ export namespace Prisma {
     id?: string
     botId: string
     isPrimary?: boolean
+    allowedModels?: BotProviderKeyCreateallowedModelsInput | string[]
+    primaryModel?: string | null
     createdAt?: Date | string
   }
 
@@ -51380,6 +51504,8 @@ export namespace Prisma {
   export type BotProviderKeyUpdateWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bot?: BotUpdateOneRequiredWithoutProviderKeysNestedInput
   }
@@ -51388,6 +51514,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     botId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -51395,6 +51523,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     botId?: StringFieldUpdateOperationsInput | string
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
+    primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

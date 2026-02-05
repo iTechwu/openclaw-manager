@@ -29,6 +29,9 @@ export const channelContract = c.router(
     list: {
       method: 'GET',
       path: '',
+      query: z.object({
+        locale: z.string().optional(), // Locale for filtering popular channels
+      }),
       responses: {
         200: ApiResponseSchema(ChannelDefinitionListResponseSchema),
       },

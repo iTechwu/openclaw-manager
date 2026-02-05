@@ -28,6 +28,7 @@ export const ChannelDefinitionSchema = z.object({
   label: z.string(),
   icon: z.string(),
   popular: z.boolean(),
+  popularLocales: z.array(z.string()), // Locales where this channel is popular
   tokenHint: z.string(),
   tokenPlaceholder: z.string(),
   helpUrl: z.string().nullable(),

@@ -20,8 +20,9 @@ export class ChannelApiService {
 
   /**
    * List all channel definitions with their credential fields
+   * @param locale - Optional locale to filter popular channels
    */
-  async listChannels(): Promise<ChannelDefinitionListResponse> {
+  async listChannels(locale?: string): Promise<ChannelDefinitionListResponse> {
     const { list: channels } = await this.channelDefinitionService.list(
       {},
       {
@@ -33,6 +34,7 @@ export class ChannelApiService {
           label: true,
           icon: true,
           popular: true,
+          popularLocales: true,
           tokenHint: true,
           tokenPlaceholder: true,
           helpUrl: true,
@@ -60,8 +62,20 @@ export class ChannelApiService {
       this.mapChannelToDto(channel),
     );
 
-    const popularChannels = mappedChannels.filter((c) => c.popular);
-    const otherChannels = mappedChannels.filter((c) => !c.popular);
+    // Filter popular channels based on locale
+    const popularChannels = mappedChannels.filter((c) => {
+      if (locale && c.popularLocales.length > 0) {
+        // Check if the locale matches any of the popularLocales
+        return c.popularLocales.some(
+          (l) => l === locale || locale.startsWith(l) || l.startsWith(locale.split('-')[0]),
+        );
+      }
+      // Fallback to the popular field if no locale specified or no popularLocales defined
+      return c.popular;
+    });
+
+    const popularChannelIds = new Set(popularChannels.map((c) => c.id));
+    const otherChannels = mappedChannels.filter((c) => !popularChannelIds.has(c.id));
 
     return {
       channels: mappedChannels,
@@ -82,6 +96,7 @@ export class ChannelApiService {
           label: true,
           icon: true,
           popular: true,
+          popularLocales: true,
           tokenHint: true,
           tokenPlaceholder: true,
           helpUrl: true,
@@ -118,6 +133,7 @@ export class ChannelApiService {
       label: channel.label,
       icon: channel.icon,
       popular: channel.popular,
+      popularLocales: channel.popularLocales || [],
       tokenHint: channel.tokenHint,
       tokenPlaceholder: channel.tokenPlaceholder,
       helpUrl: channel.helpUrl,

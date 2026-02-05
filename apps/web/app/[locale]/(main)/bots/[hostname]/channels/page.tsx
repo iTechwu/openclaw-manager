@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { botChannelApi } from '@/lib/api/contracts/client';
+import { useLocale } from 'next-intl';
+import { botChannelApi, channelApi } from '@/lib/api/contracts/client';
 import {
   Card,
   CardContent,
@@ -19,7 +20,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   Input,
   Label,
@@ -28,33 +28,26 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
-  Settings,
   Wifi,
   WifiOff,
   AlertCircle,
   Loader2,
   MessageSquare,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
 import type {
   BotChannelItem,
   ChannelConnectionStatus,
+  ChannelDefinition,
 } from '@repo/contracts';
+import { ChannelIcon, channelColors } from '@/lib/config/channels/channel-icons';
 
-/**
- * 渠道类型配置
- */
-const channelTypeConfig: Record<
-  string,
-  { label: string; icon: React.ElementType; color: string }
-> = {
-  feishu: {
-    label: '飞书',
-    icon: MessageSquare,
-    color: 'bg-blue-500',
-  },
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyQueryOptions = any;
 
 /**
  * 连接状态配置
@@ -70,11 +63,11 @@ const connectionStatusConfig: Record<
 };
 
 /**
- * 渠道卡片组件
+ * 渠道卡片组件 - openclaw.ai 风格
  */
 function ChannelCard({
   channel,
-  hostname,
+  channelDefinitions,
   onToggle,
   onConnect,
   onDisconnect,
@@ -82,35 +75,41 @@ function ChannelCard({
   isConnecting,
 }: {
   channel: BotChannelItem;
-  hostname: string;
+  channelDefinitions: ChannelDefinition[];
   onToggle: (channelId: string, enabled: boolean) => void;
   onConnect: (channelId: string) => void;
   onDisconnect: (channelId: string) => void;
   onDelete: (channelId: string) => void;
   isConnecting: boolean;
 }) {
-  const config = channelTypeConfig[channel.channelType] || {
-    label: channel.channelType,
-    icon: MessageSquare,
-    color: 'bg-gray-500',
-  };
-  const ChannelIcon = config.icon;
+  const definition = channelDefinitions.find((d) => d.id === channel.channelType);
   const statusConfig = connectionStatusConfig[channel.connectionStatus];
+  const accentColor = channelColors[channel.channelType] || '#6B7280';
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card
+      className="group relative overflow-hidden transition-all hover:shadow-lg"
+      style={{ '--accent': accentColor } as React.CSSProperties}
+    >
+      {/* 顶部彩色边框 */}
+      <div
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{ backgroundColor: accentColor }}
+      />
+      <CardHeader className="pb-3 pt-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
+            {/* 渠道图标 - 圆形背景 */}
             <div
-              className={`flex h-10 w-10 items-center justify-center rounded-lg ${config.color}`}
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ backgroundColor: `${accentColor}20` }}
             >
-              <ChannelIcon className="h-5 w-5 text-white" />
+              <ChannelIcon channelId={channel.channelType} size={28} />
             </div>
             <div>
-              <CardTitle className="text-base">{channel.name}</CardTitle>
+              <CardTitle className="text-base font-semibold">{channel.name}</CardTitle>
               <CardDescription className="text-xs">
-                {config.label}
+                {definition?.label || channel.channelType}
               </CardDescription>
             </div>
           </div>
@@ -207,13 +206,17 @@ function ChannelCardSkeleton() {
 }
 
 /**
- * 添加渠道对话框
+ * 添加渠道对话框 - openclaw.ai 风格
  */
 function AddChannelDialog({
   open,
   onOpenChange,
   onSubmit,
   isSubmitting,
+  channelDefinitions,
+  popularChannels,
+  otherChannels,
+  locale,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -224,102 +227,222 @@ function AddChannelDialog({
     config?: Record<string, unknown>;
   }) => void;
   isSubmitting: boolean;
+  channelDefinitions: ChannelDefinition[];
+  popularChannels: ChannelDefinition[];
+  otherChannels: ChannelDefinition[];
+  locale: string;
 }) {
+  const [selectedChannelType, setSelectedChannelType] = useState<string>('');
   const [name, setName] = useState('');
-  const [appId, setAppId] = useState('');
-  const [appSecret, setAppSecret] = useState('');
-  const [requireMention, setRequireMention] = useState(true);
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
+  const [showMoreChannels, setShowMoreChannels] = useState(false);
+
+  const selectedDefinition = useMemo(
+    () => channelDefinitions.find((d) => d.id === selectedChannelType),
+    [channelDefinitions, selectedChannelType],
+  );
 
   const handleSubmit = () => {
-    if (!name.trim() || !appId.trim() || !appSecret.trim()) {
-      toast.error('请填写所有必填字段');
+    if (!selectedChannelType || !name.trim()) {
+      toast.error(locale === 'zh-CN' ? '请选择渠道类型并填写名称' : 'Please select a channel type and enter a name');
+      return;
+    }
+
+    // 验证必填字段
+    const missingFields: string[] = [];
+    for (const field of selectedDefinition?.credentialFields || []) {
+      if (field.required && !credentials[field.key]?.trim()) {
+        missingFields.push(field.label);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      toast.error(
+        locale === 'zh-CN'
+          ? `请填写必填字段: ${missingFields.join(', ')}`
+          : `Please fill in required fields: ${missingFields.join(', ')}`,
+      );
       return;
     }
 
     onSubmit({
-      channelType: 'feishu',
+      channelType: selectedChannelType,
       name: name.trim(),
-      credentials: {
-        appId: appId.trim(),
-        appSecret: appSecret.trim(),
-      },
-      config: {
-        requireMention,
-        replyInThread: false,
-        showTyping: true,
-        domain: 'feishu',
-      },
+      credentials,
+      config: {},
     });
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
+      setSelectedChannelType('');
       setName('');
-      setAppId('');
-      setAppSecret('');
-      setRequireMention(true);
+      setCredentials({});
+      setShowMoreChannels(false);
     }
     onOpenChange(newOpen);
   };
 
+  const handleCredentialChange = (key: string, value: string) => {
+    setCredentials((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSelectChannel = (channelId: string) => {
+    setSelectedChannelType(channelId);
+    setCredentials({});
+  };
+
+  const renderChannelButton = (def: ChannelDefinition) => {
+    const accentColor = channelColors[def.id] || '#6B7280';
+    const isSelected = selectedChannelType === def.id;
+    return (
+      <button
+        key={def.id}
+        type="button"
+        onClick={() => handleSelectChannel(def.id)}
+        className={`
+          relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+          hover:shadow-md hover:scale-[1.02]
+          ${isSelected
+            ? 'border-primary bg-primary/5 shadow-md'
+            : 'border-border hover:border-primary/50'
+          }
+        `}
+        style={{
+          '--accent': accentColor,
+        } as React.CSSProperties}
+      >
+        {/* 选中指示器 */}
+        {isSelected && (
+          <div
+            className="absolute top-0 left-0 right-0 h-1 rounded-t-lg"
+            style={{ backgroundColor: accentColor }}
+          />
+        )}
+        {/* 图标 */}
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${accentColor}20` }}
+        >
+          <ChannelIcon channelId={def.id} size={28} />
+        </div>
+        {/* 名称 */}
+        <span className="text-sm font-medium text-center">{def.label}</span>
+      </button>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>添加飞书渠道</DialogTitle>
+          <DialogTitle>{locale === 'zh-CN' ? '添加渠道' : 'Add Channel'}</DialogTitle>
           <DialogDescription>
-            配置飞书机器人以接收和回复消息
+            {locale === 'zh-CN'
+              ? '选择渠道类型并配置凭证以接收和回复消息'
+              : 'Select a channel type and configure credentials to receive and reply to messages'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">渠道名称 *</Label>
-            <Input
-              id="name"
-              placeholder="例如：我的飞书机器人"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="appId">App ID *</Label>
-            <Input
-              id="appId"
-              placeholder="飞书应用的 App ID"
-              value={appId}
-              onChange={(e) => setAppId(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="appSecret">App Secret *</Label>
-            <Input
-              id="appSecret"
-              type="password"
-              placeholder="飞书应用的 App Secret"
-              value={appSecret}
-              onChange={(e) => setAppSecret(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>需要 @机器人</Label>
-              <p className="text-muted-foreground text-xs">
-                开启后只响应 @机器人 的消息
-              </p>
+        <div className="space-y-6 py-4">
+          {/* 推荐渠道 */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">
+              {locale === 'zh-CN' ? '推荐渠道' : 'Recommended Channels'}
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {popularChannels.map(renderChannelButton)}
             </div>
-            <Switch
-              checked={requireMention}
-              onCheckedChange={setRequireMention}
-            />
           </div>
+
+          {/* 更多渠道 - 可折叠 */}
+          {otherChannels.length > 0 && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowMoreChannels(!showMoreChannels)}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showMoreChannels ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                {locale === 'zh-CN'
+                  ? `更多渠道 (${otherChannels.length})`
+                  : `More Channels (${otherChannels.length})`}
+              </button>
+              {showMoreChannels && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {otherChannels.map(renderChannelButton)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 渠道配置表单 */}
+          {selectedDefinition && (
+            <div className="space-y-4 border-t pt-4">
+              {/* 渠道名称 */}
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  {locale === 'zh-CN' ? '渠道名称' : 'Channel Name'} *
+                </Label>
+                <Input
+                  id="name"
+                  placeholder={locale === 'zh-CN' ? '例如：我的机器人' : 'e.g., My Bot'}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
+              {/* 动态凭证字段 */}
+              {selectedDefinition.credentialFields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label htmlFor={field.key}>
+                    {field.label} {field.required && '*'}
+                  </Label>
+                  <Input
+                    id={field.key}
+                    type={field.fieldType === 'password' ? 'password' : 'text'}
+                    placeholder={field.placeholder}
+                    value={credentials[field.key] || ''}
+                    onChange={(e) => handleCredentialChange(field.key, e.target.value)}
+                  />
+                </div>
+              ))}
+
+              {/* 帮助链接 */}
+              {selectedDefinition.helpUrl && (
+                <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <ExternalLink className="h-3 w-3" />
+                  <a
+                    href={selectedDefinition.helpUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    {selectedDefinition.helpText ||
+                      (locale === 'zh-CN' ? '查看帮助文档' : 'View documentation')}
+                  </a>
+                </div>
+              )}
+
+              {/* Token 提示 */}
+              {selectedDefinition.tokenHint && (
+                <p className="text-muted-foreground text-xs bg-muted/50 p-3 rounded-lg">
+                  💡 {selectedDefinition.tokenHint}
+                </p>
+              )}
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            取消
+            {locale === 'zh-CN' ? '取消' : 'Cancel'}
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !selectedChannelType}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            添加
+            {locale === 'zh-CN' ? '添加' : 'Add'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -333,6 +456,7 @@ function AddChannelDialog({
 export default function BotChannelsPage() {
   const params = useParams<{ hostname: string }>();
   const hostname = params.hostname;
+  const locale = useLocale();
   const queryClient = useQueryClient();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -340,6 +464,17 @@ export default function BotChannelsPage() {
   const [connectingChannelId, setConnectingChannelId] = useState<string | null>(
     null,
   );
+
+  // 获取渠道定义列表（传递 locale 参数）
+  const { data: channelDefsResponse } = channelApi.list.useQuery(
+    ['channel-definitions', locale],
+    { query: { locale } },
+    { staleTime: 1000 * 60 * 10 }, // 10 minutes
+  );
+
+  const channelDefinitions = channelDefsResponse?.body?.data?.channels || [];
+  const popularChannels = channelDefsResponse?.body?.data?.popularChannels || [];
+  const otherChannels = channelDefsResponse?.body?.data?.otherChannels || [];
 
   // 获取渠道列表
   const { data: channelsResponse, isLoading } = botChannelApi.list.useQuery(
@@ -494,7 +629,7 @@ export default function BotChannelsPage() {
             <ChannelCard
               key={channel.id}
               channel={channel}
-              hostname={hostname}
+              channelDefinitions={channelDefinitions}
               onToggle={handleToggle}
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
@@ -511,6 +646,10 @@ export default function BotChannelsPage() {
         onOpenChange={setIsAddDialogOpen}
         onSubmit={handleAddChannel}
         isSubmitting={isSubmitting}
+        channelDefinitions={channelDefinitions}
+        popularChannels={popularChannels}
+        otherChannels={otherChannels}
+        locale={locale}
       />
     </div>
   );

@@ -465,11 +465,16 @@ model ProviderKey {
 }
 
 /// BotProviderKey - Bot 与 ProviderKey 的关联表
+/// 存储 Bot 与 ProviderKey 的关联关系，以及该关联允许使用的模型列表
 model BotProviderKey {
   id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   botId         String   @map("bot_id") @db.Uuid
   providerKeyId String   @map("provider_key_id") @db.Uuid
   isPrimary     Boolean  @default(false) @map("is_primary")
+  /// 允许使用的模型列表
+  allowedModels String[] @default([]) @map("allowed_models")
+  /// 主要模型（默认使用的模型）
+  primaryModel  String?  @map("primary_model") @db.VarChar(100)
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   bot         Bot         @relation(fields: [botId], references: [id], onDelete: Cascade)
@@ -661,15 +666,16 @@ model OperateLog {
 /// ChannelDefinition - 渠道定义
 /// 存储各种消息渠道的配置信息，包括所需的凭证字段
 model ChannelDefinition {
-  id               String  @id @db.VarChar(50) // e.g., "feishu", "telegram", "discord"
-  label            String  @db.VarChar(100) // Display name
-  icon             String  @db.VarChar(10) // Emoji or short icon code
-  popular          Boolean @default(false) // Whether to show in popular section
-  tokenHint        String  @map("token_hint") @db.VarChar(500) // Help text for token
-  tokenPlaceholder String  @map("token_placeholder") @db.VarChar(255) // Placeholder text
-  helpUrl          String? @map("help_url") @db.VarChar(500) // Documentation URL
-  helpText         String? @map("help_text") @db.VarChar(255) // Help link text
-  sortOrder        Int     @default(0) @map("sort_order") // Display order
+  id               String   @id @db.VarChar(50) // e.g., "feishu", "telegram", "discord"
+  label            String   @db.VarChar(100) // Display name
+  icon             String   @db.VarChar(10) // Emoji or short icon code
+  popular          Boolean  @default(false) // Whether to show in popular section (default/fallback)
+  popularLocales   String[] @default([]) @map("popular_locales") // Locales where this channel is popular, e.g., ["zh-CN", "en"]
+  tokenHint        String   @map("token_hint") @db.VarChar(500) // Help text for token
+  tokenPlaceholder String   @map("token_placeholder") @db.VarChar(255) // Placeholder text
+  helpUrl          String?  @map("help_url") @db.VarChar(500) // Documentation URL
+  helpText         String?  @map("help_text") @db.VarChar(255) // Help link text
+  sortOrder        Int      @default(0) @map("sort_order") // Display order
 
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
