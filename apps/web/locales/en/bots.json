@@ -19,7 +19,8 @@
     "delete": "Delete",
     "refresh": "Refresh",
     "usage": "Usage",
-    "plugins": "Plugins"
+    "plugins": "Plugins",
+    "skills": "Skills"
   },
   "status": {
     "created": "Created",

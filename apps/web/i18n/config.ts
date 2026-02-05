@@ -28,6 +28,7 @@ export const localeFlags: Record<Locale, string> = {
 // 只保留当前仍在使用的命名空间
 export const namespaces = [
   'bots',
+  'botSkills',
   'common',
   'creative',
   'errors',
@@ -36,6 +37,7 @@ export const namespaces = [
   'plugins',
   'secrets',
   'settings',
+  'skills',
   'templates',
   'validation',
 ] as const;

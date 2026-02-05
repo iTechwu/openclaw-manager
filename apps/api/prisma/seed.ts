@@ -392,6 +392,34 @@ async function seedCountryCodes() {
 async function seedChannelDefinitions() {
   console.log('\n📡 Seeding channel definitions...');
 
+  // Get the list of supported channel IDs
+  const supportedChannelIds = CHANNEL_DEFINITIONS.map((c) => c.id);
+
+  // Soft delete channels that are not in the supported list
+  const unsupportedChannels = await prisma.channelDefinition.findMany({
+    where: {
+      id: { notIn: supportedChannelIds },
+      isDeleted: false,
+    },
+  });
+
+  if (unsupportedChannels.length > 0) {
+    console.log('  🧹 Removing unsupported channels...');
+    for (const channel of unsupportedChannels) {
+      // Soft delete the channel
+      await prisma.channelDefinition.update({
+        where: { id: channel.id },
+        data: { isDeleted: true },
+      });
+      // Soft delete associated credential fields
+      await prisma.channelCredentialField.updateMany({
+        where: { channelId: channel.id },
+        data: { isDeleted: true },
+      });
+      console.log(`  🗑️  Removed: ${channel.label}`);
+    }
+  }
+
   for (const channelData of CHANNEL_DEFINITIONS) {
     const { credentials, ...channelInfo } = channelData;
 
@@ -417,6 +445,17 @@ async function seedChannelDefinitions() {
       });
       console.log(`  ✅ Created: ${channelInfo.label}`);
     }
+
+    // Soft delete credential fields that are not in the current definition
+    const currentFieldKeys = credentials.map((f) => f.key);
+    await prisma.channelCredentialField.updateMany({
+      where: {
+        channelId: channelInfo.id,
+        key: { notIn: currentFieldKeys },
+        isDeleted: false,
+      },
+      data: { isDeleted: true },
+    });
 
     // Upsert credential fields
     for (const field of credentials) {

@@ -78,6 +78,18 @@ export const BotProviderConfigSchema = z.object({
 
 export type BotProviderConfig = z.infer<typeof BotProviderConfigSchema>;
 
+// BotProviderKey Response Schema - 用于 API 响应
+export const BotProviderKeyResponseSchema = z.object({
+  id: z.string().uuid(),
+  providerKeyId: z.string().uuid(),
+  isPrimary: z.boolean(),
+  allowedModels: z.array(z.string()),
+  primaryModel: z.string().nullable(),
+  createdAt: z.coerce.date(),
+});
+
+export type BotProviderKeyResponse = z.infer<typeof BotProviderKeyResponseSchema>;
+
 /** @deprecated 使用 BotProviderConfigSchema 代替 */
 export const ProviderConfigSchema = BotProviderConfigSchema;
 

@@ -33,6 +33,7 @@
     "management": "Management",
     "bots": "Bots",
     "plugins": "Plugins",
+    "skills": "Skills",
     "templates": "Templates",
     "secrets": "API Keys",
     "diagnostics": "Diagnostics",

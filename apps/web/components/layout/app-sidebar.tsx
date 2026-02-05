@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Bot, Key, Activity, Sparkles, Puzzle } from 'lucide-react';
+import { Bot, Key, Activity, Sparkles, Puzzle, Wrench } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +32,11 @@ const navItems = [
     titleKey: 'plugins',
     href: '/plugins',
     icon: Puzzle,
+  },
+  {
+    titleKey: 'skills',
+    href: '/skills',
+    icon: Wrench,
   },
   {
     titleKey: 'templates',

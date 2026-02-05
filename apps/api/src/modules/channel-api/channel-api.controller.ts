@@ -23,8 +23,8 @@ export class ChannelApiController {
 
   @TsRestHandler(cc.list)
   async listChannels(): Promise<any> {
-    return tsRestHandler(cc.list, async () => {
-      const result = await this.channelApiService.listChannels();
+    return tsRestHandler(cc.list, async ({ query }) => {
+      const result = await this.channelApiService.listChannels(query.locale);
       return success(result);
     });
   }

@@ -37,7 +37,9 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 ### 已完成 ✅
 
 - **核心能力**：Bot CRUD、Provider Key 管理、AI 代理、Docker 容器编排
-- **基础设施**：用户认证、多登录方式、文件上传、短信、国际化
+- **插件系统**：MCP 插件管理、22 个预置插件（搜索、文件、数据库、开发工具等）、按区域过滤
+- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装到 Bot
+- **基础设施**：用户认证、多登录方式、文件上传、短信、国际化（中/英）
 - **诊断运维**：容器统计、孤立资源检测与清理、启动对账
 - **安全机制**：零信任代理模式（Bot 容器不接触 API 密钥）、AES-256-GCM 加密
 - **配额管理**：日/月 Token 限制、80% 阈值警告、超额系统消息
@@ -46,6 +48,7 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 
 ### 待实施 ⏳
 
+- **渠道集成**：飞书机器人、企业微信、钉钉等 IM 渠道接入
 - **Analytics 分析**：契约已定义，后端实现待完成
 - **通知系统 UI**：后端配额通知已实现，前端 UI 待完成
 - **Webhook 处理器**：契约已定义，处理器待实现
@@ -117,6 +120,8 @@ clawbotmanager/
 │   └── api/                    # NestJS 11 后端
 │       ├── src/modules/        # 功能模块
 │       │   ├── bot-api/        # Bot CRUD、Provider Key、Docker、Workspace
+│       │   ├── plugin-api/     # MCP 插件管理
+│       │   ├── skill-api/      # 技能管理（tool、prompt、workflow）
 │       │   ├── proxy/          # AI 请求代理、Keyring、Upstream
 │       │   ├── sign-api/       # 登录注册
 │       │   ├── sms-api/        # 短信
@@ -175,12 +180,15 @@ clawbotmanager/
 - **Bot 生命周期**：创建、启动、停止、删除，Docker 容器 + 工作区（config.json、soul.md、features.json）
 - **Provider Key 管理**：加密存储（AES-256-GCM）、标签路由、Round-robin、自定义 baseUrl
 - **AI 请求代理**：`/v1/:vendor/*` 统一入口，Bot Token 鉴权，流式响应（SSE）
+- **插件系统（MCP）**：22 个预置插件（搜索、文件、数据库、开发工具等）、按区域过滤、一键安装到 Bot
+- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装与配置
 - **零信任模式**：Bot 容器不接触 API 密钥，代理层注入密钥
 - **配额管理**：日/月 Token 限制、阈值警告、超额通知
 - **模板系统**：Persona 模板（系统/用户）、5 步创建向导
 - **诊断与运维**：容器统计、孤立资源检测与清理、启动对账
 - **审计日志**：操作日志记录，支持合规审计
 - **多租户**：按用户隔离 Bot 与 Key，JWT 认证
+- **国际化**：支持中文、英文切换
 
 ---
 
@@ -287,6 +295,30 @@ pnpm dev:api      # 仅后端
 | DELETE | `/api/provider-key/:id`    | 删除 Key      |
 | GET    | `/api/provider-key/health` | 健康检查      |
 
+### Plugin 插件（需 JWT）
+
+| 方法   | 路径                              | 说明                 |
+| ------ | --------------------------------- | -------------------- |
+| GET    | `/api/plugin`                     | 列出所有插件         |
+| GET    | `/api/plugin/:id`                 | 获取插件详情         |
+| GET    | `/api/bot/:hostname/plugins`      | 获取 Bot 已安装插件  |
+| POST   | `/api/bot/:hostname/plugins`      | 安装插件到 Bot       |
+| DELETE | `/api/bot/:hostname/plugins/:id`  | 从 Bot 卸载插件      |
+
+### Skill 技能（需 JWT）
+
+| 方法   | 路径                              | 说明                 |
+| ------ | --------------------------------- | -------------------- |
+| GET    | `/api/skill`                      | 列出所有技能         |
+| GET    | `/api/skill/:id`                  | 获取技能详情         |
+| POST   | `/api/skill`                      | 创建自定义技能       |
+| PUT    | `/api/skill/:id`                  | 更新技能             |
+| DELETE | `/api/skill/:id`                  | 删除技能             |
+| GET    | `/api/bot/:hostname/skills`       | 获取 Bot 已安装技能  |
+| POST   | `/api/bot/:hostname/skills`       | 安装技能到 Bot       |
+| PUT    | `/api/bot/:hostname/skills/:id`   | 更新技能配置         |
+| DELETE | `/api/bot/:hostname/skills/:id`   | 从 Bot 卸载技能      |
+
 ### AI 代理（Bearer Bot Token）
 
 | 方法 | 路径                | 说明                                         |
@@ -303,6 +335,7 @@ pnpm dev:api      # 仅后端
 
 | 功能 | 状态 | 说明 |
 | ---- | ---- | ---- |
+| 飞书机器人渠道 | 🚧 进行中 | 接入飞书开放平台，支持飞书群聊/私聊 Bot |
 | Analytics 分析后端 | 📋 契约已定义 | 实现 `/analytics/track` 端点，支持使用量统计 |
 | 通知系统 UI | 📋 后端已实现 | 完成前端通知中心、实时推送 |
 | Webhook 处理器 | 📋 契约已定义 | 实现 transcode、audio-transcribe 等回调处理 |
@@ -311,6 +344,7 @@ pnpm dev:api      # 仅后端
 
 ### 中期目标
 
+- **更多 IM 渠道**：企业微信、钉钉、Slack、Discord 等
 - **监控告警**：集成 Prometheus/Grafana，Bot 健康监控
 - **高级路由策略**：基于延迟、成本的智能路由
 - **团队协作**：团队空间、成员管理、权限分配
@@ -319,7 +353,7 @@ pnpm dev:api      # 仅后端
 ### 长期愿景
 
 - **多集群部署**：跨区域 Bot 调度
-- **插件系统**：自定义 Bot 能力扩展
+- **渠道市场**：更多第三方渠道集成
 - **Marketplace**：模板市场、Bot 分享
 
 ---

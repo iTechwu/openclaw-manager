@@ -15,6 +15,7 @@ export * from './provider.schema';
 export * from './risk-words.schema';
 export * from './setting.schema';
 export * from './sign.schema';
+export * from './skill.schema';
 export * from './sms.schema';
 export * from './sse.schema';
 export * from './system.schema';

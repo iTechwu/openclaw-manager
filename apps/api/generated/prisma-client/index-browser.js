@@ -331,6 +331,8 @@ exports.Prisma.BotProviderKeyScalarFieldEnum = {
   botId: 'botId',
   providerKeyId: 'providerKeyId',
   isPrimary: 'isPrimary',
+  allowedModels: 'allowedModels',
+  primaryModel: 'primaryModel',
   createdAt: 'createdAt'
 };
 
@@ -407,6 +409,7 @@ exports.Prisma.ChannelDefinitionScalarFieldEnum = {
   label: 'label',
   icon: 'icon',
   popular: 'popular',
+  popularLocales: 'popularLocales',
   tokenHint: 'tokenHint',
   tokenPlaceholder: 'tokenPlaceholder',
   helpUrl: 'helpUrl',
@@ -492,6 +495,23 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   isEnabled: 'isEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BotChannelScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  channelType: 'channelType',
+  name: 'name',
+  credentialsEncrypted: 'credentialsEncrypted',
+  config: 'config',
+  isEnabled: 'isEnabled',
+  connectionStatus: 'connectionStatus',
+  lastConnectedAt: 'lastConnectedAt',
+  lastError: 'lastError',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -603,6 +623,13 @@ exports.PluginCategory = exports.$Enums.PluginCategory = {
   CUSTOM: 'CUSTOM'
 };
 
+exports.ChannelConnectionStatus = exports.$Enums.ChannelConnectionStatus = {
+  DISCONNECTED: 'DISCONNECTED',
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED',
+  ERROR: 'ERROR'
+};
+
 exports.Prisma.ModelName = {
   UserInfo: 'UserInfo',
   PersonaTemplate: 'PersonaTemplate',
@@ -628,7 +655,8 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   BotPlugin: 'BotPlugin',
   Skill: 'Skill',
-  BotSkill: 'BotSkill'
+  BotSkill: 'BotSkill',
+  BotChannel: 'BotChannel'
 };
 
 /**
