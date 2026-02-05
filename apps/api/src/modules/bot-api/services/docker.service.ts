@@ -319,7 +319,10 @@ export class DockerService implements OnModuleInit {
     // Build volume bindings
     // When running in a container with named volumes, use volume names instead of host paths
     // This allows bot containers to access the same data volumes as the manager container
-    const binds = this.buildVolumeBinds(options.hostname, options.workspacePath);
+    const binds = this.buildVolumeBinds(
+      options.hostname,
+      options.workspacePath,
+    );
 
     const container = await this.docker.createContainer({
       name: containerName,

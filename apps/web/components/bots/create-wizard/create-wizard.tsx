@@ -185,9 +185,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           variant="outline"
           onClick={showCancel ? onClose : handleBack}
         >
-          {showCancel
-            ? t('wizard.actions.cancel')
-            : t('wizard.actions.back')}
+          {showCancel ? t('wizard.actions.cancel') : t('wizard.actions.back')}
         </Button>
         {state.step < 5 ? (
           <Button type="button" onClick={handleNext} disabled={!canProceed()}>
