@@ -32,12 +32,29 @@ export class PersonaTemplateApiService {
 
   /**
    * 列出所有模板（系统模板 + 用户自己的模板）
+   * @param userId 用户 ID
+   * @param locale 可选的语言环境过滤（仅对系统模板生效）
    */
-  async listTemplates(userId: string): Promise<PersonaTemplateListResponse> {
+  async listTemplates(
+    userId: string,
+    locale?: string,
+  ): Promise<PersonaTemplateListResponse> {
+    // Build the where clause
+    // For system templates, filter by locale if provided
+    // For user templates, always show all (user templates don't have locale restriction)
+    const whereClause = locale
+      ? {
+          OR: [
+            { isSystem: true, locale },
+            { createdById: userId },
+          ],
+        }
+      : {
+          OR: [{ isSystem: true }, { createdById: userId }],
+        };
+
     const { list } = await this.personaTemplateDb.list(
-      {
-        OR: [{ isSystem: true }, { createdById: userId }],
-      },
+      whereClause,
       {
         orderBy: [{ isSystem: 'desc' }, { createdAt: 'desc' }],
         limit: 1000,
@@ -276,6 +293,7 @@ export class PersonaTemplateApiService {
       tagline: template.tagline,
       soulMarkdown: template.soulMarkdown,
       soulPreview: template.soulPreview,
+      locale: template.locale,
       isSystem: template.isSystem,
       createdById: template.createdById,
       createdAt: template.createdAt,

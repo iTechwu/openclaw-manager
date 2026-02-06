@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { WizardProvider, useWizard } from './wizard-context';
 import { Step1Template, Step2BasicInfo, Step3Persona } from './steps';
 import { useBots } from '@/hooks/useBots';
-import { Dialog, DialogContent, Button, cn } from '@repo/ui';
+import { Dialog, DialogContent, DialogTitle, Button, cn } from '@repo/ui';
 import {
   Bot,
   Sparkles,
@@ -191,12 +191,15 @@ function WizardContent({ onClose }: { onClose: () => void }) {
 }
 
 export function CreateBotWizard({ isOpen, onClose }: CreateBotWizardProps) {
+  const t = useTranslations('bots');
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="flex h-[85vh] max-h-[700px] w-full max-w-2xl flex-col overflow-hidden p-0"
         hideCloseButton
       >
+        <DialogTitle className="sr-only">{t('wizard.title')}</DialogTitle>
         <WizardProvider>
           <WizardContent onClose={onClose} />
         </WizardProvider>

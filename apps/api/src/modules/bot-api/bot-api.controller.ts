@@ -16,7 +16,7 @@ import { success, created } from '@/common/ts-rest/response.helper';
 import { BotApiService } from './bot-api.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { BotSseService } from './services/bot-sse.service';
-import { AuthenticatedRequest, Auth } from '@app/auth';
+import { AuthenticatedRequest, Auth, SseAuth } from '@app/auth';
 import type { Observable } from 'rxjs';
 
 /**
@@ -337,16 +337,18 @@ export class BotApiController {
   }
 
   // ============================================================================
-  // Real-time Status Stream (SSE)
+  // Real-time Status Stream (SSE) - 已迁移到 SseApiModule
   // ============================================================================
+  // SSE 端点已迁移到 /api/sse/bot/status-stream
+  // 请使用 SseApiController 中的端点
+  // 保留此端点用于向后兼容，将在未来版本中移除
 
   /**
+   * @deprecated 请使用 /api/sse/bot/status-stream
    * SSE 端点：实时推送 Bot 状态变更
-   * 客户端连接后会收到：
-   * - bot-status: Bot 运行状态变更（running, stopped, error）
-   * - bot-health: Bot 健康状态变更（HEALTHY, UNHEALTHY）
    */
   @Get('bot/status-stream')
+  @SseAuth()
   @Sse()
   statusStream(@Req() req: AuthenticatedRequest): Observable<MessageEvent> {
     const userId = req.userId;

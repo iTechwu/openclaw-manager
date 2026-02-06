@@ -9,6 +9,7 @@ import {
 import {
   PersonaTemplateSchema,
   PersonaTemplateListResponseSchema,
+  PersonaTemplateListQuerySchema,
   CreatePersonaTemplateInputSchema,
   UpdatePersonaTemplateInputSchema,
   DuplicatePersonaTemplateInputSchema,
@@ -28,6 +29,7 @@ export const personaTemplateContract = c.router(
     list: {
       method: 'GET',
       path: '',
+      query: PersonaTemplateListQuerySchema,
       responses: {
         200: ApiResponseSchema(PersonaTemplateListResponseSchema),
       },

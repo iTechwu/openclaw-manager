@@ -91,6 +91,7 @@ model PersonaTemplate {
   soulMarkdown String  @map("soul_markdown") @db.Text
   soulPreview  String? @map("soul_preview") @db.VarChar(500)
   isSystem     Boolean @default(false) @map("is_system")
+  locale       String  @default("en") @db.VarChar(10) // en, zh-CN
   createdById  String? @map("created_by_id") @db.Uuid
 
   isDeleted Boolean   @default(false) @map("is_deleted")
@@ -106,6 +107,7 @@ model PersonaTemplate {
   @@index([createdById])
   @@index([avatarFileId])
   @@index([isDeleted])
+  @@index([locale])
   @@index([createdAt(sort: Desc)])
   @@map("b_persona_template")
 }

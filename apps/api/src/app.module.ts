@@ -53,6 +53,9 @@ import { SkillApiModule } from './modules/skill-api/skill-api.module';
 /** bot-channel-api module */
 import { BotChannelApiModule } from './modules/bot-channel-api/bot-channel-api.module';
 
+/** sse-api module */
+import { SseApiModule } from './modules/sse-api/sse-api.module';
+
 /** i18n */
 import {
   AcceptLanguageResolver,
@@ -214,6 +217,7 @@ import { DbMetricsService } from '@app/prisma/db-metrics/src/db-metrics.service'
     PluginApiModule,
     SkillApiModule,
     BotChannelApiModule,
+    SseApiModule,
   ],
   providers: [
     {

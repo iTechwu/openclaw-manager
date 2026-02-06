@@ -1,7 +1,7 @@
 /**
  * Bot Channel API Controller
  */
-import { Controller, VERSION_NEUTRAL } from '@nestjs/common';
+import { Controller, Req, VERSION_NEUTRAL } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { botChannelContract } from '@repo/contracts';
 import { BotChannelApiService } from './bot-channel-api.service';
@@ -18,7 +18,7 @@ export class BotChannelApiController {
   constructor(private readonly botChannelApiService: BotChannelApiService) {}
 
   @TsRestHandler(c.list)
-  async list(req: AuthenticatedRequest) {
+  async list(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.list, async ({ params }) => {
       const result = await this.botChannelApiService.listChannels(
         req.userId,
@@ -29,7 +29,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.getById)
-  async getById(req: AuthenticatedRequest) {
+  async getById(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.getById, async ({ params }) => {
       const result = await this.botChannelApiService.getChannelById(
         req.userId,
@@ -41,7 +41,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.create)
-  async create(req: AuthenticatedRequest) {
+  async create(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.create, async ({ params, body }) => {
       const result = await this.botChannelApiService.createChannel(
         req.userId,
@@ -53,7 +53,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.update)
-  async update(req: AuthenticatedRequest) {
+  async update(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.update, async ({ params, body }) => {
       const result = await this.botChannelApiService.updateChannel(
         req.userId,
@@ -66,7 +66,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.delete)
-  async delete(req: AuthenticatedRequest) {
+  async delete(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.delete, async ({ params }) => {
       await this.botChannelApiService.deleteChannel(
         req.userId,
@@ -78,7 +78,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.connection)
-  async connection(req: AuthenticatedRequest) {
+  async connection(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.connection, async ({ params, body }) => {
       let result;
       if (body.action === 'connect') {
@@ -99,7 +99,7 @@ export class BotChannelApiController {
   }
 
   @TsRestHandler(c.test)
-  async test(req: AuthenticatedRequest) {
+  async test(@Req() req: AuthenticatedRequest) {
     return tsRestHandler(c.test, async ({ params, body }) => {
       const result = await this.botChannelApiService.testChannel(
         req.userId,

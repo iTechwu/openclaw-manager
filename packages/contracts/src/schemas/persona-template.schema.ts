@@ -21,6 +21,7 @@ export const PersonaTemplateSchema = z.object({
   tagline: z.string(),
   soulMarkdown: z.string(),
   soulPreview: z.string().nullable(),
+  locale: z.string(),
   isSystem: z.boolean(),
   createdById: z.string().uuid().nullable(),
   createdAt: z.coerce.date(),
@@ -92,4 +93,15 @@ export const PersonaTemplateListResponseSchema = z.object({
 
 export type PersonaTemplateListResponse = z.infer<
   typeof PersonaTemplateListResponseSchema
+>;
+
+/**
+ * PersonaTemplateListQuery - 模板列表查询参数
+ */
+export const PersonaTemplateListQuerySchema = z.object({
+  locale: z.string().optional(),
+});
+
+export type PersonaTemplateListQuery = z.infer<
+  typeof PersonaTemplateListQuerySchema
 >;

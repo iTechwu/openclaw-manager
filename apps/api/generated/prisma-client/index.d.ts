@@ -5289,6 +5289,7 @@ export namespace Prisma {
     soulMarkdown: string | null
     soulPreview: string | null
     isSystem: boolean | null
+    locale: string | null
     createdById: string | null
     isDeleted: boolean | null
     createdAt: Date | null
@@ -5305,6 +5306,7 @@ export namespace Prisma {
     soulMarkdown: string | null
     soulPreview: string | null
     isSystem: boolean | null
+    locale: string | null
     createdById: string | null
     isDeleted: boolean | null
     createdAt: Date | null
@@ -5321,6 +5323,7 @@ export namespace Prisma {
     soulMarkdown: number
     soulPreview: number
     isSystem: number
+    locale: number
     createdById: number
     isDeleted: number
     createdAt: number
@@ -5339,6 +5342,7 @@ export namespace Prisma {
     soulMarkdown?: true
     soulPreview?: true
     isSystem?: true
+    locale?: true
     createdById?: true
     isDeleted?: true
     createdAt?: true
@@ -5355,6 +5359,7 @@ export namespace Prisma {
     soulMarkdown?: true
     soulPreview?: true
     isSystem?: true
+    locale?: true
     createdById?: true
     isDeleted?: true
     createdAt?: true
@@ -5371,6 +5376,7 @@ export namespace Prisma {
     soulMarkdown?: true
     soulPreview?: true
     isSystem?: true
+    locale?: true
     createdById?: true
     isDeleted?: true
     createdAt?: true
@@ -5460,6 +5466,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview: string | null
     isSystem: boolean
+    locale: string
     createdById: string | null
     isDeleted: boolean
     createdAt: Date
@@ -5493,6 +5500,7 @@ export namespace Prisma {
     soulMarkdown?: boolean
     soulPreview?: boolean
     isSystem?: boolean
+    locale?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -5513,6 +5521,7 @@ export namespace Prisma {
     soulMarkdown?: boolean
     soulPreview?: boolean
     isSystem?: boolean
+    locale?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -5531,6 +5540,7 @@ export namespace Prisma {
     soulMarkdown?: boolean
     soulPreview?: boolean
     isSystem?: boolean
+    locale?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -5549,6 +5559,7 @@ export namespace Prisma {
     soulMarkdown?: boolean
     soulPreview?: boolean
     isSystem?: boolean
+    locale?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -5556,7 +5567,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type PersonaTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "emoji" | "avatarFileId" | "tagline" | "soulMarkdown" | "soulPreview" | "isSystem" | "createdById" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["personaTemplate"]>
+  export type PersonaTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "emoji" | "avatarFileId" | "tagline" | "soulMarkdown" | "soulPreview" | "isSystem" | "locale" | "createdById" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["personaTemplate"]>
   export type PersonaTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     createdBy?: boolean | PersonaTemplate$createdByArgs<ExtArgs>
     avatarFile?: boolean | PersonaTemplate$avatarFileArgs<ExtArgs>
@@ -5588,6 +5599,7 @@ export namespace Prisma {
       soulMarkdown: string
       soulPreview: string | null
       isSystem: boolean
+      locale: string
       createdById: string | null
       isDeleted: boolean
       createdAt: Date
@@ -6027,6 +6039,7 @@ export namespace Prisma {
     readonly soulMarkdown: FieldRef<"PersonaTemplate", 'String'>
     readonly soulPreview: FieldRef<"PersonaTemplate", 'String'>
     readonly isSystem: FieldRef<"PersonaTemplate", 'Boolean'>
+    readonly locale: FieldRef<"PersonaTemplate", 'String'>
     readonly createdById: FieldRef<"PersonaTemplate", 'String'>
     readonly isDeleted: FieldRef<"PersonaTemplate", 'Boolean'>
     readonly createdAt: FieldRef<"PersonaTemplate", 'DateTime'>
@@ -34732,6 +34745,7 @@ export namespace Prisma {
     soulMarkdown: 'soulMarkdown',
     soulPreview: 'soulPreview',
     isSystem: 'isSystem',
+    locale: 'locale',
     createdById: 'createdById',
     isDeleted: 'isDeleted',
     createdAt: 'createdAt',
@@ -35641,6 +35655,7 @@ export namespace Prisma {
     soulMarkdown?: StringFilter<"PersonaTemplate"> | string
     soulPreview?: StringNullableFilter<"PersonaTemplate"> | string | null
     isSystem?: BoolFilter<"PersonaTemplate"> | boolean
+    locale?: StringFilter<"PersonaTemplate"> | string
     createdById?: UuidNullableFilter<"PersonaTemplate"> | string | null
     isDeleted?: BoolFilter<"PersonaTemplate"> | boolean
     createdAt?: DateTimeFilter<"PersonaTemplate"> | Date | string
@@ -35660,6 +35675,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     soulPreview?: SortOrderInput | SortOrder
     isSystem?: SortOrder
+    locale?: SortOrder
     createdById?: SortOrderInput | SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -35682,6 +35698,7 @@ export namespace Prisma {
     soulMarkdown?: StringFilter<"PersonaTemplate"> | string
     soulPreview?: StringNullableFilter<"PersonaTemplate"> | string | null
     isSystem?: BoolFilter<"PersonaTemplate"> | boolean
+    locale?: StringFilter<"PersonaTemplate"> | string
     createdById?: UuidNullableFilter<"PersonaTemplate"> | string | null
     isDeleted?: BoolFilter<"PersonaTemplate"> | boolean
     createdAt?: DateTimeFilter<"PersonaTemplate"> | Date | string
@@ -35701,6 +35718,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     soulPreview?: SortOrderInput | SortOrder
     isSystem?: SortOrder
+    locale?: SortOrder
     createdById?: SortOrderInput | SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -35723,6 +35741,7 @@ export namespace Prisma {
     soulMarkdown?: StringWithAggregatesFilter<"PersonaTemplate"> | string
     soulPreview?: StringNullableWithAggregatesFilter<"PersonaTemplate"> | string | null
     isSystem?: BoolWithAggregatesFilter<"PersonaTemplate"> | boolean
+    locale?: StringWithAggregatesFilter<"PersonaTemplate"> | string
     createdById?: UuidNullableWithAggregatesFilter<"PersonaTemplate"> | string | null
     isDeleted?: BoolWithAggregatesFilter<"PersonaTemplate"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"PersonaTemplate"> | Date | string
@@ -38153,6 +38172,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38171,6 +38191,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     createdById?: string | null
     isDeleted?: boolean
     createdAt?: Date | string
@@ -38187,6 +38208,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38205,6 +38227,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38222,6 +38245,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     createdById?: string | null
     isDeleted?: boolean
     createdAt?: Date | string
@@ -38237,6 +38261,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38252,6 +38277,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41165,6 +41191,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     soulPreview?: SortOrder
     isSystem?: SortOrder
+    locale?: SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -41181,6 +41208,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     soulPreview?: SortOrder
     isSystem?: SortOrder
+    locale?: SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -41197,6 +41225,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     soulPreview?: SortOrder
     isSystem?: SortOrder
+    locale?: SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -45448,6 +45477,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -45465,6 +45495,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -45924,6 +45955,7 @@ export namespace Prisma {
     soulMarkdown?: StringFilter<"PersonaTemplate"> | string
     soulPreview?: StringNullableFilter<"PersonaTemplate"> | string | null
     isSystem?: BoolFilter<"PersonaTemplate"> | boolean
+    locale?: StringFilter<"PersonaTemplate"> | string
     createdById?: UuidNullableFilter<"PersonaTemplate"> | string | null
     isDeleted?: BoolFilter<"PersonaTemplate"> | boolean
     createdAt?: DateTimeFilter<"PersonaTemplate"> | Date | string
@@ -47137,6 +47169,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47153,6 +47186,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     createdById?: string | null
     isDeleted?: boolean
     createdAt?: Date | string
@@ -47393,6 +47427,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47410,6 +47445,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     createdById?: string | null
     isDeleted?: boolean
     createdAt?: Date | string
@@ -47780,6 +47816,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47797,6 +47834,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50538,6 +50576,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -50770,6 +50809,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50787,6 +50827,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50803,6 +50844,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50986,6 +51028,7 @@ export namespace Prisma {
     soulMarkdown: string
     soulPreview?: string | null
     isSystem?: boolean
+    locale?: string
     createdById?: string | null
     isDeleted?: boolean
     createdAt?: Date | string
@@ -51111,6 +51154,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -51127,6 +51171,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -51143,6 +51188,7 @@ export namespace Prisma {
     soulMarkdown?: StringFieldUpdateOperationsInput | string
     soulPreview?: NullableStringFieldUpdateOperationsInput | string | null
     isSystem?: BoolFieldUpdateOperationsInput | boolean
+    locale?: StringFieldUpdateOperationsInput | string
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

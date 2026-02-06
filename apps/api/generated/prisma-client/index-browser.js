@@ -151,6 +151,7 @@ exports.Prisma.PersonaTemplateScalarFieldEnum = {
   soulMarkdown: 'soulMarkdown',
   soulPreview: 'soulPreview',
   isSystem: 'isSystem',
+  locale: 'locale',
   createdById: 'createdById',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',

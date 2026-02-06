@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useWizard } from '../wizard-context';
 import { usePersonaTemplates } from '@/hooks/usePersonaTemplates';
@@ -136,9 +136,10 @@ function TemplateCard({
 
 export function Step1Template() {
   const t = useTranslations('bots.wizard.step1');
+  const locale = useLocale();
   const { state, dispatch } = useWizard();
   const [searchQuery, setSearchQuery] = useState('');
-  const { templates, loading } = usePersonaTemplates();
+  const { templates, loading } = usePersonaTemplates(locale);
 
   // Localized scratch template
   const localizedScratchTemplate = {

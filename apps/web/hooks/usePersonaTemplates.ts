@@ -14,7 +14,10 @@ import type {
  */
 export const personaTemplateKeys = {
   all: ['personaTemplates'] as const,
-  list: () => [...personaTemplateKeys.all, 'list'] as const,
+  list: (locale?: string) =>
+    locale
+      ? ([...personaTemplateKeys.all, 'list', locale] as const)
+      : ([...personaTemplateKeys.all, 'list'] as const),
   detail: (id: string) => [...personaTemplateKeys.all, 'detail', id] as const,
 };
 
@@ -24,14 +27,15 @@ type AnyQueryOptions = any;
 /**
  * Hook for managing persona templates
  * Provides CRUD operations for persona templates
+ * @param locale Optional locale to filter system templates (e.g., 'en', 'zh-CN')
  */
-export function usePersonaTemplates() {
+export function usePersonaTemplates(locale?: string) {
   const queryClient = useQueryClient();
 
   // Query for listing all templates
   const templatesQuery = personaTemplateApi.list.useQuery(
-    personaTemplateKeys.list(),
-    {},
+    personaTemplateKeys.list(locale),
+    { query: { locale } },
     {} as AnyQueryOptions,
   );
 

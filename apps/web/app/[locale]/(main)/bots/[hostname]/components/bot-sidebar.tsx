@@ -4,38 +4,56 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@repo/ui/lib/utils';
-import { Badge, Separator } from '@repo/ui';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Badge } from '@repo/ui';
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Circle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { botNavItems, botNavExtendedItems } from '@/lib/config/bot-nav';
 
 interface BotSidebarProps {
   hostname: string;
-  status?: 'running' | 'stopped' | 'starting' | 'error' | 'created';
+  status?: 'running' | 'stopped' | 'starting' | 'error' | 'created' | 'draft';
   healthStatus?: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
+  hasProvider?: boolean;
+  hasChannel?: boolean;
+  configLoading?: boolean;
 }
 
 const statusConfig = {
   running: {
-    label: '运行中',
+    labelKey: 'running',
     color: 'bg-green-500',
     textColor: 'text-green-500',
   },
   stopped: {
-    label: '已停止',
+    labelKey: 'stopped',
     color: 'bg-gray-500',
     textColor: 'text-gray-500',
   },
   starting: {
-    label: '启动中',
+    labelKey: 'starting',
     color: 'bg-yellow-500',
     textColor: 'text-yellow-500',
   },
-  error: { label: '错误', color: 'bg-red-500', textColor: 'text-red-500' },
+  error: {
+    labelKey: 'error',
+    color: 'bg-red-500',
+    textColor: 'text-red-500',
+  },
   created: {
-    label: '已创建',
+    labelKey: 'created',
     color: 'bg-blue-500',
     textColor: 'text-blue-500',
+  },
+  draft: {
+    labelKey: 'draft',
+    color: 'bg-amber-500',
+    textColor: 'text-amber-500',
   },
 };
 
@@ -43,18 +61,49 @@ export function BotSidebar({
   hostname,
   status = 'stopped',
   healthStatus,
+  hasProvider,
+  hasChannel,
+  configLoading,
 }: BotSidebarProps) {
   const t = useTranslations('bots.detail');
+  const tStatus = useTranslations('bots.status');
   const pathname = usePathname();
   const [showExtended, setShowExtended] = useState(false);
 
   const basePath = `/bots/${hostname}`;
-  const statusInfo = statusConfig[status];
+  const statusInfo = statusConfig[status] ?? statusConfig.stopped;
+  const isDraft = status === 'draft';
 
   const isActive = (href: string) => {
     const fullPath = href ? `${basePath}${href}` : basePath;
     // 精确匹配或者是子路径
     return pathname === fullPath || (href === '' && pathname === basePath);
+  };
+
+  // 获取导航项的配置状态标记
+  const getNavItemBadge = (itemId: string) => {
+    if (!isDraft || configLoading) return null;
+    if (itemId === 'ai' && !hasProvider) {
+      return (
+        <Circle className="size-3 text-amber-500 ml-auto flex-shrink-0" />
+      );
+    }
+    if (itemId === 'channels' && !hasChannel) {
+      return (
+        <Circle className="size-3 text-amber-500 ml-auto flex-shrink-0" />
+      );
+    }
+    if (itemId === 'ai' && hasProvider) {
+      return (
+        <CheckCircle2 className="size-3 text-green-500 ml-auto flex-shrink-0" />
+      );
+    }
+    if (itemId === 'channels' && hasChannel) {
+      return (
+        <CheckCircle2 className="size-3 text-green-500 ml-auto flex-shrink-0" />
+      );
+    }
+    return null;
   };
 
   return (
@@ -77,7 +126,7 @@ export function BotSidebar({
             <div className="flex items-center gap-2">
               <div className={cn('size-2 rounded-full', statusInfo.color)} />
               <span className={cn('text-xs', statusInfo.textColor)}>
-                {statusInfo.label}
+                {tStatus(statusInfo.labelKey)}
               </span>
             </div>
           </div>
@@ -91,6 +140,7 @@ export function BotSidebar({
             const active = isActive(item.href);
             const Icon = item.icon;
             const fullHref = item.href ? `${basePath}${item.href}` : basePath;
+            const badge = getNavItemBadge(item.id);
 
             return (
               <li key={item.id}>
@@ -107,7 +157,8 @@ export function BotSidebar({
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-foreground rounded-r-full" />
                   )}
                   <Icon className="size-4" />
-                  <span>{t(`nav.${item.labelKey}`)}</span>
+                  <span className="flex-1">{t(`nav.${item.labelKey}`)}</span>
+                  {badge}
                 </Link>
               </li>
             );

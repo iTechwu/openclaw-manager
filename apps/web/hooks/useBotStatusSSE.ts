@@ -90,6 +90,8 @@ interface UseBotStatusSSEOptions {
   initialRetryDelay?: number;
   /** 最大重连延迟（毫秒），默认 30000 */
   maxRetryDelay?: number;
+  /** 最大重试次数，默认 10，超过后停止重试 */
+  maxRetries?: number;
   /** Bot 状态变更回调 */
   onStatusChange?: (event: BotStatusEvent) => void;
   /** Bot 健康状态变更回调 */
@@ -124,6 +126,7 @@ export function useBotStatusSSE(
     enabled = true,
     initialRetryDelay = 1000,
     maxRetryDelay = 30000,
+    maxRetries = 10,
     onStatusChange,
     onHealthChange,
     onConnected,
@@ -136,9 +139,22 @@ export function useBotStatusSSE(
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryDelayRef = useRef(initialRetryDelay);
+  const retryCountRef = useRef(0);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tokenCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isVisibleRef = useRef(true);
+
+  // 使用 refs 存储回调，避免回调变化导致重连
+  const onStatusChangeRef = useRef(onStatusChange);
+  const onHealthChangeRef = useRef(onHealthChange);
+  const onConnectedRef = useRef(onConnected);
+  const onDisconnectedRef = useRef(onDisconnected);
+
+  // 更新 refs
+  onStatusChangeRef.current = onStatusChange;
+  onHealthChangeRef.current = onHealthChange;
+  onConnectedRef.current = onConnected;
+  onDisconnectedRef.current = onDisconnected;
 
   const queryClient = useQueryClient();
 
@@ -186,8 +202,8 @@ export function useBotStatusSSE(
         return;
       }
 
-      // 构建 SSE URL
-      const sseUrl = new URL(`${API_BASE_URL}/bot/status-stream`);
+      // 构建 SSE URL - 使用专用的 SSE API 路径
+      const sseUrl = new URL(`${API_BASE_URL}/sse/bot/status-stream`);
       sseUrl.searchParams.set('access_token', token);
 
       const eventSource = new EventSource(sseUrl.toString(), {
@@ -198,7 +214,8 @@ export function useBotStatusSSE(
         setIsConnected(true);
         setError(null);
         retryDelayRef.current = initialRetryDelay;
-        onConnected?.();
+        retryCountRef.current = 0;
+        onConnectedRef.current?.();
 
         // 启动 token 过期检查
         if (tokenCheckIntervalRef.current) {
@@ -224,11 +241,11 @@ export function useBotStatusSSE(
 
           // 触发回调
           if (eventType === 'bot-status') {
-            onStatusChange?.(data as BotStatusEvent);
+            onStatusChangeRef.current?.(data as BotStatusEvent);
             // 使 bots 查询缓存失效
             queryClient.invalidateQueries({ queryKey: ['bots'] });
           } else if (eventType === 'bot-health') {
-            onHealthChange?.(data as BotHealthEvent);
+            onHealthChangeRef.current?.(data as BotHealthEvent);
             // 使 bots 查询缓存失效
             queryClient.invalidateQueries({ queryKey: ['bots'] });
           }
@@ -239,14 +256,30 @@ export function useBotStatusSSE(
 
       eventSource.onerror = () => {
         setIsConnected(false);
-        onDisconnected?.();
+        onDisconnectedRef.current?.();
 
         eventSource.close();
         eventSourceRef.current = null;
 
-        // 如果页面可见且启用了 SSE，尝试重连
+        // 如果页面可见且启用了 SSE，尝试重连（有重试次数限制）
         if (isVisibleRef.current && enabled) {
-          setError(new Error('连接断开，正在重试...'));
+          retryCountRef.current++;
+
+          if (retryCountRef.current > maxRetries) {
+            setError(
+              new Error(`连接失败，已达到最大重试次数 (${maxRetries})`),
+            );
+            console.error(
+              `Bot Status SSE: 已达到最大重试次数 (${maxRetries})，停止重连`,
+            );
+            return;
+          }
+
+          setError(
+            new Error(
+              `连接断开，正在重试... (${retryCountRef.current}/${maxRetries})`,
+            ),
+          );
 
           retryTimeoutRef.current = setTimeout(() => {
             retryDelayRef.current = Math.min(
@@ -270,12 +303,10 @@ export function useBotStatusSSE(
     enabled,
     initialRetryDelay,
     maxRetryDelay,
+    maxRetries,
     queryClient,
     addEvent,
-    onStatusChange,
-    onHealthChange,
-    onConnected,
-    onDisconnected,
+    // 注意：回调使用 refs，不在依赖数组中，避免回调变化导致重连
   ]);
 
   /**
@@ -283,6 +314,7 @@ export function useBotStatusSSE(
    */
   const reconnect = useCallback(() => {
     retryDelayRef.current = initialRetryDelay;
+    retryCountRef.current = 0;
     connect();
   }, [connect, initialRetryDelay]);
 

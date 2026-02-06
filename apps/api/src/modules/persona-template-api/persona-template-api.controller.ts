@@ -24,9 +24,12 @@ export class PersonaTemplateApiController {
 
   @TsRestHandler(ptc.list)
   async listTemplates(@Req() req: AuthenticatedRequest): Promise<any> {
-    return tsRestHandler(ptc.list, async () => {
+    return tsRestHandler(ptc.list, async ({ query }) => {
       const userId = req.userId;
-      const result = await this.personaTemplateApiService.listTemplates(userId);
+      const result = await this.personaTemplateApiService.listTemplates(
+        userId,
+        query.locale,
+      );
       return success(result);
     });
   }

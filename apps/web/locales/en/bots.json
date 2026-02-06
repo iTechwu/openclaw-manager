@@ -23,6 +23,7 @@
     "skills": "Skills"
   },
   "status": {
+    "draft": "Draft",
     "created": "Created",
     "starting": "Starting",
     "running": "Running",
