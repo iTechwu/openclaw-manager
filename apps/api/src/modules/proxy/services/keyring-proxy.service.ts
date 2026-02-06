@@ -1,6 +1,6 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ProxyTokenService, ProviderKeyService } from '@app/db';
+import { ProxyTokenService, ProviderKeyService, BotService } from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -35,6 +35,7 @@ export class KeyringProxyService {
     private readonly configService: ConfigService,
     private readonly proxyTokenService: ProxyTokenService,
     private readonly providerKeyService: ProviderKeyService,
+    private readonly botService: BotService,
     private readonly encryptionService: EncryptionService,
   ) {}
 
@@ -47,6 +48,20 @@ export class KeyringProxyService {
     keyId: string,
     tags?: string[],
   ): Promise<{ token: string; expiresAt?: Date }> {
+    // 验证 Bot 是否存在
+    const bot = await this.botService.getById(botId);
+    if (!bot) {
+      this.logger.error(`Bot not found when registering with proxy: ${botId}`);
+      throw new NotFoundException(`Bot with id "${botId}" not found`);
+    }
+
+    // 验证 ProviderKey 是否存在
+    const providerKey = await this.providerKeyService.getById(keyId);
+    if (!providerKey) {
+      this.logger.error(`ProviderKey not found when registering bot with proxy: ${keyId}`);
+      throw new NotFoundException(`ProviderKey with id "${keyId}" not found`);
+    }
+
     // Check if bot already has a token
     const existing = await this.proxyTokenService.getByBotId(botId);
     if (existing && !existing.revokedAt) {

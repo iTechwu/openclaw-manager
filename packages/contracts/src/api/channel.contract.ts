@@ -11,6 +11,7 @@ import {
   BotChannelConnectionActionSchema,
   ChannelTestRequestSchema,
   ChannelTestResponseSchema,
+  ValidateCredentialsRequestSchema,
 } from '../schemas/channel.schema';
 
 const c = initContract();
@@ -162,6 +163,20 @@ export const botChannelContract = c.router(
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
       summary: '快速测试渠道配置',
+    },
+
+    /**
+     * POST /bot/:hostname/channels/validate - 验证凭证（保存前验证）
+     */
+    validateCredentials: {
+      method: 'POST',
+      path: '/validate',
+      body: ValidateCredentialsRequestSchema,
+      responses: {
+        200: ApiResponseSchema(ChannelTestResponseSchema),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '验证渠道凭证（保存前验证）',
     },
   },
   {

@@ -110,4 +110,16 @@ export class BotChannelApiController {
       return success(result);
     });
   }
+
+  @TsRestHandler(c.validateCredentials)
+  async validateCredentials(@Req() req: AuthenticatedRequest) {
+    return tsRestHandler(c.validateCredentials, async ({ params, body }) => {
+      const result = await this.botChannelApiService.validateCredentials(
+        req.userId,
+        params.hostname,
+        body,
+      );
+      return success(result);
+    });
+  }
 }

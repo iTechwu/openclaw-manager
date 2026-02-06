@@ -24,10 +24,19 @@ export class CryptClient {
   }
 
   decrypt(text: string, iv?: string, key?: string): string {
+    const originalText = text;
     text = urlencodeUtil.urlSafeToBase64(text);
-    // this.logger.info('decrypt', {key:this.config.key, iv:this.config.iv , text})
     key = key || this.config.key;
     iv = iv || this.config.iv;
+
+    this.logger.debug('CryptClient.decrypt', {
+      originalTextLength: originalText?.length,
+      originalTextPreview: originalText?.substring(0, 30),
+      convertedTextLength: text?.length,
+      keyLength: key?.length,
+      ivLength: iv?.length,
+    });
+
     return cryptoUtil.aesCbcDecrypt(text, key, iv);
   }
 

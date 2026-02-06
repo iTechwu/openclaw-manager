@@ -13,6 +13,7 @@ import {
   BotModule,
   UserInfoModule,
   ChannelDefinitionModule,
+  BotProviderKeyModule,
 } from '@app/db';
 import { CryptModule } from '@app/clients/internal/crypt';
 import { FeishuClientModule } from '@app/clients/internal/feishu';
@@ -22,6 +23,7 @@ import { FeishuClientModule } from '@app/clients/internal/feishu';
     ConfigModule,
     BotChannelModule,
     BotModule,
+    BotProviderKeyModule,
     UserInfoModule,
     ChannelDefinitionModule,
     AuthModule,

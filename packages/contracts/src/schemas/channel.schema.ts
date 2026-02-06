@@ -70,6 +70,8 @@ export const BotChannelItemSchema = z.object({
   channelType: z.string(),
   name: z.string(),
   config: z.record(z.string(), z.unknown()).nullable(),
+  // 凭证掩码信息，用于前端显示已配置状态（如 { appId: "cli_***abc", appSecret: "***" }）
+  credentialsMasked: z.record(z.string(), z.string()).nullable(),
   isEnabled: z.boolean(),
   connectionStatus: ChannelConnectionStatusSchema,
   lastConnectedAt: z.string().datetime().nullable(),
@@ -128,6 +130,19 @@ export type BotChannelConnectionAction = z.infer<
 // ============================================================================
 // Channel Test Schemas - 渠道快速测试
 // ============================================================================
+
+/**
+ * 凭证验证请求 Schema（保存前验证）
+ */
+export const ValidateCredentialsRequestSchema = z.object({
+  channelType: z.string().min(1).max(50),
+  credentials: z.record(z.string(), z.string()),
+  config: z.record(z.string(), z.unknown()).optional(),
+});
+
+export type ValidateCredentialsRequest = z.infer<
+  typeof ValidateCredentialsRequestSchema
+>;
 
 /**
  * 渠道测试请求 Schema

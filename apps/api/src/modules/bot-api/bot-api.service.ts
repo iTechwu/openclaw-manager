@@ -11,6 +11,7 @@ import {
   BotProviderKeyService,
   OperateLogService,
   PersonaTemplateService,
+  BotChannelService,
 } from '@app/db';
 import { ProviderVerifyClient } from '@app/clients/internal/provider-verify';
 import { KeyringProxyService } from '../proxy/services/keyring-proxy.service';
@@ -44,6 +45,7 @@ export class BotApiService {
     private readonly botService: BotService,
     private readonly providerKeyService: ProviderKeyService,
     private readonly botProviderKeyService: BotProviderKeyService,
+    private readonly botChannelService: BotChannelService,
     private readonly encryptionService: EncryptionService,
     private readonly dockerService: DockerService,
     private readonly workspaceService: WorkspaceService,
@@ -1061,7 +1063,7 @@ export class BotApiService {
         ? `${secret.slice(0, 4)}...${secret.slice(-4)}`
         : '****';
 
-    return {
+    const result: BotProviderDetail = {
       id: bpk.id,
       providerKeyId: bpk.providerKeyId,
       vendor: providerKey.vendor as BotProviderDetail['vendor'],
@@ -1073,6 +1075,11 @@ export class BotApiService {
       primaryModel: bpk.primaryModel,
       createdAt: bpk.createdAt,
     };
+
+    // 检查并更新 Bot 状态（从 draft 到 created）
+    await this.checkAndUpdateBotStatus(bot.id);
+
+    return result;
   }
 
   /**
@@ -1344,5 +1351,57 @@ export class BotApiService {
       baseUrl: key.baseUrl,
       createdAt: key.createdAt,
     };
+  }
+
+  /**
+   * 检查并更新 Bot 状态
+   * 当 Bot 同时配置了渠道和 AI Provider 时，自动将状态从 draft 更新为 created
+   */
+  private async checkAndUpdateBotStatus(botId: string): Promise<void> {
+    try {
+      // 获取当前 bot 状态
+      const bot = await this.botService.getById(botId);
+      if (!bot) {
+        this.logger.warn(`Bot not found when checking status: ${botId}`);
+        return;
+      }
+
+      // 只有 draft 状态的 bot 需要检查
+      if (bot.status !== 'draft') {
+        this.logger.debug(
+          `Bot ${botId} is not in draft status (${bot.status}), skipping status update`,
+        );
+        return;
+      }
+
+      // 检查是否有渠道配置
+      const { total: channelCount } = await this.botChannelService.list({
+        botId,
+      });
+      const hasChannel = channelCount > 0;
+
+      // 检查是否有 AI Provider 配置
+      const { total: providerCount } = await this.botProviderKeyService.list({
+        botId,
+      });
+      const hasProvider = providerCount > 0;
+
+      this.logger.debug(
+        `Bot ${botId} configuration status: hasChannel=${hasChannel}, hasProvider=${hasProvider}`,
+      );
+
+      // 如果同时配置了渠道和 AI Provider，更新状态为 created
+      if (hasChannel && hasProvider) {
+        await this.botService.update({ id: botId }, { status: 'created' });
+        this.logger.log(
+          `Bot ${botId} status updated from draft to created (both channel and AI provider configured)`,
+        );
+      }
+    } catch (error) {
+      // 状态更新失败不应影响主流程
+      this.logger.error(
+        `Failed to check and update bot status for ${botId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 }

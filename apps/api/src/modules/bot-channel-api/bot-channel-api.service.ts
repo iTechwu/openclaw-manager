@@ -19,6 +19,7 @@ import {
   BotChannelService,
   BotService,
   ChannelDefinitionService,
+  BotProviderKeyService,
 } from '@app/db';
 import { CryptClient } from '@app/clients/internal/crypt';
 import { FeishuClientService } from '@app/clients/internal/feishu';
@@ -31,6 +32,7 @@ import type {
   ChannelConnectionStatus,
   ChannelTestRequest,
   ChannelTestResponse,
+  ValidateCredentialsRequest,
 } from '@repo/contracts';
 
 @Injectable()
@@ -39,6 +41,7 @@ export class BotChannelApiService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botChannelDb: BotChannelService,
     private readonly botDb: BotService,
+    private readonly botProviderKeyDb: BotProviderKeyService,
     private readonly channelDefinitionDb: ChannelDefinitionService,
     private readonly cryptClient: CryptClient,
     private readonly feishuClientService: FeishuClientService,
@@ -95,23 +98,52 @@ export class BotChannelApiService {
   ): Promise<BotChannelItem> {
     const bot = await this.getBotByHostname(userId, hostname);
 
+    this.logger.info('Creating bot channel', {
+      botId: bot.id,
+      channelType: request.channelType,
+      name: request.name,
+      credentialsKeys: Object.keys(request.credentials || {}),
+      hasCredentials: !!request.credentials,
+      credentialsLength: JSON.stringify(request.credentials || {}).length,
+      hasConfig: request.config !== undefined,
+      configKeys: request.config ? Object.keys(request.config) : [],
+      configValue: request.config,
+    });
+
     // 验证渠道类型是否存在
     await this.validateChannelCredentials(
       request.channelType,
       request.credentials,
     );
 
-    // 加密凭证
+    // 加密凭证 (credentials_encrypted 字段用于安全存储敏感凭证，如 appId/appSecret)
     const credentialsEncrypted = this.cryptClient.encrypt(
       JSON.stringify(request.credentials),
     );
+
+    this.logger.debug('Encrypted credentials', {
+      originalLength: JSON.stringify(request.credentials).length,
+      encryptedLength: credentialsEncrypted.length,
+      encryptedPreview: credentialsEncrypted.substring(0, 30),
+    });
+
+    // 处理 config 字段：确保 undefined 转换为 null，避免 Prisma 忽略该字段
+    const configValue =
+      request.config !== undefined
+        ? (request.config as Prisma.InputJsonValue)
+        : null;
+
+    this.logger.debug('Config value to save', {
+      hasConfig: request.config !== undefined,
+      configValue,
+    });
 
     const channel = await this.botChannelDb.create({
       bot: { connect: { id: bot.id } },
       channelType: request.channelType,
       name: request.name,
       credentialsEncrypted: Buffer.from(credentialsEncrypted),
-      config: request.config as Prisma.InputJsonValue,
+      config: configValue,
       isEnabled: request.isEnabled ?? true,
       connectionStatus: 'DISCONNECTED',
     });
@@ -121,6 +153,44 @@ export class BotChannelApiService {
       channelId: channel.id,
       channelType: request.channelType,
     });
+
+    // 检查并更新 Bot 状态（从 draft 到 created）
+    await this.checkAndUpdateBotStatus(bot.id);
+
+    // 对于飞书渠道，自动建立 WebSocket 长连接
+    if (request.channelType === 'feishu') {
+      try {
+        await this.connectFeishuChannel(channel);
+        // 更新状态为已连接
+        const updatedChannel = await this.botChannelDb.update(
+          { id: channel.id },
+          {
+            connectionStatus: 'CONNECTED',
+            lastConnectedAt: new Date(),
+            lastError: null,
+          },
+        );
+        this.logger.info('Feishu channel auto-connected after creation', {
+          channelId: channel.id,
+        });
+        return this.mapToItem(updatedChannel);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to auto-connect Feishu channel after creation', {
+          channelId: channel.id,
+          error: errorMessage,
+        });
+        // 更新状态为错误，但不影响创建成功
+        await this.botChannelDb.update(
+          { id: channel.id },
+          {
+            connectionStatus: 'ERROR',
+            lastError: errorMessage,
+          },
+        );
+      }
+    }
 
     return this.mapToItem(channel);
   }
@@ -144,6 +214,16 @@ export class BotChannelApiService {
       throw new NotFoundException('Channel not found');
     }
 
+    this.logger.info('Updating bot channel', {
+      botId: bot.id,
+      channelId,
+      hasName: request.name !== undefined,
+      hasCredentials: request.credentials !== undefined,
+      hasConfig: request.config !== undefined,
+      configValue: request.config,
+      hasIsEnabled: request.isEnabled !== undefined,
+    });
+
     const updateData: Prisma.BotChannelUpdateInput = {};
 
     if (request.name !== undefined) {
@@ -164,6 +244,13 @@ export class BotChannelApiService {
       updateData.isEnabled = request.isEnabled;
     }
 
+    this.logger.debug('Update data prepared', {
+      channelId,
+      updateDataKeys: Object.keys(updateData),
+      configInUpdateData: 'config' in updateData,
+      configValue: updateData.config,
+    });
+
     const channel = await this.botChannelDb.update(
       { id: channelId },
       updateData,
@@ -172,7 +259,11 @@ export class BotChannelApiService {
     this.logger.info('Bot channel updated', {
       botId: bot.id,
       channelId,
+      savedConfig: channel.config,
     });
+
+    // 检查并更新 Bot 状态（从 draft 到 created）
+    await this.checkAndUpdateBotStatus(bot.id);
 
     return this.mapToItem(channel);
   }
@@ -332,29 +423,76 @@ export class BotChannelApiService {
       throw new NotFoundException('Channel not found');
     }
 
+    return this.executeChannelTestWithTiming(
+      channel.channelType,
+      async () => {
+        // 解密凭证
+        const encryptedBuffer = channel.credentialsEncrypted;
+        const encryptedStr = Buffer.from(encryptedBuffer).toString('utf8');
+        const credentialsJson = this.cryptClient.decrypt(encryptedStr);
+        const credentials = JSON.parse(credentialsJson);
+
+        return this.executeChannelTest(
+          channel.channelType,
+          credentials,
+          channel.config as Record<string, unknown> | null,
+          request.message,
+        );
+      },
+    );
+  }
+
+  /**
+   * 验证凭证（保存前验证）
+   * 不需要先保存渠道，直接验证凭证是否有效
+   */
+  async validateCredentials(
+    userId: string,
+    hostname: string,
+    request: ValidateCredentialsRequest,
+  ): Promise<ChannelTestResponse> {
+    // 验证用户有权限访问该 Bot
+    await this.getBotByHostname(userId, hostname);
+
+    // 验证渠道类型是否存在
+    await this.validateChannelCredentials(
+      request.channelType,
+      request.credentials,
+    );
+
+    this.logger.info('Validating credentials before save', {
+      channelType: request.channelType,
+      credentialsKeys: Object.keys(request.credentials),
+      hasConfig: !!request.config,
+    });
+
+    return this.executeChannelTestWithTiming(
+      request.channelType,
+      async () => {
+        return this.executeChannelTest(
+          request.channelType,
+          request.credentials,
+          (request.config as Record<string, unknown>) || null,
+        );
+      },
+    );
+  }
+
+  /**
+   * 执行渠道测试并计时
+   */
+  private async executeChannelTestWithTiming(
+    channelType: string,
+    testFn: () => Promise<Omit<ChannelTestResponse, 'latency'>>,
+  ): Promise<ChannelTestResponse> {
     const startTime = Date.now();
 
     try {
-      // 解密凭证
-      const credentialsJson = this.cryptClient.decrypt(
-        channel.credentialsEncrypted.toString(),
-      );
-      const credentials = JSON.parse(credentialsJson);
-
-      // 根据渠道类型执行测试
-      const testResult = await this.executeChannelTest(
-        channel.channelType,
-        credentials,
-        channel.config as Record<string, unknown> | null,
-        request.message,
-      );
-
+      const testResult = await testFn();
       const latency = Date.now() - startTime;
 
       this.logger.info('Channel test completed', {
-        botId: bot.id,
-        channelId,
-        channelType: channel.channelType,
+        channelType,
         status: testResult.status,
         latency,
       });
@@ -369,9 +507,7 @@ export class BotChannelApiService {
         error instanceof Error ? error.message : 'Unknown error';
 
       this.logger.error('Channel test failed', {
-        botId: bot.id,
-        channelId,
-        channelType: channel.channelType,
+        channelType,
         error: errorMessage,
         latency,
       });
@@ -681,14 +817,55 @@ export class BotChannelApiService {
 
   /**
    * 映射到 API 响应格式
+   * 注意：credentials_encrypted 字段不会返回给前端，但会返回掩码版本用于显示已配置状态
    */
   private mapToItem(channel: any): BotChannelItem {
+    // 确保 config 字段正确处理：Prisma 返回的 Json 类型可能是 null 或对象
+    const configValue = channel.config as Record<string, unknown> | null;
+
+    // 解密凭证并生成掩码版本
+    let credentialsMasked: Record<string, string> | null = null;
+    if (channel.credentialsEncrypted) {
+      try {
+        const encryptedStr = Buffer.from(
+          channel.credentialsEncrypted,
+        ).toString('utf8');
+        const credentialsJson = this.cryptClient.decrypt(encryptedStr);
+        const credentials = JSON.parse(credentialsJson) as Record<
+          string,
+          string
+        >;
+
+        // 生成掩码版本
+        credentialsMasked = {};
+        for (const [key, value] of Object.entries(credentials)) {
+          if (value && typeof value === 'string') {
+            credentialsMasked[key] = this.maskCredentialValue(value);
+          }
+        }
+      } catch (error) {
+        this.logger.warn('Failed to decrypt credentials for masking', {
+          channelId: channel.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    this.logger.debug('Mapping channel to item', {
+      channelId: channel.id,
+      rawConfig: channel.config,
+      rawConfigType: typeof channel.config,
+      mappedConfig: configValue,
+      hasCredentialsMasked: !!credentialsMasked,
+    });
+
     return {
       id: channel.id,
       botId: channel.botId,
       channelType: channel.channelType,
       name: channel.name,
-      config: channel.config as Record<string, unknown> | null,
+      config: configValue,
+      credentialsMasked,
       isEnabled: channel.isEnabled,
       connectionStatus: channel.connectionStatus as ChannelConnectionStatus,
       lastConnectedAt: channel.lastConnectedAt?.toISOString() ?? null,
@@ -696,5 +873,79 @@ export class BotChannelApiService {
       createdAt: channel.createdAt.toISOString(),
       updatedAt: channel.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * 将凭证值转换为掩码格式
+   * 例如: "cli_abc123xyz" -> "cli_***xyz"
+   *       "secret123" -> "sec***123"
+   */
+  private maskCredentialValue(value: string): string {
+    if (!value || value.length <= 6) {
+      return '***';
+    }
+
+    const visibleChars = Math.min(3, Math.floor(value.length / 4));
+    const prefix = value.substring(0, visibleChars);
+    const suffix = value.substring(value.length - visibleChars);
+
+    return `${prefix}***${suffix}`;
+  }
+
+  /**
+   * 检查并更新 Bot 状态
+   * 当 Bot 同时配置了渠道和 AI Provider 时，自动将状态从 draft 更新为 created
+   */
+  private async checkAndUpdateBotStatus(botId: string): Promise<void> {
+    try {
+      // 获取当前 bot 状态
+      const bot = await this.botDb.getById(botId);
+      if (!bot) {
+        this.logger.warn('Bot not found when checking status', { botId });
+        return;
+      }
+
+      // 只有 draft 状态的 bot 需要检查
+      if (bot.status !== 'draft') {
+        this.logger.debug('Bot is not in draft status, skipping status update', {
+          botId,
+          currentStatus: bot.status,
+        });
+        return;
+      }
+
+      // 检查是否有渠道配置
+      const { total: channelCount } = await this.botChannelDb.list({ botId });
+      const hasChannel = channelCount > 0;
+
+      // 检查是否有 AI Provider 配置
+      const { total: providerCount } = await this.botProviderKeyDb.list({
+        botId,
+      });
+      const hasProvider = providerCount > 0;
+
+      this.logger.debug('Checking bot configuration status', {
+        botId,
+        hasChannel,
+        hasProvider,
+        channelCount,
+        providerCount,
+      });
+
+      // 如果同时配置了渠道和 AI Provider，更新状态为 created
+      if (hasChannel && hasProvider) {
+        await this.botDb.update({ id: botId }, { status: 'created' });
+        this.logger.info('Bot status updated from draft to created', {
+          botId,
+          reason: 'Both channel and AI provider are configured',
+        });
+      }
+    } catch (error) {
+      // 状态更新失败不应影响主流程
+      this.logger.error('Failed to check and update bot status', {
+        botId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 }

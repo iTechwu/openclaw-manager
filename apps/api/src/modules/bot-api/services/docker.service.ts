@@ -315,9 +315,9 @@ export class DockerService implements OnModuleInit {
     }
 
     // Determine network mode:
-    // - In zero-trust mode, connect to clawbot-network to reach keyring-proxy
+    // - In zero-trust mode, connect to common_network to reach keyring-proxy
     // - In direct mode, use bridge network
-    const networkMode = options.proxyUrl ? 'clawbot-network' : 'bridge';
+    const networkMode = options.proxyUrl ? 'common_network' : 'bridge';
 
     // Build volume bindings
     // When running in a container with named volumes, use volume names instead of host paths

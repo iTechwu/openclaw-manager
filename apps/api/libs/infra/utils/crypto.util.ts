@@ -53,6 +53,17 @@ export function rsaEncrypt(val: string): string {
  */
 export function aesCbcDecrypt(val, secretKey, iv) {
   try {
+    // Validate inputs
+    if (!val || typeof val !== 'string') {
+      throw new Error(`Invalid encrypted data: ${typeof val}`);
+    }
+    if (!secretKey || typeof secretKey !== 'string') {
+      throw new Error(`Invalid secret key: ${typeof secretKey}`);
+    }
+    if (!iv || typeof iv !== 'string') {
+      throw new Error(`Invalid IV: ${typeof iv}`);
+    }
+
     const ivBuffer = CryptoJS.enc.Utf8.parse(iv);
 
     const decryptedBytes = CryptoJS.AES.decrypt(
@@ -65,10 +76,31 @@ export function aesCbcDecrypt(val, secretKey, iv) {
       },
     );
 
+    // Check if decryption produced any output
+    if (!decryptedBytes || decryptedBytes.sigBytes <= 0) {
+      throw new Error(
+        `Decryption produced empty result. Input length: ${val.length}, Key length: ${secretKey.length}, IV length: ${iv.length}`,
+      );
+    }
+
     const originalText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+    // Validate the decrypted text is not empty
+    if (!originalText) {
+      throw new Error(
+        `Decryption produced empty string. sigBytes: ${decryptedBytes.sigBytes}`,
+      );
+    }
+
     return originalText;
   } catch (error) {
     console.error('Decryption failed:', error);
+    console.error('Decryption context:', {
+      inputLength: val?.length,
+      inputPreview: val?.substring(0, 50),
+      keyLength: secretKey?.length,
+      ivLength: iv?.length,
+    });
     throw new Error('Failed to decrypt data due to an error.');
   }
 }

@@ -10,6 +10,7 @@ import {
   OperateLogModule,
   PersonaTemplateModule,
   BotUsageLogModule,
+  BotChannelModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { AuthModule } from '@app/auth';
@@ -36,6 +37,7 @@ import { HealthCheckService } from './services/health-check.service';
     BotModule,
     ProviderKeyModule,
     BotProviderKeyModule,
+    BotChannelModule,
     UserInfoModule,
     OperateLogModule,
     AuthModule,
