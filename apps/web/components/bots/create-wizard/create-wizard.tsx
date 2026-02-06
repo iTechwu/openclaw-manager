@@ -111,7 +111,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const isLastStep = currentStep === 3;
 
   return (
-    <div className="flex h-full flex-col">
+    <>
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-6">
@@ -186,7 +186,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           </Button>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -194,7 +194,7 @@ export function CreateBotWizard({ isOpen, onClose }: CreateBotWizardProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="h-[85vh] max-h-[700px] w-full max-w-2xl overflow-hidden p-0"
+        className="flex h-[85vh] max-h-[700px] w-full max-w-2xl flex-col overflow-hidden p-0"
         hideCloseButton
       >
         <WizardProvider>
