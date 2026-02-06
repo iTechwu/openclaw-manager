@@ -148,7 +148,9 @@ export class SkillApiService {
       {
         ...(data.name && { name: data.name }),
         ...(data.slug && { slug: data.slug }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.version && { version: data.version }),
         ...(data.skillType && { skillType: data.skillType }),
         ...(data.definition !== undefined && {
@@ -192,7 +194,10 @@ export class SkillApiService {
   /**
    * 获取 Bot 已安装的技能列表
    */
-  async getBotSkills(userId: string, hostname: string): Promise<BotSkillItem[]> {
+  async getBotSkills(
+    userId: string,
+    hostname: string,
+  ): Promise<BotSkillItem[]> {
     const bot = await this.botService.get({ hostname, createdById: userId });
     if (!bot) {
       throw new NotFoundException('Bot 不存在');

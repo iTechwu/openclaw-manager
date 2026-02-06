@@ -64,7 +64,11 @@ export class BotUsageAnalyticsService {
       throw new Error('Bot not found');
     }
 
-    const { startDate, endDate } = this.getDateRange(query.period, query.startDate, query.endDate);
+    const { startDate, endDate } = this.getDateRange(
+      query.period,
+      query.startDate,
+      query.endDate,
+    );
 
     const where: Prisma.BotUsageLogWhereInput = {
       botId: bot.id,
@@ -93,10 +97,7 @@ export class BotUsageAnalyticsService {
       this.prisma.read.botUsageLog.count({
         where: {
           ...where,
-          OR: [
-            { statusCode: { gte: 400 } },
-            { errorMessage: { not: null } },
-          ],
+          OR: [{ statusCode: { gte: 400 } }, { errorMessage: { not: null } }],
         },
       }),
     ]);
@@ -171,7 +172,11 @@ export class BotUsageAnalyticsService {
       throw new Error('Bot not found');
     }
 
-    const { startDate, endDate } = this.getDateRange('month', query.startDate, query.endDate);
+    const { startDate, endDate } = this.getDateRange(
+      'month',
+      query.startDate,
+      query.endDate,
+    );
 
     const where: Prisma.BotUsageLogWhereInput = {
       botId: bot.id,
@@ -189,11 +194,7 @@ export class BotUsageAnalyticsService {
   /**
    * 获取 Bot 用量日志列表
    */
-  async getLogs(
-    userId: string,
-    hostname: string,
-    query: UsageLogListQuery,
-  ) {
+  async getLogs(userId: string, hostname: string, query: UsageLogListQuery) {
     const bot = await this.botService.get({
       hostname,
       createdById: userId,
@@ -203,7 +204,15 @@ export class BotUsageAnalyticsService {
       throw new Error('Bot not found');
     }
 
-    const { limit = 20, page = 1, vendor, model, statusCode, startDate, endDate } = query;
+    const {
+      limit = 20,
+      page = 1,
+      vendor,
+      model,
+      statusCode,
+      startDate,
+      endDate,
+    } = query;
 
     const where: Prisma.BotUsageLogWhereInput = {
       botId: bot.id,
@@ -267,7 +276,8 @@ export class BotUsageAnalyticsService {
     granularity: 'hour' | 'day' | 'week',
   ): Promise<TrendDataPoint[]> {
     // 使用原生 SQL 进行时间桶聚合
-    const truncFormat = granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
+    const truncFormat =
+      granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
 
     const result = await this.prisma.read.$queryRaw<
       Array<{
@@ -325,7 +335,8 @@ export class BotUsageAnalyticsService {
         groupColumn = 'model';
         break;
       case 'status':
-        groupColumn = 'CASE WHEN status_code >= 400 OR error_message IS NOT NULL THEN \'error\' ELSE \'success\' END';
+        groupColumn =
+          "CASE WHEN status_code >= 400 OR error_message IS NOT NULL THEN 'error' ELSE 'success' END";
         break;
     }
 
@@ -336,7 +347,8 @@ export class BotUsageAnalyticsService {
         response_tokens: bigint | null;
         request_count: bigint;
       }>
-    >(`
+    >(
+      `
       SELECT
         ${groupColumn} as group_key,
         SUM(request_tokens) as request_tokens,
@@ -348,18 +360,27 @@ export class BotUsageAnalyticsService {
         ${endDate ? `AND created_at <= $3` : ''}
       GROUP BY ${groupColumn}
       ORDER BY request_count DESC
-    `, botId, startDate, endDate);
+    `,
+      botId,
+      startDate,
+      endDate,
+    );
 
-    const totalRequests = result.reduce((sum, row) => sum + Number(row.request_count), 0);
+    const totalRequests = result.reduce(
+      (sum, row) => sum + Number(row.request_count),
+      0,
+    );
 
     return result.map((row) => ({
       key: row.group_key || 'unknown',
       requestTokens: Number(row.request_tokens || 0),
       responseTokens: Number(row.response_tokens || 0),
       requestCount: Number(row.request_count),
-      percentage: totalRequests > 0
-        ? Math.round((Number(row.request_count) / totalRequests) * 10000) / 100
-        : 0,
+      percentage:
+        totalRequests > 0
+          ? Math.round((Number(row.request_count) / totalRequests) * 10000) /
+            100
+          : 0,
       estimatedCost: this.estimateCostForTokens(
         Number(row.request_tokens || 0),
         Number(row.response_tokens || 0),
@@ -397,8 +418,10 @@ export class BotUsageAnalyticsService {
     let totalCost = 0;
     for (const row of result) {
       const pricing = this.getModelPricing(row.model);
-      const inputCost = (Number(row.request_tokens || 0) / 1_000_000) * pricing.input;
-      const outputCost = (Number(row.response_tokens || 0) / 1_000_000) * pricing.output;
+      const inputCost =
+        (Number(row.request_tokens || 0) / 1_000_000) * pricing.input;
+      const outputCost =
+        (Number(row.response_tokens || 0) / 1_000_000) * pricing.output;
       totalCost += inputCost + outputCost;
     }
 
@@ -408,7 +431,10 @@ export class BotUsageAnalyticsService {
   /**
    * 估算 Token 成本（使用默认定价）
    */
-  private estimateCostForTokens(requestTokens: number, responseTokens: number): number {
+  private estimateCostForTokens(
+    requestTokens: number,
+    responseTokens: number,
+  ): number {
     const pricing = MODEL_PRICING.default;
     const inputCost = (requestTokens / 1_000_000) * pricing.input;
     const outputCost = (responseTokens / 1_000_000) * pricing.output;
@@ -418,7 +444,10 @@ export class BotUsageAnalyticsService {
   /**
    * 获取模型定价
    */
-  private getModelPricing(model: string | null): { input: number; output: number } {
+  private getModelPricing(model: string | null): {
+    input: number;
+    output: number;
+  } {
     if (!model) return MODEL_PRICING.default;
 
     // 尝试精确匹配

@@ -54,51 +54,89 @@ export class FeishuWsClient {
 
   /**
    * 连接到飞书 WebSocket
+   * 返回一个 Promise，在连接成功建立后 resolve
    */
   async connect(): Promise<void> {
-    if (this.isConnecting || this.ws?.readyState === WebSocket.OPEN) {
-      this.logger.warn('Feishu WebSocket already connected or connecting');
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.logger.warn('Feishu WebSocket already connected');
       return;
+    }
+
+    if (this.isConnecting) {
+      this.logger.warn('Feishu WebSocket already connecting, waiting...');
+      // 等待现有连接完成
+      return new Promise((resolve, reject) => {
+        const checkInterval = setInterval(() => {
+          if (this.ws?.readyState === WebSocket.OPEN) {
+            clearInterval(checkInterval);
+            resolve();
+          } else if (!this.isConnecting) {
+            clearInterval(checkInterval);
+            reject(new Error('Connection failed'));
+          }
+        }, 100);
+        // 超时 30 秒
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          reject(new Error('Connection timeout'));
+        }, 30000);
+      });
     }
 
     this.isConnecting = true;
     this.shouldReconnect = true;
 
-    try {
-      const wsUrl = await this.apiClient.getWsEndpoint();
-      this.logger.info('Connecting to Feishu WebSocket', { url: wsUrl });
+    return new Promise(async (resolve, reject) => {
+      try {
+        const wsUrl = await this.apiClient.getWsEndpoint();
+        this.logger.info('Connecting to Feishu WebSocket', { url: wsUrl });
 
-      this.ws = new WebSocket(wsUrl);
+        this.ws = new WebSocket(wsUrl);
 
-      this.ws.on('open', () => {
-        this.logger.info('Feishu WebSocket connected');
-        this.isConnecting = false;
-        this.reconnectAttempts = 0;
-        this.startPing();
-      });
+        // 设置连接超时
+        const connectionTimeout = setTimeout(() => {
+          if (this.ws?.readyState !== WebSocket.OPEN) {
+            this.isConnecting = false;
+            reject(new Error('WebSocket connection timeout'));
+          }
+        }, 30000);
 
-      this.ws.on('message', (data: WebSocket.Data) => {
-        this.handleMessage(data);
-      });
-
-      this.ws.on('close', (code, reason) => {
-        this.logger.warn('Feishu WebSocket closed', {
-          code,
-          reason: reason.toString(),
+        this.ws.on('open', () => {
+          clearTimeout(connectionTimeout);
+          this.logger.info('Feishu WebSocket connected successfully');
+          this.isConnecting = false;
+          this.reconnectAttempts = 0;
+          this.startPing();
+          resolve();
         });
-        this.cleanup();
-        this.scheduleReconnect();
-      });
 
-      this.ws.on('error', (error) => {
-        this.logger.error('Feishu WebSocket error', { error });
+        this.ws.on('message', (data: WebSocket.Data) => {
+          this.handleMessage(data);
+        });
+
+        this.ws.on('close', (code, reason) => {
+          clearTimeout(connectionTimeout);
+          this.logger.warn('Feishu WebSocket closed', {
+            code,
+            reason: reason.toString(),
+          });
+          this.cleanup();
+          this.scheduleReconnect();
+        });
+
+        this.ws.on('error', (error) => {
+          clearTimeout(connectionTimeout);
+          this.logger.error('Feishu WebSocket error', { error });
+          this.isConnecting = false;
+          reject(error);
+        });
+      } catch (error) {
+        this.logger.error('Failed to connect to Feishu WebSocket', { error });
         this.isConnecting = false;
-      });
-    } catch (error) {
-      this.logger.error('Failed to connect to Feishu WebSocket', { error });
-      this.isConnecting = false;
-      this.scheduleReconnect();
-    }
+        this.scheduleReconnect();
+        reject(error);
+      }
+    });
   }
 
   /**

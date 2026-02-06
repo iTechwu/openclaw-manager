@@ -48,6 +48,11 @@ import { EncryptionService } from '../bot-api/services/encryption.service';
     TokenExtractorService,
     EncryptionService,
   ],
-  exports: [ProxyService, KeyringProxyService, QuotaService, TokenExtractorService],
+  exports: [
+    ProxyService,
+    KeyringProxyService,
+    QuotaService,
+    TokenExtractorService,
+  ],
 })
 export class ProxyModule {}

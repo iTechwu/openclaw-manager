@@ -1,4 +1,9 @@
-import { Inject, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ProxyTokenService, ProviderKeyService, BotService } from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
@@ -58,7 +63,9 @@ export class KeyringProxyService {
     // 验证 ProviderKey 是否存在
     const providerKey = await this.providerKeyService.getById(keyId);
     if (!providerKey) {
-      this.logger.error(`ProviderKey not found when registering bot with proxy: ${keyId}`);
+      this.logger.error(
+        `ProviderKey not found when registering bot with proxy: ${keyId}`,
+      );
       throw new NotFoundException(`ProviderKey with id "${keyId}" not found`);
     }
 

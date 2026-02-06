@@ -126,7 +126,10 @@ export class DockerService implements OnModuleInit {
    * @param workspacePath - Full workspace path (used in host path mode)
    * @returns Array of volume bind strings for Docker
    */
-  private buildVolumeBinds(isolationKey: string, workspacePath: string): string[] {
+  private buildVolumeBinds(
+    isolationKey: string,
+    workspacePath: string,
+  ): string[] {
     if (this.dataVolumeName && this.secretsVolumeName) {
       // Containerized mode: use named volumes with subdirectories
       // Format: volume_name/subpath:/container/path:mode
@@ -583,7 +586,10 @@ export class DockerService implements OnModuleInit {
     return containers.map((c) => ({
       id: c.Id,
       hostname: c.Labels['clawbot-manager.hostname'] || 'unknown',
-      isolationKey: c.Labels['clawbot-manager.isolation-key'] || c.Labels['clawbot-manager.hostname'] || 'unknown',
+      isolationKey:
+        c.Labels['clawbot-manager.isolation-key'] ||
+        c.Labels['clawbot-manager.hostname'] ||
+        'unknown',
     }));
   }
 
@@ -591,7 +597,9 @@ export class DockerService implements OnModuleInit {
    * Find orphaned containers (containers without corresponding database entries)
    * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
    */
-  async findOrphanedContainers(knownIsolationKeys: string[]): Promise<string[]> {
+  async findOrphanedContainers(
+    knownIsolationKeys: string[],
+  ): Promise<string[]> {
     if (!this.isAvailable()) {
       return [];
     }

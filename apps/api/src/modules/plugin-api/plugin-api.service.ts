@@ -25,9 +25,7 @@ export class PluginApiService {
   /**
    * 获取插件列表
    */
-  async listPlugins(
-    query: PluginListQuery,
-  ): Promise<{
+  async listPlugins(query: PluginListQuery): Promise<{
     list: PluginItem[];
     total: number;
     page: number;

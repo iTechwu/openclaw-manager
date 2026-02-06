@@ -72,7 +72,17 @@ export interface FeishuMessageEvent {
 // 飞书发送消息请求
 export interface FeishuSendMessageRequest {
   receive_id: string;
-  msg_type: 'text' | 'post' | 'image' | 'interactive' | 'share_chat' | 'share_user' | 'audio' | 'media' | 'file' | 'sticker';
+  msg_type:
+    | 'text'
+    | 'post'
+    | 'image'
+    | 'interactive'
+    | 'share_chat'
+    | 'share_user'
+    | 'audio'
+    | 'media'
+    | 'file'
+    | 'sticker';
   content: string;
   uuid?: string;
 }

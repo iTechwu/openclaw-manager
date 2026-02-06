@@ -139,9 +139,14 @@ export class ReconciliationService implements OnModuleInit {
 
     // 检测孤儿容器（在 Docker 中但不在 DB 中）
     for (const container of managedContainers) {
-      if (container.isolationKey && !botIsolationKeys.has(container.isolationKey)) {
+      if (
+        container.isolationKey &&
+        !botIsolationKeys.has(container.isolationKey)
+      ) {
         report.orphanedContainers.push(container.isolationKey);
-        this.logger.warn(`Orphaned container detected: ${container.isolationKey}`);
+        this.logger.warn(
+          `Orphaned container detected: ${container.isolationKey}`,
+        );
       }
     }
 
@@ -156,7 +161,8 @@ export class ReconciliationService implements OnModuleInit {
     }
 
     // 检测孤儿密钥目录（使用 isolation keys）
-    const secretIsolationKeys = await this.workspaceService.listSecretIsolationKeys();
+    const secretIsolationKeys =
+      await this.workspaceService.listSecretIsolationKeys();
     for (const isolationKey of secretIsolationKeys) {
       if (!botIsolationKeys.has(isolationKey)) {
         report.orphanedSecrets.push(isolationKey);

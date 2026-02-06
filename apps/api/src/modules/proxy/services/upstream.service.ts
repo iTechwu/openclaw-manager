@@ -5,10 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type { VendorConfig } from '../config/vendor.config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import {
-  TokenExtractorService,
-  TokenUsage,
-} from './token-extractor.service';
+import { TokenExtractorService, TokenUsage } from './token-extractor.service';
 
 /**
  * 上游请求参数
@@ -217,9 +214,8 @@ export class UpstreamService {
             let tokenUsage: TokenUsage | null = null;
             if (vendor && statusCode >= 200 && statusCode < 300) {
               try {
-                const responseData = Buffer.concat(responseChunks).toString(
-                  'utf-8',
-                );
+                const responseData =
+                  Buffer.concat(responseChunks).toString('utf-8');
                 tokenUsage = this.tokenExtractor.extractFromResponse(
                   vendor,
                   responseData,

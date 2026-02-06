@@ -47,13 +47,20 @@ export class HealthCheckService {
         { limit: 1000 },
       );
 
-      this.logger.debug(`Health check: checking ${runningBots.length} running bots`);
+      this.logger.debug(
+        `Health check: checking ${runningBots.length} running bots`,
+      );
 
       for (const bot of runningBots) {
         if (!bot.port) continue;
 
         const isHealthy = await this.checkBotHealth(bot.port);
-        await this.updateHealthStatus(bot.id, bot.hostname, bot.createdById, isHealthy);
+        await this.updateHealthStatus(
+          bot.id,
+          bot.hostname,
+          bot.createdById,
+          isHealthy,
+        );
       }
     } catch (error) {
       this.logger.error('Health check failed', {
@@ -214,7 +221,12 @@ export class HealthCheckService {
     }
 
     const isHealthy = await this.checkBotHealth(bot.port);
-    await this.updateHealthStatus(bot.id, bot.hostname, bot.createdById, isHealthy);
+    await this.updateHealthStatus(
+      bot.id,
+      bot.hostname,
+      bot.createdById,
+      isHealthy,
+    );
 
     return {
       healthy: isHealthy,

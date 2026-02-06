@@ -97,7 +97,8 @@ export class ProxyAdminController {
       revokedAt: token.revokedAt?.toISOString(),
       lastUsedAt: token.lastUsedAt?.toISOString(),
       requestCount: token.requestCount,
-      isActive: !token.revokedAt && (!token.expiresAt || token.expiresAt > new Date()),
+      isActive:
+        !token.revokedAt && (!token.expiresAt || token.expiresAt > new Date()),
     };
   }
 }

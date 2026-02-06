@@ -44,10 +44,7 @@ export class PersonaTemplateApiService {
     // For user templates, always show all (user templates don't have locale restriction)
     const whereClause = locale
       ? {
-          OR: [
-            { isSystem: true, locale },
-            { createdById: userId },
-          ],
+          OR: [{ isSystem: true, locale }, { createdById: userId }],
         }
       : {
           OR: [{ isSystem: true }, { createdById: userId }],

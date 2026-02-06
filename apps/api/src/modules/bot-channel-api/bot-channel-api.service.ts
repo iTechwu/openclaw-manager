@@ -177,10 +177,13 @@ export class BotChannelApiService {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn('Failed to auto-connect Feishu channel after creation', {
-          channelId: channel.id,
-          error: errorMessage,
-        });
+        this.logger.warn(
+          'Failed to auto-connect Feishu channel after creation',
+          {
+            channelId: channel.id,
+            error: errorMessage,
+          },
+        );
         // 更新状态为错误，但不影响创建成功
         await this.botChannelDb.update(
           { id: channel.id },
@@ -264,6 +267,49 @@ export class BotChannelApiService {
 
     // 检查并更新 Bot 状态（从 draft 到 created）
     await this.checkAndUpdateBotStatus(bot.id);
+
+    // 对于飞书渠道，如果凭证或配置更新了，需要重新建立连接
+    if (
+      existingChannel.channelType === 'feishu' &&
+      (request.credentials !== undefined || request.config !== undefined)
+    ) {
+      try {
+        // 先断开现有连接
+        this.feishuClientService.disconnect(channelId);
+
+        // 重新建立连接
+        await this.connectFeishuChannel(channel);
+
+        // 更新状态为已连接
+        const updatedChannel = await this.botChannelDb.update(
+          { id: channelId },
+          {
+            connectionStatus: 'CONNECTED',
+            lastConnectedAt: new Date(),
+            lastError: null,
+          },
+        );
+        this.logger.info('Feishu channel reconnected after update', {
+          channelId,
+        });
+        return this.mapToItem(updatedChannel);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to reconnect Feishu channel after update', {
+          channelId,
+          error: errorMessage,
+        });
+        // 更新状态为错误
+        await this.botChannelDb.update(
+          { id: channelId },
+          {
+            connectionStatus: 'ERROR',
+            lastError: errorMessage,
+          },
+        );
+      }
+    }
 
     return this.mapToItem(channel);
   }
@@ -423,23 +469,20 @@ export class BotChannelApiService {
       throw new NotFoundException('Channel not found');
     }
 
-    return this.executeChannelTestWithTiming(
-      channel.channelType,
-      async () => {
-        // 解密凭证
-        const encryptedBuffer = channel.credentialsEncrypted;
-        const encryptedStr = Buffer.from(encryptedBuffer).toString('utf8');
-        const credentialsJson = this.cryptClient.decrypt(encryptedStr);
-        const credentials = JSON.parse(credentialsJson);
+    return this.executeChannelTestWithTiming(channel.channelType, async () => {
+      // 解密凭证
+      const encryptedBuffer = channel.credentialsEncrypted;
+      const encryptedStr = Buffer.from(encryptedBuffer).toString('utf8');
+      const credentialsJson = this.cryptClient.decrypt(encryptedStr);
+      const credentials = JSON.parse(credentialsJson);
 
-        return this.executeChannelTest(
-          channel.channelType,
-          credentials,
-          channel.config as Record<string, unknown> | null,
-          request.message,
-        );
-      },
-    );
+      return this.executeChannelTest(
+        channel.channelType,
+        credentials,
+        channel.config as Record<string, unknown> | null,
+        request.message,
+      );
+    });
   }
 
   /**
@@ -466,16 +509,13 @@ export class BotChannelApiService {
       hasConfig: !!request.config,
     });
 
-    return this.executeChannelTestWithTiming(
-      request.channelType,
-      async () => {
-        return this.executeChannelTest(
-          request.channelType,
-          request.credentials,
-          (request.config as Record<string, unknown>) || null,
-        );
-      },
-    );
+    return this.executeChannelTestWithTiming(request.channelType, async () => {
+      return this.executeChannelTest(
+        request.channelType,
+        request.credentials,
+        (request.config as Record<string, unknown>) || null,
+      );
+    });
   }
 
   /**
@@ -827,9 +867,9 @@ export class BotChannelApiService {
     let credentialsMasked: Record<string, string> | null = null;
     if (channel.credentialsEncrypted) {
       try {
-        const encryptedStr = Buffer.from(
-          channel.credentialsEncrypted,
-        ).toString('utf8');
+        const encryptedStr = Buffer.from(channel.credentialsEncrypted).toString(
+          'utf8',
+        );
         const credentialsJson = this.cryptClient.decrypt(encryptedStr);
         const credentials = JSON.parse(credentialsJson) as Record<
           string,
@@ -907,10 +947,13 @@ export class BotChannelApiService {
 
       // 只有 draft 状态的 bot 需要检查
       if (bot.status !== 'draft') {
-        this.logger.debug('Bot is not in draft status, skipping status update', {
-          botId,
-          currentStatus: bot.status,
-        });
+        this.logger.debug(
+          'Bot is not in draft status, skipping status update',
+          {
+            botId,
+            currentStatus: bot.status,
+          },
+        );
         return;
       }
 

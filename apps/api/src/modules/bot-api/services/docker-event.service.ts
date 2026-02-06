@@ -84,7 +84,9 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.eventStream.on('error', (error: Error) => {
-        this.logger.error('Docker event stream error', { error: error.message });
+        this.logger.error('Docker event stream error', {
+          error: error.message,
+        });
         this.scheduleReconnect();
       });
 
@@ -110,7 +112,10 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
       try {
         // Use removeAllListeners and unpipe to stop the stream
         this.eventStream.removeAllListeners();
-        if ('destroy' in this.eventStream && typeof (this.eventStream as any).destroy === 'function') {
+        if (
+          'destroy' in this.eventStream &&
+          typeof (this.eventStream as any).destroy === 'function'
+        ) {
           (this.eventStream as any).destroy();
         }
       } catch {

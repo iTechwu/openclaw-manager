@@ -77,9 +77,7 @@ export class WorkspaceService {
       // This ensures a fresh start when reusing a hostname
       const workspaceExists = await this.workspaceExistsByKey(isolationKey);
       if (workspaceExists) {
-        this.logger.info(
-          `Cleaning up existing workspace for: ${isolationKey}`,
-        );
+        this.logger.info(`Cleaning up existing workspace for: ${isolationKey}`);
         await fs.rm(workspacePath, { recursive: true, force: true });
         await fs.rm(botSecretsPath, { recursive: true, force: true });
       }
@@ -155,7 +153,10 @@ export class WorkspaceService {
 
       this.logger.info(`Workspace updated for bot: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to update workspace for ${isolationKey}:`, error);
+      this.logger.error(
+        `Failed to update workspace for ${isolationKey}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -177,7 +178,10 @@ export class WorkspaceService {
 
       this.logger.info(`Workspace deleted for bot: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to delete workspace for ${isolationKey}:`, error);
+      this.logger.error(
+        `Failed to delete workspace for ${isolationKey}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -247,7 +251,11 @@ export class WorkspaceService {
   /**
    * Remove API key from secrets directory
    */
-  async removeApiKey(userId: string, hostname: string, vendor: string): Promise<void> {
+  async removeApiKey(
+    userId: string,
+    hostname: string,
+    vendor: string,
+  ): Promise<void> {
     const isolationKey = this.getIsolationKey(userId, hostname);
     const keyPath = path.join(this.secretsDir, isolationKey, `${vendor}.key`);
 
@@ -275,7 +283,9 @@ export class WorkspaceService {
    * Find orphaned workspaces (workspaces without corresponding database entries)
    * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
    */
-  async findOrphanedWorkspaces(knownIsolationKeys: string[]): Promise<string[]> {
+  async findOrphanedWorkspaces(
+    knownIsolationKeys: string[],
+  ): Promise<string[]> {
     const workspaces = await this.listWorkspaces();
     return workspaces.filter((w) => !knownIsolationKeys.includes(w));
   }
@@ -362,7 +372,10 @@ export class WorkspaceService {
       await fs.rm(botSecretsPath, { recursive: true, force: true });
       this.logger.info(`Workspace deleted for: ${isolationKey}`);
     } catch (error) {
-      this.logger.error(`Failed to delete workspace for ${isolationKey}:`, error);
+      this.logger.error(
+        `Failed to delete workspace for ${isolationKey}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -397,7 +410,11 @@ export class WorkspaceService {
   /**
    * Read a secret file for a bot
    */
-  async readSecret(userId: string, hostname: string, name: string): Promise<string | null> {
+  async readSecret(
+    userId: string,
+    hostname: string,
+    name: string,
+  ): Promise<string | null> {
     const isolationKey = this.getIsolationKey(userId, hostname);
     const secretPath = path.join(this.secretsDir, isolationKey, name);
     try {

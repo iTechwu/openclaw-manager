@@ -174,7 +174,10 @@ export class TokenExtractorService {
       const trimmedLine = line.trim();
       if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
         const usage = this.extractFromStreamChunk(vendor, trimmedLine);
-        if (usage && (usage.requestTokens !== null || usage.responseTokens !== null)) {
+        if (
+          usage &&
+          (usage.requestTokens !== null || usage.responseTokens !== null)
+        ) {
           lastUsage = usage;
         }
       }

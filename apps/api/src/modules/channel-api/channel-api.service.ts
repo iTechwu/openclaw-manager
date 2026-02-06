@@ -67,7 +67,10 @@ export class ChannelApiService {
       if (locale && c.popularLocales.length > 0) {
         // Check if the locale matches any of the popularLocales
         return c.popularLocales.some(
-          (l) => l === locale || locale.startsWith(l) || l.startsWith(locale.split('-')[0]),
+          (l) =>
+            l === locale ||
+            locale.startsWith(l) ||
+            l.startsWith(locale.split('-')[0]),
         );
       }
       // Fallback to the popular field if no locale specified or no popularLocales defined
@@ -75,7 +78,9 @@ export class ChannelApiService {
     });
 
     const popularChannelIds = new Set(popularChannels.map((c) => c.id));
-    const otherChannels = mappedChannels.filter((c) => !popularChannelIds.has(c.id));
+    const otherChannels = mappedChannels.filter(
+      (c) => !popularChannelIds.has(c.id),
+    );
 
     return {
       channels: mappedChannels,
