@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WizardProvider, useWizard } from './wizard-context';
-import { Step1Basic, Step2Persona } from './steps';
+import { Step1Template, Step2BasicInfo, Step3Persona } from './steps';
 import { useBots } from '@/hooks/useBots';
 import { Dialog, DialogContent, Button, cn } from '@repo/ui';
 import {
@@ -14,6 +14,7 @@ import {
   Loader2,
   X,
   AlertCircle,
+  LayoutTemplate,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -74,12 +75,13 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const currentStep = state.step;
 
   const steps = [
-    { step: 1, title: t('wizard.steps.basic'), icon: Bot },
-    { step: 2, title: t('wizard.steps.persona'), icon: Sparkles },
+    { step: 1, title: t('wizard.steps.template'), icon: LayoutTemplate },
+    { step: 2, title: t('wizard.steps.basicInfo'), icon: Bot },
+    { step: 3, title: t('wizard.steps.persona'), icon: Sparkles },
   ];
 
   const handleNext = () => {
-    if (currentStep < 2) {
+    if (currentStep < 3) {
       dispatch({ type: 'SET_STEP', step: currentStep + 1 });
     }
   };
@@ -106,12 +108,12 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   };
 
   const canProceed = validate(currentStep).valid;
-  const isLastStep = currentStep === 2;
+  const isLastStep = currentStep === 3;
 
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-6">
           {steps.map((s, idx) => (
             <div key={s.step} className="flex items-center">
@@ -138,21 +140,22 @@ function WizardContent({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {currentStep === 1 && <Step1Basic />}
-        {currentStep === 2 && <Step2Persona />}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-6">
+        {currentStep === 1 && <Step1Template />}
+        {currentStep === 2 && <Step2BasicInfo />}
+        {currentStep === 3 && <Step3Persona />}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mx-6 mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="mx-6 mb-4 flex shrink-0 items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           <AlertCircle className="size-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t px-6 py-4">
+      {/* Footer - Fixed at bottom */}
+      <div className="flex shrink-0 items-center justify-between border-t px-6 py-4">
         <Button
           variant="outline"
           onClick={handlePrev}
@@ -177,11 +180,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
             {t('wizard.create')}
           </Button>
         ) : (
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed}
-            className="gap-2"
-          >
+          <Button onClick={handleNext} disabled={!canProceed} className="gap-2">
             {t('wizard.next')}
             <ArrowRight className="size-4" />
           </Button>
@@ -194,7 +193,10 @@ function WizardContent({ onClose }: { onClose: () => void }) {
 export function CreateBotWizard({ isOpen, onClose }: CreateBotWizardProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="h-[85vh] max-h-[700px] w-full max-w-2xl overflow-hidden p-0">
+      <DialogContent
+        className="h-[85vh] max-h-[700px] w-full max-w-2xl overflow-hidden p-0"
+        hideCloseButton
+      >
         <WizardProvider>
           <WizardContent onClose={onClose} />
         </WizardProvider>

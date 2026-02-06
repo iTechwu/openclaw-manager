@@ -60,9 +60,15 @@
   },
   "wizard": {
     "title": "Create New Bot",
+    "prev": "Back",
+    "next": "Next",
+    "create": "Create Bot",
+    "createSuccess": "Bot created successfully",
     "steps": {
       "template": "Template",
       "templateDesc": "Choose a Persona Template",
+      "basicInfo": "Basic Info",
+      "persona": "Preview",
       "personality": "Personality",
       "personalityDesc": "Customize your bot identity",
       "features": "Features",
@@ -71,10 +77,8 @@
       "configureDesc": "Set up model and tokens",
       "review": "Review",
       "reviewDesc": "Review and create",
-      "basicInfo": "Basic Info",
       "provider": "AI Provider",
-      "channel": "Channel",
-      "persona": "Persona"
+      "channel": "Channel"
     },
     "completeStep": "Please complete this step",
     "step1": {

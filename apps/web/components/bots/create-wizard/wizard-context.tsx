@@ -127,6 +127,10 @@ export function validateStep(
 ): ValidationResult {
   switch (step) {
     case 1:
+      // Template selection - optional but recommended
+      return { valid: true };
+
+    case 2:
       // Basic info validation
       if (!state.botName.trim()) {
         return { valid: false, error: 'Bot name is required' };
@@ -155,7 +159,7 @@ export function validateStep(
       }
       return { valid: true };
 
-    case 2:
+    case 3:
       // Persona - no required validation (system prompt is optional)
       return { valid: true };
 

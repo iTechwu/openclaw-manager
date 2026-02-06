@@ -97,13 +97,16 @@ export class AuthService {
 
   async refreshTokenByUser(
     user: Partial<UserInfo>,
-    deviceInfo: PardxApp.HeaderData,
+    _deviceInfo: PardxApp.HeaderData,
   ): Promise<LoginSuccess> {
     const tokens: AuthClient.Session = await this.generateTokens(user);
 
     await this.redis.saveData('session', tokens.userId, tokens);
     await this.redis.saveData('refresh', tokens.refresh, tokens.userId);
     await this.redis.saveData('access', tokens.access, tokens.userId);
+
+    // Convert avatarFileId to CDN URL
+    const headerImg = await this.getAvatarUrl(user.avatarFileId);
 
     return {
       refresh: tokens.refresh,
@@ -117,12 +120,45 @@ export class AuthService {
         isAdmin: user.isAdmin,
         code: user.code ?? null,
         nickname: user.nickname ?? null,
-        headerImg: user.avatarFileId ?? null,
+        headerImg,
         sex: user.sex ?? null,
         mobile: user.mobile ?? null,
         email: user.email ?? null,
       },
     };
+  }
+
+  /**
+   * 将 avatarFileId 转换为 CDN URL
+   *
+   * @param avatarFileId 头像文件 ID
+   * @returns CDN URL 或 null
+   */
+  private async getAvatarUrl(
+    avatarFileId: string | null | undefined,
+  ): Promise<string | null> {
+    if (!avatarFileId) {
+      return null;
+    }
+
+    try {
+      const avatarFile = await this.fileSource.get({ id: avatarFileId });
+      if (avatarFile) {
+        return await this.fileCdn.getImageVolcengineCdn(
+          avatarFile.vendor,
+          avatarFile.bucket,
+          avatarFile.key,
+          '360:360:360:360',
+        );
+      }
+    } catch (error) {
+      this.logger.warn('Failed to get avatar URL', {
+        avatarFileId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    return null;
   }
 
   /**
@@ -173,20 +209,7 @@ export class AuthService {
     const isAnonymity = user?.isAnonymity;
 
     // Convert avatarFileId to headerImg URL
-    let headerImg: string | undefined;
-    if (user.avatarFileId) {
-      const avatarFile = await this.fileSource.get({
-        id: user.avatarFileId,
-      });
-      if (avatarFile) {
-        headerImg = await this.fileCdn.getImageVolcengineCdn(
-          avatarFile.vendor,
-          avatarFile.bucket,
-          avatarFile.key,
-          '360:360:360:360',
-        );
-      }
-    }
+    const headerImg = await this.getAvatarUrl(user.avatarFileId);
 
     // 为了与 JWT 标准保持一致，我们选择了 sub 作为属性名来保存 userId
     // 将用户基本信息放入 JWT payload，避免每次都需要查询数据库

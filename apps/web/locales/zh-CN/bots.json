@@ -61,11 +61,14 @@
   },
   "wizard": {
     "title": "创建新 Bot",
+    "prev": "上一步",
+    "next": "下一步",
+    "create": "创建 Bot",
     "createSuccess": "Bot 创建成功！请配置 AI Provider 和消息渠道后启动。",
     "steps": {
       "basic": "基本信息",
       "basicDesc": "设置 Bot 名称和选择模板",
-      "persona": "人设配置",
+      "persona": "预览",
       "personaDesc": "自定义 Bot 的系统提示词",
       "template": "模板",
       "templateDesc": "选择人设模板",
