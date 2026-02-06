@@ -3,15 +3,18 @@
  *
  * 职责：
  * - 管理多个飞书渠道的连接
- * - 创建和销毁 API 客户端和 WebSocket 客户端
+ * - 使用官方 SDK 建立 WebSocket 长连接
+ * - 创建和销毁 API 客户端和 SDK 客户端
  * - 不包含业务逻辑
+ *
+ * 注意：飞书长连接模式必须使用官方 SDK，自定义 WebSocket 连接无法被飞书后台识别
  */
 import { Injectable, Inject, OnModuleDestroy } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { FeishuApiClient } from './feishu-api.client';
-import { FeishuWsClient, FeishuWsClientOptions } from './feishu-ws.client';
+import { FeishuSdkClient, FeishuSdkClientOptions } from './feishu-sdk.client';
 import type {
   FeishuCredentials,
   FeishuChannelConfig,
@@ -21,7 +24,7 @@ import type {
 export interface FeishuConnection {
   channelId: string;
   apiClient: FeishuApiClient;
-  wsClient: FeishuWsClient;
+  sdkClient: FeishuSdkClient;
 }
 
 @Injectable()
@@ -39,20 +42,21 @@ export class FeishuClientService implements OnModuleDestroy {
    * @param credentials 凭证
    * @param config 配置
    * @param messageHandler 消息处理器
-   * @param wsOptions WebSocket 选项
+   * @param sdkOptions SDK 选项
    */
   async createConnection(
     channelId: string,
     credentials: FeishuCredentials,
     config: FeishuChannelConfig,
     messageHandler: FeishuMessageHandler,
-    wsOptions?: FeishuWsClientOptions,
+    sdkOptions?: FeishuSdkClientOptions,
   ): Promise<FeishuConnection> {
     // 如果已存在连接，先断开
     if (this.connections.has(channelId)) {
       await this.destroyConnection(channelId);
     }
 
+    // 创建 API 客户端（用于发送消息等 REST API 调用）
     const apiClient = new FeishuApiClient(
       credentials,
       config,
@@ -60,13 +64,19 @@ export class FeishuClientService implements OnModuleDestroy {
       this.logger,
     );
 
-    const wsClient = new FeishuWsClient(apiClient, this.logger, wsOptions);
-    wsClient.onMessage(messageHandler);
+    // 创建 SDK 客户端（用于建立长连接接收事件）
+    const sdkClient = new FeishuSdkClient(
+      credentials,
+      config,
+      this.logger,
+      sdkOptions,
+    );
+    sdkClient.onMessage(messageHandler);
 
     const connection: FeishuConnection = {
       channelId,
       apiClient,
-      wsClient,
+      sdkClient,
     };
 
     this.connections.set(channelId, connection);
@@ -77,7 +87,8 @@ export class FeishuClientService implements OnModuleDestroy {
   }
 
   /**
-   * 连接到飞书
+   * 连接到飞书（启动长连接）
+   * 使用官方 SDK 建立 WebSocket 长连接
    */
   async connect(channelId: string): Promise<void> {
     const connection = this.connections.get(channelId);
@@ -85,7 +96,7 @@ export class FeishuClientService implements OnModuleDestroy {
       throw new Error(`Feishu connection not found: ${channelId}`);
     }
 
-    await connection.wsClient.connect();
+    await connection.sdkClient.start();
   }
 
   /**
@@ -94,7 +105,7 @@ export class FeishuClientService implements OnModuleDestroy {
   disconnect(channelId: string): void {
     const connection = this.connections.get(channelId);
     if (connection) {
-      connection.wsClient.disconnect();
+      connection.sdkClient.stop();
     }
   }
 
@@ -104,7 +115,7 @@ export class FeishuClientService implements OnModuleDestroy {
   async destroyConnection(channelId: string): Promise<void> {
     const connection = this.connections.get(channelId);
     if (connection) {
-      connection.wsClient.disconnect();
+      connection.sdkClient.stop();
       this.connections.delete(channelId);
       this.logger.info('Feishu connection destroyed', { channelId });
     }
@@ -129,7 +140,7 @@ export class FeishuClientService implements OnModuleDestroy {
    */
   isConnected(channelId: string): boolean {
     const connection = this.connections.get(channelId);
-    return connection?.wsClient.isConnected() ?? false;
+    return connection?.sdkClient.isConnected() ?? false;
   }
 
   /**
@@ -146,7 +157,7 @@ export class FeishuClientService implements OnModuleDestroy {
    */
   onModuleDestroy(): void {
     for (const [channelId, connection] of this.connections) {
-      connection.wsClient.disconnect();
+      connection.sdkClient.stop();
       this.logger.info('Feishu connection cleaned up on module destroy', {
         channelId,
       });

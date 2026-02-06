@@ -16,6 +16,9 @@ import type {
   TenantAccessTokenResponse,
   FeishuSendMessageRequest,
   FeishuSendMessageResponse,
+  FeishuCardContent,
+  FeishuUserInfo,
+  FeishuChatInfo,
 } from './feishu.types';
 
 export class FeishuApiClient {
@@ -172,22 +175,37 @@ export class FeishuApiClient {
   }
 
   /**
-   * 获取 WebSocket 长连接端点
-   * 用于建立长连接接收事件
+   * 发送卡片消息
    */
-  async getWsEndpoint(): Promise<string> {
+  async sendCardMessage(
+    chatId: string,
+    card: FeishuCardContent,
+  ): Promise<FeishuSendMessageResponse> {
+    return this.sendMessage('chat_id', {
+      receive_id: chatId,
+      msg_type: 'interactive',
+      content: JSON.stringify(card),
+    });
+  }
+
+  /**
+   * 更新卡片消息
+   */
+  async updateCardMessage(
+    messageId: string,
+    card: FeishuCardContent,
+  ): Promise<FeishuSendMessageResponse> {
     const token = await this.getTenantAccessToken();
-    const url = `${this.baseUrl}/callback/ws/endpoint`;
+    const url = `${this.baseUrl}/im/v1/messages/${messageId}`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post<{
-          code: number;
-          msg: string;
-          data?: { url: string };
-        }>(
+        this.httpService.patch<FeishuSendMessageResponse>(
           url,
-          {},
+          {
+            msg_type: 'interactive',
+            content: JSON.stringify(card),
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -197,15 +215,78 @@ export class FeishuApiClient {
         ),
       );
 
-      if (response.data.code !== 0 || !response.data.data?.url) {
-        throw new Error(
-          `Failed to get WebSocket endpoint: ${response.data.msg}`,
-        );
+      if (response.data.code !== 0) {
+        throw new Error(`Failed to update card message: ${response.data.msg}`);
       }
 
-      return response.data.data.url;
+      return response.data;
     } catch (error) {
-      this.logger.error('Failed to get Feishu WebSocket endpoint', { error });
+      this.logger.error('Failed to update Feishu card message', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取用户信息
+   */
+  async getUserInfo(
+    userId: string,
+    userIdType: 'open_id' | 'user_id' | 'union_id' = 'open_id',
+  ): Promise<FeishuUserInfo> {
+    const token = await this.getTenantAccessToken();
+    const url = `${this.baseUrl}/contact/v3/users/${userId}?user_id_type=${userIdType}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<{
+          code: number;
+          msg: string;
+          data?: { user: FeishuUserInfo };
+        }>(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      );
+
+      if (response.data.code !== 0 || !response.data.data?.user) {
+        throw new Error(`Failed to get user info: ${response.data.msg}`);
+      }
+
+      return response.data.data.user;
+    } catch (error) {
+      this.logger.error('Failed to get Feishu user info', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取群信息
+   */
+  async getChatInfo(chatId: string): Promise<FeishuChatInfo> {
+    const token = await this.getTenantAccessToken();
+    const url = `${this.baseUrl}/im/v1/chats/${chatId}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<{
+          code: number;
+          msg: string;
+          data?: FeishuChatInfo;
+        }>(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      );
+
+      if (response.data.code !== 0 || !response.data.data) {
+        throw new Error(`Failed to get chat info: ${response.data.msg}`);
+      }
+
+      return response.data.data;
+    } catch (error) {
+      this.logger.error('Failed to get Feishu chat info', { error });
       throw error;
     }
   }
