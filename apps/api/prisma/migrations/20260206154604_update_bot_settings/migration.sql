@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "b_bot" ALTER COLUMN "ai_provider" DROP NOT NULL,
+ALTER COLUMN "model" DROP NOT NULL,
+ALTER COLUMN "channel_type" DROP NOT NULL;

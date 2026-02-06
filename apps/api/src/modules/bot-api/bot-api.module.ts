@@ -28,6 +28,7 @@ import { DockerEventService } from './services/docker-event.service';
 import { BotSseService } from './services/bot-sse.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { HealthCheckService } from './services/health-check.service';
+import { BotConfigResolverService } from './services/bot-config-resolver.service';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { HealthCheckService } from './services/health-check.service';
     BotSseService,
     BotUsageAnalyticsService,
     HealthCheckService,
+    BotConfigResolverService,
   ],
   exports: [
     BotApiService,
@@ -70,6 +72,7 @@ import { HealthCheckService } from './services/health-check.service';
     BotSseService,
     BotUsageAnalyticsService,
     HealthCheckService,
+    BotConfigResolverService,
   ],
 })
 export class BotApiModule {}

@@ -40,13 +40,14 @@ export type ContainerStatus = z.infer<typeof ContainerStatusSchema>;
 // Bot Schema
 // ============================================================================
 
+// 注意：aiProvider、model、channelType 字段已移除
+// 这些值现在从 BotProviderKey 和 BotChannel 动态派生
+// 使用 BotConfigResolverService.getBotRuntimeConfig() 获取这些值
+
 export const BotSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   hostname: z.string(),
-  aiProvider: z.string(),
-  model: z.string(),
-  channelType: z.string(),
   containerId: z.string().nullable(),
   port: z.number().nullable(),
   gatewayToken: z.string().nullable(),

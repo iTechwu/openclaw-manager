@@ -18,6 +18,7 @@ import { KeyringProxyService } from '../proxy/services/keyring-proxy.service';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
+import { BotConfigResolverService } from './services/bot-config-resolver.service';
 import type { Bot, ProviderKey, BotStatus } from '@prisma/client';
 import type {
   CreateBotInput,
@@ -53,6 +54,7 @@ export class BotApiService {
     private readonly personaTemplateService: PersonaTemplateService,
     private readonly providerVerifyClient: ProviderVerifyClient,
     private readonly keyringProxyService: KeyringProxyService,
+    private readonly botConfigResolver: BotConfigResolverService,
   ) {
     // Get internal API URL for bot containers to reach the proxy
     this.proxyUrl = enviromentUtil.generateEnvironmentUrls().internalApi;
@@ -275,12 +277,10 @@ export class BotApiService {
     }
 
     // Create bot in database（port 必须为 number，Prisma Int 不接受 string）
+    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotProviderKey 和 BotChannel 派生
     const bot = await this.botService.create({
       name: input.name,
       hostname: input.hostname,
-      aiProvider: primaryProvider.providerId,
-      model: primaryProvider.primaryModel || primaryProvider.models[0],
-      channelType: input.channels[0].channelType,
       containerId,
       port: typeof port === 'number' ? port : Number(port),
       gatewayToken,
@@ -390,8 +390,7 @@ export class BotApiService {
       targetName: bot.name,
       detail: {
         hostname: bot.hostname,
-        aiProvider: bot.aiProvider,
-        model: bot.model,
+        // aiProvider 和 model 从 BotProviderKey 派生，不再记录在日志中
       },
     });
 
@@ -444,12 +443,10 @@ export class BotApiService {
 
     // Create bot in database with draft status
     // No workspace, no container, no port allocation
+    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotProviderKey 和 BotChannel 派生
     const bot = await this.botService.create({
       name: input.name,
       hostname: input.hostname,
-      aiProvider: '', // Will be set when provider is added
-      model: '', // Will be set when provider is added
-      channelType: '', // Will be set when channel is added
       containerId: null,
       port: null,
       gatewayToken,
@@ -710,15 +707,21 @@ export class BotApiService {
           userId,
           hostname,
         );
+
+        // 从 BotProviderKey 和 BotChannel 派生运行时配置
+        const runtimeConfig = await this.botConfigResolver.getBotRuntimeConfig(
+          bot.id,
+        );
+
         const containerId = await this.dockerService.createContainer({
           hostname: bot.hostname,
           isolationKey,
           name: bot.name,
           port: botPort,
           gatewayToken: bot.gatewayToken || '',
-          aiProvider: bot.aiProvider,
-          model: bot.model,
-          channelType: bot.channelType,
+          aiProvider: runtimeConfig?.aiProvider || '',
+          model: runtimeConfig?.model || '',
+          channelType: runtimeConfig?.channelType || '',
           workspacePath,
           apiKey,
           apiBaseUrl,
@@ -1115,17 +1118,11 @@ export class BotApiService {
       createdAt: bpk.createdAt,
     };
 
-    // 如果是主要 Provider，更新 Bot 的 aiProvider 和 model 字段
+    // 注意：不再更新 Bot 的 aiProvider 和 model 字段
+    // 这些值现在从 BotProviderKey 动态派生
     if (input.isPrimary) {
-      await this.botService.update(
-        { id: bot.id },
-        {
-          aiProvider: providerKey.vendor,
-          model: input.primaryModel || input.models[0] || '',
-        },
-      );
       this.logger.log(
-        `Updated bot ${bot.hostname} with primary provider: ${providerKey.vendor}, model: ${input.primaryModel || input.models[0]}`,
+        `Primary provider set for bot ${bot.hostname}: ${providerKey.vendor}, model: ${input.primaryModel || input.models[0]}`,
       );
     }
 

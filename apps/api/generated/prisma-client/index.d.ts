@@ -76,6 +76,7 @@ export type CountryCode = $Result.DefaultSelection<Prisma.$CountryCodePayload>
  * Model Bot
  * Bot - 机器人实体
  * 管理 AI 机器人的生命周期和配置
+ * 注意：aiProvider、model、channelType 字段已移除，这些值从 BotProviderKey 和 BotChannel 动态派生
  */
 export type Bot = $Result.DefaultSelection<Prisma.$BotPayload>
 /**
@@ -16797,9 +16798,6 @@ export namespace Prisma {
     id: string | null
     name: string | null
     hostname: string | null
-    aiProvider: string | null
-    model: string | null
-    channelType: string | null
     containerId: string | null
     port: number | null
     gatewayToken: string | null
@@ -16822,9 +16820,6 @@ export namespace Prisma {
     id: string | null
     name: string | null
     hostname: string | null
-    aiProvider: string | null
-    model: string | null
-    channelType: string | null
     containerId: string | null
     port: number | null
     gatewayToken: string | null
@@ -16847,9 +16842,6 @@ export namespace Prisma {
     id: number
     name: number
     hostname: number
-    aiProvider: number
-    model: number
-    channelType: number
     containerId: number
     port: number
     gatewayToken: number
@@ -16883,9 +16875,6 @@ export namespace Prisma {
     id?: true
     name?: true
     hostname?: true
-    aiProvider?: true
-    model?: true
-    channelType?: true
     containerId?: true
     port?: true
     gatewayToken?: true
@@ -16908,9 +16897,6 @@ export namespace Prisma {
     id?: true
     name?: true
     hostname?: true
-    aiProvider?: true
-    model?: true
-    channelType?: true
     containerId?: true
     port?: true
     gatewayToken?: true
@@ -16933,9 +16919,6 @@ export namespace Prisma {
     id?: true
     name?: true
     hostname?: true
-    aiProvider?: true
-    model?: true
-    channelType?: true
     containerId?: true
     port?: true
     gatewayToken?: true
@@ -17046,9 +17029,6 @@ export namespace Prisma {
     id: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId: string | null
     port: number | null
     gatewayToken: string | null
@@ -17091,9 +17071,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     hostname?: boolean
-    aiProvider?: boolean
-    model?: boolean
-    channelType?: boolean
     containerId?: boolean
     port?: boolean
     gatewayToken?: boolean
@@ -17127,9 +17104,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     hostname?: boolean
-    aiProvider?: boolean
-    model?: boolean
-    channelType?: boolean
     containerId?: boolean
     port?: boolean
     gatewayToken?: boolean
@@ -17156,9 +17130,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     hostname?: boolean
-    aiProvider?: boolean
-    model?: boolean
-    channelType?: boolean
     containerId?: boolean
     port?: boolean
     gatewayToken?: boolean
@@ -17185,9 +17156,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     hostname?: boolean
-    aiProvider?: boolean
-    model?: boolean
-    channelType?: boolean
     containerId?: boolean
     port?: boolean
     gatewayToken?: boolean
@@ -17207,7 +17175,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type BotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "hostname" | "aiProvider" | "model" | "channelType" | "containerId" | "port" | "gatewayToken" | "proxyTokenHash" | "tags" | "status" | "createdById" | "personaTemplateId" | "emoji" | "avatarFileId" | "soulMarkdown" | "healthStatus" | "lastHealthCheck" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["bot"]>
+  export type BotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "hostname" | "containerId" | "port" | "gatewayToken" | "proxyTokenHash" | "tags" | "status" | "createdById" | "personaTemplateId" | "emoji" | "avatarFileId" | "soulMarkdown" | "healthStatus" | "lastHealthCheck" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["bot"]>
   export type BotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     createdBy?: boolean | UserInfoDefaultArgs<ExtArgs>
     personaTemplate?: boolean | Bot$personaTemplateArgs<ExtArgs>
@@ -17248,9 +17216,6 @@ export namespace Prisma {
       id: string
       name: string
       hostname: string
-      aiProvider: string
-      model: string
-      channelType: string
       containerId: string | null
       port: number | null
       gatewayToken: string | null
@@ -17703,9 +17668,6 @@ export namespace Prisma {
     readonly id: FieldRef<"Bot", 'String'>
     readonly name: FieldRef<"Bot", 'String'>
     readonly hostname: FieldRef<"Bot", 'String'>
-    readonly aiProvider: FieldRef<"Bot", 'String'>
-    readonly model: FieldRef<"Bot", 'String'>
-    readonly channelType: FieldRef<"Bot", 'String'>
     readonly containerId: FieldRef<"Bot", 'String'>
     readonly port: FieldRef<"Bot", 'Int'>
     readonly gatewayToken: FieldRef<"Bot", 'String'>
@@ -34914,9 +34876,6 @@ export namespace Prisma {
     id: 'id',
     name: 'name',
     hostname: 'hostname',
-    aiProvider: 'aiProvider',
-    model: 'model',
-    channelType: 'channelType',
     containerId: 'containerId',
     port: 'port',
     gatewayToken: 'gatewayToken',
@@ -36532,9 +36491,6 @@ export namespace Prisma {
     id?: UuidFilter<"Bot"> | string
     name?: StringFilter<"Bot"> | string
     hostname?: StringFilter<"Bot"> | string
-    aiProvider?: StringFilter<"Bot"> | string
-    model?: StringFilter<"Bot"> | string
-    channelType?: StringFilter<"Bot"> | string
     containerId?: StringNullableFilter<"Bot"> | string | null
     port?: IntNullableFilter<"Bot"> | number | null
     gatewayToken?: StringNullableFilter<"Bot"> | string | null
@@ -36567,9 +36523,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     hostname?: SortOrder
-    aiProvider?: SortOrder
-    model?: SortOrder
-    channelType?: SortOrder
     containerId?: SortOrderInput | SortOrder
     port?: SortOrderInput | SortOrder
     gatewayToken?: SortOrderInput | SortOrder
@@ -36605,9 +36558,6 @@ export namespace Prisma {
     NOT?: BotWhereInput | BotWhereInput[]
     name?: StringFilter<"Bot"> | string
     hostname?: StringFilter<"Bot"> | string
-    aiProvider?: StringFilter<"Bot"> | string
-    model?: StringFilter<"Bot"> | string
-    channelType?: StringFilter<"Bot"> | string
     containerId?: StringNullableFilter<"Bot"> | string | null
     port?: IntNullableFilter<"Bot"> | number | null
     gatewayToken?: StringNullableFilter<"Bot"> | string | null
@@ -36640,9 +36590,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     hostname?: SortOrder
-    aiProvider?: SortOrder
-    model?: SortOrder
-    channelType?: SortOrder
     containerId?: SortOrderInput | SortOrder
     port?: SortOrderInput | SortOrder
     gatewayToken?: SortOrderInput | SortOrder
@@ -36674,9 +36621,6 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"Bot"> | string
     name?: StringWithAggregatesFilter<"Bot"> | string
     hostname?: StringWithAggregatesFilter<"Bot"> | string
-    aiProvider?: StringWithAggregatesFilter<"Bot"> | string
-    model?: StringWithAggregatesFilter<"Bot"> | string
-    channelType?: StringWithAggregatesFilter<"Bot"> | string
     containerId?: StringNullableWithAggregatesFilter<"Bot"> | string | null
     port?: IntNullableWithAggregatesFilter<"Bot"> | number | null
     gatewayToken?: StringNullableWithAggregatesFilter<"Bot"> | string | null
@@ -39185,9 +39129,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -39217,9 +39158,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -39249,9 +39187,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39281,9 +39216,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39313,9 +39245,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -39339,9 +39268,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39362,9 +39288,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41942,9 +41865,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     hostname?: SortOrder
-    aiProvider?: SortOrder
-    model?: SortOrder
-    channelType?: SortOrder
     containerId?: SortOrder
     port?: SortOrder
     gatewayToken?: SortOrder
@@ -41972,9 +41892,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     hostname?: SortOrder
-    aiProvider?: SortOrder
-    model?: SortOrder
-    channelType?: SortOrder
     containerId?: SortOrder
     port?: SortOrder
     gatewayToken?: SortOrder
@@ -41997,9 +41914,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     hostname?: SortOrder
-    aiProvider?: SortOrder
-    model?: SortOrder
-    channelType?: SortOrder
     containerId?: SortOrder
     port?: SortOrder
     gatewayToken?: SortOrder
@@ -45357,9 +45271,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -45388,9 +45299,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -45871,9 +45779,6 @@ export namespace Prisma {
     id?: UuidFilter<"Bot"> | string
     name?: StringFilter<"Bot"> | string
     hostname?: StringFilter<"Bot"> | string
-    aiProvider?: StringFilter<"Bot"> | string
-    model?: StringFilter<"Bot"> | string
-    channelType?: StringFilter<"Bot"> | string
     containerId?: StringNullableFilter<"Bot"> | string | null
     port?: IntNullableFilter<"Bot"> | number | null
     gatewayToken?: StringNullableFilter<"Bot"> | string | null
@@ -46135,9 +46040,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -46166,9 +46068,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -47209,9 +47108,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -47240,9 +47136,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48429,9 +48322,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48460,9 +48350,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48546,9 +48433,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -48577,9 +48461,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -48653,9 +48534,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48684,9 +48562,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48770,9 +48645,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -48801,9 +48673,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -48877,9 +48746,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48908,9 +48774,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -48994,9 +48857,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -49025,9 +48885,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -49849,9 +49706,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -49880,9 +49734,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -49978,9 +49829,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50009,9 +49857,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50141,9 +49986,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50172,9 +50014,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50260,9 +50099,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50291,9 +50127,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50369,9 +50202,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50400,9 +50230,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50447,9 +50274,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50478,9 +50302,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50532,9 +50353,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50670,9 +50488,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50701,9 +50516,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50732,9 +50544,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50891,9 +50700,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -50916,9 +50722,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50947,9 +50750,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50978,9 +50778,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -51040,9 +50837,6 @@ export namespace Prisma {
     id?: string
     name: string
     hostname: string
-    aiProvider: string
-    model: string
-    channelType: string
     containerId?: string | null
     port?: number | null
     gatewayToken?: string | null
@@ -51200,9 +50994,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -51231,9 +51022,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -51262,9 +51050,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     hostname?: StringFieldUpdateOperationsInput | string
-    aiProvider?: StringFieldUpdateOperationsInput | string
-    model?: StringFieldUpdateOperationsInput | string
-    channelType?: StringFieldUpdateOperationsInput | string
     containerId?: NullableStringFieldUpdateOperationsInput | string | null
     port?: NullableIntFieldUpdateOperationsInput | number | null
     gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null

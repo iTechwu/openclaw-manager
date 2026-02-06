@@ -100,24 +100,42 @@ export class OpenClawClient {
 
   /**
    * 通过 WebSocket 发送消息并获取响应
+   * 使用 OpenClaw Gateway 协议：
+   * 1. 连接后发送 connect 请求进行认证
+   * 2. 收到 hello-ok 后发送 chat.send 请求
+   * 3. 监听 chat 事件获取响应
    */
   private sendMessageViaWebSocket(
     port: number,
     token: string,
     message: string,
-    context?: OpenClawMessage[],
+    _context?: OpenClawMessage[],
   ): Promise<string> {
     return new Promise((resolve, reject) => {
-      const wsUrl = `ws://localhost:${port}/chat?session=main&token=${encodeURIComponent(token)}`;
+      // OpenClaw gateway WebSocket 端点（不需要在 URL 中传递 token）
+      const wsUrl = `ws://localhost:${port}`;
 
       this.logger.info('OpenClawClient: 建立 WebSocket 连接', {
         port,
-        url: wsUrl.replace(token, '***'),
+        url: wsUrl,
       });
 
-      const ws = new WebSocket(wsUrl);
+      // OpenClaw gateway 需要 Origin 和 User-Agent 头
+      const ws = new WebSocket(wsUrl, {
+        origin: `http://localhost:${port}`,
+        headers: {
+          'User-Agent': 'ClawbotManager/1.0',
+        },
+      });
+
       let responseText = '';
       let isResolved = false;
+      let isConnected = false;
+      let requestId = 0;
+      let connectRequestId = '';
+      let chatRequestId = '';
+
+      const generateId = () => `req-${++requestId}-${randomUUID().slice(0, 8)}`;
 
       const timeoutId = setTimeout(() => {
         if (!isResolved) {
@@ -127,43 +145,135 @@ export class OpenClawClient {
         }
       }, this.wsTimeout);
 
-      ws.on('open', () => {
-        this.logger.debug('OpenClawClient: WebSocket 连接已建立', { port });
-
-        // 发送消息
-        const payload = {
-          type: 'message',
-          content: message,
-          context: context || [],
+      // 发送请求帧
+      const sendRequest = (method: string, params: unknown) => {
+        const frame = {
+          type: 'req',
+          id: generateId(),
+          method,
+          params,
         };
-        ws.send(JSON.stringify(payload));
+        this.logger.info('OpenClawClient: 发送请求', { method, id: frame.id });
+        ws.send(JSON.stringify(frame));
+        return frame.id;
+      };
+
+      ws.on('open', () => {
+        this.logger.info('OpenClawClient: WebSocket 连接已建立', { port });
+
+        // 第一步：发送 connect 请求进行认证
+        connectRequestId = sendRequest('connect', {
+          minProtocol: 3,
+          maxProtocol: 3,
+          client: {
+            id: 'gateway-client',
+            version: '1.0.0',
+            platform: 'node',
+            mode: 'backend',
+          },
+          auth: {
+            token: token,
+          },
+        });
       });
 
       ws.on('message', (data: WebSocket.Data) => {
         try {
-          const msg = JSON.parse(data.toString());
+          const frame = JSON.parse(data.toString());
+          this.logger.info('OpenClawClient: 收到消息', {
+            type: frame.type,
+            event: frame.event,
+            ok: frame.ok,
+            id: frame.id,
+          });
 
-          if (msg.type === 'response' || msg.type === 'assistant') {
-            responseText += msg.content || '';
-          } else if (msg.type === 'done' || msg.type === 'end') {
-            // 响应完成
-            if (!isResolved) {
-              isResolved = true;
-              clearTimeout(timeoutId);
-              ws.close();
-              resolve(responseText || msg.content || '');
-            }
-          } else if (msg.type === 'error') {
-            if (!isResolved) {
-              isResolved = true;
-              clearTimeout(timeoutId);
-              ws.close();
-              reject(new Error(msg.message || msg.error || 'Unknown error'));
-            }
+          // 处理 hello-ok 响应（connect 成功 - 旧协议）
+          if (frame.type === 'hello-ok') {
+            isConnected = true;
+            this.logger.info('OpenClawClient: 认证成功 (hello-ok)', { port });
+
+            // 第二步：发送聊天消息
+            chatRequestId = sendRequest('chat.send', {
+              sessionKey: 'main',
+              message: message,
+              idempotencyKey: randomUUID(),
+            });
+            return;
           }
-        } catch {
-          // 非 JSON 消息，可能是纯文本响应
-          responseText += data.toString();
+
+          // 处理响应帧
+          if (frame.type === 'res') {
+            // connect 请求成功响应
+            if (frame.id === connectRequestId && frame.ok && !isConnected) {
+              isConnected = true;
+              this.logger.info('OpenClawClient: 认证成功 (res)', { port });
+
+              // 第二步：发送聊天消息
+              chatRequestId = sendRequest('chat.send', {
+                sessionKey: 'main',
+                message: message,
+                idempotencyKey: randomUUID(),
+              });
+              return;
+            }
+
+            // chat.send 请求成功响应
+            if (frame.id === chatRequestId && frame.ok) {
+              this.logger.info('OpenClawClient: chat.send 请求成功', { port });
+              // 等待 chat 事件返回响应
+              return;
+            }
+
+            // 错误响应
+            if (!frame.ok && frame.error) {
+              this.logger.error('OpenClawClient: 请求失败', {
+                error: frame.error,
+              });
+              if (!isResolved) {
+                isResolved = true;
+                clearTimeout(timeoutId);
+                ws.close();
+                reject(
+                  new Error(frame.error.message || 'Request failed'),
+                );
+              }
+            }
+            return;
+          }
+
+          // 处理事件帧（聊天响应）
+          if (frame.type === 'event') {
+            const { event, payload } = frame;
+
+            // 处理聊天事件
+            if (event === 'chat') {
+              const chatEvent = payload;
+              if (chatEvent?.type === 'text' && chatEvent?.text) {
+                responseText += chatEvent.text;
+              } else if (chatEvent?.type === 'result') {
+                // 聊天完成
+                if (!isResolved) {
+                  isResolved = true;
+                  clearTimeout(timeoutId);
+                  ws.close();
+                  resolve(responseText);
+                }
+              } else if (chatEvent?.type === 'error') {
+                if (!isResolved) {
+                  isResolved = true;
+                  clearTimeout(timeoutId);
+                  ws.close();
+                  reject(new Error(chatEvent.message || 'Chat error'));
+                }
+              }
+            }
+            return;
+          }
+        } catch (e) {
+          this.logger.warn('OpenClawClient: 解析消息失败', {
+            error: e instanceof Error ? e.message : 'Unknown error',
+            data: data.toString().slice(0, 200),
+          });
         }
       });
 
@@ -184,6 +294,7 @@ export class OpenClawClient {
           port,
           code,
           reason: reason.toString(),
+          isConnected,
         });
 
         if (!isResolved) {

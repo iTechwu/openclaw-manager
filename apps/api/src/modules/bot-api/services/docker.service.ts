@@ -341,7 +341,7 @@ export class DockerService implements OnModuleInit {
       Entrypoint: ['/bin/sh', '-c'],
       Cmd: [
         `
-        # Determine the provider for auth configuration
+        # Determine the provider for auth configuration and model prefix
         PROVIDER="${options.aiProvider}"
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
           # For custom provider, use the API type as the auth provider
@@ -351,14 +351,29 @@ export class DockerService implements OnModuleInit {
             anthropic) AUTH_PROVIDER="anthropic" ;;
             *) AUTH_PROVIDER="$AI_API_TYPE" ;;
           esac
+          # For OpenClaw model setting, use openai-compatible for custom OpenAI endpoints
+          if [ "$AI_API_TYPE" = "openai" ]; then
+            MODEL_PROVIDER="openai-compatible"
+          else
+            MODEL_PROVIDER="$AUTH_PROVIDER"
+          fi
         else
           AUTH_PROVIDER="$PROVIDER"
+          MODEL_PROVIDER="$PROVIDER"
         fi
 
         # Set the model if AI_MODEL is provided
+        # OpenClaw expects model format: provider/model-name
         if [ -n "$AI_MODEL" ]; then
-          echo "Setting model to: $AI_MODEL"
-          node /app/openclaw.mjs models set "$AI_MODEL" 2>/dev/null || true
+          # Check if model already has a provider prefix (contains /)
+          if echo "$AI_MODEL" | grep -q "/"; then
+            FULL_MODEL="$AI_MODEL"
+          else
+            # Add provider prefix for OpenClaw
+            FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
+          fi
+          echo "Setting model to: $FULL_MODEL"
+          node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || true
         fi
 
         # Configure API key based on provider
