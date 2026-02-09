@@ -134,10 +134,10 @@ export default function BotDashboardPage() {
           <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground text-sm">{t('description')}</p>
         </div>
-        {bot?.port && isRunning && (
+        {bot?.dashboardUrl && isRunning && (
           <Button variant="outline" size="sm" asChild>
             <a
-              href={`http://localhost:${bot.port}`}
+              href={bot.dashboardUrl}
               target="_blank"
               rel="noopener noreferrer"
             >

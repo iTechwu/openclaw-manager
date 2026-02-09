@@ -419,19 +419,29 @@ export class DockerService implements OnModuleInit {
 
         # Set the model if AI_MODEL is provided
         # OpenClaw expects model format: provider/model-name
-        # Always use openclaw models set to ensure the model is properly configured
+        # For *-compatible providers, we use AUTH_PROVIDER (e.g., openai) as the model prefix
+        # because OpenClaw doesn't recognize *-compatible as a valid provider name
+        # The custom base_url is configured via OPENAI_BASE_URL environment variable
         if [ -n "$AI_MODEL" ]; then
           # Check if model already has a provider prefix (contains /)
           if echo "$AI_MODEL" | grep -q "/"; then
             FULL_MODEL="$AI_MODEL"
           else
-            # Add provider prefix for OpenClaw
-            FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
+            # For *-compatible providers, use AUTH_PROVIDER (e.g., openai) as prefix
+            # For standard providers, use MODEL_PROVIDER
+            if echo "$MODEL_PROVIDER" | grep -q -- "-compatible$"; then
+              # Use AUTH_PROVIDER (e.g., openai) so OpenClaw recognizes the provider
+              # The custom base_url is already set via OPENAI_BASE_URL
+              FULL_MODEL="$AUTH_PROVIDER/$AI_MODEL"
+              echo "Using *-compatible provider ($MODEL_PROVIDER), setting model with standard provider prefix: $FULL_MODEL"
+            else
+              # Add provider prefix for OpenClaw
+              FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
+            fi
           fi
           echo "Setting model to: $FULL_MODEL"
-          # Always set the model using openclaw models set
-          # This ensures the gateway uses the correct model
-          node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model via CLI, will use config.yaml"
+          # Set the model using openclaw models set
+          node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model via CLI"
         fi
 
         # Configure API key based on provider
@@ -532,8 +542,8 @@ JSON_EOF
         echo "Created openclaw.json:"
         cat "$JSON_CONFIG_FILE"
 
-        # Create auth-profiles.json with the API key
-        # OpenClaw looks for API keys in this file for each provider
+        # Create auth-profiles.json with the API key and base URL
+        # OpenClaw looks for API keys and base URLs in this file for each provider
         AUTH_PROFILES_DIR="$CONFIG_DIR/agents/main/agent"
         mkdir -p "$AUTH_PROFILES_DIR"
         AUTH_PROFILES_FILE="$AUTH_PROFILES_DIR/auth-profiles.json"
@@ -547,8 +557,26 @@ JSON_EOF
           AUTH_PROFILE_PROVIDER="$AUTH_PROVIDER"
         fi
 
+        # Build auth-profiles.json with baseUrl if using custom provider
+        # OpenClaw reads baseUrl from auth-profiles.json to override the default API endpoint
         echo "Creating auth-profiles.json for provider: $AUTH_PROFILE_PROVIDER"
-        cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+        if [ -n "$OPENAI_BASE_URL" ]; then
+          # Include baseUrl for custom API endpoint
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$AUTH_PROFILE_PROVIDER": {
+    "apiKey": "$API_KEY",
+    "baseUrl": "$OPENAI_BASE_URL"
+  },
+  "openai": {
+    "apiKey": "$API_KEY",
+    "baseUrl": "$OPENAI_BASE_URL"
+  }
+}
+AUTH_EOF
+        else
+          # No custom base URL
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
 {
   "$AUTH_PROFILE_PROVIDER": {
     "apiKey": "$API_KEY"
@@ -558,6 +586,7 @@ JSON_EOF
   }
 }
 AUTH_EOF
+        fi
         echo "Created auth-profiles.json:"
         cat "$AUTH_PROFILES_FILE"
 
