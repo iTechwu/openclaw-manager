@@ -27,6 +27,7 @@ export const localeFlags: Record<Locale, string> = {
 // 命名空间列表（与 locales/ 目录下的 JSON 文件对应）
 // 只保留当前仍在使用的命名空间
 export const namespaces = [
+  'auth',
   'bots',
   'botSkills',
   'common',
@@ -39,6 +40,7 @@ export const namespaces = [
   'settings',
   'skills',
   'templates',
+  'usage',
   'validation',
 ] as const;
 

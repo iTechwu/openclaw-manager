@@ -5,8 +5,11 @@ import {
   BotService,
   BotModelRoutingService as BotModelRoutingDbService,
   ProviderKeyService,
+  BotProviderKeyService,
 } from '@app/db';
 import { ModelRouterService } from './services/model-router.service';
+import { RoutingSuggestionService } from './services/routing-suggestion.service';
+import { EncryptionService } from './services/encryption.service';
 import type { BotModelRouting as PrismaBotModelRouting, ModelRoutingType, Prisma } from '@prisma/client';
 import type {
   BotModelRouting,
@@ -16,6 +19,8 @@ import type {
   RoutingTestResult,
   RoutingStatistics,
   RoutingConfig,
+  RoutingSuggestionResult,
+  BotProviderDetail,
 } from '@repo/contracts';
 
 /**
@@ -47,7 +52,9 @@ export class ModelRoutingService {
     private readonly botService: BotService,
     private readonly botModelRoutingDbService: BotModelRoutingDbService,
     private readonly providerKeyService: ProviderKeyService,
+    private readonly botProviderKeyService: BotProviderKeyService,
     private readonly modelRouterService: ModelRouterService,
+    private readonly routingSuggestionService: RoutingSuggestionService,
   ) {}
 
   /**
@@ -262,6 +269,54 @@ export class ModelRoutingService {
     userId: string,
   ): Promise<BotModelRouting> {
     return this.updateRouting(hostname, routingId, { isEnabled: false }, userId);
+  }
+
+  /**
+   * 获取 AI 推荐的路由配置
+   * 根据 Bot 的 allowed_models 分析并生成推荐的路由规则
+   */
+  async suggestRouting(
+    hostname: string,
+    userId: string,
+  ): Promise<RoutingSuggestionResult> {
+    const bot = await this.getBotByHostname(hostname, userId);
+
+    // Get all bot provider keys
+    const { list: botProviderKeys } = await this.botProviderKeyService.list({
+      botId: bot.id,
+    });
+
+    // Build provider details for suggestion service
+    const providers: BotProviderDetail[] = await Promise.all(
+      botProviderKeys.map(async (bpk) => {
+        const providerKey = await this.providerKeyService.get({
+          id: bpk.providerKeyId,
+          createdById: userId,
+        });
+
+        return {
+          id: bpk.id,
+          providerKeyId: bpk.providerKeyId,
+          vendor: (providerKey?.vendor || 'openai') as BotProviderDetail['vendor'],
+          apiType: (providerKey?.apiType || null) as BotProviderDetail['apiType'],
+          label: providerKey?.label || '',
+          apiKeyMasked: '****',
+          baseUrl: providerKey?.baseUrl || null,
+          isPrimary: bpk.isPrimary,
+          allowedModels: bpk.allowedModels,
+          primaryModel: bpk.primaryModel,
+          createdAt: bpk.createdAt,
+        };
+      }),
+    );
+
+    this.logger.info('Generating routing suggestions', {
+      botId: bot.id,
+      hostname,
+      providerCount: providers.length,
+    });
+
+    return this.routingSuggestionService.generateSuggestions(providers);
   }
 
   /**

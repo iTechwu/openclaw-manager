@@ -20,6 +20,7 @@ interface ProviderModel {
 
 interface ProviderCardProps {
   vendor: string;
+  apiType?: string | null;
   label: string;
   baseUrl?: string | null;
   apiKeyMasked: string;
@@ -44,6 +45,7 @@ const providerColors: Record<string, string> = {
 
 export function ProviderCard({
   vendor,
+  apiType,
   label,
   baseUrl,
   apiKeyMasked,
@@ -56,6 +58,7 @@ export function ProviderCard({
   const [expanded, setExpanded] = useState(true);
   const accentColor = providerColors[vendor] || '#6B7280';
   const primaryModel = models.find((m) => m.isPrimary);
+  const displayType = apiType || vendor;
 
   return (
     <Card className="relative overflow-hidden">
@@ -78,7 +81,7 @@ export function ProviderCard({
             <div>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base font-semibold">
-                  {vendor}
+                  {label} ({displayType})
                 </CardTitle>
                 <Badge variant="outline" className="text-xs">
                   已配置

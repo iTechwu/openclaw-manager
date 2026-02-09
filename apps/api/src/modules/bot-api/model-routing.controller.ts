@@ -159,4 +159,19 @@ export class ModelRoutingController {
       return success(routing);
     });
   }
+
+  /**
+   * GET /bot/:hostname/routing/suggest - 获取 AI 推荐的路由配置
+   */
+  @TsRestHandler(c.suggest)
+  async suggest(@Req() req: AuthenticatedRequest) {
+    return tsRestHandler(c.suggest, async ({ params }) => {
+      const { userId } = req;
+      const suggestions = await this.modelRoutingService.suggestRouting(
+        params.hostname,
+        userId,
+      );
+      return success(suggestions);
+    });
+  }
 }

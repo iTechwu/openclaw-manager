@@ -1,0 +1,51 @@
+{
+  "title": "用量统计",
+  "refresh": "刷新数据",
+  "noData": "暂无数据",
+  "loadError": "无法加载用量数据，请稍后重试",
+  "noDataDescription": "该 Bot 在选定时间段内没有使用记录。当 Bot 开始处理 API 请求后，用量数据将自动显示在这里。",
+  "periods": {
+    "today": "今天",
+    "week": "近 7 天",
+    "month": "近 30 天"
+  },
+  "stats": {
+    "totalTokens": "总 Token",
+    "inputTokens": "输入",
+    "outputTokens": "输出",
+    "requests": "请求次数",
+    "success": "成功",
+    "failed": "失败",
+    "errorRate": "错误率",
+    "errors": "次错误",
+    "estimatedCost": "预估成本",
+    "costDescription": "基于模型定价估算",
+    "avgResponseTime": "平均响应时间",
+    "basedOnRequests": "基于 {count} 次请求"
+  },
+  "tabs": {
+    "trend": "趋势",
+    "breakdown": "分布"
+  },
+  "trend": {
+    "title": "Token 使用趋势",
+    "byHour": "按小时",
+    "byDay": "按天",
+    "inputToken": "输入 Token",
+    "outputToken": "输出 Token"
+  },
+  "breakdown": {
+    "title": "用量分布",
+    "description": "按不同维度查看用量分布",
+    "byVendor": "按提供商",
+    "byModel": "按模型",
+    "byStatus": "按状态",
+    "requests": "次请求",
+    "tokens": "tokens"
+  },
+  "chart": {
+    "input": "输入",
+    "output": "输出",
+    "date": "日期"
+  }
+}

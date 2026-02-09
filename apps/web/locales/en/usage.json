@@ -1,0 +1,51 @@
+{
+  "title": "Usage Statistics",
+  "refresh": "Refresh data",
+  "noData": "No data available",
+  "loadError": "Unable to load usage data, please try again later",
+  "noDataDescription": "This Bot has no usage records in the selected time period. Usage data will automatically appear here when the Bot starts processing API requests.",
+  "periods": {
+    "today": "Today",
+    "week": "Last 7 days",
+    "month": "Last 30 days"
+  },
+  "stats": {
+    "totalTokens": "Total Tokens",
+    "inputTokens": "Input",
+    "outputTokens": "Output",
+    "requests": "Requests",
+    "success": "Success",
+    "failed": "Failed",
+    "errorRate": "Error Rate",
+    "errors": "errors",
+    "estimatedCost": "Estimated Cost",
+    "costDescription": "Based on model pricing",
+    "avgResponseTime": "Avg Response Time",
+    "basedOnRequests": "Based on {count} requests"
+  },
+  "tabs": {
+    "trend": "Trend",
+    "breakdown": "Distribution"
+  },
+  "trend": {
+    "title": "Token Usage Trend",
+    "byHour": "By hour",
+    "byDay": "By day",
+    "inputToken": "Input Token",
+    "outputToken": "Output Token"
+  },
+  "breakdown": {
+    "title": "Usage Distribution",
+    "description": "View usage distribution by different dimensions",
+    "byVendor": "By Provider",
+    "byModel": "By Model",
+    "byStatus": "By Status",
+    "requests": "requests",
+    "tokens": "tokens"
+  },
+  "chart": {
+    "input": "Input",
+    "output": "Output",
+    "date": "Date"
+  }
+}

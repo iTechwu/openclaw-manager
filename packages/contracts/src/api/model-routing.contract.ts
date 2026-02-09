@@ -8,6 +8,7 @@ import {
   RoutingTestInputSchema,
   RoutingTestResultSchema,
   RoutingStatisticsSchema,
+  RoutingSuggestionResultSchema,
 } from '../schemas/model-routing.schema';
 
 const c = initContract();
@@ -184,6 +185,25 @@ export const modelRoutingContract = c.router(
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
       summary: '禁用路由配置',
+    },
+
+    // ============================================================================
+    // Routing Suggestions (AI-powered)
+    // ============================================================================
+
+    /**
+     * GET /bot/:hostname/routing/suggest - 获取 AI 推荐的路由配置
+     * 根据 Bot 的 allowed_models 分析并生成推荐的路由规则
+     */
+    suggest: {
+      method: 'GET',
+      path: '/:hostname/routing/suggest',
+      pathParams: z.object({ hostname: z.string() }),
+      responses: {
+        200: ApiResponseSchema(RoutingSuggestionResultSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取 AI 推荐的路由配置',
     },
   },
   {

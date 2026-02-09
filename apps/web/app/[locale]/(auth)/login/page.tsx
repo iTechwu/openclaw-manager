@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   Card,
   CardContent,
@@ -27,6 +28,7 @@ import { clearAll, setLoginData } from '@/lib/storage';
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations('auth.login');
 
   // Clear auth storage on mount
   useEffect(() => {
@@ -51,14 +53,14 @@ export default function LoginPage() {
       if (response.status === 200 && response.body?.code === 200) {
         const loginData = response.body.data;
         setLoginData(loginData);
-        toast.success('Login successful');
+        toast.success(t('success'));
         router.push('/bots');
       } else {
-        const errorMsg = response.body?.msg || 'Login failed';
+        const errorMsg = (response.body as { msg?: string })?.msg || t('failed');
         toast.error(errorMsg);
       }
     } catch (error) {
-      toast.error('Network error, please try again');
+      toast.error(t('networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -68,10 +70,10 @@ export default function LoginPage() {
     <Card className="w-full max-w-md mx-4">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">
-          ClawBotManager
+          {t('title')}
         </CardTitle>
         <CardDescription className="text-center">
-          Sign in to your account
+          {t('subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -82,11 +84,11 @@ export default function LoginPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t('emailPlaceholder')}
                       autoComplete="email"
                       {...field}
                     />
@@ -100,11 +102,11 @@ export default function LoginPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder={t('passwordPlaceholder')}
                       autoComplete="current-password"
                       {...field}
                     />
@@ -114,7 +116,7 @@ export default function LoginPage() {
               )}
             />
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? t('submitting') : t('submit')}
             </Button>
           </form>
         </Form>

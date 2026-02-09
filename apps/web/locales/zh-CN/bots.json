@@ -418,6 +418,10 @@
     "ai": {
       "title": "AI 模型配置",
       "description": "配置 AI 提供商和模型",
+      "tabs": {
+        "providers": "AI 提供商",
+        "routing": "模型路由"
+      },
       "addProvider": "添加 Provider",
       "deleteProvider": "删除 Provider",
       "setPrimary": "设为主模型",
@@ -425,7 +429,219 @@
       "configured": "已配置",
       "notConfigured": "未配置",
       "noProviders": "尚未配置任何 AI Provider",
-      "addFirst": "添加第一个 Provider"
+      "addFirst": "添加第一个 Provider",
+      "fetchProvidersFailed": "获取 Provider 列表失败",
+      "setPrimarySuccess": "主模型设置成功",
+      "setFailed": "设置失败",
+      "deleteConfirm": "确定要删除此 Provider 吗？",
+      "deleteSuccess": "Provider 已删除",
+      "deleteFailed": "删除失败",
+      "selectProviderAndModel": "请选择 Provider 和至少一个模型",
+      "addSuccess": "Provider 添加成功",
+      "addFailed": "添加失败",
+      "dialogDescription": "从已配置的 API Keys 中选择一个 Provider 添加到此 Bot",
+      "selectApiKey": "选择 API Key",
+      "noApiKeys": "没有可用的 API Key，请先在设置中添加",
+      "selectApiKeyPlaceholder": "选择一个 API Key",
+      "selectModels": "选择模型",
+      "loadingModels": "加载模型列表...",
+      "noModels": "无可用模型",
+      "primaryModel": "主模型",
+      "setAsPrimary": "设为主模型",
+      "setAsPrimaryProvider": "设为主 Provider（Bot 默认使用此 Provider）",
+      "cancel": "取消",
+      "add": "添加"
+    },
+    "modelRouting": {
+      "title": "模型路由配置",
+      "description": "配置智能路由规则，根据消息内容自动选择最合适的模型",
+      "addRouting": "添加路由",
+      "editRouting": "编辑路由",
+      "deleteRouting": "删除路由",
+      "noRoutings": "尚未配置任何路由规则",
+      "addFirst": "添加第一个路由",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "enable": "启用",
+      "disable": "禁用",
+      "priority": "优先级",
+      "routingType": "路由类型",
+      "types": {
+        "FUNCTION_ROUTE": "功能路由",
+        "FUNCTION_ROUTE_DESC": "根据消息内容匹配规则选择模型",
+        "LOAD_BALANCE": "负载均衡",
+        "LOAD_BALANCE_DESC": "在多个模型之间分配流量",
+        "FAILOVER": "故障转移",
+        "FAILOVER_DESC": "主模型失败时自动切换到备用模型"
+      },
+      "form": {
+        "name": "路由名称",
+        "namePlaceholder": "输入路由名称",
+        "selectType": "选择路由类型",
+        "priority": "优先级",
+        "priorityHint": "数值越小优先级越高",
+        "providerKey": "Provider Key",
+        "selectProviderKey": "选择 Provider Key",
+        "model": "模型",
+        "selectModel": "选择模型"
+      },
+      "functionRoute": {
+        "title": "功能路由规则",
+        "addRule": "添加规则",
+        "pattern": "匹配模式",
+        "patternPlaceholder": "输入关键词或正则表达式",
+        "matchType": "匹配类型",
+        "matchTypes": {
+          "keyword": "关键词",
+          "regex": "正则表达式",
+          "intent": "意图识别"
+        },
+        "target": "目标模型",
+        "defaultTarget": "默认目标",
+        "defaultTargetHint": "无匹配规则时使用",
+        "quickAdd": "快速添加",
+        "predefinedIntents": {
+          "title": "预设意图模板",
+          "code": {
+            "name": "代码编程",
+            "description": "代码编写、调试、解释相关",
+            "pattern": "代码|编程|调试|debug|code|程序|函数|bug|报错|编译",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, deepseek-coder, codestral"
+          },
+          "translation": {
+            "name": "翻译",
+            "description": "语言翻译相关请求",
+            "pattern": "翻译|translate|英译中|中译英|转换成",
+            "recommendedModels": "gpt-4o, claude-3.5-sonnet, gemini-pro"
+          },
+          "math": {
+            "name": "数学计算",
+            "description": "数学问题和计算",
+            "pattern": "计算|数学|公式|方程|求解|算一下|多少钱|加减乘除",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, deepseek-chat"
+          },
+          "creative": {
+            "name": "创意写作",
+            "description": "文案、故事、诗歌创作",
+            "pattern": "写一篇|创作|故事|诗歌|文案|小说|剧本|写作",
+            "recommendedModels": "claude-3-opus, gpt-4o, gemini-pro"
+          },
+          "analysis": {
+            "name": "数据分析",
+            "description": "数据处理和分析",
+            "pattern": "分析|数据|统计|报表|图表|趋势|对比",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, gemini-pro"
+          },
+          "image": {
+            "name": "图像生成",
+            "description": "图片创建和编辑",
+            "pattern": "画一张|生成图片|图像|绘制|设计图|插画|画图",
+            "recommendedModels": "dall-e-3, stable-diffusion, midjourney"
+          },
+          "summary": {
+            "name": "内容总结",
+            "description": "文本摘要和总结",
+            "pattern": "总结|摘要|概括|归纳|要点|简述",
+            "recommendedModels": "claude-3-haiku, gpt-4o-mini, gemini-flash"
+          },
+          "knowledge": {
+            "name": "知识问答",
+            "description": "通用知识查询",
+            "pattern": "什么是|为什么|如何|怎么|是什么|解释一下",
+            "recommendedModels": "gpt-4o, claude-3.5-sonnet, gemini-pro"
+          }
+        }
+      },
+      "loadBalance": {
+        "title": "负载均衡配置",
+        "strategy": "均衡策略",
+        "strategies": {
+          "round_robin": "轮询",
+          "weighted": "加权",
+          "least_latency": "最低延迟"
+        },
+        "targets": "目标列表",
+        "addTarget": "添加目标",
+        "weight": "权重",
+        "weightHint": "0-100，权重越高被选中概率越大",
+        "quickAdd": "快速添加",
+        "templates": {
+          "title": "预设模板",
+          "dualEqual": {
+            "name": "双模型均衡",
+            "description": "2个模型平均分配流量"
+          },
+          "tripleEqual": {
+            "name": "三模型均衡",
+            "description": "3个模型平均分配流量"
+          },
+          "primaryHeavy": {
+            "name": "主模型优先",
+            "description": "主模型70%，备用30%"
+          }
+        }
+      },
+      "failover": {
+        "title": "故障转移配置",
+        "primary": "主要目标",
+        "fallbackChain": "备用链",
+        "addFallback": "添加备用",
+        "retry": "重试配置",
+        "maxAttempts": "最大重试次数",
+        "delayMs": "重试延迟 (ms)",
+        "quickAdd": "快速添加",
+        "templates": {
+          "title": "预设模板",
+          "singleFallback": {
+            "name": "单备用",
+            "description": "主模型 + 1个备用模型"
+          },
+          "doubleFallback": {
+            "name": "双备用",
+            "description": "主模型 + 2个备用模型"
+          },
+          "tripleFallback": {
+            "name": "三备用",
+            "description": "主模型 + 3个备用模型"
+          }
+        }
+      },
+      "test": {
+        "title": "测试路由",
+        "message": "测试消息",
+        "messagePlaceholder": "输入测试消息",
+        "run": "运行测试",
+        "result": "测试结果",
+        "selectedModel": "选中模型",
+        "selectedProvider": "选中 Provider",
+        "reason": "选择原因",
+        "matchedRule": "匹配规则"
+      },
+      "messages": {
+        "createSuccess": "路由配置创建成功",
+        "updateSuccess": "路由配置更新成功",
+        "deleteSuccess": "路由配置删除成功",
+        "enableSuccess": "路由已启用",
+        "disableSuccess": "路由已禁用",
+        "deleteConfirm": "确定要删除此路由配置吗？",
+        "suggestError": "获取路由建议失败",
+        "ruleApplied": "已添加规则: {name}"
+      },
+      "autoGenerate": {
+        "button": "AI 智能生成",
+        "title": "AI 路由建议",
+        "description": "根据您配置的模型能力，AI 自动分析并生成最优路由规则",
+        "suggestedRules": "建议的功能路由规则",
+        "suggestedFailover": "建议的故障转移配置",
+        "applyAll": "应用全部规则",
+        "applyFailover": "应用故障转移",
+        "close": "关闭",
+        "primary": "主模型",
+        "fallback": "备用",
+        "modelCapabilities": "模型能力分析",
+        "suggestedRoutingName": "AI 智能路由",
+        "suggestedFailoverName": "AI 故障转移"
+      }
     },
     "channels": {
       "title": "消息渠道",

@@ -415,6 +415,10 @@
     "ai": {
       "title": "AI Model Configuration",
       "description": "Configure AI providers and models",
+      "tabs": {
+        "providers": "AI Providers",
+        "routing": "Model Routing"
+      },
       "addProvider": "Add Provider",
       "deleteProvider": "Delete Provider",
       "setPrimary": "Set as Primary",
@@ -422,7 +426,219 @@
       "configured": "Configured",
       "notConfigured": "Not Configured",
       "noProviders": "No AI Providers configured yet",
-      "addFirst": "Add First Provider"
+      "addFirst": "Add First Provider",
+      "fetchProvidersFailed": "Failed to fetch provider list",
+      "setPrimarySuccess": "Primary model set successfully",
+      "setFailed": "Failed to set",
+      "deleteConfirm": "Are you sure you want to delete this Provider?",
+      "deleteSuccess": "Provider deleted",
+      "deleteFailed": "Failed to delete",
+      "selectProviderAndModel": "Please select a Provider and at least one model",
+      "addSuccess": "Provider added successfully",
+      "addFailed": "Failed to add",
+      "dialogDescription": "Select a Provider from your configured API Keys to add to this Bot",
+      "selectApiKey": "Select API Key",
+      "noApiKeys": "No API Keys available, please add one in settings first",
+      "selectApiKeyPlaceholder": "Select an API Key",
+      "selectModels": "Select Models",
+      "loadingModels": "Loading model list...",
+      "noModels": "No models available",
+      "primaryModel": "Primary",
+      "setAsPrimary": "Set as primary",
+      "setAsPrimaryProvider": "Set as primary Provider (Bot will use this Provider by default)",
+      "cancel": "Cancel",
+      "add": "Add"
+    },
+    "modelRouting": {
+      "title": "Model Routing",
+      "description": "Configure intelligent routing rules to automatically select the best model based on message content",
+      "addRouting": "Add Routing",
+      "editRouting": "Edit Routing",
+      "deleteRouting": "Delete Routing",
+      "noRoutings": "No routing rules configured yet",
+      "addFirst": "Add First Routing",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "priority": "Priority",
+      "routingType": "Routing Type",
+      "types": {
+        "FUNCTION_ROUTE": "Function Route",
+        "FUNCTION_ROUTE_DESC": "Select model based on message content matching rules",
+        "LOAD_BALANCE": "Load Balance",
+        "LOAD_BALANCE_DESC": "Distribute traffic across multiple models",
+        "FAILOVER": "Failover",
+        "FAILOVER_DESC": "Automatically switch to backup model when primary fails"
+      },
+      "form": {
+        "name": "Routing Name",
+        "namePlaceholder": "Enter routing name",
+        "selectType": "Select routing type",
+        "priority": "Priority",
+        "priorityHint": "Lower value means higher priority",
+        "providerKey": "Provider Key",
+        "selectProviderKey": "Select Provider Key",
+        "model": "Model",
+        "selectModel": "Select Model"
+      },
+      "functionRoute": {
+        "title": "Function Route Rules",
+        "addRule": "Add Rule",
+        "pattern": "Pattern",
+        "patternPlaceholder": "Enter keyword or regex",
+        "matchType": "Match Type",
+        "matchTypes": {
+          "keyword": "Keyword",
+          "regex": "Regex",
+          "intent": "Intent"
+        },
+        "target": "Target Model",
+        "defaultTarget": "Default Target",
+        "defaultTargetHint": "Used when no rules match",
+        "quickAdd": "Quick Add",
+        "predefinedIntents": {
+          "title": "Predefined Intent Templates",
+          "code": {
+            "name": "Code & Programming",
+            "description": "Code writing, debugging, explanation",
+            "pattern": "code|programming|debug|function|bug|error|compile|script|algorithm",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, deepseek-coder, codestral"
+          },
+          "translation": {
+            "name": "Translation",
+            "description": "Language translation requests",
+            "pattern": "translate|translation|convert to|in english|in chinese|in spanish",
+            "recommendedModels": "gpt-4o, claude-3.5-sonnet, gemini-pro"
+          },
+          "math": {
+            "name": "Math & Calculation",
+            "description": "Mathematical problems and calculations",
+            "pattern": "calculate|math|formula|equation|solve|compute|how much|add|subtract|multiply",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, deepseek-chat"
+          },
+          "creative": {
+            "name": "Creative Writing",
+            "description": "Copywriting, stories, poetry",
+            "pattern": "write a|create|story|poem|essay|novel|script|creative|compose",
+            "recommendedModels": "claude-3-opus, gpt-4o, gemini-pro"
+          },
+          "analysis": {
+            "name": "Data Analysis",
+            "description": "Data processing and analysis",
+            "pattern": "analyze|analysis|data|statistics|report|chart|trend|compare",
+            "recommendedModels": "claude-3.5-sonnet, gpt-4o, gemini-pro"
+          },
+          "image": {
+            "name": "Image Generation",
+            "description": "Image creation and editing",
+            "pattern": "draw|generate image|picture|illustration|design|sketch|create image",
+            "recommendedModels": "dall-e-3, stable-diffusion, midjourney"
+          },
+          "summary": {
+            "name": "Summarization",
+            "description": "Text summary and condensation",
+            "pattern": "summarize|summary|brief|condense|key points|tldr|overview",
+            "recommendedModels": "claude-3-haiku, gpt-4o-mini, gemini-flash"
+          },
+          "knowledge": {
+            "name": "Knowledge Q&A",
+            "description": "General knowledge queries",
+            "pattern": "what is|why|how to|explain|define|tell me about|describe",
+            "recommendedModels": "gpt-4o, claude-3.5-sonnet, gemini-pro"
+          }
+        }
+      },
+      "loadBalance": {
+        "title": "Load Balance Configuration",
+        "strategy": "Strategy",
+        "strategies": {
+          "round_robin": "Round Robin",
+          "weighted": "Weighted",
+          "least_latency": "Least Latency"
+        },
+        "targets": "Targets",
+        "addTarget": "Add Target",
+        "weight": "Weight",
+        "weightHint": "0-100, higher weight means higher selection probability",
+        "quickAdd": "Quick Add",
+        "templates": {
+          "title": "Preset Templates",
+          "dualEqual": {
+            "name": "Dual Model Equal",
+            "description": "2 models with equal traffic distribution"
+          },
+          "tripleEqual": {
+            "name": "Triple Model Equal",
+            "description": "3 models with equal traffic distribution"
+          },
+          "primaryHeavy": {
+            "name": "Primary Heavy",
+            "description": "Primary 70%, backup 30%"
+          }
+        }
+      },
+      "failover": {
+        "title": "Failover Configuration",
+        "primary": "Primary Target",
+        "fallbackChain": "Fallback Chain",
+        "addFallback": "Add Fallback",
+        "retry": "Retry Configuration",
+        "maxAttempts": "Max Attempts",
+        "delayMs": "Delay (ms)",
+        "quickAdd": "Quick Add",
+        "templates": {
+          "title": "Preset Templates",
+          "singleFallback": {
+            "name": "Single Fallback",
+            "description": "Primary + 1 backup model"
+          },
+          "doubleFallback": {
+            "name": "Double Fallback",
+            "description": "Primary + 2 backup models"
+          },
+          "tripleFallback": {
+            "name": "Triple Fallback",
+            "description": "Primary + 3 backup models"
+          }
+        }
+      },
+      "test": {
+        "title": "Test Routing",
+        "message": "Test Message",
+        "messagePlaceholder": "Enter test message",
+        "run": "Run Test",
+        "result": "Test Result",
+        "selectedModel": "Selected Model",
+        "selectedProvider": "Selected Provider",
+        "reason": "Reason",
+        "matchedRule": "Matched Rule"
+      },
+      "messages": {
+        "createSuccess": "Routing configuration created successfully",
+        "updateSuccess": "Routing configuration updated successfully",
+        "deleteSuccess": "Routing configuration deleted successfully",
+        "enableSuccess": "Routing enabled",
+        "disableSuccess": "Routing disabled",
+        "deleteConfirm": "Are you sure you want to delete this routing configuration?",
+        "suggestError": "Failed to get routing suggestions",
+        "ruleApplied": "Rule added: {name}"
+      },
+      "autoGenerate": {
+        "button": "AI Auto-Generate",
+        "title": "AI Routing Suggestions",
+        "description": "AI analyzes your configured models and generates optimal routing rules",
+        "suggestedRules": "Suggested Function Route Rules",
+        "suggestedFailover": "Suggested Failover Configuration",
+        "applyAll": "Apply All Rules",
+        "applyFailover": "Apply Failover",
+        "close": "Close",
+        "primary": "Primary",
+        "fallback": "Fallback",
+        "modelCapabilities": "Model Capabilities Analysis",
+        "suggestedRoutingName": "AI Smart Routing",
+        "suggestedFailoverName": "AI Failover"
+      }
     },
     "channels": {
       "title": "Message Channels",

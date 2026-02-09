@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   useBotUsageStats,
   useBotUsageTrend,
@@ -93,6 +94,9 @@ function StatCard({
 function SimpleTrendChart({
   data,
   loading,
+  noDataText,
+  inputLabel,
+  outputLabel,
 }: {
   data: Array<{
     timestamp: Date;
@@ -100,6 +104,9 @@ function SimpleTrendChart({
     responseTokens: number;
   }>;
   loading?: boolean;
+  noDataText: string;
+  inputLabel: string;
+  outputLabel: string;
 }) {
   if (loading) {
     return (
@@ -112,7 +119,7 @@ function SimpleTrendChart({
   if (!data || data.length === 0) {
     return (
       <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-        暂无数据
+        {noDataText}
       </div>
     );
   }
@@ -135,7 +142,7 @@ function SimpleTrendChart({
             <div
               key={index}
               className="flex flex-1 flex-col items-center gap-1"
-              title={`${new Date(point.timestamp).toLocaleDateString()}\n输入: ${point.requestTokens.toLocaleString()}\n输出: ${point.responseTokens.toLocaleString()}`}
+              title={`${new Date(point.timestamp).toLocaleDateString()}\n${inputLabel}: ${point.requestTokens.toLocaleString()}\n${outputLabel}: ${point.responseTokens.toLocaleString()}`}
             >
               <div className="flex w-full flex-1 items-end gap-0.5">
                 <div
@@ -154,11 +161,11 @@ function SimpleTrendChart({
       <div className="mt-2 flex justify-center gap-4 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded bg-blue-500" />
-          <span>输入 Token</span>
+          <span>{inputLabel}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded bg-green-500" />
-          <span>输出 Token</span>
+          <span>{outputLabel}</span>
         </div>
       </div>
     </div>
@@ -171,6 +178,8 @@ function SimpleTrendChart({
 function BreakdownList({
   data,
   loading,
+  noDataText,
+  requestsLabel,
 }: {
   data: Array<{
     key: string;
@@ -181,6 +190,8 @@ function BreakdownList({
     estimatedCost: number;
   }>;
   loading?: boolean;
+  noDataText: string;
+  requestsLabel: string;
 }) {
   if (loading) {
     return (
@@ -194,7 +205,7 @@ function BreakdownList({
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-muted-foreground py-8 text-center">暂无数据</div>
+      <div className="text-muted-foreground py-8 text-center">{noDataText}</div>
     );
   }
 
@@ -208,7 +219,7 @@ function BreakdownList({
           <div className="flex-1">
             <div className="font-medium">{item.key}</div>
             <div className="text-muted-foreground text-sm">
-              {item.requestCount.toLocaleString()} 次请求 ·{' '}
+              {item.requestCount.toLocaleString()} {requestsLabel} ·{' '}
               {(item.requestTokens + item.responseTokens).toLocaleString()}{' '}
               tokens
             </div>
@@ -231,6 +242,7 @@ function BreakdownList({
 export default function BotUsagePage() {
   const params = useParams<{ hostname: string }>();
   const hostname = params.hostname;
+  const t = useTranslations('usage');
 
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [groupBy, setGroupBy] = useState<'vendor' | 'model' | 'status'>(
@@ -306,7 +318,6 @@ export default function BotUsagePage() {
 
   // 检查是否有错误
   const hasError = !!statsError || !!trendError || !!breakdownError;
-  const errorMessage = hasError ? '无法加载用量数据，请稍后重试' : undefined;
 
   // 检查是否有数据
   const hasNoData =
@@ -324,7 +335,7 @@ export default function BotUsagePage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">用量统计</h1>
+            <h1 className="text-2xl font-bold">{t('title')}</h1>
             <p className="text-muted-foreground text-sm">{hostname}</p>
           </div>
         </div>
@@ -332,7 +343,7 @@ export default function BotUsagePage() {
           <button
             onClick={() => refetchStats()}
             className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
-            title="刷新数据"
+            title={t('refresh')}
           >
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -344,9 +355,9 @@ export default function BotUsagePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="day">今天</SelectItem>
-              <SelectItem value="week">近 7 天</SelectItem>
-              <SelectItem value="month">近 30 天</SelectItem>
+              <SelectItem value="day">{t('periods.today')}</SelectItem>
+              <SelectItem value="week">{t('periods.week')}</SelectItem>
+              <SelectItem value="month">{t('periods.month')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -356,10 +367,8 @@ export default function BotUsagePage() {
       {hasError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>加载失败</AlertTitle>
-          <AlertDescription>
-            {errorMessage || '无法加载用量数据，请稍后重试'}
-          </AlertDescription>
+          <AlertTitle>{t('noData')}</AlertTitle>
+          <AlertDescription>{t('loadError')}</AlertDescription>
         </Alert>
       )}
 
@@ -367,42 +376,39 @@ export default function BotUsagePage() {
       {hasNoData && !hasError && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>暂无数据</AlertTitle>
-          <AlertDescription>
-            该 Bot 在选定时间段内没有使用记录。当 Bot 开始处理 API
-            请求后，用量数据将自动显示在这里。
-          </AlertDescription>
+          <AlertTitle>{t('noData')}</AlertTitle>
+          <AlertDescription>{t('noDataDescription')}</AlertDescription>
         </Alert>
       )}
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="总 Token"
+          title={t('stats.totalTokens')}
           value={formatNumber(stats?.totalTokens || 0)}
           icon={Zap}
-          description={`输入 ${formatNumber(stats?.requestTokens || 0)} / 输出 ${formatNumber(stats?.responseTokens || 0)}`}
+          description={`${t('stats.inputTokens')} ${formatNumber(stats?.requestTokens || 0)} / ${t('stats.outputTokens')} ${formatNumber(stats?.responseTokens || 0)}`}
           loading={statsLoading}
         />
         <StatCard
-          title="请求次数"
+          title={t('stats.requests')}
           value={formatNumber(stats?.requestCount || 0)}
           icon={Activity}
-          description={`成功 ${stats?.successCount || 0} / 失败 ${stats?.errorCount || 0}`}
+          description={`${t('stats.success')} ${stats?.successCount || 0} / ${t('stats.failed')} ${stats?.errorCount || 0}`}
           loading={statsLoading}
         />
         <StatCard
-          title="错误率"
+          title={t('stats.errorRate')}
           value={`${(stats?.errorRate || 0).toFixed(1)}%`}
           icon={AlertTriangle}
-          description={`${stats?.errorCount || 0} 次错误`}
+          description={`${stats?.errorCount || 0} ${t('stats.errors')}`}
           loading={statsLoading}
         />
         <StatCard
-          title="预估成本"
+          title={t('stats.estimatedCost')}
           value={`$${(stats?.estimatedCost || 0).toFixed(2)}`}
           icon={DollarSign}
-          description="基于模型定价估算"
+          description={t('stats.costDescription')}
           loading={statsLoading}
         />
       </div>
@@ -412,26 +418,29 @@ export default function BotUsagePage() {
         <TabsList>
           <TabsTrigger value="trend">
             <TrendingUp className="mr-2 h-4 w-4" />
-            趋势
+            {t('tabs.trend')}
           </TabsTrigger>
           <TabsTrigger value="breakdown">
             <Activity className="mr-2 h-4 w-4" />
-            分布
+            {t('tabs.breakdown')}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="trend">
           <Card>
             <CardHeader>
-              <CardTitle>Token 使用趋势</CardTitle>
+              <CardTitle>{t('trend.title')}</CardTitle>
               <CardDescription>
-                {period === 'day' ? '按小时' : '按天'}统计的 Token 使用量
+                {period === 'day' ? t('trend.byHour') : t('trend.byDay')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <SimpleTrendChart
                 data={trend?.dataPoints || []}
                 loading={trendLoading}
+                noDataText={t('noData')}
+                inputLabel={t('trend.inputToken')}
+                outputLabel={t('trend.outputToken')}
               />
             </CardContent>
           </Card>
@@ -441,8 +450,8 @@ export default function BotUsagePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>用量分布</CardTitle>
-                <CardDescription>按不同维度查看用量分布</CardDescription>
+                <CardTitle>{t('breakdown.title')}</CardTitle>
+                <CardDescription>{t('breakdown.description')}</CardDescription>
               </div>
               <Select
                 value={groupBy}
@@ -454,9 +463,13 @@ export default function BotUsagePage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="vendor">按提供商</SelectItem>
-                  <SelectItem value="model">按模型</SelectItem>
-                  <SelectItem value="status">按状态</SelectItem>
+                  <SelectItem value="vendor">
+                    {t('breakdown.byVendor')}
+                  </SelectItem>
+                  <SelectItem value="model">{t('breakdown.byModel')}</SelectItem>
+                  <SelectItem value="status">
+                    {t('breakdown.byStatus')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </CardHeader>
@@ -464,6 +477,8 @@ export default function BotUsagePage() {
               <BreakdownList
                 data={breakdown?.groups || []}
                 loading={breakdownLoading}
+                noDataText={t('noData')}
+                requestsLabel={t('breakdown.requests')}
               />
             </CardContent>
           </Card>
@@ -474,7 +489,9 @@ export default function BotUsagePage() {
       {stats?.avgDurationMs && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">平均响应时间</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('stats.avgResponseTime')}
+            </CardTitle>
             <Clock className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -482,7 +499,7 @@ export default function BotUsagePage() {
               {stats.avgDurationMs.toFixed(0)} ms
             </div>
             <p className="text-muted-foreground text-xs">
-              基于 {stats.requestCount} 次请求
+              {t('stats.basedOnRequests', { count: stats.requestCount })}
             </p>
           </CardContent>
         </Card>

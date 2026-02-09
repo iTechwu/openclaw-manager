@@ -1035,10 +1035,12 @@ export class BotApiService {
     );
 
     // Use the verify client to get models
+    // Pass the stored apiType to override the default from PROVIDER_CONFIGS
     return this.providerVerifyClient.verify({
       vendor: key.vendor as VerifyProviderKeyInput['vendor'],
       secret,
       baseUrl: key.baseUrl || undefined,
+      apiType: key.apiType as VerifyProviderKeyInput['apiType'],
     });
   }
 
@@ -1081,6 +1083,7 @@ export class BotApiService {
           id: bpk.id,
           providerKeyId: bpk.providerKeyId,
           vendor: providerKey.vendor as BotProviderDetail['vendor'],
+          apiType: (providerKey.apiType as BotProviderDetail['apiType']) || null,
           label: providerKey.label,
           apiKeyMasked,
           baseUrl: providerKey.baseUrl,
@@ -1167,6 +1170,7 @@ export class BotApiService {
       id: bpk.id,
       providerKeyId: bpk.providerKeyId,
       vendor: providerKey.vendor as BotProviderDetail['vendor'],
+      apiType: (providerKey.apiType as BotProviderDetail['apiType']) || null,
       label: providerKey.label,
       apiKeyMasked,
       baseUrl: providerKey.baseUrl,

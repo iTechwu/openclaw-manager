@@ -248,3 +248,56 @@ export const RoutingStatisticsSchema = z.object({
 });
 
 export type RoutingStatistics = z.infer<typeof RoutingStatisticsSchema>;
+
+// ============================================================================
+// Routing Suggestion Schemas
+// ============================================================================
+
+/**
+ * Model capability analysis
+ */
+export const ModelCapabilitySchema = z.object({
+  modelId: z.string(),
+  providerKeyId: z.string().uuid(),
+  vendor: z.string(),
+  strengths: z.array(z.string()),
+  bestFor: z.array(z.string()),
+  score: z.record(z.string(), z.number()),
+});
+
+export type ModelCapability = z.infer<typeof ModelCapabilitySchema>;
+
+/**
+ * Suggested routing rule
+ */
+export const SuggestedRoutingRuleSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  pattern: z.string(),
+  matchType: z.enum(['keyword', 'regex', 'intent']),
+  target: RoutingTargetSchema,
+  confidence: z.number().min(0).max(100),
+  reasoning: z.string(),
+});
+
+export type SuggestedRoutingRule = z.infer<typeof SuggestedRoutingRuleSchema>;
+
+/**
+ * Routing suggestion result
+ */
+export const RoutingSuggestionResultSchema = z.object({
+  functionRouteRules: z.array(SuggestedRoutingRuleSchema),
+  defaultTarget: RoutingTargetSchema,
+  failoverSuggestion: z
+    .object({
+      primary: RoutingTargetSchema,
+      fallbackChain: z.array(RoutingTargetSchema),
+    })
+    .optional(),
+  analysis: z.object({
+    modelCapabilities: z.array(ModelCapabilitySchema),
+    summary: z.string(),
+  }),
+});
+
+export type RoutingSuggestionResult = z.infer<typeof RoutingSuggestionResultSchema>;

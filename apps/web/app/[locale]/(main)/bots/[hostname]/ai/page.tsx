@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useBot } from '@/hooks/useBots';
 import { useProviderKeys, useProviderKeyModels } from '@/hooks/useProviderKeys';
 import { ProviderCard } from '../components/provider-card';
+import { ModelRoutingConfig } from '../components/model-routing-config';
 import {
   Button,
   Card,
@@ -25,6 +26,10 @@ import {
   Checkbox,
   Label,
   ScrollArea,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from '@repo/ui';
 import { Plus, Bot, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,6 +41,7 @@ interface BotProvider {
   id: string;
   providerKeyId: string;
   vendor: string;
+  apiType: string | null;
   label: string;
   baseUrl: string | null;
   apiKeyMasked: string;
@@ -52,6 +58,7 @@ function mapProviderDetail(detail: BotProviderDetail): BotProvider {
     id: detail.id,
     providerKeyId: detail.providerKeyId,
     vendor: detail.vendor,
+    apiType: detail.apiType,
     label: detail.label,
     baseUrl: detail.baseUrl,
     apiKeyMasked: detail.apiKeyMasked,
@@ -98,7 +105,7 @@ export default function BotAIConfigPage() {
         setProviders(response.body.data.providers.map(mapProviderDetail));
       }
     } catch (error) {
-      toast.error('获取 Provider 列表失败');
+      toast.error(t('fetchProvidersFailed'));
     } finally {
       setProvidersLoading(false);
     }
@@ -152,20 +159,20 @@ export default function BotAIConfigPage() {
         body: { modelId },
       });
       if (response.status === 200) {
-        toast.success('主模型设置成功');
+        toast.success(t('setPrimarySuccess'));
         await fetchProviders();
       } else {
-        toast.error('设置失败');
+        toast.error(t('setFailed'));
       }
     } catch (error) {
-      toast.error('设置失败');
+      toast.error(t('setFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteProvider = async (provider: BotProvider) => {
-    if (!confirm('确定要删除此 Provider 吗？')) return;
+    if (!confirm(t('deleteConfirm'))) return;
 
     setLoading(true);
     try {
@@ -175,12 +182,12 @@ export default function BotAIConfigPage() {
       });
       if (response.status === 200) {
         setProviders((prev) => prev.filter((p) => p.id !== provider.id));
-        toast.success('Provider 已删除');
+        toast.success(t('deleteSuccess'));
       } else {
-        toast.error('删除失败');
+        toast.error(t('deleteFailed'));
       }
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(t('deleteFailed'));
     } finally {
       setLoading(false);
     }
@@ -188,7 +195,7 @@ export default function BotAIConfigPage() {
 
   const handleAddProvider = async () => {
     if (!selectedKeyId || selectedModels.length === 0) {
-      toast.error('请选择 Provider 和至少一个模型');
+      toast.error(t('selectProviderAndModel'));
       return;
     }
 
@@ -204,16 +211,16 @@ export default function BotAIConfigPage() {
         },
       });
       if (response.status === 201) {
-        toast.success('Provider 添加成功');
+        toast.success(t('addSuccess'));
         setIsAddDialogOpen(false);
         resetAddForm();
         await fetchProviders();
       } else {
         const errorBody = response.body as { error?: string };
-        toast.error(errorBody?.error || '添加失败');
+        toast.error(errorBody?.error || t('addFailed'));
       }
     } catch (error) {
-      toast.error('添加失败');
+      toast.error(t('addFailed'));
     } finally {
       setAddLoading(false);
     }
@@ -270,49 +277,66 @@ export default function BotAIConfigPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{t('title')}</h1>
-          <p className="text-muted-foreground text-sm">{t('description')}</p>
-        </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="size-4 mr-2" />
-          {t('addProvider')}
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
-      {/* Provider 列表 */}
-      {providers.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Bot className="size-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground mb-4">{t('noProviders')}</p>
+      {/* Tabs */}
+      <Tabs defaultValue="providers" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="providers">{t('tabs.providers')}</TabsTrigger>
+          <TabsTrigger value="routing">{t('tabs.routing')}</TabsTrigger>
+        </TabsList>
+
+        {/* AI Providers Tab */}
+        <TabsContent value="providers" className="mt-6 space-y-4">
+          <div className="flex justify-end">
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="size-4 mr-2" />
-              {t('addFirst')}
+              {t('addProvider')}
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {providers.map((provider) => (
-            <ProviderCard
-              key={provider.id}
-              vendor={provider.vendor}
-              label={provider.label}
-              baseUrl={provider.baseUrl}
-              apiKeyMasked={provider.apiKeyMasked}
-              models={provider.models}
-              isPrimary={provider.isPrimary}
-              onSetPrimaryModel={(modelId) =>
-                handleSetPrimaryModel(provider, modelId)
-              }
-              onDelete={() => handleDeleteProvider(provider)}
-              loading={loading}
-            />
-          ))}
-        </div>
-      )}
+          </div>
+
+          {providers.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Bot className="size-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground mb-4">{t('noProviders')}</p>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="size-4 mr-2" />
+                  {t('addFirst')}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {providers.map((provider) => (
+                <ProviderCard
+                  key={provider.id}
+                  vendor={provider.vendor}
+                  apiType={provider.apiType}
+                  label={provider.label}
+                  baseUrl={provider.baseUrl}
+                  apiKeyMasked={provider.apiKeyMasked}
+                  models={provider.models}
+                  isPrimary={provider.isPrimary}
+                  onSetPrimaryModel={(modelId) =>
+                    handleSetPrimaryModel(provider, modelId)
+                  }
+                  onDelete={() => handleDeleteProvider(provider)}
+                  loading={loading}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Model Routing Tab */}
+        <TabsContent value="routing" className="mt-6">
+          <ModelRoutingConfig hostname={hostname} />
+        </TabsContent>
+      </Tabs>
 
       {/* 添加 Provider 对话框 */}
       <Dialog open={isAddDialogOpen} onOpenChange={handleDialogClose}>
@@ -320,25 +344,25 @@ export default function BotAIConfigPage() {
           <DialogHeader>
             <DialogTitle>{t('addProvider')}</DialogTitle>
             <DialogDescription>
-              从已配置的 API Keys 中选择一个 Provider 添加到此 Bot
+              {t('dialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {/* Provider Key 选择 */}
             <div className="space-y-2">
-              <Label>选择 API Key</Label>
+              <Label>{t('selectApiKey')}</Label>
               {keysLoading ? (
                 <Skeleton className="h-10 w-full" />
               ) : availableKeys.length === 0 ? (
                 <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg text-sm text-amber-600 dark:text-amber-400">
                   <AlertCircle className="size-4" />
-                  <span>没有可用的 API Key，请先在设置中添加</span>
+                  <span>{t('noApiKeys')}</span>
                 </div>
               ) : (
                 <Select value={selectedKeyId} onValueChange={setSelectedKeyId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择一个 API Key" />
+                    <SelectValue placeholder={t('selectApiKeyPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableKeys.map((key) => (
@@ -359,17 +383,17 @@ export default function BotAIConfigPage() {
             {/* 模型选择 */}
             {selectedKeyId && (
               <div className="space-y-2">
-                <Label>选择模型</Label>
+                <Label>{t('selectModels')}</Label>
                 {modelsLoading ? (
                   <div className="flex items-center gap-2 p-4">
                     <Loader2 className="size-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">
-                      加载模型列表...
+                      {t('loadingModels')}
                     </span>
                   </div>
                 ) : availableModels.length === 0 ? (
                   <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
-                    无可用模型
+                    {t('noModels')}
                   </div>
                 ) : (
                   <ScrollArea className="h-48 border rounded-lg p-2">
@@ -404,8 +428,8 @@ export default function BotAIConfigPage() {
                               onClick={() => setPrimaryModel(model.id)}
                             >
                               {primaryModel === model.id
-                                ? '主模型'
-                                : '设为主模型'}
+                                ? t('primaryModel')
+                                : t('setAsPrimary')}
                             </Button>
                           )}
                         </div>
@@ -425,7 +449,7 @@ export default function BotAIConfigPage() {
                   onCheckedChange={(checked) => setIsPrimary(checked === true)}
                 />
                 <Label htmlFor="isPrimary" className="text-sm cursor-pointer">
-                  设为主 Provider（Bot 默认使用此 Provider）
+                  {t('setAsPrimaryProvider')}
                 </Label>
               </div>
             )}
@@ -437,7 +461,7 @@ export default function BotAIConfigPage() {
               onClick={() => handleDialogClose(false)}
               disabled={addLoading}
             >
-              取消
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleAddProvider}
@@ -449,7 +473,7 @@ export default function BotAIConfigPage() {
               }
             >
               {addLoading && <Loader2 className="size-4 mr-2 animate-spin" />}
-              添加
+              {t('add')}
             </Button>
           </DialogFooter>
         </DialogContent>

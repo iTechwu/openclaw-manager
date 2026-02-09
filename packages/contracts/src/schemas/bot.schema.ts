@@ -279,6 +279,8 @@ export const VerifyProviderKeyInputSchema = z.object({
     .url({ message: 'Must be a valid URL' })
     .optional()
     .transform((val) => (val?.trim() === '' ? undefined : val)),
+  /** API protocol type - overrides the default from PROVIDER_CONFIGS */
+  apiType: ProviderApiTypeSchema.optional(),
 });
 
 export type VerifyProviderKeyInput = z.infer<
@@ -322,6 +324,7 @@ export const BotProviderDetailSchema = z.object({
   id: z.string().uuid(),
   providerKeyId: z.string().uuid(),
   vendor: ProviderVendorSchema,
+  apiType: ProviderApiTypeSchema.nullable(),
   label: z.string(),
   apiKeyMasked: z.string(),
   baseUrl: z.string().nullable(),

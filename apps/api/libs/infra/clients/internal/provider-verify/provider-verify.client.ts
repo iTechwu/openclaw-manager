@@ -31,7 +31,7 @@ export class ProviderVerifyClient {
     input: VerifyProviderKeyInput,
   ): Promise<VerifyProviderKeyResponse> {
     const startTime = Date.now();
-    const { vendor, secret, baseUrl } = input;
+    const { vendor, secret, baseUrl, apiType: inputApiType } = input;
 
     // Get effective API host
     const effectiveHost = getEffectiveApiHost(vendor, baseUrl);
@@ -43,8 +43,9 @@ export class ProviderVerifyClient {
     }
 
     // Get provider config to determine API type
+    // Use input apiType if provided, otherwise fall back to provider config
     const providerConfig = PROVIDER_CONFIGS[vendor];
-    const apiType = providerConfig?.apiType || 'openai';
+    const apiType = inputApiType || providerConfig?.apiType || 'openai';
 
     try {
       let models: ProviderModel[] = [];
@@ -56,6 +57,10 @@ export class ProviderVerifyClient {
           secret,
           startTime,
         );
+      } else if (apiType === 'gemini') {
+        models = await this.verifyGeminiKey(effectiveHost, secret);
+      } else if (apiType === 'ollama') {
+        models = await this.verifyOllamaKey(effectiveHost, secret);
       } else {
         models = await this.verifyOpenAICompatibleKey(effectiveHost, secret);
       }
@@ -96,14 +101,76 @@ export class ProviderVerifyClient {
       throw { response: { status: 401 } };
     }
 
-    // Return predefined Anthropic models
+    // Return predefined Anthropic models (latest Claude 4 series)
     return [
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
-      { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
-      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+      { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
+      { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet 4.5' },
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5' },
     ];
+  }
+
+  /**
+   * Verify Google Gemini API key by calling /models endpoint
+   * Gemini API uses a different authentication method (API key in query param)
+   */
+  private async verifyGeminiKey(
+    effectiveHost: string,
+    secret: string,
+  ): Promise<ProviderModel[]> {
+    const modelsUrl = `${effectiveHost}/models?key=${secret}`;
+    const response = await firstValueFrom(
+      this.httpService.get(modelsUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }),
+    );
+
+    const data = response.data;
+    let models: ProviderModel[] = [];
+
+    if (data?.models && Array.isArray(data.models)) {
+      models = data.models
+        .filter((m: any) => m.name?.startsWith('models/gemini'))
+        .map((m: any) => ({
+          id: m.name?.replace('models/', '') || m.name,
+          name: m.displayName || m.name?.replace('models/', ''),
+        }));
+    }
+
+    return models;
+  }
+
+  /**
+   * Verify Ollama API key by calling /api/tags endpoint
+   * Ollama uses a different endpoint structure
+   */
+  private async verifyOllamaKey(
+    effectiveHost: string,
+    _secret: string,
+  ): Promise<ProviderModel[]> {
+    // Ollama doesn't require authentication, just check if the server is running
+    // The endpoint is /api/tags for listing models
+    const baseHost = effectiveHost.replace(/\/v1$/, '');
+    const modelsUrl = `${baseHost}/api/tags`;
+    const response = await firstValueFrom(
+      this.httpService.get(modelsUrl, {
+        timeout: 10000,
+      }),
+    );
+
+    const data = response.data;
+    let models: ProviderModel[] = [];
+
+    if (data?.models && Array.isArray(data.models)) {
+      models = data.models.map((m: any) => ({
+        id: m.name || m.model,
+        name: m.name || m.model,
+      }));
+    }
+
+    return models;
   }
 
   /**
@@ -143,7 +210,6 @@ export class ProviderVerifyClient {
         owned_by: m.owned_by,
       }));
     }
-    console.log('tech: models', modelsUrl, models);
     return models;
   }
 
