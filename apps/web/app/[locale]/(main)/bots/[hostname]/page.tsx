@@ -23,6 +23,7 @@ export default function BotDashboardPage() {
   const { handleStart, handleStop, startLoading, stopLoading } = useBots();
 
   const [logs, setLogs] = useState<string[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [hasProvider, setHasProvider] = useState(false);
   const [hasChannel, setHasChannel] = useState(false);
@@ -60,11 +61,37 @@ export default function BotDashboardPage() {
     checkConfig();
   }, [hostname, bot]);
 
-  // 模拟获取日志（后续可以替换为真实 API）
-  const fetchLogs = useCallback(() => {
-    // TODO: 实现真实的日志获取 API
-    // 目前使用模拟数据
-  }, []);
+  // 获取实时日志
+  const fetchLogs = useCallback(async () => {
+    if (!hostname || !bot?.containerId) return;
+
+    setLogsLoading(true);
+    try {
+      const response = await botClient.getLogs({
+        params: { hostname },
+        query: { tail: 50 },
+      });
+
+      if (response.status === 200 && response.body.data) {
+        // 将结构化日志转换为字符串数组用于显示
+        const logLines = response.body.data.logs.map(
+          (log) => `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}`
+        );
+        setLogs(logLines);
+      }
+    } catch {
+      // 忽略错误
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [hostname, bot?.containerId]);
+
+  // 初始加载日志
+  useEffect(() => {
+    if (bot?.status === 'running') {
+      fetchLogs();
+    }
+  }, [bot?.status, fetchLogs]);
 
   const onStart = async () => {
     setActionLoading(true);
@@ -157,10 +184,7 @@ export default function BotDashboardPage() {
         />
       )}
 
-      {/* 服务状态卡片 */}
-      <StatusCard status={serviceStatus} loading={botLoading} />
-
-      {/* 快捷操作 */}
+      {/* 快捷操作 - 移到服务状态前面 */}
       <QuickActions
         isRunning={isRunning}
         loading={loading}
@@ -173,8 +197,11 @@ export default function BotDashboardPage() {
         onDiagnose={onDiagnose}
       />
 
+      {/* 服务状态卡片 */}
+      <StatusCard status={serviceStatus} loading={botLoading} />
+
       {/* 实时日志 */}
-      <RealtimeLogs logs={logs} loading={false} onRefresh={fetchLogs} />
+      <RealtimeLogs logs={logs} loading={logsLoading} onRefresh={fetchLogs} />
     </div>
   );
 }

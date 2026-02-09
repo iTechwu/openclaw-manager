@@ -1348,13 +1348,53 @@ export class BotApiService {
 
     // Channel Tokens Check
     if (checksToRun.includes('channel_tokens')) {
-      // This would check channel configurations
-      // For now, we'll do a basic check
-      results.push({
-        name: 'channel_tokens',
-        status: 'pass',
-        message: 'Channel configuration valid',
+      const { list: channels } = await this.botChannelService.list({
+        botId: bot.id,
       });
+
+      if (channels.length === 0) {
+        results.push({
+          name: 'channel_tokens',
+          status: 'warning',
+          message: 'No channels configured',
+        });
+        recommendations.push('Add at least one channel configuration');
+      } else {
+        const enabledChannels = channels.filter((c) => c.isEnabled);
+        const connectedChannels = channels.filter(
+          (c) => c.connectionStatus === 'CONNECTED',
+        );
+        const errorChannels = channels.filter((c) => c.lastError);
+
+        if (enabledChannels.length === 0) {
+          results.push({
+            name: 'channel_tokens',
+            status: 'warning',
+            message: `${channels.length} channel(s) configured but none enabled`,
+          });
+          recommendations.push('Enable at least one channel');
+        } else if (errorChannels.length > 0) {
+          results.push({
+            name: 'channel_tokens',
+            status: 'fail',
+            message: `${errorChannels.length} channel(s) have errors`,
+          });
+          recommendations.push('Check channel configurations for errors');
+        } else if (connectedChannels.length === 0 && enabledChannels.length > 0) {
+          results.push({
+            name: 'channel_tokens',
+            status: 'warning',
+            message: `${enabledChannels.length} channel(s) enabled but not connected`,
+          });
+          recommendations.push('Start the bot to connect channels');
+        } else {
+          results.push({
+            name: 'channel_tokens',
+            status: 'pass',
+            message: `${connectedChannels.length}/${enabledChannels.length} channel(s) connected`,
+          });
+        }
+      }
     }
 
     // Container Check
@@ -1396,25 +1436,78 @@ export class BotApiService {
       }
     }
 
-    // Network Check
+    // Network Check - verify internal connectivity
     if (checksToRun.includes('network')) {
       const startTime = Date.now();
-      try {
-        // Simple network check - verify we can reach external services
-        const latency = Date.now() - startTime;
+
+      // Check if container exists and is running first
+      if (!bot.containerId) {
         results.push({
           name: 'network',
-          status: 'pass',
-          message: 'Network connectivity OK',
-          latency,
+          status: 'warning',
+          message: 'No container to check network connectivity',
         });
-      } catch (error) {
-        results.push({
-          name: 'network',
-          status: 'fail',
-          message: 'Network connectivity issues',
-        });
-        recommendations.push('Check network configuration');
+        recommendations.push('Start the bot to check network connectivity');
+      } else {
+        try {
+          // Check container network configuration
+          const containerStatus = await this.dockerService.getContainerStatus(
+            bot.containerId,
+          );
+          const latency = Date.now() - startTime;
+
+          if (!containerStatus) {
+            results.push({
+              name: 'network',
+              status: 'fail',
+              message: 'Container not found for network check',
+              latency,
+            });
+            recommendations.push('Recreate the bot container');
+          } else if (!containerStatus.running) {
+            results.push({
+              name: 'network',
+              status: 'warning',
+              message: 'Container not running, cannot verify network',
+              latency,
+            });
+            recommendations.push('Start the bot to verify network connectivity');
+          } else {
+            // Container is running, check if it has network access
+            // Verify container is on the expected network
+            const networkInfo =
+              await this.dockerService.getContainerNetworkInfo(bot.containerId);
+
+            if (networkInfo && networkInfo.networks.length > 0) {
+              results.push({
+                name: 'network',
+                status: 'pass',
+                message: `Container connected to ${networkInfo.networks.length} network(s)`,
+                latency,
+              });
+            } else {
+              results.push({
+                name: 'network',
+                status: 'fail',
+                message: 'Container has no network connections',
+                latency,
+              });
+              recommendations.push('Check Docker network configuration');
+            }
+          }
+        } catch (error) {
+          const latency = Date.now() - startTime;
+          results.push({
+            name: 'network',
+            status: 'fail',
+            message:
+              error instanceof Error
+                ? `Network check error: ${error.message}`
+                : 'Failed to check network connectivity',
+            latency,
+          });
+          recommendations.push('Check Docker daemon and network configuration');
+        }
       }
     }
 
@@ -1428,6 +1521,137 @@ export class BotApiService {
       checks: results,
       recommendations,
     };
+  }
+
+  // ============================================================================
+  // Bot Logs
+  // ============================================================================
+
+  /**
+   * 获取 Bot 容器日志
+   * @param hostname Bot hostname
+   * @param userId 用户 ID
+   * @param options 日志选项
+   * @returns 解析后的日志条目数组
+   */
+  async getBotLogs(
+    hostname: string,
+    userId: string,
+    options: { tail?: number; since?: number } = {},
+  ): Promise<{
+    logs: Array<{
+      id: string;
+      timestamp: string;
+      level: 'info' | 'warn' | 'error' | 'debug';
+      message: string;
+    }>;
+    containerId: string | null;
+  }> {
+    const bot = await this.getBotByHostname(hostname, userId);
+
+    if (!bot.containerId) {
+      return { logs: [], containerId: null };
+    }
+
+    try {
+      const rawLogs = await this.dockerService.getContainerLogs(
+        bot.containerId,
+        {
+          tail: options.tail || 100,
+          since: options.since,
+        },
+      );
+
+      // Parse raw logs into structured format
+      const logs = this.parseContainerLogs(rawLogs);
+
+      return { logs, containerId: bot.containerId };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get logs for bot ${hostname}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      return { logs: [], containerId: bot.containerId };
+    }
+  }
+
+  /**
+   * 解析容器日志为结构化格式
+   */
+  private parseContainerLogs(rawLogs: string): Array<{
+    id: string;
+    timestamp: string;
+    level: 'info' | 'warn' | 'error' | 'debug';
+    message: string;
+  }> {
+    if (!rawLogs || rawLogs === 'Docker not available') {
+      return [];
+    }
+
+    const lines = rawLogs.split('\n').filter((line) => line.trim());
+    const logs: Array<{
+      id: string;
+      timestamp: string;
+      level: 'info' | 'warn' | 'error' | 'debug';
+      message: string;
+    }> = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Skip empty lines and Docker stream header bytes
+      const cleanLine = line.replace(/^[\x00-\x1f]+/, '').trim();
+      if (!cleanLine) continue;
+
+      // Try to parse timestamp from common log formats
+      // Format 1: ISO timestamp at start (2024-01-15T10:30:15.123Z)
+      // Format 2: Date time format (2024-01-15 10:30:15)
+      let timestamp = new Date().toISOString();
+      let message = cleanLine;
+
+      // Try ISO format
+      const isoMatch = cleanLine.match(
+        /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)\s*(.*)/,
+      );
+      if (isoMatch) {
+        timestamp = isoMatch[1];
+        message = isoMatch[2];
+      } else {
+        // Try date time format
+        const dateMatch = cleanLine.match(
+          /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s*(.*)/,
+        );
+        if (dateMatch) {
+          timestamp = dateMatch[1];
+          message = dateMatch[2];
+        }
+      }
+
+      // Determine log level from message content
+      const lowerMessage = message.toLowerCase();
+      let level: 'info' | 'warn' | 'error' | 'debug' = 'info';
+      if (
+        lowerMessage.includes('error') ||
+        lowerMessage.includes('err') ||
+        lowerMessage.includes('fail')
+      ) {
+        level = 'error';
+      } else if (
+        lowerMessage.includes('warn') ||
+        lowerMessage.includes('warning')
+      ) {
+        level = 'warn';
+      } else if (lowerMessage.includes('debug')) {
+        level = 'debug';
+      }
+
+      logs.push({
+        id: `log-${i}-${Date.now()}`,
+        timestamp,
+        level,
+        message: message || cleanLine,
+      });
+    }
+
+    return logs;
   }
 
   // ============================================================================

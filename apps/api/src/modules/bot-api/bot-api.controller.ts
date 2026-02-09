@@ -218,6 +218,23 @@ export class BotApiController {
   }
 
   // ============================================================================
+  // Bot Logs
+  // ============================================================================
+
+  @TsRestHandler(bc.getLogs)
+  async getBotLogs(@Req() req: AuthenticatedRequest): Promise<any> {
+    return tsRestHandler(bc.getLogs, async ({ params, query }) => {
+      const userId = req.userId;
+      const result = await this.botApiService.getBotLogs(
+        params.hostname,
+        userId,
+        query,
+      );
+      return success(result);
+    });
+  }
+
+  // ============================================================================
   // Provider Key Management
   // ============================================================================
 

@@ -434,10 +434,33 @@ export default function BotChannelsPage() {
       { staleTime: 1000 * 60 * 10 } as AnyQueryOptions,
     );
 
-  const channelDefinitions = useMemo(
-    () => channelDefsResponse?.body?.data?.channels || [],
-    [channelDefsResponse],
-  );
+  // 中文环境下优先显示的渠道
+  const chinesePriorityChannels = ['feishu', 'wechat', 'webchat'];
+
+  const channelDefinitions = useMemo(() => {
+    const channels = channelDefsResponse?.body?.data?.channels || [];
+
+    // 中文环境下，将飞书和微信排在最前面
+    if (locale === 'zh') {
+      return [...channels].sort((a, b) => {
+        const aIndex = chinesePriorityChannels.indexOf(a.id);
+        const bIndex = chinesePriorityChannels.indexOf(b.id);
+
+        // 如果两个都在优先列表中，按优先列表顺序排序
+        if (aIndex !== -1 && bIndex !== -1) {
+          return aIndex - bIndex;
+        }
+        // 如果只有 a 在优先列表中，a 排前面
+        if (aIndex !== -1) return -1;
+        // 如果只有 b 在优先列表中，b 排前面
+        if (bIndex !== -1) return 1;
+        // 其他保持原顺序
+        return 0;
+      });
+    }
+
+    return channels;
+  }, [channelDefsResponse, locale]);
 
   // 获取已配置的渠道列表
   const { data: channelsResponse, isLoading: channelsLoading } =
@@ -569,16 +592,16 @@ export default function BotChannelsPage() {
         <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
-      {/* 主内容区 - 左右分栏 */}
-      <div className="flex gap-6">
+      {/* 主内容区 - 左右分栏，使用 calc 确保不超出屏幕 */}
+      <div className="flex gap-6 h-[calc(100vh-220px)] min-h-[400px]">
         {/* 左侧：渠道列表 */}
-        <Card className="w-64 flex-shrink-0">
-          <CardHeader className="pb-3">
+        <Card className="w-64 flex-shrink-0 flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <CardTitle className="text-sm font-medium">消息渠道</CardTitle>
           </CardHeader>
-          <CardContent className="p-2">
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-1">
+          <CardContent className="p-2 flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="space-y-1 pr-2">
                 {channelDefinitions.map((definition) => {
                   const channel = configuredChannels.find(
                     (c) => c.channelType === definition.id,
@@ -599,8 +622,8 @@ export default function BotChannelsPage() {
         </Card>
 
         {/* 右侧：配置表单 */}
-        <Card className="flex-1">
-          <CardContent className="p-6">
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <CardContent className="p-6 flex-1 overflow-y-auto">
             {selectedDefinition ? (
               <ChannelConfigForm
                 definition={selectedDefinition}
@@ -609,7 +632,7 @@ export default function BotChannelsPage() {
                 saving={saving}
               />
             ) : (
-              <div className="h-[500px] flex items-center justify-center text-muted-foreground">
+              <div className="h-full flex items-center justify-center text-muted-foreground">
                 {t('selectChannel')}
               </div>
             )}

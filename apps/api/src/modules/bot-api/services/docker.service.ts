@@ -743,6 +743,39 @@ AUTH_EOF
   }
 
   /**
+   * Get container network information
+   */
+  async getContainerNetworkInfo(
+    containerId: string,
+  ): Promise<{ networks: string[]; ipAddresses: Record<string, string> } | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      const container = this.docker.getContainer(containerId);
+      const info = await container.inspect();
+      const networks = Object.keys(info.NetworkSettings.Networks || {});
+      const ipAddresses: Record<string, string> = {};
+
+      for (const [networkName, networkConfig] of Object.entries(
+        info.NetworkSettings.Networks || {},
+      )) {
+        if (networkConfig && typeof networkConfig === 'object') {
+          const config = networkConfig as { IPAddress?: string };
+          if (config.IPAddress) {
+            ipAddresses[networkName] = config.IPAddress;
+          }
+        }
+      }
+
+      return { networks, ipAddresses };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get container stats for all managed containers
    */
   async getAllContainerStats(): Promise<ContainerStats[]> {

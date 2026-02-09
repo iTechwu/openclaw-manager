@@ -495,6 +495,22 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ModelPricingScalarFieldEnum = {
+  id: 'id',
+  model: 'model',
+  vendor: 'vendor',
+  inputPrice: 'inputPrice',
+  outputPrice: 'outputPrice',
+  displayName: 'displayName',
+  isEnabled: 'isEnabled',
+  priceUpdatedAt: 'priceUpdatedAt',
+  notes: 'notes',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.BotChannelScalarFieldEnum = {
   id: 'id',
   botId: 'botId',
@@ -655,6 +671,7 @@ exports.Prisma.ModelName = {
   BotPlugin: 'BotPlugin',
   Skill: 'Skill',
   BotSkill: 'BotSkill',
+  ModelPricing: 'ModelPricing',
   BotChannel: 'BotChannel'
 };
 

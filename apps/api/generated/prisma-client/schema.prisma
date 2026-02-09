@@ -869,6 +869,43 @@ enum ChannelConnectionStatus {
   @@map("channel_connection_status")
 }
 
+// ============================================================================
+// Model Pricing System - AI 模型定价系统
+// ============================================================================
+
+/// ModelPricing - AI 模型定价
+/// 存储各 AI 模型的定价信息，用于成本估算
+/// 价格单位：美元/百万 tokens
+model ModelPricing {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 模型名称（如 gpt-4o, claude-3-5-sonnet）
+  model          String   @unique @db.VarChar(100)
+  /// 服务商标识（openai, anthropic, google, deepseek 等）
+  vendor         String   @db.VarChar(50)
+  /// 输入 token 价格（美元/百万 tokens）
+  inputPrice     Decimal  @map("input_price") @db.Decimal(10, 6)
+  /// 输出 token 价格（美元/百万 tokens）
+  outputPrice    Decimal  @map("output_price") @db.Decimal(10, 6)
+  /// 模型显示名称
+  displayName    String?  @map("display_name") @db.VarChar(255)
+  /// 是否启用
+  isEnabled      Boolean  @default(true) @map("is_enabled")
+  /// 价格更新时间
+  priceUpdatedAt DateTime @default(now()) @map("price_updated_at") @db.Timestamptz(6)
+  /// 备注
+  notes          String?  @db.Text
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([vendor])
+  @@index([isEnabled])
+  @@index([isDeleted])
+  @@map("b_model_pricing")
+}
+
 /// BotChannel - Bot 渠道配置
 /// 存储 Bot 的渠道连接配置，包括加密的凭证
 /// 一个 Bot 可以连接多个渠道（如同时连接飞书和 Telegram）

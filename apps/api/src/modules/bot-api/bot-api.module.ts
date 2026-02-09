@@ -11,6 +11,7 @@ import {
   PersonaTemplateModule,
   BotUsageLogModule,
   BotChannelModule,
+  ModelPricingModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { AuthModule } from '@app/auth';
@@ -48,6 +49,7 @@ import { BotConfigResolverService } from './services/bot-config-resolver.service
     ProviderVerifyModule,
     ProxyModule,
     BotUsageLogModule,
+    ModelPricingModule,
     PrismaModule,
   ],
   controllers: [BotApiController],

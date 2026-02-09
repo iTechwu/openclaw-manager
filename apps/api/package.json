@@ -28,6 +28,7 @@
     "db:generate": "prisma generate && node scripts/generate-db-crud.js",
     "db:format": "prisma format",
     "db:seed": "ts-node prisma/seed.ts",
+    "update:model-pricing": "ts-node scripts/update-model-pricing.ts",
     "validate:versions": "ts-node scripts/validate-api-versions.ts"
   },
   "devDependencies": {

@@ -162,6 +162,13 @@ export type Skill = $Result.DefaultSelection<Prisma.$SkillPayload>
  */
 export type BotSkill = $Result.DefaultSelection<Prisma.$BotSkillPayload>
 /**
+ * Model ModelPricing
+ * ModelPricing - AI 模型定价
+ * 存储各 AI 模型的定价信息，用于成本估算
+ * 价格单位：美元/百万 tokens
+ */
+export type ModelPricing = $Result.DefaultSelection<Prisma.$ModelPricingPayload>
+/**
  * Model BotChannel
  * BotChannel - Bot 渠道配置
  * 存储 Bot 的渠道连接配置，包括加密的凭证
@@ -707,6 +714,16 @@ export class PrismaClient<
   get botSkill(): Prisma.BotSkillDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.modelPricing`: Exposes CRUD operations for the **ModelPricing** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ModelPricings
+    * const modelPricings = await prisma.modelPricing.findMany()
+    * ```
+    */
+  get modelPricing(): Prisma.ModelPricingDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.botChannel`: Exposes CRUD operations for the **BotChannel** model.
     * Example usage:
     * ```ts
@@ -1174,6 +1191,7 @@ export namespace Prisma {
     BotPlugin: 'BotPlugin',
     Skill: 'Skill',
     BotSkill: 'BotSkill',
+    ModelPricing: 'ModelPricing',
     BotChannel: 'BotChannel'
   };
 
@@ -1190,7 +1208,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skill" | "botSkill" | "botChannel"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skill" | "botSkill" | "modelPricing" | "botChannel"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3044,6 +3062,80 @@ export namespace Prisma {
           }
         }
       }
+      ModelPricing: {
+        payload: Prisma.$ModelPricingPayload<ExtArgs>
+        fields: Prisma.ModelPricingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ModelPricingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ModelPricingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          findFirst: {
+            args: Prisma.ModelPricingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ModelPricingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          findMany: {
+            args: Prisma.ModelPricingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+          }
+          create: {
+            args: Prisma.ModelPricingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          createMany: {
+            args: Prisma.ModelPricingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ModelPricingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+          }
+          delete: {
+            args: Prisma.ModelPricingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          update: {
+            args: Prisma.ModelPricingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          deleteMany: {
+            args: Prisma.ModelPricingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ModelPricingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ModelPricingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+          }
+          upsert: {
+            args: Prisma.ModelPricingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+          }
+          aggregate: {
+            args: Prisma.ModelPricingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateModelPricing>
+          }
+          groupBy: {
+            args: Prisma.ModelPricingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ModelPricingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ModelPricingCountArgs<ExtArgs>
+            result: $Utils.Optional<ModelPricingCountAggregateOutputType> | number
+          }
+        }
+      }
       BotChannel: {
         payload: Prisma.$BotChannelPayload<ExtArgs>
         fields: Prisma.BotChannelFieldRefs
@@ -3251,6 +3343,7 @@ export namespace Prisma {
     botPlugin?: BotPluginOmit
     skill?: SkillOmit
     botSkill?: BotSkillOmit
+    modelPricing?: ModelPricingOmit
     botChannel?: BotChannelOmit
   }
 
@@ -33489,6 +33582,1167 @@ export namespace Prisma {
 
 
   /**
+   * Model ModelPricing
+   */
+
+  export type AggregateModelPricing = {
+    _count: ModelPricingCountAggregateOutputType | null
+    _avg: ModelPricingAvgAggregateOutputType | null
+    _sum: ModelPricingSumAggregateOutputType | null
+    _min: ModelPricingMinAggregateOutputType | null
+    _max: ModelPricingMaxAggregateOutputType | null
+  }
+
+  export type ModelPricingAvgAggregateOutputType = {
+    inputPrice: Decimal | null
+    outputPrice: Decimal | null
+  }
+
+  export type ModelPricingSumAggregateOutputType = {
+    inputPrice: Decimal | null
+    outputPrice: Decimal | null
+  }
+
+  export type ModelPricingMinAggregateOutputType = {
+    id: string | null
+    model: string | null
+    vendor: string | null
+    inputPrice: Decimal | null
+    outputPrice: Decimal | null
+    displayName: string | null
+    isEnabled: boolean | null
+    priceUpdatedAt: Date | null
+    notes: string | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ModelPricingMaxAggregateOutputType = {
+    id: string | null
+    model: string | null
+    vendor: string | null
+    inputPrice: Decimal | null
+    outputPrice: Decimal | null
+    displayName: string | null
+    isEnabled: boolean | null
+    priceUpdatedAt: Date | null
+    notes: string | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type ModelPricingCountAggregateOutputType = {
+    id: number
+    model: number
+    vendor: number
+    inputPrice: number
+    outputPrice: number
+    displayName: number
+    isEnabled: number
+    priceUpdatedAt: number
+    notes: number
+    isDeleted: number
+    createdAt: number
+    updatedAt: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type ModelPricingAvgAggregateInputType = {
+    inputPrice?: true
+    outputPrice?: true
+  }
+
+  export type ModelPricingSumAggregateInputType = {
+    inputPrice?: true
+    outputPrice?: true
+  }
+
+  export type ModelPricingMinAggregateInputType = {
+    id?: true
+    model?: true
+    vendor?: true
+    inputPrice?: true
+    outputPrice?: true
+    displayName?: true
+    isEnabled?: true
+    priceUpdatedAt?: true
+    notes?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ModelPricingMaxAggregateInputType = {
+    id?: true
+    model?: true
+    vendor?: true
+    inputPrice?: true
+    outputPrice?: true
+    displayName?: true
+    isEnabled?: true
+    priceUpdatedAt?: true
+    notes?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type ModelPricingCountAggregateInputType = {
+    id?: true
+    model?: true
+    vendor?: true
+    inputPrice?: true
+    outputPrice?: true
+    displayName?: true
+    isEnabled?: true
+    priceUpdatedAt?: true
+    notes?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type ModelPricingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModelPricing to aggregate.
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelPricings to fetch.
+     */
+    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ModelPricingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelPricings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelPricings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ModelPricings
+    **/
+    _count?: true | ModelPricingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ModelPricingAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ModelPricingSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ModelPricingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ModelPricingMaxAggregateInputType
+  }
+
+  export type GetModelPricingAggregateType<T extends ModelPricingAggregateArgs> = {
+        [P in keyof T & keyof AggregateModelPricing]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateModelPricing[P]>
+      : GetScalarType<T[P], AggregateModelPricing[P]>
+  }
+
+
+
+
+  export type ModelPricingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModelPricingWhereInput
+    orderBy?: ModelPricingOrderByWithAggregationInput | ModelPricingOrderByWithAggregationInput[]
+    by: ModelPricingScalarFieldEnum[] | ModelPricingScalarFieldEnum
+    having?: ModelPricingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ModelPricingCountAggregateInputType | true
+    _avg?: ModelPricingAvgAggregateInputType
+    _sum?: ModelPricingSumAggregateInputType
+    _min?: ModelPricingMinAggregateInputType
+    _max?: ModelPricingMaxAggregateInputType
+  }
+
+  export type ModelPricingGroupByOutputType = {
+    id: string
+    model: string
+    vendor: string
+    inputPrice: Decimal
+    outputPrice: Decimal
+    displayName: string | null
+    isEnabled: boolean
+    priceUpdatedAt: Date
+    notes: string | null
+    isDeleted: boolean
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    _count: ModelPricingCountAggregateOutputType | null
+    _avg: ModelPricingAvgAggregateOutputType | null
+    _sum: ModelPricingSumAggregateOutputType | null
+    _min: ModelPricingMinAggregateOutputType | null
+    _max: ModelPricingMaxAggregateOutputType | null
+  }
+
+  type GetModelPricingGroupByPayload<T extends ModelPricingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ModelPricingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ModelPricingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ModelPricingGroupByOutputType[P]>
+            : GetScalarType<T[P], ModelPricingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ModelPricingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    model?: boolean
+    vendor?: boolean
+    inputPrice?: boolean
+    outputPrice?: boolean
+    displayName?: boolean
+    isEnabled?: boolean
+    priceUpdatedAt?: boolean
+    notes?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["modelPricing"]>
+
+  export type ModelPricingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    model?: boolean
+    vendor?: boolean
+    inputPrice?: boolean
+    outputPrice?: boolean
+    displayName?: boolean
+    isEnabled?: boolean
+    priceUpdatedAt?: boolean
+    notes?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["modelPricing"]>
+
+  export type ModelPricingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    model?: boolean
+    vendor?: boolean
+    inputPrice?: boolean
+    outputPrice?: boolean
+    displayName?: boolean
+    isEnabled?: boolean
+    priceUpdatedAt?: boolean
+    notes?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["modelPricing"]>
+
+  export type ModelPricingSelectScalar = {
+    id?: boolean
+    model?: boolean
+    vendor?: boolean
+    inputPrice?: boolean
+    outputPrice?: boolean
+    displayName?: boolean
+    isEnabled?: boolean
+    priceUpdatedAt?: boolean
+    notes?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }
+
+  export type ModelPricingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "vendor" | "inputPrice" | "outputPrice" | "displayName" | "isEnabled" | "priceUpdatedAt" | "notes" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["modelPricing"]>
+
+  export type $ModelPricingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ModelPricing"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 模型名称（如 gpt-4o, claude-3-5-sonnet）
+       */
+      model: string
+      /**
+       * 服务商标识（openai, anthropic, google, deepseek 等）
+       */
+      vendor: string
+      /**
+       * 输入 token 价格（美元/百万 tokens）
+       */
+      inputPrice: Prisma.Decimal
+      /**
+       * 输出 token 价格（美元/百万 tokens）
+       */
+      outputPrice: Prisma.Decimal
+      /**
+       * 模型显示名称
+       */
+      displayName: string | null
+      /**
+       * 是否启用
+       */
+      isEnabled: boolean
+      /**
+       * 价格更新时间
+       */
+      priceUpdatedAt: Date
+      /**
+       * 备注
+       */
+      notes: string | null
+      isDeleted: boolean
+      createdAt: Date
+      updatedAt: Date
+      deletedAt: Date | null
+    }, ExtArgs["result"]["modelPricing"]>
+    composites: {}
+  }
+
+  type ModelPricingGetPayload<S extends boolean | null | undefined | ModelPricingDefaultArgs> = $Result.GetResult<Prisma.$ModelPricingPayload, S>
+
+  type ModelPricingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ModelPricingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ModelPricingCountAggregateInputType | true
+    }
+
+  export interface ModelPricingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ModelPricing'], meta: { name: 'ModelPricing' } }
+    /**
+     * Find zero or one ModelPricing that matches the filter.
+     * @param {ModelPricingFindUniqueArgs} args - Arguments to find a ModelPricing
+     * @example
+     * // Get one ModelPricing
+     * const modelPricing = await prisma.modelPricing.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ModelPricingFindUniqueArgs>(args: SelectSubset<T, ModelPricingFindUniqueArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ModelPricing that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ModelPricingFindUniqueOrThrowArgs} args - Arguments to find a ModelPricing
+     * @example
+     * // Get one ModelPricing
+     * const modelPricing = await prisma.modelPricing.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ModelPricingFindUniqueOrThrowArgs>(args: SelectSubset<T, ModelPricingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ModelPricing that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingFindFirstArgs} args - Arguments to find a ModelPricing
+     * @example
+     * // Get one ModelPricing
+     * const modelPricing = await prisma.modelPricing.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ModelPricingFindFirstArgs>(args?: SelectSubset<T, ModelPricingFindFirstArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ModelPricing that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingFindFirstOrThrowArgs} args - Arguments to find a ModelPricing
+     * @example
+     * // Get one ModelPricing
+     * const modelPricing = await prisma.modelPricing.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ModelPricingFindFirstOrThrowArgs>(args?: SelectSubset<T, ModelPricingFindFirstOrThrowArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ModelPricings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ModelPricings
+     * const modelPricings = await prisma.modelPricing.findMany()
+     * 
+     * // Get first 10 ModelPricings
+     * const modelPricings = await prisma.modelPricing.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const modelPricingWithIdOnly = await prisma.modelPricing.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ModelPricingFindManyArgs>(args?: SelectSubset<T, ModelPricingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ModelPricing.
+     * @param {ModelPricingCreateArgs} args - Arguments to create a ModelPricing.
+     * @example
+     * // Create one ModelPricing
+     * const ModelPricing = await prisma.modelPricing.create({
+     *   data: {
+     *     // ... data to create a ModelPricing
+     *   }
+     * })
+     * 
+     */
+    create<T extends ModelPricingCreateArgs>(args: SelectSubset<T, ModelPricingCreateArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ModelPricings.
+     * @param {ModelPricingCreateManyArgs} args - Arguments to create many ModelPricings.
+     * @example
+     * // Create many ModelPricings
+     * const modelPricing = await prisma.modelPricing.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ModelPricingCreateManyArgs>(args?: SelectSubset<T, ModelPricingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ModelPricings and returns the data saved in the database.
+     * @param {ModelPricingCreateManyAndReturnArgs} args - Arguments to create many ModelPricings.
+     * @example
+     * // Create many ModelPricings
+     * const modelPricing = await prisma.modelPricing.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ModelPricings and only return the `id`
+     * const modelPricingWithIdOnly = await prisma.modelPricing.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ModelPricingCreateManyAndReturnArgs>(args?: SelectSubset<T, ModelPricingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ModelPricing.
+     * @param {ModelPricingDeleteArgs} args - Arguments to delete one ModelPricing.
+     * @example
+     * // Delete one ModelPricing
+     * const ModelPricing = await prisma.modelPricing.delete({
+     *   where: {
+     *     // ... filter to delete one ModelPricing
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ModelPricingDeleteArgs>(args: SelectSubset<T, ModelPricingDeleteArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ModelPricing.
+     * @param {ModelPricingUpdateArgs} args - Arguments to update one ModelPricing.
+     * @example
+     * // Update one ModelPricing
+     * const modelPricing = await prisma.modelPricing.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ModelPricingUpdateArgs>(args: SelectSubset<T, ModelPricingUpdateArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ModelPricings.
+     * @param {ModelPricingDeleteManyArgs} args - Arguments to filter ModelPricings to delete.
+     * @example
+     * // Delete a few ModelPricings
+     * const { count } = await prisma.modelPricing.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ModelPricingDeleteManyArgs>(args?: SelectSubset<T, ModelPricingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ModelPricings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ModelPricings
+     * const modelPricing = await prisma.modelPricing.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ModelPricingUpdateManyArgs>(args: SelectSubset<T, ModelPricingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ModelPricings and returns the data updated in the database.
+     * @param {ModelPricingUpdateManyAndReturnArgs} args - Arguments to update many ModelPricings.
+     * @example
+     * // Update many ModelPricings
+     * const modelPricing = await prisma.modelPricing.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ModelPricings and only return the `id`
+     * const modelPricingWithIdOnly = await prisma.modelPricing.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ModelPricingUpdateManyAndReturnArgs>(args: SelectSubset<T, ModelPricingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ModelPricing.
+     * @param {ModelPricingUpsertArgs} args - Arguments to update or create a ModelPricing.
+     * @example
+     * // Update or create a ModelPricing
+     * const modelPricing = await prisma.modelPricing.upsert({
+     *   create: {
+     *     // ... data to create a ModelPricing
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ModelPricing we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ModelPricingUpsertArgs>(args: SelectSubset<T, ModelPricingUpsertArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ModelPricings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingCountArgs} args - Arguments to filter ModelPricings to count.
+     * @example
+     * // Count the number of ModelPricings
+     * const count = await prisma.modelPricing.count({
+     *   where: {
+     *     // ... the filter for the ModelPricings we want to count
+     *   }
+     * })
+    **/
+    count<T extends ModelPricingCountArgs>(
+      args?: Subset<T, ModelPricingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ModelPricingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ModelPricing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ModelPricingAggregateArgs>(args: Subset<T, ModelPricingAggregateArgs>): Prisma.PrismaPromise<GetModelPricingAggregateType<T>>
+
+    /**
+     * Group by ModelPricing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelPricingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ModelPricingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ModelPricingGroupByArgs['orderBy'] }
+        : { orderBy?: ModelPricingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ModelPricingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetModelPricingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ModelPricing model
+   */
+  readonly fields: ModelPricingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ModelPricing.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ModelPricingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ModelPricing model
+   */
+  interface ModelPricingFieldRefs {
+    readonly id: FieldRef<"ModelPricing", 'String'>
+    readonly model: FieldRef<"ModelPricing", 'String'>
+    readonly vendor: FieldRef<"ModelPricing", 'String'>
+    readonly inputPrice: FieldRef<"ModelPricing", 'Decimal'>
+    readonly outputPrice: FieldRef<"ModelPricing", 'Decimal'>
+    readonly displayName: FieldRef<"ModelPricing", 'String'>
+    readonly isEnabled: FieldRef<"ModelPricing", 'Boolean'>
+    readonly priceUpdatedAt: FieldRef<"ModelPricing", 'DateTime'>
+    readonly notes: FieldRef<"ModelPricing", 'String'>
+    readonly isDeleted: FieldRef<"ModelPricing", 'Boolean'>
+    readonly createdAt: FieldRef<"ModelPricing", 'DateTime'>
+    readonly updatedAt: FieldRef<"ModelPricing", 'DateTime'>
+    readonly deletedAt: FieldRef<"ModelPricing", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ModelPricing findUnique
+   */
+  export type ModelPricingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter, which ModelPricing to fetch.
+     */
+    where: ModelPricingWhereUniqueInput
+  }
+
+  /**
+   * ModelPricing findUniqueOrThrow
+   */
+  export type ModelPricingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter, which ModelPricing to fetch.
+     */
+    where: ModelPricingWhereUniqueInput
+  }
+
+  /**
+   * ModelPricing findFirst
+   */
+  export type ModelPricingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter, which ModelPricing to fetch.
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelPricings to fetch.
+     */
+    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModelPricings.
+     */
+    cursor?: ModelPricingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelPricings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelPricings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModelPricings.
+     */
+    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+  }
+
+  /**
+   * ModelPricing findFirstOrThrow
+   */
+  export type ModelPricingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter, which ModelPricing to fetch.
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelPricings to fetch.
+     */
+    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModelPricings.
+     */
+    cursor?: ModelPricingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelPricings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelPricings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModelPricings.
+     */
+    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+  }
+
+  /**
+   * ModelPricing findMany
+   */
+  export type ModelPricingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter, which ModelPricings to fetch.
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelPricings to fetch.
+     */
+    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ModelPricings.
+     */
+    cursor?: ModelPricingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelPricings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelPricings.
+     */
+    skip?: number
+    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+  }
+
+  /**
+   * ModelPricing create
+   */
+  export type ModelPricingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ModelPricing.
+     */
+    data: XOR<ModelPricingCreateInput, ModelPricingUncheckedCreateInput>
+  }
+
+  /**
+   * ModelPricing createMany
+   */
+  export type ModelPricingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ModelPricings.
+     */
+    data: ModelPricingCreateManyInput | ModelPricingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ModelPricing createManyAndReturn
+   */
+  export type ModelPricingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * The data used to create many ModelPricings.
+     */
+    data: ModelPricingCreateManyInput | ModelPricingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ModelPricing update
+   */
+  export type ModelPricingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ModelPricing.
+     */
+    data: XOR<ModelPricingUpdateInput, ModelPricingUncheckedUpdateInput>
+    /**
+     * Choose, which ModelPricing to update.
+     */
+    where: ModelPricingWhereUniqueInput
+  }
+
+  /**
+   * ModelPricing updateMany
+   */
+  export type ModelPricingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ModelPricings.
+     */
+    data: XOR<ModelPricingUpdateManyMutationInput, ModelPricingUncheckedUpdateManyInput>
+    /**
+     * Filter which ModelPricings to update
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * Limit how many ModelPricings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ModelPricing updateManyAndReturn
+   */
+  export type ModelPricingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * The data used to update ModelPricings.
+     */
+    data: XOR<ModelPricingUpdateManyMutationInput, ModelPricingUncheckedUpdateManyInput>
+    /**
+     * Filter which ModelPricings to update
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * Limit how many ModelPricings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ModelPricing upsert
+   */
+  export type ModelPricingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ModelPricing to update in case it exists.
+     */
+    where: ModelPricingWhereUniqueInput
+    /**
+     * In case the ModelPricing found by the `where` argument doesn't exist, create a new ModelPricing with this data.
+     */
+    create: XOR<ModelPricingCreateInput, ModelPricingUncheckedCreateInput>
+    /**
+     * In case the ModelPricing was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ModelPricingUpdateInput, ModelPricingUncheckedUpdateInput>
+  }
+
+  /**
+   * ModelPricing delete
+   */
+  export type ModelPricingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+    /**
+     * Filter which ModelPricing to delete.
+     */
+    where: ModelPricingWhereUniqueInput
+  }
+
+  /**
+   * ModelPricing deleteMany
+   */
+  export type ModelPricingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModelPricings to delete
+     */
+    where?: ModelPricingWhereInput
+    /**
+     * Limit how many ModelPricings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ModelPricing without action
+   */
+  export type ModelPricingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelPricing
+     */
+    select?: ModelPricingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelPricing
+     */
+    omit?: ModelPricingOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model BotChannel
    */
 
@@ -35123,6 +36377,25 @@ export namespace Prisma {
   export type BotSkillScalarFieldEnum = (typeof BotSkillScalarFieldEnum)[keyof typeof BotSkillScalarFieldEnum]
 
 
+  export const ModelPricingScalarFieldEnum: {
+    id: 'id',
+    model: 'model',
+    vendor: 'vendor',
+    inputPrice: 'inputPrice',
+    outputPrice: 'outputPrice',
+    displayName: 'displayName',
+    isEnabled: 'isEnabled',
+    priceUpdatedAt: 'priceUpdatedAt',
+    notes: 'notes',
+    isDeleted: 'isDeleted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
+  };
+
+  export type ModelPricingScalarFieldEnum = (typeof ModelPricingScalarFieldEnum)[keyof typeof ModelPricingScalarFieldEnum]
+
+
   export const BotChannelScalarFieldEnum: {
     id: 'id',
     botId: 'botId',
@@ -35424,6 +36697,20 @@ export namespace Prisma {
    * Reference to a field of type 'PluginCategory[]'
    */
   export type ListEnumPluginCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PluginCategory[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Decimal'
+   */
+  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+  /**
+   * Reference to a field of type 'Decimal[]'
+   */
+  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
 
 
@@ -37808,6 +39095,100 @@ export namespace Prisma {
     isEnabled?: BoolWithAggregatesFilter<"BotSkill"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
+  }
+
+  export type ModelPricingWhereInput = {
+    AND?: ModelPricingWhereInput | ModelPricingWhereInput[]
+    OR?: ModelPricingWhereInput[]
+    NOT?: ModelPricingWhereInput | ModelPricingWhereInput[]
+    id?: UuidFilter<"ModelPricing"> | string
+    model?: StringFilter<"ModelPricing"> | string
+    vendor?: StringFilter<"ModelPricing"> | string
+    inputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    displayName?: StringNullableFilter<"ModelPricing"> | string | null
+    isEnabled?: BoolFilter<"ModelPricing"> | boolean
+    priceUpdatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    notes?: StringNullableFilter<"ModelPricing"> | string | null
+    isDeleted?: BoolFilter<"ModelPricing"> | boolean
+    createdAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
+  }
+
+  export type ModelPricingOrderByWithRelationInput = {
+    id?: SortOrder
+    model?: SortOrder
+    vendor?: SortOrder
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+    displayName?: SortOrderInput | SortOrder
+    isEnabled?: SortOrder
+    priceUpdatedAt?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+  }
+
+  export type ModelPricingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    model?: string
+    AND?: ModelPricingWhereInput | ModelPricingWhereInput[]
+    OR?: ModelPricingWhereInput[]
+    NOT?: ModelPricingWhereInput | ModelPricingWhereInput[]
+    vendor?: StringFilter<"ModelPricing"> | string
+    inputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    displayName?: StringNullableFilter<"ModelPricing"> | string | null
+    isEnabled?: BoolFilter<"ModelPricing"> | boolean
+    priceUpdatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    notes?: StringNullableFilter<"ModelPricing"> | string | null
+    isDeleted?: BoolFilter<"ModelPricing"> | boolean
+    createdAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
+  }, "id" | "model">
+
+  export type ModelPricingOrderByWithAggregationInput = {
+    id?: SortOrder
+    model?: SortOrder
+    vendor?: SortOrder
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+    displayName?: SortOrderInput | SortOrder
+    isEnabled?: SortOrder
+    priceUpdatedAt?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    _count?: ModelPricingCountOrderByAggregateInput
+    _avg?: ModelPricingAvgOrderByAggregateInput
+    _max?: ModelPricingMaxOrderByAggregateInput
+    _min?: ModelPricingMinOrderByAggregateInput
+    _sum?: ModelPricingSumOrderByAggregateInput
+  }
+
+  export type ModelPricingScalarWhereWithAggregatesInput = {
+    AND?: ModelPricingScalarWhereWithAggregatesInput | ModelPricingScalarWhereWithAggregatesInput[]
+    OR?: ModelPricingScalarWhereWithAggregatesInput[]
+    NOT?: ModelPricingScalarWhereWithAggregatesInput | ModelPricingScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ModelPricing"> | string
+    model?: StringWithAggregatesFilter<"ModelPricing"> | string
+    vendor?: StringWithAggregatesFilter<"ModelPricing"> | string
+    inputPrice?: DecimalWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
+    displayName?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
+    isEnabled?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
+    priceUpdatedAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
+    notes?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
+    isDeleted?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"ModelPricing"> | Date | string | null
   }
 
   export type BotChannelWhereInput = {
@@ -40621,6 +42002,118 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ModelPricingCreateInput = {
+    id?: string
+    model: string
+    vendor: string
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    displayName?: string | null
+    isEnabled?: boolean
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ModelPricingUncheckedCreateInput = {
+    id?: string
+    model: string
+    vendor: string
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    displayName?: string | null
+    isEnabled?: boolean
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ModelPricingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ModelPricingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ModelPricingCreateManyInput = {
+    id?: string
+    model: string
+    vendor: string
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    displayName?: string | null
+    isEnabled?: boolean
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type ModelPricingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ModelPricingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type BotChannelCreateInput = {
     id?: string
     channelType: string
@@ -42749,6 +44242,91 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type DecimalFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ModelPricingCountOrderByAggregateInput = {
+    id?: SortOrder
+    model?: SortOrder
+    vendor?: SortOrder
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+    displayName?: SortOrder
+    isEnabled?: SortOrder
+    priceUpdatedAt?: SortOrder
+    notes?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ModelPricingAvgOrderByAggregateInput = {
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+  }
+
+  export type ModelPricingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    model?: SortOrder
+    vendor?: SortOrder
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+    displayName?: SortOrder
+    isEnabled?: SortOrder
+    priceUpdatedAt?: SortOrder
+    notes?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ModelPricingMinOrderByAggregateInput = {
+    id?: SortOrder
+    model?: SortOrder
+    vendor?: SortOrder
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+    displayName?: SortOrder
+    isEnabled?: SortOrder
+    priceUpdatedAt?: SortOrder
+    notes?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type ModelPricingSumOrderByAggregateInput = {
+    inputPrice?: SortOrder
+    outputPrice?: SortOrder
+  }
+
+  export type DecimalWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedDecimalFilter<$PrismaModel>
+    _sum?: NestedDecimalFilter<$PrismaModel>
+    _min?: NestedDecimalFilter<$PrismaModel>
+    _max?: NestedDecimalFilter<$PrismaModel>
+  }
+
   export type EnumChannelConnectionStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ChannelConnectionStatus | EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ChannelConnectionStatus[] | ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
@@ -44462,6 +46040,14 @@ export namespace Prisma {
     update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutInstallationsInput, SkillUpdateWithoutInstallationsInput>, SkillUncheckedUpdateWithoutInstallationsInput>
   }
 
+  export type DecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
   export type BotCreateNestedOneWithoutChannelsInput = {
     create?: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
     connectOrCreate?: BotCreateOrConnectWithoutChannelsInput
@@ -44978,6 +46564,33 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPluginCategoryFilter<$PrismaModel>
     _max?: NestedEnumPluginCategoryFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedDecimalFilter<$PrismaModel>
+    _sum?: NestedDecimalFilter<$PrismaModel>
+    _min?: NestedDecimalFilter<$PrismaModel>
+    _max?: NestedDecimalFilter<$PrismaModel>
   }
 
   export type NestedEnumChannelConnectionStatusFilter<$PrismaModel = never> = {

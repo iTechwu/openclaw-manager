@@ -280,6 +280,40 @@ export const botContract = c.router(
       },
       summary: '运行 Bot 诊断',
     },
+
+    // ============================================================================
+    // Bot Logs
+    // ============================================================================
+
+    /**
+     * GET /bot/:hostname/logs - 获取 Bot 容器日志
+     */
+    getLogs: {
+      method: 'GET',
+      path: '/:hostname/logs',
+      pathParams: z.object({ hostname: z.string() }),
+      query: z.object({
+        tail: z.coerce.number().positive().optional().default(100),
+        since: z.coerce.number().optional(),
+      }),
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            logs: z.array(
+              z.object({
+                id: z.string(),
+                timestamp: z.string(),
+                level: z.enum(['info', 'warn', 'error', 'debug']),
+                message: z.string(),
+              }),
+            ),
+            containerId: z.string().nullable(),
+          }),
+        ),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取 Bot 容器日志',
+    },
   },
   {
     pathPrefix: '/bot',
