@@ -5,7 +5,7 @@ import {
   NotificationItemSchema,
   NotificationListQuerySchema,
   NotificationListResponseSchema,
-  UnreadCountResponseSchema,
+  NotificationUnreadCountResponseSchema,
   MarkReadRequestSchema,
   MarkReadResponseSchema,
 } from '../schemas/notification.schema';
@@ -53,7 +53,7 @@ export const notificationContract = c.router(
       method: 'GET',
       path: '/notifications/unread-count',
       responses: {
-        200: createApiResponse(UnreadCountResponseSchema),
+        200: createApiResponse(NotificationUnreadCountResponseSchema),
       },
       summary: '获取未读通知数量',
       description: '获取当前用户的未读通知数量',

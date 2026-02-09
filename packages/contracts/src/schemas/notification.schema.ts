@@ -57,10 +57,10 @@ export type NotificationListResponse = z.infer<typeof NotificationListResponseSc
 /**
  * 未读通知数量响应
  */
-export const UnreadCountResponseSchema = z.object({
+export const NotificationUnreadCountResponseSchema = z.object({
   count: z.number(),
 });
-export type UnreadCountResponse = z.infer<typeof UnreadCountResponseSchema>;
+export type NotificationUnreadCountResponse = z.infer<typeof NotificationUnreadCountResponseSchema>;
 
 /**
  * 标记已读请求 Schema

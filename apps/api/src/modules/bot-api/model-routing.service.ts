@@ -255,7 +255,7 @@ export class ModelRoutingService {
         model: s.model,
         vendor: s.vendor,
         requestCount: s.requestCount,
-        successRate: s.successRate,
+        successRate: s.requestCount > 0 ? s.successCount / s.requestCount : 0,
         avgLatencyMs: s.avgLatencyMs,
       })),
     };

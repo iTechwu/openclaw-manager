@@ -238,8 +238,8 @@ export const RoutingStatisticsSchema = z.object({
   avgLatencyMs: z.number(),
   targetStats: z.array(
     z.object({
-      providerKeyId: z.string().uuid(),
       model: z.string(),
+      vendor: z.string(),
       requestCount: z.number(),
       successRate: z.number(),
       avgLatencyMs: z.number(),
