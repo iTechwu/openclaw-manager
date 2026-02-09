@@ -75,6 +75,34 @@ export class ProxyService {
   ): Promise<ProxyResult> {
     const { vendor, path, method, headers, body, botToken } = params;
 
+    // Log incoming request from openclawClient (concise summary)
+    this.logger.info(`[Proxy] Incoming request: ${method} ${vendor}${path}`);
+    if (body && body.length > 0) {
+      try {
+        const bodyJson = JSON.parse(body.toString('utf-8'));
+        // Log only key fields to avoid verbose output
+        const summary = {
+          model: bodyJson.model,
+          stream: bodyJson.stream,
+          messagesCount: Array.isArray(bodyJson.messages)
+            ? bodyJson.messages.length
+            : Array.isArray(bodyJson.input)
+              ? bodyJson.input.length
+              : 0,
+          toolsCount: Array.isArray(bodyJson.tools) ? bodyJson.tools.length : 0,
+          max_tokens:
+            bodyJson.max_tokens ||
+            bodyJson.max_output_tokens ||
+            bodyJson.max_completion_tokens,
+        };
+        this.logger.info(`[Proxy] Request summary: ${JSON.stringify(summary)}`);
+      } catch {
+        this.logger.info(
+          `[Proxy] Request body (raw, truncated): ${body.toString('utf-8').substring(0, 500)}`,
+        );
+      }
+    }
+
     // 解析 URL vendor 获取 apiType 和是否为 custom provider
     // 规则: ${apiType}${isCustom ? '-compatible' : ''}
     // 例如: openai-compatible → apiType=openai, isCustom=true

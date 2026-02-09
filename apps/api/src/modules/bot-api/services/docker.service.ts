@@ -333,6 +333,15 @@ export class DockerService implements OnModuleInit {
           : getBaseUrlEnvName(options.aiProvider);
       envVars.push(`${baseUrlEnvName}=${proxyEndpoint}`);
 
+      // Set the API key environment variable directly for OpenClaw
+      // OpenClaw reads API keys from standard environment variables at startup
+      // Use proxy token as the API key for authentication with the proxy
+      const apiKeyEnvName =
+        options.aiProvider === 'custom' && options.apiType
+          ? getApiKeyEnvName(options.apiType)
+          : getApiKeyEnvName(options.aiProvider);
+      envVars.push(`${apiKeyEnvName}=${options.proxyToken}`);
+
       this.logger.log(
         `Container ${options.hostname} configured in zero-trust mode with proxy: ${proxyEndpoint} (vendor: ${proxyVendor})`,
       );
@@ -392,64 +401,37 @@ export class DockerService implements OnModuleInit {
       Entrypoint: ['/bin/sh', '-c'],
       Cmd: [
         `
+        # IMPORTANT: OpenClaw's OpenAI SDK reads OPENAI_BASE_URL at initialization time
+        # We use the standard 'openai' provider (not 'openai-compatible') because:
+        # 1. OpenAI SDK automatically reads OPENAI_BASE_URL environment variable
+        # 2. The 'openai-compatible' provider has known integration gaps (GitHub Issue #9498)
+        # 3. Using standard provider ensures SDK uses our custom base URL
+
         # Determine the provider for auth configuration and model prefix
         PROVIDER="${options.aiProvider}"
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
-          # For custom provider, use AI_API_TYPE directly as the model provider
+          # For custom provider, use AI_API_TYPE as the provider
           # OpenClaw expects standard provider names like 'openai', 'anthropic', etc.
-          # AUTH_PROVIDER is used for API key environment variable naming
           AUTH_PROVIDER="$AI_API_TYPE"
-          # When using a proxy (PROXY_URL is set), use {apiType}-compatible as the model provider
-          # This tells OpenClaw to use the custom base_url for API requests
-          # The vendor mapping rule is: \${apiType}\${vendor === 'custom' ? '-compatible' : ''}
-          if [ -n "$PROXY_URL" ]; then
-            MODEL_PROVIDER="$AI_API_TYPE-compatible"
-          else
-            MODEL_PROVIDER="$AI_API_TYPE"
-          fi
+          # IMPORTANT: Always use standard provider name (not -compatible)
+          # The OpenAI SDK will use OPENAI_BASE_URL environment variable for custom endpoint
+          MODEL_PROVIDER="$AI_API_TYPE"
         else
           AUTH_PROVIDER="$PROVIDER"
-          # When using a proxy with standard providers, also use {apiType}-compatible
-          if [ -n "$PROXY_URL" ]; then
-            MODEL_PROVIDER="$PROVIDER-compatible"
-          else
-            MODEL_PROVIDER="$PROVIDER"
-          fi
+          MODEL_PROVIDER="$PROVIDER"
         fi
 
         # Set the model if AI_MODEL is provided
         # OpenClaw expects model format: provider/model-name
-        # For *-compatible providers, we use AUTH_PROVIDER (e.g., openai) as the model prefix
-        # because OpenClaw doesn't recognize *-compatible as a valid provider name
-        # The custom base_url is configured via OPENAI_BASE_URL environment variable
         if [ -n "$AI_MODEL" ]; then
           # Check if model already has a provider prefix (contains /)
           if echo "$AI_MODEL" | grep -q "/"; then
             FULL_MODEL="$AI_MODEL"
           else
-            # For *-compatible providers, use AUTH_PROVIDER (e.g., openai) as prefix
-            # For standard providers, use MODEL_PROVIDER
-            if echo "$MODEL_PROVIDER" | grep -q -- "-compatible$"; then
-              # Use AUTH_PROVIDER (e.g., openai) so OpenClaw recognizes the provider
-              # The custom base_url is already set via OPENAI_BASE_URL
-              FULL_MODEL="$AUTH_PROVIDER/$AI_MODEL"
-              echo "Using *-compatible provider ($MODEL_PROVIDER), setting model with standard provider prefix: $FULL_MODEL"
-            else
-              # Add provider prefix for OpenClaw
-              FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
-            fi
+            # Add provider prefix for OpenClaw
+            FULL_MODEL="$AUTH_PROVIDER/$AI_MODEL"
           fi
           echo "Setting model to: $FULL_MODEL"
-
-          # For custom providers with base URL, try to add the model with --base-url option
-          # This tells OpenClaw to use a custom API endpoint for this model
-          if [ -n "$OPENAI_BASE_URL" ]; then
-            echo "Adding model with custom base URL: $OPENAI_BASE_URL"
-            # Try openclaw models add with --base-url option
-            node /app/openclaw.mjs models add "$FULL_MODEL" --base-url "$OPENAI_BASE_URL" 2>/dev/null || \
-            node /app/openclaw.mjs models add "$FULL_MODEL" --baseUrl "$OPENAI_BASE_URL" 2>/dev/null || \
-            echo "Warning: Failed to add model with base URL, falling back to models set"
-          fi
 
           # Set the model using openclaw models set
           node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model via CLI"
@@ -527,52 +509,11 @@ export class DockerService implements OnModuleInit {
         JSON_CONFIG_FILE="$CONFIG_DIR/openclaw.json"
         mkdir -p "$CONFIG_DIR"
 
-        # Build openclaw.json with custom provider configuration if using proxy
-        # Based on OpenClaw's models.providers configuration pattern
+        # Build openclaw.json - simple configuration
+        # IMPORTANT: We rely on OPENAI_BASE_URL and OPENAI_API_KEY environment variables
+        # for the OpenAI SDK to use our custom endpoint. The SDK reads these at initialization.
         echo "Creating openclaw.json with gateway token authentication..."
-        if [ -n "$OPENAI_BASE_URL" ] && echo "$MODEL_PROVIDER" | grep -q -- "-compatible$"; then
-          # Custom provider with base URL - configure under models.providers
-          # This tells OpenClaw to use a custom API endpoint
-          # The models array is required by OpenClaw's config validation
-          cat > "$JSON_CONFIG_FILE" << JSON_EOF
-{
-  "gateway": {
-    "mode": "local",
-    "port": $BOT_PORT,
-    "bind": "lan",
-    "auth": {
-      "mode": "token",
-      "token": "$OPENCLAW_GATEWAY_TOKEN"
-    },
-    "controlUi": {
-      "enabled": true,
-      "allowInsecureAuth": true
-    }
-  },
-  "agents": {
-    "defaults": {
-      "workspace": "$BOT_WORKSPACE_DIR"
-    }
-  },
-  "models": {
-    "providers": {
-      "$AUTH_PROVIDER": {
-        "baseUrl": "$OPENAI_BASE_URL",
-        "apiKey": "$API_KEY",
-        "models": [
-          {
-            "id": "$AI_MODEL",
-            "name": "$AI_MODEL"
-          }
-        ]
-      }
-    }
-  }
-}
-JSON_EOF
-        else
-          # Standard configuration without custom provider
-          cat > "$JSON_CONFIG_FILE" << JSON_EOF
+        cat > "$JSON_CONFIG_FILE" << JSON_EOF
 {
   "gateway": {
     "mode": "local",
@@ -594,7 +535,6 @@ JSON_EOF
   }
 }
 JSON_EOF
-        fi
         echo "Created openclaw.json:"
         cat "$JSON_CONFIG_FILE"
 
@@ -604,29 +544,14 @@ JSON_EOF
         mkdir -p "$AUTH_PROFILES_DIR"
         AUTH_PROFILES_FILE="$AUTH_PROFILES_DIR/auth-profiles.json"
 
-        # Determine the provider name for auth-profiles.json
-        # For {apiType}-compatible providers, we still need to provide the key under a recognized provider name
-        # Check if MODEL_PROVIDER ends with -compatible
-        if echo "$MODEL_PROVIDER" | grep -q -- "-compatible$"; then
-          AUTH_PROFILE_PROVIDER="$MODEL_PROVIDER"
-        else
-          AUTH_PROFILE_PROVIDER="$AUTH_PROVIDER"
-        fi
-
-        # Build auth-profiles.json with baseUrl if using custom provider
-        # OpenClaw reads baseUrl from auth-profiles.json to override the default API endpoint
-        # Try both baseUrl and baseURL since different SDKs use different naming conventions
-        echo "Creating auth-profiles.json for provider: $AUTH_PROFILE_PROVIDER"
+        # Build auth-profiles.json with baseUrl for the provider
+        # Include both baseUrl and baseURL since different SDKs use different naming conventions
+        echo "Creating auth-profiles.json for provider: $AUTH_PROVIDER"
         if [ -n "$OPENAI_BASE_URL" ]; then
           # Include both baseUrl and baseURL for compatibility
           cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
 {
-  "$AUTH_PROFILE_PROVIDER": {
-    "apiKey": "$API_KEY",
-    "baseUrl": "$OPENAI_BASE_URL",
-    "baseURL": "$OPENAI_BASE_URL"
-  },
-  "openai": {
+  "$AUTH_PROVIDER": {
     "apiKey": "$API_KEY",
     "baseUrl": "$OPENAI_BASE_URL",
     "baseURL": "$OPENAI_BASE_URL"
@@ -637,10 +562,7 @@ AUTH_EOF
           # No custom base URL
           cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
 {
-  "$AUTH_PROFILE_PROVIDER": {
-    "apiKey": "$API_KEY"
-  },
-  "openai": {
+  "$AUTH_PROVIDER": {
     "apiKey": "$API_KEY"
   }
 }
@@ -655,34 +577,47 @@ AUTH_EOF
         echo "Running openclaw doctor --fix to clean up config..."
         node /app/openclaw.mjs doctor --fix 2>/dev/null || true
 
+        # CRITICAL: Configure the base URL using openclaw config set AFTER doctor --fix
+        # doctor --fix overwrites our configuration, so we must set it again
+        # OpenClaw reads models.providers.<provider>.baseUrl for API endpoint
+        if [ -n "$OPENAI_BASE_URL" ]; then
+          echo "Setting OpenAI base URL via config: $OPENAI_BASE_URL"
+          # Set the base URL for the openai provider
+          node /app/openclaw.mjs config set models.providers.openai.baseUrl "$OPENAI_BASE_URL" 2>/dev/null || echo "Warning: Failed to set baseUrl via config"
+          # Also set models array to avoid validation errors
+          node /app/openclaw.mjs config set models.providers.openai.models '[]' 2>/dev/null || true
+
+          # Fallback: Directly patch the openclaw.json file using node
+          # This ensures the base URL is set even if config set doesn't work
+          echo "Patching openclaw.json with models.providers configuration..."
+          node -e "
+            const fs = require('fs');
+            const configPath = '$JSON_CONFIG_FILE';
+            try {
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              config.models = config.models || {};
+              config.models.providers = config.models.providers || {};
+              config.models.providers.openai = config.models.providers.openai || {};
+              config.models.providers.openai.baseUrl = '$OPENAI_BASE_URL';
+              config.models.providers.openai.models = [];
+              fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+              console.log('Successfully patched openclaw.json with baseUrl');
+            } catch (e) {
+              console.error('Failed to patch config:', e.message);
+            }
+          " 2>/dev/null || echo "Warning: Failed to patch config file"
+        fi
+
         # Set the model again after doctor --fix to ensure it's not overwritten
         if [ -n "$FULL_MODEL" ]; then
           echo "Re-setting model after doctor: $FULL_MODEL"
           node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model"
         fi
 
-        # For {apiType}-compatible provider, create a config.yaml file with base_url
-        # OpenClaw reads LLM configuration from ~/.openclaw/config.yaml
-        # Check if MODEL_PROVIDER ends with -compatible and we have a base URL
-        if echo "$MODEL_PROVIDER" | grep -q -- "-compatible$" && [ -n "$OPENAI_BASE_URL" ]; then
-          CONFIG_FILE="$CONFIG_DIR/config.yaml"
-
-          echo "Creating OpenClaw config.yaml for $MODEL_PROVIDER provider..."
-          cat > "$CONFIG_FILE" << YAML_EOF
-# OpenClaw LLM Configuration (auto-generated by clawbot-manager)
-llm:
-  provider: $MODEL_PROVIDER
-  base_url: "$OPENAI_BASE_URL"
-  api_key: "$API_KEY"
-  model: "$AI_MODEL"
-  max_tokens: 4096
-  temperature: 0.7
-YAML_EOF
-          echo "Created config.yaml with base_url: $OPENAI_BASE_URL"
-          cat "$CONFIG_FILE"
-        else
-          echo "Not using *-compatible provider, skipping config.yaml creation"
-        fi
+        # Debug: Show final openclaw.json configuration
+        echo "=== Final openclaw.json ==="
+        cat "$JSON_CONFIG_FILE" 2>/dev/null || echo "Config file not found"
+        echo "==========================="
 
         # Debug: Output all relevant environment variables
         echo "=== Environment Configuration ==="

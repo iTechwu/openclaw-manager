@@ -210,12 +210,66 @@ export class UpstreamService {
           proxyRes.on('end', () => {
             rawResponse.end();
 
+            // Log response data for debugging (concise summary)
+            const responseData = Buffer.concat(responseChunks).toString('utf-8');
+            if (responseData.length > 0) {
+              // For SSE responses, extract usage from last event; for JSON, extract key fields
+              if (contentType?.includes('text/event-stream')) {
+                // Try to extract usage info from the last SSE event
+                const lines = responseData.split('\n').filter((l) => l.trim());
+                let usageSummary = {};
+                try {
+                  // Find the last data line that contains usage info
+                  for (let i = lines.length - 1; i >= 0; i--) {
+                    const line = lines[i];
+                    if (line.startsWith('data:')) {
+                      const jsonStr = line.slice(5).trim();
+                      if (jsonStr && jsonStr !== '[DONE]') {
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed.usage) {
+                          usageSummary = {
+                            model: parsed.model,
+                            input_tokens: parsed.usage.input_tokens || parsed.usage.prompt_tokens,
+                            output_tokens: parsed.usage.output_tokens || parsed.usage.completion_tokens,
+                            total_tokens: parsed.usage.total_tokens,
+                          };
+                          break;
+                        }
+                      }
+                    }
+                  }
+                } catch {
+                  // Ignore parse errors
+                }
+                this.logger.info(
+                  `[Proxy] Response: status=${statusCode}, events=${lines.length}, usage=${JSON.stringify(usageSummary)}`,
+                );
+              } else {
+                try {
+                  const jsonResponse = JSON.parse(responseData);
+                  // Extract key fields for summary
+                  const summary = {
+                    model: jsonResponse.model,
+                    usage: jsonResponse.usage,
+                    error: jsonResponse.error,
+                  };
+                  this.logger.info(
+                    `[Proxy] Response: status=${statusCode}, summary=${JSON.stringify(summary)}`,
+                  );
+                } catch {
+                  this.logger.info(
+                    `[Proxy] Response: status=${statusCode}, body (truncated)=${responseData.substring(0, 500)}`,
+                  );
+                }
+              }
+            } else {
+              this.logger.info(`[Proxy] Response: status=${statusCode}, empty body`);
+            }
+
             // 提取 token 使用量
             let tokenUsage: TokenUsage | null = null;
             if (vendor && statusCode >= 200 && statusCode < 300) {
               try {
-                const responseData =
-                  Buffer.concat(responseChunks).toString('utf-8');
                 tokenUsage = this.tokenExtractor.extractFromResponse(
                   vendor,
                   responseData,

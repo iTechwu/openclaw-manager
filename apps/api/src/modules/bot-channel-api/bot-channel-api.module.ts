@@ -9,6 +9,7 @@ import { RedisModule } from '@app/redis';
 import { BotChannelApiController } from './bot-channel-api.controller';
 import { BotChannelApiService } from './bot-channel-api.service';
 import { BotChannelStartupService } from './bot-channel-startup.service';
+import { FeishuMessageHandlerService } from './feishu-message-handler.service';
 import {
   BotChannelModule,
   BotModule,
@@ -36,7 +37,11 @@ import { OpenClawModule } from '@app/clients/internal/openclaw';
     OpenClawModule,
   ],
   controllers: [BotChannelApiController],
-  providers: [BotChannelApiService, BotChannelStartupService],
+  providers: [
+    BotChannelApiService,
+    BotChannelStartupService,
+    FeishuMessageHandlerService,
+  ],
   exports: [BotChannelApiService],
 })
 export class BotChannelApiModule {}

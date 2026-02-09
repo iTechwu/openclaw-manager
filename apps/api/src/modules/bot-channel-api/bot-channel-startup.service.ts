@@ -5,15 +5,14 @@
  * - 应用启动时自动重连所有已启用的飞书渠道
  * - 确保长连接在应用重启后能够自动恢复
  * - 提供连接验证和重试机制
- * - 处理飞书消息并转发到 OpenClaw
  */
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { BotChannelService, BotService } from '@app/db';
+import { BotChannelService } from '@app/db';
 import { CryptClient } from '@app/clients/internal/crypt';
 import { FeishuClientService } from '@app/clients/internal/feishu';
-import { OpenClawClient } from '@app/clients/internal/openclaw';
+import { FeishuMessageHandlerService } from './feishu-message-handler.service';
 
 // 连接配置
 const CONNECTION_CONFIG = {
@@ -40,10 +39,9 @@ export class BotChannelStartupService implements OnModuleInit {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botChannelDb: BotChannelService,
-    private readonly botDb: BotService,
     private readonly cryptClient: CryptClient,
     private readonly feishuClientService: FeishuClientService,
-    private readonly openClawClient: OpenClawClient,
+    private readonly feishuMessageHandler: FeishuMessageHandlerService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -231,7 +229,7 @@ export class BotChannelStartupService implements OnModuleInit {
 
     const config = (channel.config as Record<string, unknown>) || {};
 
-    // 创建连接
+    // 创建连接，使用共享的消息处理器
     await this.feishuClientService.createConnection(
       channel.id,
       {
@@ -244,130 +242,11 @@ export class BotChannelStartupService implements OnModuleInit {
         showTyping: (config.showTyping as boolean) ?? true,
         domain: (config.domain as 'feishu' | 'lark') ?? 'feishu',
       },
-      async (event) => {
-        await this.handleFeishuMessage(channel, event);
-      },
+      this.feishuMessageHandler.createHandler(channel),
     );
 
     // 建立 WebSocket 连接
     await this.feishuClientService.connect(channel.id);
-  }
-
-  /**
-   * 处理飞书消息
-   */
-  private async handleFeishuMessage(channel: any, event: any): Promise<void> {
-    const messageId = event.event?.message?.message_id;
-    const chatId = event.event?.message?.chat_id;
-    const messageType = event.event?.message?.message_type;
-    const rawContent = event.event?.message?.content;
-
-    // 解析消息内容
-    let messageText = '';
-    try {
-      if (rawContent) {
-        const content = JSON.parse(rawContent);
-        messageText = content.text || '';
-      }
-    } catch {
-      messageText = rawContent || '';
-    }
-
-    this.logger.info('========== 收到飞书消息 ==========', {
-      channelId: channel.id,
-      botId: channel.botId,
-      messageId,
-      chatId,
-      messageType,
-      messageText,
-    });
-
-    // 只处理文本消息
-    if (messageType !== 'text' || !messageText.trim()) {
-      this.logger.debug('跳过非文本消息或空消息', { messageType, messageText });
-      return;
-    }
-
-    try {
-      // 获取关联的 Bot
-      const bot = await this.botDb.getById(channel.botId);
-      if (!bot) {
-        this.logger.error('找不到关联的 Bot（可能已删除），断开飞书连接', {
-          botId: channel.botId,
-          channelId: channel.id,
-        });
-        // 断开飞书连接
-        await this.feishuClientService.destroyConnection(channel.id);
-        // 更新渠道状态
-        await this.botChannelDb.update(
-          { id: channel.id },
-          {
-            connectionStatus: 'DISCONNECTED',
-            lastError: 'Bot 已删除，连接已断开',
-          },
-        );
-        return;
-      }
-
-      // 检查 Bot 是否运行中
-      if (bot.status !== 'running') {
-        this.logger.warn('Bot 未运行，跳过消息处理', {
-          botId: bot.id,
-          status: bot.status,
-        });
-        return;
-      }
-
-      // 检查 Bot 端口和 token
-      if (!bot.port || !bot.gatewayToken) {
-        this.logger.error('Bot 缺少端口或 token', {
-          botId: bot.id,
-          port: bot.port,
-          hasToken: !!bot.gatewayToken,
-        });
-        return;
-      }
-
-      this.logger.info('转发消息到 OpenClaw', {
-        botId: bot.id,
-        botName: bot.name,
-        port: bot.port,
-        messageLength: messageText.length,
-      });
-
-      // 发送消息到 OpenClaw
-      const aiResponse = await this.openClawClient.chat(
-        bot.port,
-        bot.gatewayToken,
-        messageText,
-      );
-
-      this.logger.info('收到 OpenClaw 响应', {
-        botId: bot.id,
-        responseLength: aiResponse.length,
-      });
-
-      // 回复飞书消息
-      if (aiResponse) {
-        const apiClient = this.feishuClientService.getApiClient(channel.id);
-        if (apiClient) {
-          await apiClient.replyMessage(messageId, aiResponse);
-          this.logger.info('已回复飞书消息', {
-            channelId: channel.id,
-            messageId,
-            responseLength: aiResponse.length,
-          });
-        } else {
-          this.logger.error('找不到飞书 API 客户端', { channelId: channel.id });
-        }
-      }
-    } catch (error) {
-      this.logger.error('处理飞书消息失败', {
-        channelId: channel.id,
-        messageId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
   }
 
   /**

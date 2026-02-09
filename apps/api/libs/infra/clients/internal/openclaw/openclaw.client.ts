@@ -185,6 +185,9 @@ export class OpenClawClient {
             event: frame.event,
             ok: frame.ok,
             id: frame.id,
+            payload: frame.payload
+              ? JSON.stringify(frame.payload).substring(0, 500)
+              : undefined,
           });
 
           // 处理 hello-ok 响应（connect 成功 - 旧协议）
@@ -245,13 +248,75 @@ export class OpenClawClient {
           if (frame.type === 'event') {
             const { event, payload } = frame;
 
-            // 处理聊天事件
+            // 处理 agent 事件（流式文本）
+            // 格式: { stream: 'assistant', data: { text: '...' } }
+            if (event === 'agent' && payload?.stream === 'assistant' && payload?.data?.text) {
+              // 流式文本累积 - 但 agent 事件发送的是累积文本，不是增量
+              // 所以我们只保存最新的完整文本
+              responseText = payload.data.text;
+              this.logger.debug('OpenClawClient: 收到 agent 流式文本', {
+                textLength: responseText.length,
+              });
+              return;
+            }
+
+            // 处理 agent lifecycle 事件（结束信号）
+            // 格式: { stream: 'lifecycle', data: { phase: 'end' } }
+            if (event === 'agent' && payload?.stream === 'lifecycle' && payload?.data?.phase === 'end') {
+              this.logger.info('OpenClawClient: agent 生命周期结束', {
+                responseLength: responseText.length,
+              });
+              // 不在这里 resolve，等待 chat 事件的 final 状态
+              return;
+            }
+
+            // 处理 chat 事件（最终结果）
+            // 格式: { state: 'final', message: { role: 'assistant', content: [{ type: 'text', text: '...' }] } }
             if (event === 'chat') {
               const chatEvent = payload;
+              this.logger.info('OpenClawClient: 处理 chat 事件', {
+                state: chatEvent?.state,
+                hasMessage: !!chatEvent?.message,
+                currentResponseLength: responseText.length,
+              });
+
+              // 处理 final 状态 - 提取最终文本
+              if (chatEvent?.state === 'final' && chatEvent?.message?.content) {
+                const content = chatEvent.message.content;
+                let finalText = '';
+                for (const item of content) {
+                  if (item.type === 'text' && item.text) {
+                    finalText += item.text;
+                  }
+                }
+                if (finalText) {
+                  responseText = finalText;
+                }
+                this.logger.info('OpenClawClient: 聊天完成 (final)', {
+                  finalResponseLength: responseText.length,
+                  responsePreview: responseText.substring(0, 200),
+                });
+                if (!isResolved) {
+                  isResolved = true;
+                  clearTimeout(timeoutId);
+                  ws.close();
+                  resolve(responseText);
+                }
+                return;
+              }
+
+              // 兼容旧格式: payload.type === 'text' / 'result' / 'error'
               if (chatEvent?.type === 'text' && chatEvent?.text) {
                 responseText += chatEvent.text;
+                this.logger.debug('OpenClawClient: 累积响应文本 (旧格式)', {
+                  addedLength: chatEvent.text.length,
+                  totalLength: responseText.length,
+                });
               } else if (chatEvent?.type === 'result') {
-                // 聊天完成
+                this.logger.info('OpenClawClient: 聊天完成 (result)', {
+                  finalResponseLength: responseText.length,
+                  responsePreview: responseText.substring(0, 200),
+                });
                 if (!isResolved) {
                   isResolved = true;
                   clearTimeout(timeoutId);
@@ -259,6 +324,9 @@ export class OpenClawClient {
                   resolve(responseText);
                 }
               } else if (chatEvent?.type === 'error') {
+                this.logger.error('OpenClawClient: 聊天错误', {
+                  errorMessage: chatEvent.message,
+                });
                 if (!isResolved) {
                   isResolved = true;
                   clearTimeout(timeoutId);

@@ -28,6 +28,8 @@ export class ProxyController {
     // 提取 Authorization header
     const auth = req.headers.authorization;
     console.log('techwu auth', auth);
+    console.log('techwu path', path);
+    console.log('techwu vendor', vendor);
     if (!auth || !auth.startsWith('Bearer ')) {
       reply.status(401).send({ error: 'Missing authorization' });
       return;
@@ -59,7 +61,7 @@ export class ProxyController {
 
     // 获取原始响应对象用于流式传输
     const rawResponse = reply.raw;
-
+    console.log('techwu rawResponse', headers, req.body);
     // 处理代理请求
     const result = await this.proxyService.handleProxyRequest(
       {
