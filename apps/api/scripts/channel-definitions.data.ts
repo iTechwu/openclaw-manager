@@ -197,4 +197,19 @@ export const CHANNEL_DEFINITIONS: ChannelDefinitionData[] = [
       { key: 'channelSecret', label: 'Channel Secret', placeholder: 'xxx...', fieldType: 'password', required: true, sortOrder: 2 },
     ],
   },
+  {
+    id: 'webchat',
+    label: 'Web Chat',
+    icon: 'webchat',
+    popular: true,
+    popularLocales: ['zh-CN', 'zh', 'en'],
+    tokenHint: 'Web Chat 嵌入式聊天组件配置',
+    tokenPlaceholder: 'API key...',
+    helpText: 'Web Chat - 嵌入式网页聊天组件',
+    sortOrder: 11,
+    credentials: [
+      { key: 'apiKey', label: 'API Key', placeholder: 'xxx...', fieldType: 'password', required: false, sortOrder: 1 },
+      { key: 'allowedOrigins', label: 'Allowed Origins', placeholder: 'https://example.com', fieldType: 'text', required: false, sortOrder: 2 },
+    ],
+  },
 ];

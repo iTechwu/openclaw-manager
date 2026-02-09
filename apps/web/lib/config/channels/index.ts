@@ -30,6 +30,7 @@ import {
   googlechat,
   webex,
   web,
+  webchat,
   webhook,
 } from './definitions';
 
@@ -66,6 +67,7 @@ export const CHANNELS: ChannelDefinition[] = [
   googlechat,
   webex,
   web,
+  webchat,
   webhook,
 ];
 
@@ -108,5 +110,6 @@ export {
   googlechat,
   webex,
   web,
+  webchat,
   webhook,
 };

@@ -440,6 +440,17 @@ export class DockerService implements OnModuleInit {
             fi
           fi
           echo "Setting model to: $FULL_MODEL"
+
+          # For custom providers with base URL, try to add the model with --base-url option
+          # This tells OpenClaw to use a custom API endpoint for this model
+          if [ -n "$OPENAI_BASE_URL" ]; then
+            echo "Adding model with custom base URL: $OPENAI_BASE_URL"
+            # Try openclaw models add with --base-url option
+            node /app/openclaw.mjs models add "$FULL_MODEL" --base-url "$OPENAI_BASE_URL" 2>/dev/null || \
+            node /app/openclaw.mjs models add "$FULL_MODEL" --baseUrl "$OPENAI_BASE_URL" 2>/dev/null || \
+            echo "Warning: Failed to add model with base URL, falling back to models set"
+          fi
+
           # Set the model using openclaw models set
           node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model via CLI"
         fi
@@ -516,8 +527,52 @@ export class DockerService implements OnModuleInit {
         JSON_CONFIG_FILE="$CONFIG_DIR/openclaw.json"
         mkdir -p "$CONFIG_DIR"
 
+        # Build openclaw.json with custom provider configuration if using proxy
+        # Based on OpenClaw's models.providers configuration pattern
         echo "Creating openclaw.json with gateway token authentication..."
-        cat > "$JSON_CONFIG_FILE" << JSON_EOF
+        if [ -n "$OPENAI_BASE_URL" ] && echo "$MODEL_PROVIDER" | grep -q -- "-compatible$"; then
+          # Custom provider with base URL - configure under models.providers
+          # This tells OpenClaw to use a custom API endpoint
+          # The models array is required by OpenClaw's config validation
+          cat > "$JSON_CONFIG_FILE" << JSON_EOF
+{
+  "gateway": {
+    "mode": "local",
+    "port": $BOT_PORT,
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "$OPENCLAW_GATEWAY_TOKEN"
+    },
+    "controlUi": {
+      "enabled": true,
+      "allowInsecureAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "$BOT_WORKSPACE_DIR"
+    }
+  },
+  "models": {
+    "providers": {
+      "$AUTH_PROVIDER": {
+        "baseUrl": "$OPENAI_BASE_URL",
+        "apiKey": "$API_KEY",
+        "models": [
+          {
+            "id": "$AI_MODEL",
+            "name": "$AI_MODEL"
+          }
+        ]
+      }
+    }
+  }
+}
+JSON_EOF
+        else
+          # Standard configuration without custom provider
+          cat > "$JSON_CONFIG_FILE" << JSON_EOF
 {
   "gateway": {
     "mode": "local",
@@ -539,6 +594,7 @@ export class DockerService implements OnModuleInit {
   }
 }
 JSON_EOF
+        fi
         echo "Created openclaw.json:"
         cat "$JSON_CONFIG_FILE"
 
@@ -559,18 +615,21 @@ JSON_EOF
 
         # Build auth-profiles.json with baseUrl if using custom provider
         # OpenClaw reads baseUrl from auth-profiles.json to override the default API endpoint
+        # Try both baseUrl and baseURL since different SDKs use different naming conventions
         echo "Creating auth-profiles.json for provider: $AUTH_PROFILE_PROVIDER"
         if [ -n "$OPENAI_BASE_URL" ]; then
-          # Include baseUrl for custom API endpoint
+          # Include both baseUrl and baseURL for compatibility
           cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
 {
   "$AUTH_PROFILE_PROVIDER": {
     "apiKey": "$API_KEY",
-    "baseUrl": "$OPENAI_BASE_URL"
+    "baseUrl": "$OPENAI_BASE_URL",
+    "baseURL": "$OPENAI_BASE_URL"
   },
   "openai": {
     "apiKey": "$API_KEY",
-    "baseUrl": "$OPENAI_BASE_URL"
+    "baseUrl": "$OPENAI_BASE_URL",
+    "baseURL": "$OPENAI_BASE_URL"
   }
 }
 AUTH_EOF
