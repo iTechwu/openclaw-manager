@@ -69,12 +69,35 @@ export class BotApiService {
   // Bot Operations
   // ============================================================================
 
+  /**
+   * Build tokenized URLs for accessing the bot's OpenClaw gateway
+   * These URLs include the gateway token for WebSocket authentication
+   */
+  private buildTokenizedUrls(bot: Bot): {
+    dashboardUrl: string | null;
+    chatUrl: string | null;
+  } {
+    if (!bot.port || !bot.gatewayToken) {
+      return { dashboardUrl: null, chatUrl: null };
+    }
+    // Build URLs with token for WebSocket authentication
+    // The token is passed as a query parameter and stored in localStorage by the Control UI
+    const baseUrl = `http://localhost:${bot.port}`;
+    return {
+      dashboardUrl: `${baseUrl}/?token=${bot.gatewayToken}`,
+      chatUrl: `${baseUrl}/chat?session=main&token=${bot.gatewayToken}`,
+    };
+  }
+
   async listBots(userId: string): Promise<Bot[]> {
     const { list } = await this.botService.list({ createdById: userId });
 
     // Enrich with container status and sync database status if needed
     const enrichedBots = await Promise.all(
       list.map(async (bot) => {
+        // Build tokenized URLs for accessing the bot's OpenClaw gateway
+        const tokenizedUrls = this.buildTokenizedUrls(bot);
+
         if (bot.containerId) {
           const containerStatus = await this.dockerService.getContainerStatus(
             bot.containerId,
@@ -94,13 +117,18 @@ export class BotApiService {
               this.logger.log(
                 `Synced bot ${bot.hostname} status: ${bot.status} -> ${actualStatus}`,
               );
-              return { ...bot, status: actualStatus, containerStatus };
+              return {
+                ...bot,
+                status: actualStatus,
+                containerStatus,
+                ...tokenizedUrls,
+              };
             }
           }
 
-          return { ...bot, containerStatus };
+          return { ...bot, containerStatus, ...tokenizedUrls };
         }
-        return bot;
+        return { ...bot, ...tokenizedUrls };
       }),
     );
 
@@ -117,15 +145,18 @@ export class BotApiService {
       throw new NotFoundException(`Bot with hostname "${hostname}" not found`);
     }
 
+    // Build tokenized URLs for accessing the bot's OpenClaw gateway
+    const tokenizedUrls = this.buildTokenizedUrls(bot);
+
     // Enrich with container status
     if (bot.containerId) {
       const containerStatus = await this.dockerService.getContainerStatus(
         bot.containerId,
       );
-      return { ...bot, containerStatus } as Bot;
+      return { ...bot, containerStatus, ...tokenizedUrls } as Bot;
     }
 
-    return bot;
+    return { ...bot, ...tokenizedUrls } as Bot;
   }
 
   async createBot(input: CreateBotInput, userId: string): Promise<Bot> {

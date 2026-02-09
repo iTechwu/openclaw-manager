@@ -416,7 +416,7 @@ export class DockerService implements OnModuleInit {
 
         # Set the model if AI_MODEL is provided
         # OpenClaw expects model format: provider/model-name
-        # For openai-compatible with config.yaml, we'll set the model in config.yaml instead
+        # Always use openclaw models set to ensure the model is properly configured
         if [ -n "$AI_MODEL" ]; then
           # Check if model already has a provider prefix (contains /)
           if echo "$AI_MODEL" | grep -q "/"; then
@@ -426,13 +426,9 @@ export class DockerService implements OnModuleInit {
             FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
           fi
           echo "Setting model to: $FULL_MODEL"
-          # Only use openclaw models set if not using openai-compatible
-          # For openai-compatible, the model will be set in config.yaml
-          if [ "$MODEL_PROVIDER" != "openai-compatible" ]; then
-            node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || true
-          else
-            echo "Using openai-compatible provider, model will be set in config.yaml"
-          fi
+          # Always set the model using openclaw models set
+          # This ensures the gateway uses the correct model
+          node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model via CLI, will use config.yaml"
         fi
 
         # Configure API key based on provider
@@ -489,17 +485,94 @@ export class DockerService implements OnModuleInit {
           echo "Mapped CUSTOM_BASE_URL to provider base URL: $CUSTOM_BASE_URL"
         fi
 
+        # Create workspace directory if it doesn't exist
+        # This is needed because the volume might be mounted with root ownership
+        echo "Creating workspace directory: $BOT_WORKSPACE_DIR"
+        if ! mkdir -p "$BOT_WORKSPACE_DIR" 2>/dev/null; then
+          echo "ERROR: Cannot create workspace directory $BOT_WORKSPACE_DIR"
+          echo "This is likely a permission issue with the mounted volume."
+          echo "Please ensure the /data/bots volume has proper permissions for the node user."
+          echo "You can fix this by running: docker exec -u root <manager-container> chown -R node:node /data/bots"
+          exit 1
+        fi
+        echo "Workspace directory created successfully"
+
+        # Create openclaw.json configuration with gateway token authentication
+        # This is required for WebSocket connections to the Gateway
+        CONFIG_DIR="/home/node/.openclaw"
+        JSON_CONFIG_FILE="$CONFIG_DIR/openclaw.json"
+        mkdir -p "$CONFIG_DIR"
+
+        echo "Creating openclaw.json with gateway token authentication..."
+        cat > "$JSON_CONFIG_FILE" << JSON_EOF
+{
+  "gateway": {
+    "mode": "local",
+    "port": $BOT_PORT,
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "$OPENCLAW_GATEWAY_TOKEN"
+    },
+    "controlUi": {
+      "enabled": true,
+      "allowInsecureAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "$BOT_WORKSPACE_DIR"
+    }
+  }
+}
+JSON_EOF
+        echo "Created openclaw.json:"
+        cat "$JSON_CONFIG_FILE"
+
+        # Create auth-profiles.json with the API key
+        # OpenClaw looks for API keys in this file for each provider
+        AUTH_PROFILES_DIR="$CONFIG_DIR/agents/main/agent"
+        mkdir -p "$AUTH_PROFILES_DIR"
+        AUTH_PROFILES_FILE="$AUTH_PROFILES_DIR/auth-profiles.json"
+
+        # Determine the provider name for auth-profiles.json
+        # For openai-compatible, we still need to provide the key under a recognized provider name
+        if [ "$MODEL_PROVIDER" = "openai-compatible" ]; then
+          AUTH_PROFILE_PROVIDER="openai-compatible"
+        else
+          AUTH_PROFILE_PROVIDER="$AUTH_PROVIDER"
+        fi
+
+        echo "Creating auth-profiles.json for provider: $AUTH_PROFILE_PROVIDER"
+        cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$AUTH_PROFILE_PROVIDER": {
+    "apiKey": "$API_KEY"
+  },
+  "openai": {
+    "apiKey": "$API_KEY"
+  }
+}
+AUTH_EOF
+        echo "Created auth-profiles.json:"
+        cat "$AUTH_PROFILES_FILE"
+
         # Clean up any invalid config keys from previous runs
         # OpenClaw validates config strictly and rejects unknown keys
+        # Note: Run this AFTER creating our config to avoid overwriting
         echo "Running openclaw doctor --fix to clean up config..."
         node /app/openclaw.mjs doctor --fix 2>/dev/null || true
+
+        # Set the model again after doctor --fix to ensure it's not overwritten
+        if [ -n "$FULL_MODEL" ]; then
+          echo "Re-setting model after doctor: $FULL_MODEL"
+          node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model"
+        fi
 
         # For openai-compatible provider, create a config.yaml file with base_url
         # OpenClaw reads LLM configuration from ~/.openclaw/config.yaml
         if [ "$MODEL_PROVIDER" = "openai-compatible" ] && [ -n "$OPENAI_BASE_URL" ]; then
-          CONFIG_DIR="/home/node/.openclaw"
           CONFIG_FILE="$CONFIG_DIR/config.yaml"
-          mkdir -p "$CONFIG_DIR"
 
           echo "Creating OpenClaw config.yaml for openai-compatible provider..."
           cat > "$CONFIG_FILE" << YAML_EOF
@@ -530,8 +603,10 @@ YAML_EOF
         if [ -n "$OPENAI_API_KEY" ]; then echo "OPENAI_API_KEY: [SET]"; else echo "OPENAI_API_KEY: [NOT SET]"; fi
         echo "================================="
 
-        # Start the gateway (bind to lan to accept external connections)
-        exec node /app/openclaw.mjs gateway --port ${options.port} --bind lan --allow-unconfigured
+        # Start the gateway
+        # Note: --bind lan is configured in openclaw.json, but we pass it here for clarity
+        # The gateway token is configured in openclaw.json for WebSocket authentication
+        exec node /app/openclaw.mjs gateway --port ${options.port} --bind lan
         `,
       ],
       Env: envVars,

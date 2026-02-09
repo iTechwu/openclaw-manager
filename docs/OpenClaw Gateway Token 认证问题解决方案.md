@@ -282,4 +282,122 @@ const openBotChat = (bot: Bot) => {
 
 - [docker.service.ts](../apps/api/src/modules/bot-api/services/docker.service.ts) - Docker 容器管理服务
 - [bot-api.service.ts](../apps/api/src/modules/bot-api/bot-api.service.ts) - Bot API 服务
+- [bot.schema.ts](../packages/contracts/src/schemas/bot.schema.ts) - Bot Schema 定义
 - [Dockerfile.botenv](../Dockerfile.botenv) - Bot 环境镜像
+
+## 实施记录
+
+### 已完成的修改 (2026-02-09)
+
+#### 1. DockerService 容器启动脚本修改
+
+**文件**: [docker.service.ts](../apps/api/src/modules/bot-api/services/docker.service.ts)
+
+**修改内容**:
+- 在容器启动脚本中添加 `openclaw.json` 配置文件创建逻辑
+- 配置 `gateway.auth.mode: "token"` 和 `gateway.auth.token`
+- 移除 `--allow-unconfigured` 参数，因为现在有了正确的配置文件
+
+**关键代码**:
+```bash
+# Create openclaw.json configuration with gateway token authentication
+CONFIG_DIR="/home/node/.openclaw"
+JSON_CONFIG_FILE="$CONFIG_DIR/openclaw.json"
+mkdir -p "$CONFIG_DIR"
+
+cat > "$JSON_CONFIG_FILE" << JSON_EOF
+{
+  "gateway": {
+    "mode": "local",
+    "port": $BOT_PORT,
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "$OPENCLAW_GATEWAY_TOKEN"
+    },
+    "controlUi": {
+      "enabled": true,
+      "allowInsecureAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "$BOT_WORKSPACE_DIR"
+    }
+  }
+}
+JSON_EOF
+```
+
+**注意**: `allowInsecureAuth: true` 用于禁用设备配对认证。当从非本地连接（如 Docker 容器外部）访问时，Gateway 默认要求设备配对。此设置禁用该要求，仅依赖 token 认证。
+
+#### 2. Bot Schema 更新
+
+**文件**: [bot.schema.ts](../packages/contracts/src/schemas/bot.schema.ts)
+
+**修改内容**:
+- 添加 `dashboardUrl` 字段：带 token 的控制台 URL
+- 添加 `chatUrl` 字段：带 token 的聊天界面 URL
+
+```typescript
+export const BotSchema = z.object({
+  // ... 其他字段 ...
+  // Tokenized URLs for accessing the bot's OpenClaw gateway
+  dashboardUrl: z.string().nullable().optional(),
+  chatUrl: z.string().nullable().optional(),
+});
+```
+
+#### 3. BotApiService 更新
+
+**文件**: [bot-api.service.ts](../apps/api/src/modules/bot-api/bot-api.service.ts)
+
+**修改内容**:
+- 添加 `buildTokenizedUrls()` 私有方法，用于构建带 token 的 URL
+- 更新 `listBots()` 方法，在返回结果中包含 tokenized URLs
+- 更新 `getBotByHostname()` 方法，在返回结果中包含 tokenized URLs
+
+```typescript
+private buildTokenizedUrls(bot: Bot): {
+  dashboardUrl: string | null;
+  chatUrl: string | null;
+} {
+  if (!bot.port || !bot.gatewayToken) {
+    return { dashboardUrl: null, chatUrl: null };
+  }
+  const baseUrl = `http://localhost:${bot.port}`;
+  return {
+    dashboardUrl: `${baseUrl}/?token=${bot.gatewayToken}`,
+    chatUrl: `${baseUrl}/chat?session=main&token=${bot.gatewayToken}`,
+  };
+}
+```
+
+### 验证步骤
+
+1. **重新构建并启动 Bot 容器**:
+   ```bash
+   # 停止现有容器
+   docker stop <container_name>
+
+   # 通过 API 重新启动 Bot
+   curl -X POST http://localhost:3200/api/bots/<hostname>/start
+   ```
+
+2. **检查容器日志**:
+   ```bash
+   docker logs <container_name>
+   ```
+   应该看到：
+   - `Created openclaw.json:` 后面跟着配置内容
+   - Gateway 启动成功的日志
+
+3. **使用 Tokenized URL 访问**:
+   - 从 API 获取 Bot 信息，使用返回的 `dashboardUrl` 或 `chatUrl`
+   - 或者手动构建 URL: `http://localhost:<port>/?token=<gatewayToken>`
+
+4. **验证 WebSocket 连接**:
+   - 打开浏览器开发者工具
+   - 检查 WebSocket 连接是否成功建立
+   - 不应再看到 `token_missing` 错误
+

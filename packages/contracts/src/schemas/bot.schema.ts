@@ -62,6 +62,10 @@ export const BotSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   containerStatus: ContainerStatusSchema.nullable().optional(),
+  // Tokenized URLs for accessing the bot's OpenClaw gateway
+  // These URLs include the gateway token for WebSocket authentication
+  dashboardUrl: z.string().nullable().optional(),
+  chatUrl: z.string().nullable().optional(),
 });
 
 export type Bot = z.infer<typeof BotSchema>;

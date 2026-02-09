@@ -37,5 +37,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 netcat-openbsd dnsutils \
  && rm -rf /var/lib/apt/lists/*
 
+# Create data directories with proper ownership for node user
+# These directories will be used as mount points for named volumes
+# The node user needs write access to create workspace subdirectories
+RUN mkdir -p /data/bots /data/secrets \
+ && chown -R node:node /data
+
 # Switch back to non-root user
 USER node
