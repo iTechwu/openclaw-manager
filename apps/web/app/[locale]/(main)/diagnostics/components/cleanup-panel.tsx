@@ -13,16 +13,24 @@ import {
   Badge,
   Skeleton,
   Alert,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@repo/ui';
-import { Trash2, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Trash2, RefreshCw, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 
 export function CleanupPanel() {
   const t = useTranslations('bots.diagnostics.cleanupPanel');
   const { orphans, loading, error, refresh, handleCleanup, cleanupLoading } =
     useOrphans();
   const [result, setResult] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const onCleanup = async () => {
+    setConfirmOpen(false);
     try {
       const report = await handleCleanup();
       if (report) {
@@ -121,7 +129,7 @@ export function CleanupPanel() {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={onCleanup}
+                  onClick={() => setConfirmOpen(true)}
                   disabled={cleanupLoading}
                 >
                   {cleanupLoading
@@ -137,6 +145,36 @@ export function CleanupPanel() {
                   <RefreshCw className="mr-1 size-4" />
                   {t('refresh')}
                 </Button>
+
+                {/* 清理确认对话框 */}
+                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="size-5 text-destructive" />
+                        {t('confirmTitle')}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {t('confirmDescription', { count: orphanReport.total })}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setConfirmOpen(false)}
+                      >
+                        {t('cancel')}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={onCleanup}
+                        disabled={cleanupLoading}
+                      >
+                        {t('confirmCleanup')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             ) : (
               <div className="mt-4 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">

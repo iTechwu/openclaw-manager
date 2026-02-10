@@ -14,9 +14,30 @@
   "createSkill": "创建技能",
   "createSkillDescription": "创建新的自定义技能",
   "comingSoon": "功能开发中，敬请期待",
+  "skillTypes": "技能类型",
   "types": {
     "tool": "工具",
     "prompt": "提示词",
     "workflow": "工作流"
-  }
+  },
+  "pagination": {
+    "showing": "显示 {from}-{to}，共 {total} 项",
+    "page": "第 {page} / {totalPages} 页"
+  },
+  "form": {
+    "name": "名称",
+    "namePlaceholder": "输入技能名称",
+    "slug": "标识符",
+    "slugPlaceholder": "输入技能标识符",
+    "type": "类型",
+    "selectType": "选择技能类型",
+    "description": "描述",
+    "descriptionPlaceholder": "输入技能描述",
+    "version": "版本",
+    "cancel": "取消",
+    "create": "创建"
+  },
+  "fillRequiredFields": "请填写必填字段",
+  "createSuccess": "技能创建成功",
+  "createFailed": "技能创建失败"
 }

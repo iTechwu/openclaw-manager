@@ -28,23 +28,22 @@ import {
   Trash2,
   Settings,
   Wrench,
-  MessageSquare,
-  GitBranch,
   Sparkles,
   User,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
-import type { SkillType, BotSkillItem, SkillItem } from '@repo/contracts';
+import type { BotSkillItem, SkillItem } from '@repo/contracts';
+import { useLocalizedFields } from '@/hooks/useLocalizedFields';
 
 /**
- * 技能类型图标映射
+ * 获取技能图标
  */
-const skillTypeIcons: Record<SkillType, React.ElementType> = {
-  tool: Wrench,
-  prompt: MessageSquare,
-  workflow: GitBranch,
-};
+function getSkillIcon(skill: {
+  skillType?: { icon?: string | null } | null;
+}): string {
+  return skill.skillType?.icon || '📦';
+}
 
 /**
  * 已安装技能卡片
@@ -63,18 +62,19 @@ function InstalledSkillCard({
   t: (key: string) => string;
 }) {
   const { skill } = botSkill;
-  const TypeIcon = skillTypeIcons[skill.skillType];
+  const { getName, getDescription } = useLocalizedFields();
+  const skillIcon = getSkillIcon(skill);
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded">
-              <TypeIcon className="h-4 w-4" />
+            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded text-lg">
+              {skillIcon}
             </div>
             <div>
-              <CardTitle className="text-base">{skill.name}</CardTitle>
+              <CardTitle className="text-base">{getName(skill)}</CardTitle>
               <CardDescription className="text-xs">
                 v{skill.version}
               </CardDescription>
@@ -101,12 +101,14 @@ function InstalledSkillCard({
               {t('custom')}
             </Badge>
           )}
-          <Badge variant="outline" className="text-xs">
-            {t(`types.${skill.skillType}`)}
-          </Badge>
+          {skill.skillType && (
+            <Badge variant="outline" className="text-xs">
+              {getName(skill.skillType)}
+            </Badge>
+          )}
         </div>
         <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
-          {skill.description || t('noDescription')}
+          {getDescription(skill) || t('noDescription')}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" disabled>
@@ -141,18 +143,19 @@ function AvailableSkillCard({
   isInstalling: boolean;
   t: (key: string) => string;
 }) {
-  const TypeIcon = skillTypeIcons[skill.skillType];
+  const { getName, getDescription } = useLocalizedFields();
+  const skillIcon = getSkillIcon(skill);
 
   return (
     <Card className="hover:border-primary/50 transition-colors">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded">
-              <TypeIcon className="h-4 w-4" />
+            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded text-lg">
+              {skillIcon}
             </div>
             <div>
-              <CardTitle className="text-base">{skill.name}</CardTitle>
+              <CardTitle className="text-base">{getName(skill)}</CardTitle>
               <CardDescription className="text-xs">
                 v{skill.version}
               </CardDescription>
@@ -173,7 +176,7 @@ function AvailableSkillCard({
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
-          {skill.description || t('noDescription')}
+          {getDescription(skill) || t('noDescription')}
         </p>
         <Button
           size="sm"
@@ -370,7 +373,9 @@ export default function BotSkillsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Wrench className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
-            <p className="text-muted-foreground mb-4">{t('noInstalledSkills')}</p>
+            <p className="text-muted-foreground mb-4">
+              {t('noInstalledSkills')}
+            </p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               {t('addFirstSkill')}

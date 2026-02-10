@@ -19,10 +19,11 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
+  Brain,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { AdminOnly } from '@/lib/permissions';
 
 /**
  * 配置状态卡片
@@ -112,10 +113,9 @@ function ConfigStatusCardSkeleton() {
 
 /**
  * 路由配置管理页面
+ * 所有用户可查看，仅管理员可修改
  */
 export default function RoutingPage() {
-  const queryClient = useQueryClient();
-
   const { data: response, isLoading, refetch } = routingAdminApi.getConfigStatus.useQuery(
     ['routing-config-status'],
     {},
@@ -144,21 +144,23 @@ export default function RoutingPage() {
             管理模型定价、能力标签、Fallback 链和成本策略
           </p>
         </div>
-        <Button onClick={handleRefresh} variant="outline" size="sm">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          刷新配置
-        </Button>
+        <AdminOnly>
+          <Button onClick={handleRefresh} variant="outline" size="sm">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            刷新配置
+          </Button>
+        </AdminOnly>
       </div>
 
       {/* 配置状态卡片 */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5].map((i) => (
             <ConfigStatusCardSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ConfigStatusCard
             title="模型定价"
             description="管理各模型的定价信息和能力评分"
@@ -194,6 +196,15 @@ export default function RoutingPage() {
             lastUpdate={status?.costStrategies?.lastUpdate}
             href="/routing/cost-strategies"
             icon={TrendingUp}
+          />
+          <ConfigStatusCard
+            title="复杂度路由"
+            description="根据消息复杂度智能选择模型"
+            loaded={status?.complexityRoutingConfigs?.loaded ?? false}
+            count={status?.complexityRoutingConfigs?.count ?? 0}
+            lastUpdate={status?.complexityRoutingConfigs?.lastUpdate}
+            href="/routing/complexity-routing"
+            icon={Brain}
           />
         </div>
       )}

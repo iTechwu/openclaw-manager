@@ -9,6 +9,10 @@ import {
   ConfigLoadStatusSchema,
   CostCalculationSchema,
   BudgetStatusSchema,
+  ComplexityRoutingConfigSchema,
+  ComplexityLevelSchema,
+  ComplexityModelConfigSchema,
+  ComplexityClassificationResultSchema,
 } from '../schemas/routing.schema';
 
 const c = initContract();
@@ -73,11 +77,16 @@ export const CreateModelPricingInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type CreateModelPricingInput = z.infer<typeof CreateModelPricingInputSchema>;
+export type CreateModelPricingInput = z.infer<
+  typeof CreateModelPricingInputSchema
+>;
 
-export const UpdateModelPricingInputSchema = CreateModelPricingInputSchema.partial();
+export const UpdateModelPricingInputSchema =
+  CreateModelPricingInputSchema.partial();
 
-export type UpdateModelPricingInput = z.infer<typeof UpdateModelPricingInputSchema>;
+export type UpdateModelPricingInput = z.infer<
+  typeof UpdateModelPricingInputSchema
+>;
 
 export const CreateCapabilityTagInputSchema = z.object({
   tagId: z.string(),
@@ -95,11 +104,16 @@ export const CreateCapabilityTagInputSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export type CreateCapabilityTagInput = z.infer<typeof CreateCapabilityTagInputSchema>;
+export type CreateCapabilityTagInput = z.infer<
+  typeof CreateCapabilityTagInputSchema
+>;
 
-export const UpdateCapabilityTagInputSchema = CreateCapabilityTagInputSchema.partial();
+export const UpdateCapabilityTagInputSchema =
+  CreateCapabilityTagInputSchema.partial();
 
-export type UpdateCapabilityTagInput = z.infer<typeof UpdateCapabilityTagInputSchema>;
+export type UpdateCapabilityTagInput = z.infer<
+  typeof UpdateCapabilityTagInputSchema
+>;
 
 export const CreateFallbackChainInputSchema = z.object({
   chainId: z.string(),
@@ -127,11 +141,16 @@ export const CreateFallbackChainInputSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export type CreateFallbackChainInput = z.infer<typeof CreateFallbackChainInputSchema>;
+export type CreateFallbackChainInput = z.infer<
+  typeof CreateFallbackChainInputSchema
+>;
 
-export const UpdateFallbackChainInputSchema = CreateFallbackChainInputSchema.partial();
+export const UpdateFallbackChainInputSchema =
+  CreateFallbackChainInputSchema.partial();
 
-export type UpdateFallbackChainInput = z.infer<typeof UpdateFallbackChainInputSchema>;
+export type UpdateFallbackChainInput = z.infer<
+  typeof UpdateFallbackChainInputSchema
+>;
 
 export const CreateCostStrategyInputSchema = z.object({
   strategyId: z.string(),
@@ -154,11 +173,60 @@ export const CreateCostStrategyInputSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export type CreateCostStrategyInput = z.infer<typeof CreateCostStrategyInputSchema>;
+export type CreateCostStrategyInput = z.infer<
+  typeof CreateCostStrategyInputSchema
+>;
 
-export const UpdateCostStrategyInputSchema = CreateCostStrategyInputSchema.partial();
+export const UpdateCostStrategyInputSchema =
+  CreateCostStrategyInputSchema.partial();
 
-export type UpdateCostStrategyInput = z.infer<typeof UpdateCostStrategyInputSchema>;
+export type UpdateCostStrategyInput = z.infer<
+  typeof UpdateCostStrategyInputSchema
+>;
+
+// ============================================================================
+// Complexity Routing Config Input Schemas
+// ============================================================================
+
+export const CreateComplexityRoutingConfigInputSchema = z.object({
+  configId: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  isEnabled: z.boolean().default(true),
+  models: z.object({
+    super_easy: ComplexityModelConfigSchema,
+    easy: ComplexityModelConfigSchema,
+    medium: ComplexityModelConfigSchema,
+    hard: ComplexityModelConfigSchema,
+    super_hard: ComplexityModelConfigSchema,
+  }),
+  // 分类器配置（用于判断消息复杂度的模型）
+  classifierModel: z.string().default('deepseek-v3-250324'),
+  classifierVendor: z.string().default('deepseek'),
+  classifierBaseUrl: z.string().optional(),
+  toolMinComplexity: ComplexityLevelSchema.optional(),
+});
+
+export type CreateComplexityRoutingConfigInput = z.infer<
+  typeof CreateComplexityRoutingConfigInputSchema
+>;
+
+export const UpdateComplexityRoutingConfigInputSchema =
+  CreateComplexityRoutingConfigInputSchema.partial();
+
+export type UpdateComplexityRoutingConfigInput = z.infer<
+  typeof UpdateComplexityRoutingConfigInputSchema
+>;
+
+export const ClassifyComplexityInputSchema = z.object({
+  message: z.string(),
+  context: z.string().optional(),
+  hasTools: z.boolean().optional(),
+});
+
+export type ClassifyComplexityInput = z.infer<
+  typeof ClassifyComplexityInputSchema
+>;
 
 // 导入/导出 Schema
 export const ExportConfigResponseSchema = z.object({
@@ -200,6 +268,10 @@ export const FallbackChainListResponseSchema = z.object({
 
 export const CostStrategyListResponseSchema = z.object({
   list: z.array(CostStrategySchema),
+});
+
+export const ComplexityRoutingConfigListResponseSchema = z.object({
+  list: z.array(ComplexityRoutingConfigSchema),
 });
 
 export const BotUsageResponseSchema = z.object({
@@ -477,6 +549,93 @@ export const routingAdminContract = c.router(
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
       summary: '删除成本策略',
+    },
+
+    // ========================================================================
+    // 复杂度路由配置管理
+    // ========================================================================
+
+    /**
+     * GET /proxy/admin/routing/complexity-configs - 获取所有复杂度路由配置
+     */
+    getComplexityRoutingConfigs: {
+      method: 'GET',
+      path: '/complexity-configs',
+      responses: {
+        200: ApiResponseSchema(ComplexityRoutingConfigListResponseSchema),
+      },
+      summary: '获取所有复杂度路由配置',
+    },
+
+    /**
+     * GET /proxy/admin/routing/complexity-configs/:configId - 获取指定复杂度路由配置
+     */
+    getComplexityRoutingConfig: {
+      method: 'GET',
+      path: '/complexity-configs/:configId',
+      pathParams: z.object({ configId: z.string() }),
+      responses: {
+        200: ApiResponseSchema(ComplexityRoutingConfigSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取指定复杂度路由配置',
+    },
+
+    /**
+     * POST /proxy/admin/routing/complexity-configs - 创建复杂度路由配置
+     */
+    createComplexityRoutingConfig: {
+      method: 'POST',
+      path: '/complexity-configs',
+      body: CreateComplexityRoutingConfigInputSchema,
+      responses: {
+        200: ApiResponseSchema(ComplexityRoutingConfigSchema),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '创建复杂度路由配置',
+    },
+
+    /**
+     * PUT /proxy/admin/routing/complexity-configs/:id - 更新复杂度路由配置
+     */
+    updateComplexityRoutingConfig: {
+      method: 'PUT',
+      path: '/complexity-configs/:id',
+      pathParams: z.object({ id: z.string().uuid() }),
+      body: UpdateComplexityRoutingConfigInputSchema,
+      responses: {
+        200: ApiResponseSchema(ComplexityRoutingConfigSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '更新复杂度路由配置',
+    },
+
+    /**
+     * DELETE /proxy/admin/routing/complexity-configs/:id - 删除复杂度路由配置
+     */
+    deleteComplexityRoutingConfig: {
+      method: 'DELETE',
+      path: '/complexity-configs/:id',
+      pathParams: z.object({ id: z.string().uuid() }),
+      body: z.object({}).optional(),
+      responses: {
+        200: SuccessResponseSchema,
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '删除复杂度路由配置',
+    },
+
+    /**
+     * POST /proxy/admin/routing/classify-complexity - 测试复杂度分类
+     */
+    classifyComplexity: {
+      method: 'POST',
+      path: '/classify-complexity',
+      body: ClassifyComplexityInputSchema,
+      responses: {
+        200: ApiResponseSchema(ComplexityClassificationResultSchema),
+      },
+      summary: '测试复杂度分类',
     },
 
     // ========================================================================

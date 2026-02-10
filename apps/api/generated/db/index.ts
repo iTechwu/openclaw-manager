@@ -34,3 +34,5 @@ export * from './modules/capability-tag';
 export * from './modules/fallback-chain';
 export * from './modules/cost-strategy';
 export * from './modules/bot-routing-config';
+export * from './modules/skill-type';
+export * from './modules/complexity-routing-config';

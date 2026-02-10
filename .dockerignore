@@ -9,6 +9,7 @@ dist
 **/.next
 build
 **/build
+**/data
 
 # 日志
 logs

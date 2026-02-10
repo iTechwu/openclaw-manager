@@ -14,10 +14,12 @@ import {
   CapabilityTagModule,
   FallbackChainModule,
   CostStrategyModule,
+  ComplexityRoutingConfigModule,
 } from '@app/db';
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
+import { ComplexityClassifierModule } from '@app/clients/internal/complexity-classifier';
 import { ProxyController } from './proxy.controller';
 import { ProxyAdminController } from './proxy-admin.controller';
 import { RoutingAdminController } from './routing-admin.controller';
@@ -34,6 +36,7 @@ import { RoutingEngineService } from './services/routing-engine.service';
 import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
+import { BotComplexityRoutingService } from './services/bot-complexity-routing.service';
 
 /**
  * ProxyModule - API 代理模块
@@ -68,6 +71,9 @@ import { ConfigurationService } from './services/configuration.service';
     CapabilityTagModule,
     FallbackChainModule,
     CostStrategyModule,
+    ComplexityRoutingConfigModule,
+    // Complexity classifier for complexity-based routing
+    ComplexityClassifierModule,
   ],
   controllers: [ProxyController, ProxyAdminController, RoutingAdminController],
   providers: [
@@ -84,6 +90,8 @@ import { ConfigurationService } from './services/configuration.service';
     FallbackEngineService,
     CostTrackerService,
     ConfigurationService,
+    // Bot complexity routing service
+    BotComplexityRoutingService,
   ],
   exports: [
     ProxyService,
@@ -96,6 +104,8 @@ import { ConfigurationService } from './services/configuration.service';
     FallbackEngineService,
     CostTrackerService,
     ConfigurationService,
+    // Bot complexity routing service
+    BotComplexityRoutingService,
   ],
 })
 export class ProxyModule {}

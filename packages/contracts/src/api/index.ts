@@ -14,6 +14,7 @@ export * from './routing-admin.contract';
 export * from './setting.contract';
 export * from './sign.contract';
 export * from './skill.contract';
+export * from './skill-sync.contract';
 export * from './sms.contract';
 export * from './system.contract';
 export * from './task.contract';

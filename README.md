@@ -22,11 +22,15 @@
 
 ### v1.0.0 (2026-02)
 
+- **Model Routing System**: Intelligent multi-model routing with capability tags, fallback chains, cost strategies, and load balancing
+- **Skill Management System**: New SkillType model with upsert functionality and OpenClaw synchronization
+- **Bot Usage Analytics**: Enhanced token usage tracking, routing statistics, and analytics dashboard
 - **Bot Configuration Resolver**: Runtime configuration now derived from `BotProviderKey` and `BotChannel` tables for better data consistency
 - **Zero-Trust Architecture**: Bot containers never touch API keys directly - all keys are injected at the proxy layer
 - **10 Channel Integrations**: Support for Feishu, Telegram, Slack, WeChat, Discord, WhatsApp, X, Instagram, Teams, and LINE
 - **22 MCP Plugins**: Pre-built plugins for search, file operations, database access, and development tools
 - **Skill System**: Custom tools, prompt templates, and workflows with one-click installation to Bots
+- **Notification System**: Backend quota notifications with real-time alerts
 
 ---
 
@@ -87,8 +91,9 @@ ClawBotManager is designed for **teams and developers who need to deploy and man
 ### Completed ✅
 
 - **Core Capabilities**: Bot CRUD, Provider Key management, AI proxy, Docker container orchestration
+- **Model Routing System**: Capability tags, fallback chains, cost strategies, load balancing, routing statistics
 - **Plugin System**: MCP plugin management, 22 preset plugins (search, file, database, dev tools, etc.), region filtering
-- **Skill System**: Custom tools, prompt templates, workflows, skill installation to Bots
+- **Skill System**: Custom tools, prompt templates, workflows, skill installation to Bots, OpenClaw synchronization
 - **Channel System**: 10 channel definitions (Feishu, Telegram, Slack, WeChat, Discord, WhatsApp, X, Instagram, Teams, LINE), credential management, locale-based recommendations
 - **Infrastructure**: User authentication, multiple login methods, file upload, SMS, i18n (Chinese/English)
 - **Diagnostics & Ops**: Container stats, orphan resource detection and cleanup, startup reconciliation
@@ -96,11 +101,13 @@ ClawBotManager is designed for **teams and developers who need to deploy and man
 - **Quota Management**: Daily/monthly token limits, 80% threshold warnings, over-quota notifications
 - **Template System**: Persona templates (system + user), 5-step creation wizard
 - **Audit Logs**: Operation logging (CREATE, START, STOP, DELETE)
+- **Bot Usage Analytics**: Token usage tracking, routing statistics, analytics dashboard
+- **Notification System**: Backend quota notifications implemented
 
 ### Pending ⏳
 
 - **Channel Connectors**: Actual message send/receive connectors for Feishu, Telegram, WeChat, etc.
-- **Analytics**: Contract defined, backend implementation pending
+- **Analytics UI**: Backend analytics implemented, frontend dashboard pending
 - **Notification UI**: Backend quota notifications implemented, frontend UI pending
 - **Webhook Handlers**: Contract defined, handlers pending
 - **Permission System**: Fine-grained access control pending
@@ -199,28 +206,55 @@ ClawBotManager is designed for **teams and developers who need to deploy and man
 clawbotmanager/
 ├── apps/
 │   ├── web/                    # Next.js 16 Frontend
-│   │   ├── app/[locale]/       # Routes (auth, main, bots, diagnostics)
+│   │   ├── app/[locale]/       # Routes
+│   │   │   ├── (auth)/         # Auth route group
+│   │   │   └── (main)/         # Main route group (authenticated)
+│   │   │       ├── bots/       # Bot management
+│   │   │       ├── diagnostics/# Container diagnostics
+│   │   │       ├── plugins/    # Plugin management
+│   │   │       ├── routing/    # Model routing config
+│   │   │       ├── secrets/    # API key management
+│   │   │       ├── settings/   # Settings
+│   │   │       ├── skills/     # Skill management
+│   │   │       └── templates/  # Persona templates
 │   │   ├── components/         # Common components
 │   │   ├── hooks/              # React Hooks
 │   │   └── lib/                # API client, config
 │   │
 │   └── api/                    # NestJS 11 Backend
-│       ├── src/modules/        # Feature modules
+│       ├── src/modules/        # Feature modules (15 modules)
 │       │   ├── bot-api/        # Bot CRUD, Provider Key, Docker, Workspace
+│       │   ├── bot-channel-api/# Bot channel management
+│       │   ├── channel-api/    # Channel definitions
+│       │   ├── message-api/    # Messaging system
+│       │   ├── operate-log-api/# Operation audit logs
+│       │   ├── persona-template-api/ # Persona templates
 │       │   ├── plugin-api/     # MCP plugin management
-│       │   ├── skill-api/      # Skill management (tool, prompt, workflow)
-│       │   ├── channel-api/    # Channel definitions and Bot channels
 │       │   ├── proxy/          # AI request proxy, Keyring, Upstream
 │       │   ├── sign-api/       # Login/register
+│       │   ├── skill-api/      # Skill management
+│       │   ├── skill-sync/     # Skill synchronization
 │       │   ├── sms-api/        # SMS
-│       │   └── uploader/       # File upload
+│       │   ├── sse-api/        # Server-sent events
+│       │   ├── uploader/       # File upload
+│       │   └── user-api/       # User management
 │       ├── libs/
 │       │   ├── infra/          # Infrastructure (prisma, redis, jwt, clients…)
-│       │   └── domain/         # Domain (auth, db)
-│       └── prisma/             # Schema, migrations
+│       │   │   ├── common/     # Decorators, interceptors, pipes
+│       │   │   ├── clients/    # Third-party API clients (18 clients)
+│       │   │   ├── prisma/     # DB connection, read/write split
+│       │   │   ├── redis/      # Cache
+│       │   │   ├── rabbitmq/   # Message queue
+│       │   │   ├── jwt/        # JWT authentication
+│       │   │   ├── utils/      # Pure utilities
+│       │   │   ├── i18n/       # Internationalization
+│       │   │   ├── shared-db/  # TransactionalServiceBase, UnitOfWork
+│       │   │   └── shared-services/ # Shared services (7 services)
+│       │   └── domain/         # Domain (auth, services)
+│       └── prisma/             # Schema (33 models), migrations
 │
-├── packages/                   # Shared packages
-│   ├── contracts/              # ts-rest contracts + Zod Schema
+├── packages/                   # Shared packages (7 packages)
+│   ├── contracts/              # ts-rest contracts + Zod Schema (25 contracts)
 │   ├── ui/                     # shadcn/ui components
 │   ├── utils/                  # Utility functions
 │   ├── validators/             # Zod validators
@@ -228,6 +262,7 @@ clawbotmanager/
 │   ├── types/                  # Type definitions
 │   └── config/                 # ESLint, Prettier, TS config
 │
+├── docs/                       # Documentation
 └── scripts/                    # Init and ops scripts
 ```
 
@@ -267,12 +302,14 @@ clawbotmanager/
 
 - **Bot Lifecycle**: Create, start, stop, delete - Docker containers + workspace (config.json, soul.md, features.json)
 - **Provider Key Management**: Encrypted storage (AES-256-GCM), tag routing, round-robin, custom baseUrl
+- **Model Routing System**: Capability tags, fallback chains, cost strategies, load balancing, routing statistics
 - **AI Request Proxy**: `/v1/:vendor/*` unified entry, Bot Token auth, streaming response (SSE)
 - **Plugin System (MCP)**: 22 preset plugins (search, file, database, dev tools, etc.), region filtering, one-click install to Bot
-- **Skill System**: Custom tools, prompt templates, workflows, skill installation and configuration
+- **Skill System**: Custom tools, prompt templates, workflows, skill installation and configuration, OpenClaw sync
 - **Channel System**: 10 channel definitions, locale-based recommendations, credential management
 - **Zero-trust Mode**: Bot containers don't touch API keys, proxy layer injects keys
 - **Quota Management**: Daily/monthly token limits, threshold warnings, over-quota notifications
+- **Bot Usage Analytics**: Token usage tracking, routing statistics, analytics dashboard
 - **Template System**: Persona templates (system/user), 5-step creation wizard
 - **Diagnostics & Ops**: Container stats, orphan resource detection and cleanup, startup reconciliation
 - **Audit Logs**: Operation logging, compliance audit support
@@ -459,6 +496,17 @@ Uses `docker-compose.yml`, starts API and Web services. After health check passe
 | POST   | `/api/bot/:hostname/skills` | Install skill to Bot |
 | PUT    | `/api/bot/:hostname/skills/:id` | Update skill config |
 | DELETE | `/api/bot/:hostname/skills/:id` | Uninstall skill from Bot |
+
+### Model Routing (JWT Required)
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET    | `/api/bot/:hostname/routing` | Get Bot's routing config |
+| PUT    | `/api/bot/:hostname/routing` | Update routing config |
+| GET    | `/api/routing/capability-tags` | List capability tags |
+| GET    | `/api/routing/fallback-chains` | List fallback chains |
+| GET    | `/api/routing/cost-strategies` | List cost strategies |
+| GET    | `/api/routing/statistics` | Get routing statistics |
 
 ### Channel (JWT Required)
 

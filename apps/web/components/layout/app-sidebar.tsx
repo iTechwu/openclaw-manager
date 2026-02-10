@@ -21,6 +21,7 @@ import {
 import { cn } from '@repo/ui/lib/utils';
 import { useBots } from '@/hooks/useBots';
 import { usePersonaTemplates } from '@/hooks/usePersonaTemplates';
+import { useIsAdmin } from '@/lib/permissions';
 
 const navItems = [
   {
@@ -46,14 +47,15 @@ const navItems = [
     badgeKey: 'userTemplates',
   },
   {
-    titleKey: 'diagnostics',
-    href: '/diagnostics',
-    icon: Activity,
-  },
-  {
     titleKey: 'routing',
     href: '/routing',
     icon: Route,
+  },
+  {
+    titleKey: 'diagnostics',
+    href: '/diagnostics',
+    icon: Activity,
+    adminOnly: true,
   },
 ];
 
@@ -62,10 +64,16 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { bots } = useBots();
   const { userCount } = usePersonaTemplates();
+  const isAdmin = useIsAdmin();
 
   // Remove locale prefix from pathname for comparison
   // Only match valid locales: 'en' or 'zh-CN' (case insensitive)
   const currentPath = pathname.replace(/^\/(en|zh-CN)(?=\/|$)/i, '') || '/';
+
+  // Filter nav items based on admin status
+  const filteredNavItems = navItems.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   // Calculate activity badges
   const runningBotsCount = bots.filter(
@@ -93,7 +101,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 px-2">
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const isActive =
                   currentPath === item.href ||
                   currentPath.startsWith(`${item.href}/`);

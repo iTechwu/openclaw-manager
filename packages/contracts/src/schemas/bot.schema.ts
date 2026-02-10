@@ -222,6 +222,10 @@ export type ApplyPendingConfigResponse = z.infer<
 export const ContainerStatsSchema = z.object({
   hostname: z.string(),
   name: z.string(),
+  containerId: z.string().optional(),
+  pid: z.number().nullable().optional(),
+  uptimeSeconds: z.number().nullable().optional(),
+  startedAt: z.string().nullable().optional(),
   cpuPercent: z.number(),
   memoryUsage: z.number(),
   memoryLimit: z.number(),

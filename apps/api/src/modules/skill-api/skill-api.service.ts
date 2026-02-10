@@ -39,15 +39,22 @@ export class SkillApiService {
     page: number;
     limit: number;
   }> {
-    const { page = 1, limit = 20, skillType, isSystem, search } = query;
+    const {
+      page = 1,
+      limit = 20,
+      skillTypeId,
+      isSystem,
+      search,
+      source,
+    } = query;
 
     const where: Prisma.SkillWhereInput = {
       isEnabled: true,
       OR: [{ isSystem: true }, { createdById: userId }],
     };
 
-    if (skillType) {
-      where.skillType = skillType;
+    if (skillTypeId) {
+      where.skillTypeId = skillTypeId;
     }
 
     if (isSystem !== undefined) {
@@ -56,6 +63,11 @@ export class SkillApiService {
       if (!isSystem) {
         where.createdById = userId;
       }
+    }
+
+    // 支持按来源筛选
+    if (source) {
+      where.source = source;
     }
 
     if (search) {
@@ -69,7 +81,34 @@ export class SkillApiService {
       ];
     }
 
-    const result = await this.skillService.list(where, { page, limit });
+    const result = await this.skillService.list(
+      where,
+      { page, limit },
+      {
+        select: {
+          id: true,
+          name: true,
+          nameZh: true,
+          slug: true,
+          description: true,
+          descriptionZh: true,
+          version: true,
+          skillTypeId: true,
+          skillType: true,
+          definition: true,
+          examples: true,
+          isSystem: true,
+          isEnabled: true,
+          createdById: true,
+          source: true,
+          sourceUrl: true,
+          author: true,
+          lastSyncedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    );
 
     return {
       list: result.list.map((skill) => this.mapSkillToItem(skill)),
@@ -83,7 +122,30 @@ export class SkillApiService {
    * 获取技能详情
    */
   async getSkillById(userId: string, skillId: string): Promise<SkillItem> {
-    const skill = await this.skillService.getById(skillId);
+    const skill = await this.skillService.getById(skillId, {
+      select: {
+        id: true,
+        name: true,
+        nameZh: true,
+        slug: true,
+        description: true,
+        descriptionZh: true,
+        version: true,
+        skillTypeId: true,
+        skillType: true,
+        definition: true,
+        examples: true,
+        isSystem: true,
+        isEnabled: true,
+        createdById: true,
+        source: true,
+        sourceUrl: true,
+        author: true,
+        lastSyncedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!skill) {
       throw new NotFoundException('技能不存在');
     }
@@ -107,7 +169,9 @@ export class SkillApiService {
       slug: data.slug,
       description: data.description,
       version: data.version || '1.0.0',
-      skillType: data.skillType,
+      skillType: data.skillTypeId
+        ? { connect: { id: data.skillTypeId } }
+        : undefined,
       definition: data.definition as Prisma.InputJsonValue,
       examples: data.examples as Prisma.InputJsonValue,
       isSystem: false,
@@ -152,7 +216,9 @@ export class SkillApiService {
           description: data.description,
         }),
         ...(data.version && { version: data.version }),
-        ...(data.skillType && { skillType: data.skillType }),
+        ...(data.skillTypeId && {
+          skillType: { connect: { id: data.skillTypeId } },
+        }),
         ...(data.definition !== undefined && {
           definition: data.definition as Prisma.InputJsonValue,
         }),
@@ -364,10 +430,13 @@ export class SkillApiService {
     return {
       id: skill.id,
       name: skill.name,
+      nameZh: skill.nameZh,
       slug: skill.slug,
       description: skill.description,
+      descriptionZh: skill.descriptionZh,
       version: skill.version,
-      skillType: skill.skillType,
+      skillTypeId: skill.skillTypeId,
+      skillType: skill.skillType || null,
       definition: skill.definition as Record<string, unknown>,
       examples: skill.examples as Array<{
         input: string;
@@ -377,6 +446,11 @@ export class SkillApiService {
       isSystem: skill.isSystem,
       isEnabled: skill.isEnabled,
       createdById: skill.createdById,
+      // 外部来源字段
+      source: skill.source,
+      sourceUrl: skill.sourceUrl,
+      author: skill.author,
+      lastSyncedAt: skill.lastSyncedAt,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
     };

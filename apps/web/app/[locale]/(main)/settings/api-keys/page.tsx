@@ -9,6 +9,7 @@ import { HealthStatus } from '../../bots/components/health-status';
 import { ClientOnly } from '@/components/client-only';
 import { Button, Skeleton, Card, CardContent } from '@repo/ui';
 import { Plus, Key } from 'lucide-react';
+import { CanCreate } from '@/lib/permissions';
 
 export default function ApiKeysPage() {
   const t = useTranslations('settings');
@@ -41,10 +42,12 @@ export default function ApiKeysPage() {
             {t('apiKeysDescription')}
           </p>
         </div>
-        <Button onClick={() => setShowAddKeyModal(true)}>
-          <Plus className="mr-2 size-4" />
-          {tBots('actions.addApiKey')}
-        </Button>
+        <CanCreate module="providerKey">
+          <Button onClick={() => setShowAddKeyModal(true)}>
+            <Plus className="mr-2 size-4" />
+            {tBots('actions.addApiKey')}
+          </Button>
+        </CanCreate>
       </div>
 
       {health && <HealthStatus health={health} />}
@@ -90,10 +93,12 @@ export default function ApiKeysPage() {
         />
       )}
 
-      <AddProviderKeyModal
-        isOpen={showAddKeyModal}
-        onClose={() => setShowAddKeyModal(false)}
-      />
+      <CanCreate module="providerKey">
+        <AddProviderKeyModal
+          isOpen={showAddKeyModal}
+          onClose={() => setShowAddKeyModal(false)}
+        />
+      </CanCreate>
     </div>
   );
 }

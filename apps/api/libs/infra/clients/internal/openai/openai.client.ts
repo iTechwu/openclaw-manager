@@ -45,7 +45,7 @@ export class OpenAIClient implements OnModuleInit {
     this.openaiConfig = keysConfig?.openai;
 
     this.apiKey = this.openaiConfig?.apiKey || '';
-    this.baseUrl = this.openaiConfig?.baseUrl || 'https://api.openai.com/v1';
+    this.baseUrl = this.openaiConfig?.baseUrl;
 
     if (!this.apiKey) {
       this.logger.warn('OpenAI API Key not configured');
@@ -89,6 +89,8 @@ export class OpenAIClient implements OnModuleInit {
       return response.data;
     } catch (error) {
       this.handleError('chatCompletion', error as AxiosError, {
+        baseUrl: this.baseUrl,
+        apiKey: this.apiKey,
         model: request.model,
       });
     }

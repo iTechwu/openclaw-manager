@@ -2,7 +2,7 @@ import { Controller, Req, VERSION_NEUTRAL } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { pluginContract, botPluginContract } from '@repo/contracts';
 import { success } from '@/common/ts-rest/response.helper';
-import { AuthenticatedRequest, Auth } from '@app/auth';
+import { AuthenticatedRequest, Auth, AdminAuth } from '@app/auth';
 import { PluginApiService } from './plugin-api.service';
 
 const pluginC = pluginContract;
@@ -36,6 +36,7 @@ export class PluginApiController {
   }
 
   @TsRestHandler(pluginC.create)
+  @AdminAuth()
   async createPlugin(): Promise<any> {
     return tsRestHandler(pluginC.create, async ({ body }) => {
       const result = await this.pluginApiService.createPlugin(body);
@@ -44,6 +45,7 @@ export class PluginApiController {
   }
 
   @TsRestHandler(pluginC.update)
+  @AdminAuth()
   async updatePlugin(): Promise<any> {
     return tsRestHandler(pluginC.update, async ({ params, body }) => {
       const result = await this.pluginApiService.updatePlugin(
@@ -55,6 +57,7 @@ export class PluginApiController {
   }
 
   @TsRestHandler(pluginC.delete)
+  @AdminAuth()
   async deletePlugin(): Promise<any> {
     return tsRestHandler(pluginC.delete, async ({ params }) => {
       const result = await this.pluginApiService.deletePlugin(params.pluginId);

@@ -9,6 +9,7 @@ interface ServiceStatus {
   running: boolean;
   port?: number;
   pid?: number | null;
+  containerId?: string | null;
   memoryMb?: number | null;
   uptimeSeconds?: number | null;
 }
@@ -79,18 +80,20 @@ export function StatusCard({ status, loading }: StatusCardProps) {
             )}
           </div>
 
-          {/* 进程 ID */}
+          {/* 进程 ID / 容器 ID */}
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Cpu className="size-4 text-purple-500" />
               <span className="text-xs text-muted-foreground">
-                {t('processId')}
+                {status?.pid ? t('processId') : t('containerId')}
               </span>
             </div>
             {loading ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <p className="text-xl font-semibold">{status?.pid || '--'}</p>
+              <p className="text-xl font-semibold">
+                {status?.pid || status?.containerId || '--'}
+              </p>
             )}
           </div>
 

@@ -11,6 +11,7 @@ import {
   Badge,
   Skeleton,
   Input,
+  Button,
 } from '@repo/ui';
 import {
   Search,
@@ -23,7 +24,9 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
+  ArrowLeft,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { ModelPricing } from '@repo/contracts';
 
 /**
@@ -216,11 +219,18 @@ export default function ModelPricingPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold">模型定价管理</h1>
-        <p className="text-muted-foreground text-sm">
-          查看和管理各模型的定价信息、能力评分和特性支持
-        </p>
+      <div className="flex items-center gap-4">
+        <Link href="/routing">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">模型定价管理</h1>
+          <p className="text-muted-foreground text-sm">
+            查看和管理各模型的定价信息、能力评分和特性支持
+          </p>
+        </div>
       </div>
 
       {/* 搜索 */}

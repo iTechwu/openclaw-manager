@@ -144,19 +144,34 @@ export default function BotDashboardPage() {
   const loading = actionLoading || startLoading || stopLoading;
 
   // 从容器统计中获取当前 Bot 的统计信息
-  const currentBotStats = containerStats.find(
-    (s: { hostname: string }) => s.hostname === hostname,
-  ) as { memoryUsage?: number; cpuPercent?: number } | undefined;
+  interface ContainerStat {
+    hostname: string;
+    memoryUsage?: number;
+    cpuPercent?: number;
+    pid?: number | null;
+    uptimeSeconds?: number | null;
+    containerId?: string;
+  }
+
+  const currentBotStats = (containerStats as ContainerStat[] | undefined)?.find(
+    (s) => s.hostname === hostname,
+  );
 
   // 构建服务状态对象
   const serviceStatus = bot
     ? {
         running: isRunning,
         port: bot.port ?? undefined,
+        // 从容器统计获取 PID
+        pid: currentBotStats?.pid ?? null,
+        // 从容器统计获取容器 ID
+        containerId: currentBotStats?.containerId ?? null,
         // 从容器统计获取内存使用量（转换为 MB）
         memoryMb: currentBotStats?.memoryUsage
           ? Math.round(currentBotStats.memoryUsage / 1024 / 1024)
           : null,
+        // 从容器统计获取运行时间
+        uptimeSeconds: currentBotStats?.uptimeSeconds ?? null,
         // CPU 使用率
         cpuPercent: currentBotStats?.cpuPercent ?? null,
       }

@@ -14,6 +14,7 @@
     "createBot": "Create Bot",
     "addApiKey": "Add API Key",
     "manageApiKeys": "Manage API Keys",
+    "viewApiKeys": "View API Keys",
     "start": "Start",
     "stop": "Stop",
     "delete": "Delete",
@@ -368,7 +369,11 @@
       "cleaning": "Cleaning...",
       "refresh": "Refresh",
       "noOrphanedResources": "No orphaned resources",
-      "cleanedUp": "Cleaned up {count} orphaned resources"
+      "cleanedUp": "Cleaned up {count} orphaned resources",
+      "confirmTitle": "Confirm Cleanup",
+      "confirmDescription": "Are you sure you want to clean up {count} orphaned resources? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirmCleanup": "Confirm Cleanup"
     }
   },
   "detail": {
@@ -397,6 +402,7 @@
       "realtimeLogs": "Realtime Logs",
       "port": "Port",
       "processId": "Process ID",
+      "containerId": "Container ID",
       "memory": "Memory",
       "uptime": "Uptime",
       "start": "Start",

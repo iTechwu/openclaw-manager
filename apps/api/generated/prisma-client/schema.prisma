@@ -830,17 +830,56 @@ model BotPlugin {
   @@map("b_bot_plugin")
 }
 
+/// SkillType - 技能类型/分类
+/// 用于对技能进行分类管理，支持中英文名称
+model SkillType {
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 类型标识（如 coding-agents, git-github）
+  slug          String  @unique @db.VarChar(100)
+  /// 英文名称（如 Coding Agents & IDEs）
+  name          String  @db.VarChar(200)
+  /// 中文名称
+  nameZh        String? @map("name_zh") @db.VarChar(200)
+  /// 英文描述
+  description   String? @db.Text
+  /// 中文描述
+  descriptionZh String? @map("description_zh") @db.Text
+  /// 图标（emoji 或图标名称）
+  icon          String? @db.VarChar(50)
+  /// 排序权重（越小越靠前）
+  sortOrder     Int     @default(0) @map("sort_order")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  skills Skill[]
+
+  @@index([slug])
+  @@index([sortOrder])
+  @@index([isDeleted])
+  @@map("b_skill_type")
+}
+
 /// Skill - 自定义技能定义
 /// 用户可以创建自定义技能供 Bot 使用
+/// 支持系统预设、用户自定义和外部同步（如 OpenClaw）
 model Skill {
-  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name        String  @db.VarChar(100)
-  slug        String  @db.VarChar(100)
-  description String? @db.Text
-  version     String  @default("1.0.0") @db.VarChar(20)
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String  @db.VarChar(100)
+  /// 中文名称（翻译自 name）
+  nameZh        String? @map("name_zh") @db.VarChar(200)
+  slug          String  @db.VarChar(100)
+  /// 英文描述（原始描述）
+  description   String? @db.Text
+  /// 中文描述（翻译自 description）
+  descriptionZh String? @map("description_zh") @db.Text
+  version       String  @default("1.0.0") @db.VarChar(20)
 
-  // 技能类型: tool (工具调用), prompt (提示词模板), workflow (工作流)
-  skillType String @default("tool") @map("skill_type") @db.VarChar(20)
+  // 技能类型关联
+  skillTypeId String?    @map("skill_type_id") @db.Uuid
+  skillType   SkillType? @relation(fields: [skillTypeId], references: [id], onDelete: SetNull)
 
   // 技能定义 (JSON)
   // 对于 tool 类型: { name, description, inputSchema, handler }
@@ -858,6 +897,16 @@ model Skill {
   // 创建者
   createdById String? @map("created_by_id") @db.Uuid
 
+  // ============ 外部来源字段（用于同步 OpenClaw 等外部技能库）============
+  /// 外部来源标识（如 openclaw, clawhub）
+  source       String?   @db.VarChar(50)
+  /// 外部来源 URL（如 GitHub 仓库链接）
+  sourceUrl    String?   @map("source_url") @db.VarChar(500)
+  /// 技能作者（外部来源的作者）
+  author       String?   @db.VarChar(100)
+  /// 最后同步时间
+  lastSyncedAt DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -866,11 +915,14 @@ model Skill {
   installations BotSkill[]
 
   @@unique([slug, createdById])
-  @@index([skillType])
+  @@unique([source, slug], name: "b_skill_source_slug_key")
+  @@index([skillTypeId])
   @@index([isSystem])
   @@index([isEnabled])
   @@index([createdById])
   @@index([isDeleted])
+  @@index([source])
+  @@index([lastSyncedAt])
   @@map("b_skill")
 }
 
@@ -1263,6 +1315,12 @@ model BotRoutingConfig {
   /// 降级目标模型
   downgradeModel     String?  @map("downgrade_model") @db.VarChar(100)
 
+  // ============ 复杂度路由配置 ============
+  /// 是否启用复杂度路由
+  complexityRoutingEnabled  Boolean @default(false) @map("complexity_routing_enabled")
+  /// 复杂度路由配置 ID
+  complexityRoutingConfigId String? @map("complexity_routing_config_id") @db.VarChar(50)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -1271,5 +1329,49 @@ model BotRoutingConfig {
   @@index([botId])
   @@index([routingEnabled])
   @@index([costControlEnabled])
+  @@index([complexityRoutingEnabled])
   @@map("b_bot_routing_config")
+}
+
+/// ComplexityRoutingConfig - 复杂度路由配置
+/// 存储基于消息复杂度的模型路由配置
+model ComplexityRoutingConfig {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 配置唯一标识符
+  configId    String  @unique @map("config_id") @db.VarChar(50)
+  /// 配置名称
+  name        String  @db.VarChar(100)
+  /// 配置描述
+  description String? @db.Text
+
+  // ============ 模型配置 ============
+  /// 各复杂度对应的模型配置（JSON）
+  /// 格式: { super_easy: {vendor, model}, easy: {...}, medium: {...}, hard: {...}, super_hard: {...} }
+  models Json @db.JsonB
+
+  // ============ 分类器配置 ============
+  /// 分类器使用的模型
+  classifierModel  String @default("deepseek-v3-250324") @map("classifier_model") @db.VarChar(100)
+  /// 分类器使用的 vendor
+  classifierVendor String @default("deepseek") @map("classifier_vendor") @db.VarChar(50)
+
+  // ============ 行为配置 ============
+  /// 工具调用时的最低复杂度
+  toolMinComplexity String? @map("tool_min_complexity") @db.VarChar(20)
+
+  // ============ 状态 ============
+  /// 是否启用
+  isEnabled Boolean @default(true) @map("is_enabled")
+  /// 是否为内置配置
+  isBuiltin Boolean @default(false) @map("is_builtin")
+  /// 软删除标记
+  isDeleted Boolean @default(false) @map("is_deleted")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([configId])
+  @@index([isEnabled])
+  @@index([isDeleted])
+  @@map("b_complexity_routing_config")
 }

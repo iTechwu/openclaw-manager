@@ -29,7 +29,8 @@
     "db:format": "prisma format",
     "db:seed": "ts-node prisma/seed.ts",
     "update:model-pricing": "ts-node scripts/update-model-pricing.ts",
-    "validate:versions": "ts-node scripts/validate-api-versions.ts"
+    "validate:versions": "ts-node scripts/validate-api-versions.ts",
+    "sync:skills": "ts-node -r tsconfig-paths/register scripts/sync-openclaw-skills.ts"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.14",

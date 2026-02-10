@@ -11,6 +11,7 @@ import {
   Badge,
   Skeleton,
   Input,
+  Button,
 } from '@repo/ui';
 import {
   Search,
@@ -21,7 +22,9 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  ArrowLeft,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { FallbackChain, FallbackModel } from '@repo/contracts';
 
 /**
@@ -216,11 +219,18 @@ export default function FallbackChainsPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold">Fallback 链管理</h1>
-        <p className="text-muted-foreground text-sm">
-          配置多模型 Fallback 策略，确保服务高可用性
-        </p>
+      <div className="flex items-center gap-4">
+        <Link href="/routing">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">Fallback 链管理</h1>
+          <p className="text-muted-foreground text-sm">
+            配置多模型 Fallback 策略，确保服务高可用性
+          </p>
+        </div>
       </div>
 
       {/* 搜索 */}

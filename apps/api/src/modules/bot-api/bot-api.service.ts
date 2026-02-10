@@ -769,25 +769,22 @@ export class BotApiService {
       }
 
       // Check if container exists and is in a healthy state
-      let needsRecreate = false;
+      // IMPORTANT: We always recreate the container to ensure new configurations take effect
+      // The OpenClaw data (memory, sessions) is persisted in a separate volume and won't be lost
+      let needsRecreate = true; // Always recreate to apply new config
       if (bot.containerId) {
         const containerStatus = await this.dockerService.getContainerStatus(
           bot.containerId,
         );
-        if (!containerStatus) {
-          // Container doesn't exist anymore
+        if (containerStatus) {
+          // Container exists, remove it to recreate with new config
           this.logger.log(
-            `Container ${bot.containerId} not found, will recreate`,
+            `Container ${bot.containerId} exists, will recreate to apply latest config`,
           );
-          needsRecreate = true;
-        } else if (containerStatus.exitCode !== 0 && !containerStatus.running) {
-          // Container exited with error, needs to be recreated
-          this.logger.log(
-            `Container ${bot.containerId} exited with code ${containerStatus.exitCode}, will recreate`,
-          );
-          needsRecreate = true;
-          // Remove the failed container
           try {
+            if (containerStatus.running) {
+              await this.dockerService.stopContainer(bot.containerId);
+            }
             await this.dockerService.removeContainer(bot.containerId);
           } catch (removeError) {
             this.logger.warn(
@@ -795,10 +792,20 @@ export class BotApiService {
               removeError,
             );
           }
+        } else {
+          // Container doesn't exist anymore
+          this.logger.log(
+            `Container ${bot.containerId} not found, will create new one`,
+          );
         }
       }
 
-      if (bot.containerId && !needsRecreate) {
+      // Ensure OpenClaw data directory exists before creating container
+      await this.workspaceService.ensureOpenclawDir(userId, hostname);
+
+      if (!needsRecreate && bot.containerId) {
+        // This branch is currently unreachable since needsRecreate is always true
+        // Kept for potential future optimization where we might skip recreation
         await this.dockerService.startContainer(bot.containerId);
       } else {
         // Get provider key for this bot
@@ -1072,10 +1079,15 @@ export class BotApiService {
   // Provider Key Operations
   // ============================================================================
 
-  async listProviderKeys(userId: string): Promise<ProviderKeyDto[]> {
-    const { list } = await this.providerKeyService.list({
-      createdById: userId,
-    });
+  /**
+   * 列出所有可用的 Provider Keys
+   * 管理员创建的 API Keys 对所有用户可见和可用
+   * 注意：只有管理员可以创建和删除 API Keys
+   */
+  async listProviderKeys(_userId: string): Promise<ProviderKeyDto[]> {
+    // 列出所有 API Keys（不按用户过滤）
+    // 所有用户都可以使用管理员创建的 API Keys
+    const { list } = await this.providerKeyService.list({});
     return list.map((key) => this.toProviderKeyDto(key));
   }
 
@@ -1113,12 +1125,16 @@ export class BotApiService {
     return { id: key.id };
   }
 
+  /**
+   * 删除 Provider Key
+   * 注意：只有管理员可以删除 API Keys（通过 @AdminAuth() 装饰器控制）
+   */
   async deleteProviderKey(
     id: string,
     userId: string,
   ): Promise<{ ok: boolean }> {
     const key = await this.providerKeyService.get({ id });
-    if (!key || key.createdById !== userId) {
+    if (!key) {
       throw new NotFoundException(`Provider key with id "${id}" not found`);
     }
     await this.providerKeyService.update(
@@ -1140,14 +1156,18 @@ export class BotApiService {
     return { ok: true };
   }
 
-  async getProviderKeyHealth(userId: string): Promise<{
+  /**
+   * 获取 Provider Key 健康状态
+   * 显示所有可用的 API Keys 数量
+   */
+  async getProviderKeyHealth(_userId: string): Promise<{
     status: string;
     keyCount: number;
     botCount: number;
   }> {
     const [keyResult, botResult] = await Promise.all([
-      this.providerKeyService.list({ createdById: userId }, { limit: 1 }),
-      this.botService.list({ createdById: userId }, { limit: 1 }),
+      this.providerKeyService.list({}, { limit: 1 }),
+      this.botService.list({}, { limit: 1 }),
     ]);
     const keyCount = keyResult.total;
     const botCount = botResult.total;

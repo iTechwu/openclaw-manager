@@ -1,6 +1,54 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import {
+  ComplexityClassifierService,
+  type ComplexityLevel,
+  type ClassifyResult,
+  COMPLEXITY_LEVELS,
+  type ModelConfig,
+  type ClassifierConfig,
+} from '@app/clients/internal/complexity-classifier';
+
+/**
+ * 复杂度路由配置
+ */
+export interface ComplexityRoutingConfig {
+  /** 是否启用复杂度路由 */
+  enabled: boolean;
+  /** 各复杂度对应的模型配置 */
+  models: Record<ComplexityLevel, ModelConfig>;
+  /** 工具调用时的最低复杂度 */
+  toolMinComplexity?: ComplexityLevel;
+  /** 分类器配置 */
+  classifier?: {
+    /** 分类器使用的模型 */
+    model: string;
+    /** 分类器使用的 vendor */
+    vendor: string;
+    /** 自定义 Base URL */
+    baseUrl?: string;
+  };
+}
+
+/**
+ * 默认复杂度路由配置
+ */
+const DEFAULT_COMPLEXITY_ROUTING: ComplexityRoutingConfig = {
+  enabled: true,
+  models: {
+    super_easy: { vendor: 'deepseek', model: 'deepseek-v3' },
+    easy: { vendor: 'deepseek', model: 'deepseek-v3' },
+    medium: { vendor: 'openai', model: 'gpt-4o' },
+    hard: { vendor: 'anthropic', model: 'claude-opus-4-20250514' },
+    super_hard: { vendor: 'anthropic', model: 'claude-opus-4-20250514' },
+  },
+  toolMinComplexity: 'easy',
+  classifier: {
+    model: 'deepseek-v3-250324',
+    vendor: 'deepseek',
+  },
+};
 
 /**
  * 能力标签定义
@@ -32,6 +80,12 @@ export interface RouteDecision {
   };
   fallbackChainId?: string;
   costStrategyId?: string;
+  /** 复杂度分类结果（如果启用了复杂度路由） */
+  complexity?: {
+    level: ComplexityLevel;
+    latencyMs: number;
+    inheritedFromContext?: boolean;
+  };
 }
 
 /**
@@ -64,9 +118,11 @@ export interface BotRoutingContext {
   installedSkills: string[];
   routingConfig?: {
     routingEnabled: boolean;
-    routingMode: 'auto' | 'manual' | 'cost-optimized';
+    routingMode: 'auto' | 'manual' | 'cost-optimized' | 'complexity-based';
     fallbackChainId?: string;
     costStrategyId?: string;
+    /** 复杂度路由配置 */
+    complexityRouting?: ComplexityRoutingConfig;
   };
 }
 
@@ -83,9 +139,14 @@ export interface BotRoutingContext {
 export class RoutingEngineService {
   // 预定义能力标签（后续从数据库加载）
   private capabilityTags: Map<string, CapabilityTag> = new Map();
+  // 复杂度路由配置
+  private complexityRoutingConfig: ComplexityRoutingConfig =
+    DEFAULT_COMPLEXITY_ROUTING;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Optional()
+    private readonly complexityClassifier?: ComplexityClassifierService,
   ) {
     this.initializeDefaultTags();
   }
@@ -150,14 +211,22 @@ export class RoutingEngineService {
         category: 'context',
         priority: 60,
         requiredProtocol: 'openai-compatible',
-        requiredModels: ['gemini-1.5-pro', 'gemini-2.0-flash', 'doubao-pro-128k'],
+        requiredModels: [
+          'gemini-1.5-pro',
+          'gemini-2.0-flash',
+          'doubao-pro-128k',
+        ],
       },
       {
         tagId: 'vision',
         name: '视觉理解',
         category: 'vision',
         priority: 75,
-        requiredModels: ['gpt-4o', 'claude-sonnet-4-20250514', 'gemini-2.0-flash'],
+        requiredModels: [
+          'gpt-4o',
+          'claude-sonnet-4-20250514',
+          'gemini-2.0-flash',
+        ],
         requiresVision: true,
       },
     ];
@@ -170,9 +239,7 @@ export class RoutingEngineService {
   /**
    * 从数据库加载能力标签配置
    */
-  async loadCapabilityTagsFromDb(
-    tags: CapabilityTag[],
-  ): Promise<void> {
+  async loadCapabilityTagsFromDb(tags: CapabilityTag[]): Promise<void> {
     this.capabilityTags.clear();
     for (const tag of tags) {
       this.capabilityTags.set(tag.tagId, tag);
@@ -272,9 +339,7 @@ export class RoutingEngineService {
   /**
    * 检查消息中是否包含视觉内容
    */
-  private hasVisionContent(
-    messages?: ProxyRequestBody['messages'],
-  ): boolean {
+  private hasVisionContent(messages?: ProxyRequestBody['messages']): boolean {
     if (!messages) return false;
 
     return messages.some((msg) => {
@@ -405,7 +470,11 @@ export class RoutingEngineService {
     const modelLower = model.toLowerCase();
 
     if (modelLower.includes('claude')) return 'anthropic';
-    if (modelLower.includes('gpt') || modelLower.includes('o1') || modelLower.includes('o3'))
+    if (
+      modelLower.includes('gpt') ||
+      modelLower.includes('o1') ||
+      modelLower.includes('o3')
+    )
       return 'openai';
     if (modelLower.includes('gemini')) return 'google';
     if (modelLower.includes('deepseek')) return 'deepseek';
@@ -430,5 +499,242 @@ export class RoutingEngineService {
    */
   getCapabilityTag(tagId: string): CapabilityTag | undefined {
     return this.capabilityTags.get(tagId);
+  }
+
+  // ============================================================================
+  // 复杂度路由相关方法
+  // ============================================================================
+
+  /**
+   * 设置复杂度路由配置
+   */
+  setComplexityRoutingConfig(config: ComplexityRoutingConfig): void {
+    this.complexityRoutingConfig = config;
+
+    // 同步更新分类器配置
+    if (config.classifier && this.complexityClassifier) {
+      this.complexityClassifier.setClassifierConfig({
+        model: config.classifier.model,
+        vendor: config.classifier.vendor,
+        baseUrl: config.classifier.baseUrl,
+      });
+    }
+
+    this.logger.info('[RoutingEngine] Complexity routing config updated', {
+      enabled: config.enabled,
+      toolMinComplexity: config.toolMinComplexity,
+      classifierModel: config.classifier?.model,
+      classifierVendor: config.classifier?.vendor,
+    });
+  }
+
+  /**
+   * 获取复杂度路由配置
+   */
+  getComplexityRoutingConfig(): ComplexityRoutingConfig {
+    return this.complexityRoutingConfig;
+  }
+
+  /**
+   * 基于复杂度的路由决策
+   *
+   * @param requestBody 请求体
+   * @param context Bot 路由上下文
+   * @param routingHint 路由提示
+   * @returns 路由决策（包含复杂度信息）
+   */
+  async selectRouteWithComplexity(
+    requestBody: ProxyRequestBody,
+    context: BotRoutingContext,
+    routingHint?: string,
+  ): Promise<RouteDecision> {
+    // 1. 获取复杂度路由配置
+    const complexityConfig =
+      context.routingConfig?.complexityRouting || this.complexityRoutingConfig;
+
+    // 2. 如果未启用复杂度路由或没有分类器，使用传统路由
+    if (!complexityConfig.enabled || !this.complexityClassifier) {
+      this.logger.debug(
+        '[RoutingEngine] Complexity routing disabled, using capability-based routing',
+      );
+      const requirements = this.parseCapabilityRequirements(
+        requestBody,
+        routingHint,
+      );
+      return this.selectRoute(requirements, context, requestBody.model);
+    }
+
+    // 3. 提取用户消息和上下文
+    const { message, contextMessage } = this.extractMessageAndContext(
+      requestBody.messages,
+    );
+
+    if (!message) {
+      this.logger.warn(
+        '[RoutingEngine] No user message found, using default route',
+      );
+      const requirements = this.parseCapabilityRequirements(
+        requestBody,
+        routingHint,
+      );
+      return this.selectRoute(requirements, context, requestBody.model);
+    }
+
+    // 4. 调用复杂度分类器
+    const classifyResult = await this.complexityClassifier.classify({
+      message,
+      context: contextMessage,
+      hasTools: !!requestBody.tools && requestBody.tools.length > 0,
+    });
+
+    // 5. 应用工具调用的最低复杂度
+    let finalLevel = classifyResult.level;
+    if (
+      requestBody.tools &&
+      requestBody.tools.length > 0 &&
+      complexityConfig.toolMinComplexity
+    ) {
+      finalLevel = this.complexityClassifier.ensureMinComplexity(
+        classifyResult.level,
+        complexityConfig.toolMinComplexity,
+      );
+      if (finalLevel !== classifyResult.level) {
+        this.logger.debug(
+          `[RoutingEngine] Tools present: bumped ${classifyResult.level} -> ${finalLevel}`,
+        );
+      }
+    }
+
+    // 6. 根据复杂度选择模型
+    const modelConfig = complexityConfig.models[finalLevel];
+
+    // 7. 构建路由决策
+    const decision: RouteDecision = {
+      protocol: this.inferProtocolFromVendor(modelConfig.vendor),
+      vendor: modelConfig.vendor,
+      model: modelConfig.model,
+      features: {},
+      complexity: {
+        level: finalLevel,
+        latencyMs: classifyResult.latencyMs,
+        inheritedFromContext: classifyResult.inheritedFromContext,
+      },
+    };
+
+    // 8. 检查是否需要特殊能力（Extended Thinking, Cache Control 等）
+    const requirements = this.parseCapabilityRequirements(
+      requestBody,
+      routingHint,
+    );
+    if (requirements.length > 0) {
+      const primaryRequirement = requirements[0];
+
+      // Extended Thinking 需要 Anthropic Native
+      if (primaryRequirement.requiresExtendedThinking) {
+        decision.protocol = 'anthropic-native';
+        decision.features.extendedThinking = true;
+        // 如果复杂度选择的不是 Anthropic 模型，需要覆盖
+        if (decision.vendor !== 'anthropic') {
+          decision.vendor = 'anthropic';
+          decision.model =
+            primaryRequirement.requiredModels?.[0] ||
+            'claude-sonnet-4-20250514';
+        }
+      }
+
+      // Cache Control 需要 Anthropic Native
+      if (primaryRequirement.requiresCacheControl) {
+        decision.protocol = 'anthropic-native';
+        decision.features.cacheControl = true;
+      }
+    }
+
+    // 9. 应用 fallback 和 cost 配置
+    if (context.routingConfig) {
+      if (context.routingConfig.fallbackChainId) {
+        decision.fallbackChainId = context.routingConfig.fallbackChainId;
+      }
+      if (context.routingConfig.costStrategyId) {
+        decision.costStrategyId = context.routingConfig.costStrategyId;
+      }
+    }
+
+    this.logger.info('[RoutingEngine] Complexity-based route decision', {
+      complexity: finalLevel,
+      latencyMs: classifyResult.latencyMs,
+      vendor: decision.vendor,
+      model: decision.model,
+      protocol: decision.protocol,
+    });
+
+    return decision;
+  }
+
+  /**
+   * 从消息数组中提取最后一条用户消息和上下文
+   */
+  private extractMessageAndContext(messages?: ProxyRequestBody['messages']): {
+    message: string;
+    contextMessage?: string;
+  } {
+    if (!messages || messages.length === 0) {
+      return { message: '' };
+    }
+
+    let userMessage = '';
+    let contextMessage: string | undefined;
+    let foundUser = false;
+
+    // 从后往前遍历，找到最后一条用户消息
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      const content = this.extractTextFromContent(msg.content);
+
+      if (!foundUser && msg.role === 'user') {
+        userMessage = content;
+        foundUser = true;
+      } else if (foundUser && content) {
+        // 获取用户消息之前的消息作为上下文
+        contextMessage = content.substring(0, 200);
+        break;
+      }
+    }
+
+    return { message: userMessage, contextMessage };
+  }
+
+  /**
+   * 从消息内容中提取文本
+   */
+  private extractTextFromContent(content: unknown): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    if (Array.isArray(content)) {
+      return content
+        .filter(
+          (item): item is { type: string; text: string } =>
+            typeof item === 'object' &&
+            item !== null &&
+            'type' in item &&
+            item.type === 'text' &&
+            'text' in item,
+        )
+        .map((item) => item.text)
+        .join(' ');
+    }
+
+    return '';
+  }
+
+  /**
+   * 从 vendor 推断协议
+   */
+  private inferProtocolFromVendor(
+    vendor: string,
+  ): 'openai-compatible' | 'anthropic-native' {
+    // 只有 Anthropic 使用原生协议，其他都使用 OpenAI 兼容协议
+    return vendor === 'anthropic' ? 'anthropic-native' : 'openai-compatible';
   }
 }

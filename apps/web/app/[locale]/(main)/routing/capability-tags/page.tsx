@@ -11,6 +11,7 @@ import {
   Badge,
   Skeleton,
   Input,
+  Button,
 } from '@repo/ui';
 import {
   Search,
@@ -24,7 +25,9 @@ import {
   FileText,
   CheckCircle,
   XCircle,
+  ArrowLeft,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { CapabilityTag } from '@repo/contracts';
 
 /**
@@ -56,8 +59,9 @@ function CapabilityTagCard({ tag }: { tag: CapabilityTag }) {
             </div>
             <div>
               <CardTitle className="text-base">{tag.name}</CardTitle>
+              <CardDescription className="text-xs">{tag.tagId}</CardDescription>
               <CardDescription className="text-xs">
-                {tag.tagId} · 优先级: {tag.priority}
+                优先级: {tag.priority}
               </CardDescription>
             </div>
           </div>
@@ -218,11 +222,18 @@ export default function CapabilityTagsPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold">能力标签管理</h1>
-        <p className="text-muted-foreground text-sm">
-          定义模型能力标签和路由要求，用于智能路由选择
-        </p>
+      <div className="flex items-center gap-4">
+        <Link href="/routing">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">能力标签管理</h1>
+          <p className="text-muted-foreground text-sm">
+            定义模型能力标签和路由要求，用于智能路由选择
+          </p>
+        </div>
       </div>
 
       {/* 搜索 */}

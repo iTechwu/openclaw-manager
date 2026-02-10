@@ -405,9 +405,9 @@ model Bot {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  createdBy       UserInfo         @relation(fields: [createdById], references: [id])
-  personaTemplate PersonaTemplate? @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
-  avatarFile      FileSource?      @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  createdBy       UserInfo          @relation(fields: [createdById], references: [id])
+  personaTemplate PersonaTemplate?  @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
+  avatarFile      FileSource?       @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
   providerKeys    BotProviderKey[]
   usageLogs       BotUsageLog[]
   proxyToken      ProxyToken?
@@ -504,10 +504,10 @@ model BotUsageLog {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   // 基础字段 - 用于精细化用量分析
-  model        String?  @db.VarChar(100)                    // AI 模型名称
-  endpoint     String?  @db.VarChar(255)                    // API 端点路径
-  durationMs   Int?     @map("duration_ms")                 // 请求耗时（毫秒）
-  errorMessage String?  @map("error_message") @db.Text      // 错误信息
+  model        String? @db.VarChar(100) // AI 模型名称
+  endpoint     String? @db.VarChar(255) // API 端点路径
+  durationMs   Int?    @map("duration_ms") // 请求耗时（毫秒）
+  errorMessage String? @map("error_message") @db.Text // 错误信息
 
   // ============ 混合架构扩展字段 ============
   // 原生功能使用追踪
@@ -547,11 +547,11 @@ model BotUsageLog {
   @@index([botId])
   @@index([createdAt])
   @@index([vendor])
-  @@index([botId, createdAt])           // 复合索引：按 Bot 查询时间范围
-  @@index([botId, vendor, createdAt])   // 复合索引：按 Bot+Vendor 查询
-  @@index([model])                      // 按模型查询
-  @@index([protocolType])               // 按协议类型查询
-  @@index([fallbackUsed])               // 按 Fallback 使用情况查询
+  @@index([botId, createdAt]) // 复合索引：按 Bot 查询时间范围
+  @@index([botId, vendor, createdAt]) // 复合索引：按 Bot+Vendor 查询
+  @@index([model]) // 按模型查询
+  @@index([protocolType]) // 按协议类型查询
+  @@index([fallbackUsed]) // 按 Fallback 使用情况查询
   @@map("b_usage_log")
 }
 
@@ -763,13 +763,13 @@ model ChannelCredentialField {
 
 /// 插件分类
 enum PluginCategory {
-  BROWSER       // 浏览器自动化
-  FILESYSTEM    // 文件系统
-  DATABASE      // 数据库
-  API           // API 集成
+  BROWSER // 浏览器自动化
+  FILESYSTEM // 文件系统
+  DATABASE // 数据库
+  API // API 集成
   COMMUNICATION // 通讯工具
-  DEVELOPMENT   // 开发工具
-  CUSTOM        // 自定义
+  DEVELOPMENT // 开发工具
+  CUSTOM // 自定义
 
   @@map("plugin_category")
 }
@@ -785,9 +785,9 @@ model Plugin {
   author        String?        @db.VarChar(100)
   category      PluginCategory
   region        String         @default("global") @db.VarChar(20) // global, cn, en
-  configSchema  Json?          @map("config_schema")   // JSON Schema for plugin config
-  defaultConfig Json?          @map("default_config")  // Default configuration
-  mcpConfig     Json?          @map("mcp_config")      // MCP server configuration
+  configSchema  Json?          @map("config_schema") // JSON Schema for plugin config
+  defaultConfig Json?          @map("default_config") // Default configuration
+  mcpConfig     Json?          @map("mcp_config") // MCP server configuration
   isOfficial    Boolean        @default(false) @map("is_official")
   isEnabled     Boolean        @default(true) @map("is_enabled")
   downloadUrl   String?        @map("download_url") @db.VarChar(500)
@@ -815,7 +815,7 @@ model BotPlugin {
   id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   botId     String   @map("bot_id") @db.Uuid
   pluginId  String   @map("plugin_id") @db.Uuid
-  config    Json?                                      // Plugin instance configuration
+  config    Json? // Plugin instance configuration
   isEnabled Boolean  @default(true) @map("is_enabled")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -830,47 +830,99 @@ model BotPlugin {
   @@map("b_bot_plugin")
 }
 
+/// SkillType - 技能类型/分类
+/// 用于对技能进行分类管理，支持中英文名称
+model SkillType {
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 类型标识（如 coding-agents, git-github）
+  slug          String  @unique @db.VarChar(100)
+  /// 英文名称（如 Coding Agents & IDEs）
+  name          String  @db.VarChar(200)
+  /// 中文名称
+  nameZh        String? @map("name_zh") @db.VarChar(200)
+  /// 英文描述
+  description   String? @db.Text
+  /// 中文描述
+  descriptionZh String? @map("description_zh") @db.Text
+  /// 图标（emoji 或图标名称）
+  icon          String? @db.VarChar(50)
+  /// 排序权重（越小越靠前）
+  sortOrder     Int     @default(0) @map("sort_order")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  skills Skill[]
+
+  @@index([slug])
+  @@index([sortOrder])
+  @@index([isDeleted])
+  @@map("b_skill_type")
+}
+
 /// Skill - 自定义技能定义
 /// 用户可以创建自定义技能供 Bot 使用
+/// 支持系统预设、用户自定义和外部同步（如 OpenClaw）
 model Skill {
-  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name        String   @db.VarChar(100)
-  slug        String   @db.VarChar(100)
-  description String?  @db.Text
-  version     String   @default("1.0.0") @db.VarChar(20)
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String  @db.VarChar(100)
+  /// 中文名称（翻译自 name）
+  nameZh        String? @map("name_zh") @db.VarChar(200)
+  slug          String  @db.VarChar(100)
+  /// 英文描述（原始描述）
+  description   String? @db.Text
+  /// 中文描述（翻译自 description）
+  descriptionZh String? @map("description_zh") @db.Text
+  version       String  @default("1.0.0") @db.VarChar(20)
 
-  // 技能类型: tool (工具调用), prompt (提示词模板), workflow (工作流)
-  skillType   String   @default("tool") @map("skill_type") @db.VarChar(20)
+  // 技能类型关联
+  skillTypeId String?    @map("skill_type_id") @db.Uuid
+  skillType   SkillType? @relation(fields: [skillTypeId], references: [id], onDelete: SetNull)
 
   // 技能定义 (JSON)
   // 对于 tool 类型: { name, description, inputSchema, handler }
   // 对于 prompt 类型: { template, variables }
   // 对于 workflow 类型: { steps, triggers }
-  definition  Json     @db.JsonB
+  definition Json @db.JsonB
 
   // 示例用法
-  examples    Json?    @db.JsonB
+  examples Json? @db.JsonB
 
   // 是否为系统预设
-  isSystem    Boolean  @default(false) @map("is_system")
-  isEnabled   Boolean  @default(true) @map("is_enabled")
+  isSystem  Boolean @default(false) @map("is_system")
+  isEnabled Boolean @default(true) @map("is_enabled")
 
   // 创建者
-  createdById String?  @map("created_by_id") @db.Uuid
+  createdById String? @map("created_by_id") @db.Uuid
 
-  isDeleted   Boolean  @default(false) @map("is_deleted")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+  // ============ 外部来源字段（用于同步 OpenClaw 等外部技能库）============
+  /// 外部来源标识（如 openclaw, clawhub）
+  source       String?   @db.VarChar(50)
+  /// 外部来源 URL（如 GitHub 仓库链接）
+  sourceUrl    String?   @map("source_url") @db.VarChar(500)
+  /// 技能作者（外部来源的作者）
+  author       String?   @db.VarChar(100)
+  /// 最后同步时间
+  lastSyncedAt DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   installations BotSkill[]
 
   @@unique([slug, createdById])
-  @@index([skillType])
+  @@unique([source, slug], name: "b_skill_source_slug_key")
+  @@index([skillTypeId])
   @@index([isSystem])
   @@index([isEnabled])
   @@index([createdById])
   @@index([isDeleted])
+  @@index([source])
+  @@index([lastSyncedAt])
   @@map("b_skill")
 }
 
@@ -880,7 +932,7 @@ model BotSkill {
   id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   botId     String   @map("bot_id") @db.Uuid
   skillId   String   @map("skill_id") @db.Uuid
-  config    Json?    // Skill instance configuration overrides
+  config    Json? // Skill instance configuration overrides
   isEnabled Boolean  @default(true) @map("is_enabled")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -902,9 +954,9 @@ model BotSkill {
 /// 渠道连接状态
 enum ChannelConnectionStatus {
   DISCONNECTED // 未连接
-  CONNECTING   // 连接中
-  CONNECTED    // 已连接
-  ERROR        // 连接错误
+  CONNECTING // 连接中
+  CONNECTED // 已连接
+  ERROR // 连接错误
 
   @@map("channel_connection_status")
 }
@@ -917,21 +969,21 @@ enum ChannelConnectionStatus {
 /// 存储各 AI 模型的定价信息、能力评分和特性支持，用于成本估算和智能路由
 /// 价格单位：美元/百万 tokens
 model ModelPricing {
-  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   /// 模型名称（如 gpt-4o, claude-sonnet-4-20250514）
-  model          String   @unique @db.VarChar(100)
+  model       String  @unique @db.VarChar(100)
   /// 服务商标识（openai, anthropic, google, deepseek 等）
-  vendor         String   @db.VarChar(50)
+  vendor      String  @db.VarChar(50)
   /// 模型显示名称
-  displayName    String?  @map("display_name") @db.VarChar(255)
+  displayName String? @map("display_name") @db.VarChar(255)
   /// 模型描述
-  description    String?  @db.Text
+  description String? @db.Text
 
   // ============ 定价信息（美元/百万 tokens）============
   /// 输入 token 价格
-  inputPrice     Decimal  @map("input_price") @db.Decimal(10, 6)
+  inputPrice      Decimal  @map("input_price") @db.Decimal(10, 6)
   /// 输出 token 价格
-  outputPrice    Decimal  @map("output_price") @db.Decimal(10, 6)
+  outputPrice     Decimal  @map("output_price") @db.Decimal(10, 6)
   /// 缓存读取价格（Anthropic Cache Control）
   cacheReadPrice  Decimal? @map("cache_read_price") @db.Decimal(10, 6)
   /// 缓存写入价格（Anthropic Cache Control）
@@ -941,15 +993,15 @@ model ModelPricing {
 
   // ============ 能力评分（0-100）============
   /// 推理能力评分
-  reasoningScore   Int @default(50) @map("reasoning_score")
+  reasoningScore  Int @default(50) @map("reasoning_score")
   /// 编码能力评分
-  codingScore      Int @default(50) @map("coding_score")
+  codingScore     Int @default(50) @map("coding_score")
   /// 创造力评分
-  creativityScore  Int @default(50) @map("creativity_score")
+  creativityScore Int @default(50) @map("creativity_score")
   /// 响应速度评分
-  speedScore       Int @default(50) @map("speed_score")
+  speedScore      Int @default(50) @map("speed_score")
   /// 上下文长度（K tokens）
-  contextLength    Int @default(128) @map("context_length")
+  contextLength   Int @default(128) @map("context_length")
 
   // ============ 特性支持 ============
   /// 是否支持 Extended Thinking（Anthropic）
@@ -970,17 +1022,17 @@ model ModelPricing {
 
   // ============ 状态 ============
   /// 是否启用
-  isEnabled      Boolean  @default(true) @map("is_enabled")
+  isEnabled       Boolean   @default(true) @map("is_enabled")
   /// 是否已弃用
-  isDeprecated   Boolean  @default(false) @map("is_deprecated")
+  isDeprecated    Boolean   @default(false) @map("is_deprecated")
   /// 弃用日期
   deprecationDate DateTime? @map("deprecation_date") @db.Timestamptz(6)
   /// 价格更新时间
-  priceUpdatedAt DateTime @default(now()) @map("price_updated_at") @db.Timestamptz(6)
+  priceUpdatedAt  DateTime  @default(now()) @map("price_updated_at") @db.Timestamptz(6)
   /// 备注
-  notes          String?  @db.Text
+  notes           String?   @db.Text
   /// 其他扩展元数据
-  metadata       Json?    @db.JsonB
+  metadata        Json?     @db.JsonB
 
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -1002,9 +1054,9 @@ model ModelPricing {
 
 /// 路由类型枚举
 enum ModelRoutingType {
-  FUNCTION_ROUTE  // 功能路由：根据消息内容选择模型
-  LOAD_BALANCE    // 负载均衡：多模型分流
-  FAILOVER        // 故障转移：主备切换
+  FUNCTION_ROUTE // 功能路由：根据消息内容选择模型
+  LOAD_BALANCE // 负载均衡：多模型分流
+  FAILOVER // 故障转移：主备切换
 
   @@map("model_routing_type")
 }
@@ -1052,7 +1104,7 @@ model BotChannel {
   channelType          String                  @map("channel_type") @db.VarChar(50) // feishu, telegram, discord, etc.
   name                 String                  @db.VarChar(255) // 渠道名称，用于区分同类型多个渠道
   credentialsEncrypted Bytes                   @map("credentials_encrypted") // AES-256-GCM 加密的凭证 JSON
-  config               Json?                   // 渠道特定配置（如 requireMention, replyInThread 等）
+  config               Json? // 渠道特定配置（如 requireMention, replyInThread 等）
   isEnabled            Boolean                 @default(true) @map("is_enabled")
   connectionStatus     ChannelConnectionStatus @default(DISCONNECTED) @map("connection_status")
   lastConnectedAt      DateTime?               @map("last_connected_at") @db.Timestamptz(6)
@@ -1263,6 +1315,12 @@ model BotRoutingConfig {
   /// 降级目标模型
   downgradeModel     String?  @map("downgrade_model") @db.VarChar(100)
 
+  // ============ 复杂度路由配置 ============
+  /// 是否启用复杂度路由
+  complexityRoutingEnabled  Boolean @default(false) @map("complexity_routing_enabled")
+  /// 复杂度路由配置 ID
+  complexityRoutingConfigId String? @map("complexity_routing_config_id") @db.VarChar(50)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -1271,5 +1329,49 @@ model BotRoutingConfig {
   @@index([botId])
   @@index([routingEnabled])
   @@index([costControlEnabled])
+  @@index([complexityRoutingEnabled])
   @@map("b_bot_routing_config")
+}
+
+/// ComplexityRoutingConfig - 复杂度路由配置
+/// 存储基于消息复杂度的模型路由配置
+model ComplexityRoutingConfig {
+  id       String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 配置唯一标识符
+  configId String @unique @map("config_id") @db.VarChar(50)
+  /// 配置名称
+  name     String @db.VarChar(100)
+  /// 配置描述
+  description String? @db.Text
+
+  // ============ 模型配置 ============
+  /// 各复杂度对应的模型配置（JSON）
+  /// 格式: { super_easy: {vendor, model}, easy: {...}, medium: {...}, hard: {...}, super_hard: {...} }
+  models Json @db.JsonB
+
+  // ============ 分类器配置 ============
+  /// 分类器使用的模型
+  classifierModel  String @default("deepseek-v3-250324") @map("classifier_model") @db.VarChar(100)
+  /// 分类器使用的 vendor
+  classifierVendor String @default("deepseek") @map("classifier_vendor") @db.VarChar(50)
+
+  // ============ 行为配置 ============
+  /// 工具调用时的最低复杂度
+  toolMinComplexity String? @map("tool_min_complexity") @db.VarChar(20)
+
+  // ============ 状态 ============
+  /// 是否启用
+  isEnabled Boolean @default(true) @map("is_enabled")
+  /// 是否为内置配置
+  isBuiltin Boolean @default(false) @map("is_builtin")
+  /// 软删除标记
+  isDeleted Boolean @default(false) @map("is_deleted")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([configId])
+  @@index([isEnabled])
+  @@index([isDeleted])
+  @@map("b_complexity_routing_config")
 }

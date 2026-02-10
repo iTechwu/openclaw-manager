@@ -32,19 +32,15 @@ export interface BotWorkspaceConfig {
 export class WorkspaceService {
   private readonly dataDir: string;
   private readonly secretsDir: string;
+  private readonly openclawDir: string;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
   ) {
-    const dataDir = this.configService.get<string>(
-      'BOT_DATA_DIR',
-      '/data/bots',
-    );
-    const secretsDir = this.configService.get<string>(
-      'BOT_SECRETS_DIR',
-      '/data/secrets',
-    );
+    const dataDir = process.env.BOT_DATA_DIR || '/data/bots';
+    const secretsDir = process.env.BOT_SECRETS_DIR || '/data/secrets';
+    const openclawDir = process.env.BOT_OPENCLAW_DIR || '/data/openclaw';
 
     // 确保始终使用绝对路径，避免 Docker 将其当作 volume 名称解析
     this.dataDir = path.isAbsolute(dataDir)
@@ -53,6 +49,9 @@ export class WorkspaceService {
     this.secretsDir = path.isAbsolute(secretsDir)
       ? secretsDir
       : path.join(process.cwd(), secretsDir);
+    this.openclawDir = path.isAbsolute(openclawDir)
+      ? openclawDir
+      : path.join(process.cwd(), openclawDir);
   }
 
   /**
@@ -71,6 +70,7 @@ export class WorkspaceService {
     const isolationKey = this.getIsolationKey(config.userId, config.hostname);
     const workspacePath = path.join(this.dataDir, isolationKey);
     const botSecretsPath = path.join(this.secretsDir, isolationKey);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
 
     try {
       // Clean up any existing workspace/secrets from previously deleted bot
@@ -80,6 +80,8 @@ export class WorkspaceService {
         this.logger.info(`Cleaning up existing workspace for: ${isolationKey}`);
         await fs.rm(workspacePath, { recursive: true, force: true });
         await fs.rm(botSecretsPath, { recursive: true, force: true });
+        // Note: We don't clean up openclawPath here as it may contain valuable data
+        // OpenClaw data is only cleaned up when the bot is explicitly deleted
       }
 
       // Create workspace directory
@@ -102,6 +104,9 @@ export class WorkspaceService {
 
       // Create secrets directory for this bot
       await fs.mkdir(botSecretsPath, { recursive: true });
+
+      // Create OpenClaw data directory for this bot (for persistent memory/sessions)
+      await fs.mkdir(openclawPath, { recursive: true });
 
       this.logger.info(`Workspace created for bot: ${isolationKey}`);
       return workspacePath;
@@ -163,11 +168,13 @@ export class WorkspaceService {
 
   /**
    * Delete workspace directory
+   * This also deletes OpenClaw data (memory, sessions, etc.)
    */
   async deleteWorkspace(userId: string, hostname: string): Promise<void> {
     const isolationKey = this.getIsolationKey(userId, hostname);
     const workspacePath = path.join(this.dataDir, isolationKey);
     const botSecretsPath = path.join(this.secretsDir, isolationKey);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
 
     try {
       // Remove workspace directory
@@ -176,7 +183,12 @@ export class WorkspaceService {
       // Remove secrets directory
       await fs.rm(botSecretsPath, { recursive: true, force: true });
 
-      this.logger.info(`Workspace deleted for bot: ${isolationKey}`);
+      // Remove OpenClaw data directory (memory, sessions, etc.)
+      await fs.rm(openclawPath, { recursive: true, force: true });
+
+      this.logger.info(
+        `Workspace deleted for bot: ${isolationKey} (including OpenClaw data)`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to delete workspace for ${isolationKey}:`,
@@ -220,6 +232,25 @@ export class WorkspaceService {
    */
   getIsolationKeyForBot(userId: string, hostname: string): string {
     return this.getIsolationKey(userId, hostname);
+  }
+
+  /**
+   * Get OpenClaw data path for a bot
+   * This directory stores persistent data like memory, sessions, agents config
+   */
+  getOpenclawPath(userId: string, hostname: string): string {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    return path.join(this.openclawDir, isolationKey);
+  }
+
+  /**
+   * Ensure OpenClaw data directory exists for a bot
+   * Called before container creation to ensure the mount point exists
+   */
+  async ensureOpenclawDir(userId: string, hostname: string): Promise<string> {
+    const openclawPath = this.getOpenclawPath(userId, hostname);
+    await fs.mkdir(openclawPath, { recursive: true });
+    return openclawPath;
   }
 
   /**
@@ -363,14 +394,19 @@ export class WorkspaceService {
 
   /**
    * Delete workspace directory by isolation key (for orphan cleanup)
+   * Also deletes OpenClaw data
    */
   async deleteWorkspaceByKey(isolationKey: string): Promise<void> {
     const workspacePath = path.join(this.dataDir, isolationKey);
     const botSecretsPath = path.join(this.secretsDir, isolationKey);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
     try {
       await fs.rm(workspacePath, { recursive: true, force: true });
       await fs.rm(botSecretsPath, { recursive: true, force: true });
-      this.logger.info(`Workspace deleted for: ${isolationKey}`);
+      await fs.rm(openclawPath, { recursive: true, force: true });
+      this.logger.info(
+        `Workspace deleted for: ${isolationKey} (including OpenClaw data)`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to delete workspace for ${isolationKey}:`,
@@ -421,6 +457,46 @@ export class WorkspaceService {
       return await fs.readFile(secretPath, 'utf-8');
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * List all OpenClaw data directories
+   */
+  async listOpenclawDirs(): Promise<string[]> {
+    try {
+      const entries = await fs.readdir(this.openclawDir, {
+        withFileTypes: true,
+      });
+      return entries.filter((e) => e.isDirectory()).map((e) => e.name);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Find orphaned OpenClaw data directories
+   * @param knownIsolationKeys - isolation keys (userId_short-hostname) of known bots
+   */
+  async findOrphanedOpenclaw(knownIsolationKeys: string[]): Promise<string[]> {
+    const openclawDirs = await this.listOpenclawDirs();
+    return openclawDirs.filter((d) => !knownIsolationKeys.includes(d));
+  }
+
+  /**
+   * Delete OpenClaw data directory by isolation key (for orphan cleanup)
+   */
+  async deleteOpenclawByKey(isolationKey: string): Promise<void> {
+    const openclawPath = path.join(this.openclawDir, isolationKey);
+    try {
+      await fs.rm(openclawPath, { recursive: true, force: true });
+      this.logger.info(`OpenClaw data deleted for: ${isolationKey}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete OpenClaw data for ${isolationKey}:`,
+        error,
+      );
+      throw error;
     }
   }
 }

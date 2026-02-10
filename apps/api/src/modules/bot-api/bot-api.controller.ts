@@ -16,7 +16,7 @@ import { success, created } from '@/common/ts-rest/response.helper';
 import { BotApiService } from './bot-api.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { BotSseService } from './services/bot-sse.service';
-import { AuthenticatedRequest, Auth, SseAuth } from '@app/auth';
+import { AuthenticatedRequest, Auth, SseAuth, AdminAuth } from '@app/auth';
 import type { Observable } from 'rxjs';
 
 /**
@@ -148,10 +148,11 @@ export class BotApiController {
   }
 
   // ============================================================================
-  // Container Diagnostics
+  // Container Diagnostics (Admin Only)
   // ============================================================================
 
   @TsRestHandler(bc.getStats)
+  @AdminAuth()
   async getStats(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(bc.getStats, async () => {
       const userId = req.userId;
@@ -161,6 +162,7 @@ export class BotApiController {
   }
 
   @TsRestHandler(bc.getOrphans)
+  @AdminAuth()
   async getOrphans(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(bc.getOrphans, async () => {
       const userId = req.userId;
@@ -170,6 +172,7 @@ export class BotApiController {
   }
 
   @TsRestHandler(bc.cleanup)
+  @AdminAuth()
   async cleanup(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(bc.cleanup, async () => {
       const userId = req.userId;
@@ -282,6 +285,7 @@ export class BotApiController {
   }
 
   @TsRestHandler(pkc.add)
+  @AdminAuth()
   async addProviderKey(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(pkc.add, async ({ body }) => {
       const userId = req.userId;
@@ -291,6 +295,7 @@ export class BotApiController {
   }
 
   @TsRestHandler(pkc.delete)
+  @AdminAuth()
   async deleteProviderKey(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(pkc.delete, async ({ params }) => {
       const userId = req.userId;

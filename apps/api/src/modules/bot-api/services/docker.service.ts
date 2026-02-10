@@ -52,50 +52,43 @@ export class DockerService implements OnModuleInit {
   private readonly portStart: number;
   private readonly dataDir: string;
   private readonly secretsDir: string;
+  private readonly openclawDir: string;
   private readonly containerPrefix = 'clawbot-manager-';
   /**
-   * Docker volume names for bot data and secrets.
+   * Docker volume names for bot data, secrets, and OpenClaw data.
    * When running in a container, we need to use volume names instead of host paths
    * to correctly mount volumes into bot containers.
    */
   private readonly dataVolumeName: string | null;
   private readonly secretsVolumeName: string | null;
+  private readonly openclawVolumeName: string | null;
 
   constructor(private readonly configService: ConfigService) {
-    this.botImage = this.configService.get<string>(
-      'BOT_IMAGE',
-      'openclaw:latest',
-    );
+    this.botImage = process.env.BOT_IMAGE || 'openclaw:latest';
     // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
-    const portStartRaw = this.configService.get<string | number>(
-      'BOT_PORT_START',
-      9200,
-    );
+    const portStartRaw = process.env.BOT_PORT_START || 9200;
     this.portStart =
       typeof portStartRaw === 'number'
         ? portStartRaw
         : Number(portStartRaw) || 9200;
-    const dataDir = this.configService.get<string>(
-      'BOT_DATA_DIR',
-      '/data/bots',
-    );
-    const secretsDir = this.configService.get<string>(
-      'BOT_SECRETS_DIR',
-      '/data/secrets',
-    );
+    const dataDir = process.env.BOT_DATA_DIR || '/data/bots';
+    const secretsDir = process.env.BOT_SECRETS_DIR || '/data/secrets';
+    const openclawDir = process.env.BOT_OPENCLAW_DIR || '/data/openclaw';
 
     // 统一规范为绝对路径，避免 Docker 把相对路径当作 volume 名称（从而报类似 "includes invalid characters"）
     this.dataDir = isAbsolute(dataDir) ? dataDir : join(process.cwd(), dataDir);
     this.secretsDir = isAbsolute(secretsDir)
       ? secretsDir
       : join(process.cwd(), secretsDir);
+    this.openclawDir = isAbsolute(openclawDir)
+      ? openclawDir
+      : join(process.cwd(), openclawDir);
 
     // Volume names for containerized deployment
     // When set, bot containers will mount from these named volumes instead of host paths
-    this.dataVolumeName =
-      this.configService.get<string>('DATA_VOLUME_NAME') || null;
-    this.secretsVolumeName =
-      this.configService.get<string>('SECRETS_VOLUME_NAME') || null;
+    this.dataVolumeName = process.env.DATA_VOLUME_NAME || null;
+    this.secretsVolumeName = process.env.SECRETS_VOLUME_NAME || null;
+    this.openclawVolumeName = process.env.OPENCLAW_VOLUME_NAME || null;
   }
 
   async onModuleInit() {
@@ -120,11 +113,16 @@ export class DockerService implements OnModuleInit {
 
   /**
    * Build volume bindings for bot container.
-   * When running in a container with named volumes (DATA_VOLUME_NAME/SECRETS_VOLUME_NAME set),
+   * When running in a container with named volumes (DATA_VOLUME_NAME/SECRETS_VOLUME_NAME/OPENCLAW_VOLUME_NAME set),
    * use volume names to allow bot containers to access the same data.
    * Otherwise, use host paths for local development.
    *
-   * @param hostname - Bot hostname (used as subdirectory in volumes)
+   * OpenClaw data directory (/home/node/.openclaw) is mounted to persist:
+   * - Memory/sessions (conversation history)
+   * - Agent configurations
+   * - Identity data
+   *
+   * @param isolationKey - Isolation key for multi-tenant support (userId_short-hostname)
    * @param workspacePath - Full workspace path (used in host path mode)
    * @returns Array of volume bind strings for Docker
    */
@@ -132,25 +130,36 @@ export class DockerService implements OnModuleInit {
     isolationKey: string,
     workspacePath: string,
   ): string[] {
-    if (this.dataVolumeName && this.secretsVolumeName) {
+    if (
+      this.dataVolumeName &&
+      this.secretsVolumeName &&
+      this.openclawVolumeName
+    ) {
       // Containerized mode: use named volumes with subdirectories
       // Format: volume_name/subpath:/container/path:mode
       // Note: Docker doesn't support subpaths in named volumes directly,
       // so we mount the entire volume and the bot uses isolationKey as subdirectory
       this.logger.log(
-        `Using named volumes: data=${this.dataVolumeName}, secrets=${this.secretsVolumeName}`,
+        `Using named volumes: data=${this.dataVolumeName}, secrets=${this.secretsVolumeName}, openclaw=${this.openclawVolumeName}`,
       );
       return [
         `${this.dataVolumeName}:/data/bots:rw`,
         `${this.secretsVolumeName}:/data/secrets:ro`,
+        // Mount OpenClaw data directory for persistent memory/sessions
+        // The bot will use /data/openclaw/{isolationKey} as its .openclaw directory
+        `${this.openclawVolumeName}:/data/openclaw:rw`,
       ];
     }
 
     // Local development mode: use host paths
-    this.logger.log(`Using host paths: data=${workspacePath}`);
+    this.logger.log(
+      `Using host paths: data=${workspacePath}, openclaw=${this.openclawDir}/${isolationKey}`,
+    );
     return [
       `${workspacePath}:/app/workspace:rw`,
       `${this.secretsDir}/${isolationKey}:/app/secrets:ro`,
+      // Mount OpenClaw data directory for persistent memory/sessions
+      `${this.openclawDir}/${isolationKey}:/home/node/.openclaw:rw`,
     ];
   }
 
@@ -209,12 +218,18 @@ export class DockerService implements OnModuleInit {
     ];
 
     // When using named volumes, bot needs to know its workspace subdirectory
-    if (this.dataVolumeName) {
+    // This must match the condition in buildVolumeBinds
+    const useNamedVolumes = this.dataVolumeName && this.secretsVolumeName && this.openclawVolumeName;
+    if (useNamedVolumes) {
       envVars.push(`BOT_WORKSPACE_DIR=/data/bots/${options.isolationKey}`);
       envVars.push(`BOT_SECRETS_DIR=/data/secrets/${options.isolationKey}`);
+      // OpenClaw data directory for persistent memory/sessions
+      envVars.push(`OPENCLAW_HOME=/data/openclaw/${options.isolationKey}`);
     } else {
       envVars.push(`BOT_WORKSPACE_DIR=/app/workspace`);
       envVars.push(`BOT_SECRETS_DIR=/app/secrets`);
+      // In local dev mode, .openclaw is mounted directly to /home/node/.openclaw
+      // No need to set OPENCLAW_HOME as it uses the default location
     }
 
     // Add API type if provided
@@ -578,19 +593,18 @@ AUTH_EOF
         echo "Running openclaw doctor --fix to clean up config..."
         node /app/openclaw.mjs doctor --fix 2>/dev/null || true
 
-        # CRITICAL: Configure the base URL using openclaw config set AFTER doctor --fix
+        # CRITICAL: Configure the base URL AFTER doctor --fix
         # doctor --fix overwrites our configuration, so we must set it again
         # OpenClaw reads models.providers.<provider>.baseUrl for API endpoint
         if [ -n "$OPENAI_BASE_URL" ]; then
-          echo "Setting OpenAI base URL via config: $OPENAI_BASE_URL"
-          # Set the base URL for the openai provider
-          node /app/openclaw.mjs config set models.providers.openai.baseUrl "$OPENAI_BASE_URL" 2>/dev/null || echo "Warning: Failed to set baseUrl via config"
-          # Also set models array to avoid validation errors
+          echo "Setting OpenAI base URL: $OPENAI_BASE_URL"
+          # Try to set via CLI first (may fail due to schema validation)
+          node /app/openclaw.mjs config set models.providers.openai.baseUrl "$OPENAI_BASE_URL" 2>/dev/null || true
           node /app/openclaw.mjs config set models.providers.openai.models '[]' 2>/dev/null || true
 
-          # Fallback: Directly patch the openclaw.json file using node
-          # This ensures the base URL is set even if config set doesn't work
-          echo "Patching openclaw.json with models.providers configuration..."
+          # Directly patch the openclaw.json file using node (primary method)
+          # This is more reliable than the CLI config set command
+          echo "Configuring models.providers in openclaw.json..."
           node -e "
             const fs = require('fs');
             const configPath = '$JSON_CONFIG_FILE';
@@ -606,7 +620,7 @@ AUTH_EOF
             } catch (e) {
               console.error('Failed to patch config:', e.message);
             }
-          " 2>/dev/null || echo "Warning: Failed to patch config file"
+          " || true
         fi
 
         # Set the model again after doctor --fix to ensure it's not overwritten
@@ -746,9 +760,10 @@ AUTH_EOF
   /**
    * Get container network information
    */
-  async getContainerNetworkInfo(
-    containerId: string,
-  ): Promise<{ networks: string[]; ipAddresses: Record<string, string> } | null> {
+  async getContainerNetworkInfo(containerId: string): Promise<{
+    networks: string[];
+    ipAddresses: Record<string, string>;
+  } | null> {
     if (!this.isAvailable()) {
       return null;
     }
@@ -795,6 +810,7 @@ AUTH_EOF
       try {
         const container = this.docker.getContainer(containerInfo.Id);
         const containerStats = await container.stats({ stream: false });
+        const inspectInfo = await container.inspect();
         const hostname =
           containerInfo.Labels['clawbot-manager.hostname'] || 'unknown';
 
@@ -826,9 +842,23 @@ AUTH_EOF
           networkTxBytes += (net as { tx_bytes: number }).tx_bytes || 0;
         }
 
+        // Get PID and uptime from inspect info
+        const pid = inspectInfo.State.Pid || null;
+        const startedAt = inspectInfo.State.StartedAt || null;
+        let uptimeSeconds: number | null = null;
+        if (startedAt && inspectInfo.State.Running) {
+          const startTime = new Date(startedAt).getTime();
+          const now = Date.now();
+          uptimeSeconds = Math.floor((now - startTime) / 1000);
+        }
+
         stats.push({
           hostname,
           name: containerInfo.Names[0]?.replace(/^\//, '') || hostname,
+          containerId: containerInfo.Id.substring(0, 12),
+          pid: pid === 0 ? null : pid,
+          uptimeSeconds,
+          startedAt,
           cpuPercent: Math.round(cpuPercent * 100) / 100,
           memoryUsage,
           memoryLimit,
@@ -905,7 +935,9 @@ AUTH_EOF
    * Find orphaned workspaces (workspace directories without corresponding database entries)
    * @param knownIsolationKeys - isolation keys of known bots
    */
-  async findOrphanedWorkspaces(knownIsolationKeys: string[]): Promise<string[]> {
+  async findOrphanedWorkspaces(
+    knownIsolationKeys: string[],
+  ): Promise<string[]> {
     try {
       const entries = await readdir(this.dataDir, { withFileTypes: true });
       const orphaned: string[] = [];
@@ -955,8 +987,7 @@ AUTH_EOF
 
     const orphanedWorkspaces =
       await this.findOrphanedWorkspaces(knownIsolationKeys);
-    const orphanedSecrets =
-      await this.findOrphanedSecrets(knownIsolationKeys);
+    const orphanedSecrets = await this.findOrphanedSecrets(knownIsolationKeys);
 
     return {
       orphanedContainers,
@@ -1012,8 +1043,7 @@ AUTH_EOF
     }
 
     // Cleanup orphaned secrets
-    const orphanedSecrets =
-      await this.findOrphanedSecrets(knownIsolationKeys);
+    const orphanedSecrets = await this.findOrphanedSecrets(knownIsolationKeys);
     let secretsRemoved = 0;
     for (const isolationKey of orphanedSecrets) {
       try {

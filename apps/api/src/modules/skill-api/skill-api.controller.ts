@@ -2,7 +2,7 @@ import { Controller, Req, VERSION_NEUTRAL } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { skillContract, botSkillContract } from '@repo/contracts';
 import { success } from '@/common/ts-rest/response.helper';
-import { AuthenticatedRequest, Auth } from '@app/auth';
+import { AuthenticatedRequest, Auth, AdminAuth } from '@app/auth';
 import { SkillApiService } from './skill-api.service';
 
 const skillC = skillContract;
@@ -39,6 +39,7 @@ export class SkillApiController {
   }
 
   @TsRestHandler(skillC.create)
+  @AdminAuth()
   async createSkill(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(skillC.create, async ({ body }) => {
       const result = await this.skillApiService.createSkill(req.userId, body);
@@ -47,6 +48,7 @@ export class SkillApiController {
   }
 
   @TsRestHandler(skillC.update)
+  @AdminAuth()
   async updateSkill(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(skillC.update, async ({ params, body }) => {
       const result = await this.skillApiService.updateSkill(
@@ -59,6 +61,7 @@ export class SkillApiController {
   }
 
   @TsRestHandler(skillC.delete)
+  @AdminAuth()
   async deleteSkill(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(skillC.delete, async ({ params }) => {
       const result = await this.skillApiService.deleteSkill(

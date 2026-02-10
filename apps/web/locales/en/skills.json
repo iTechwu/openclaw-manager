@@ -14,9 +14,30 @@
   "createSkill": "Create Skill",
   "createSkillDescription": "Create a new custom skill",
   "comingSoon": "Coming soon",
+  "skillTypes": "Skill Types",
   "types": {
     "tool": "Tool",
     "prompt": "Prompt",
     "workflow": "Workflow"
-  }
+  },
+  "pagination": {
+    "showing": "Showing {from}-{to} of {total}",
+    "page": "Page {page} of {totalPages}"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "Enter skill name",
+    "slug": "Slug",
+    "slugPlaceholder": "Enter skill slug",
+    "type": "Type",
+    "selectType": "Select skill type",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter skill description",
+    "version": "Version",
+    "cancel": "Cancel",
+    "create": "Create"
+  },
+  "fillRequiredFields": "Please fill in required fields",
+  "createSuccess": "Skill created successfully",
+  "createFailed": "Failed to create skill"
 }

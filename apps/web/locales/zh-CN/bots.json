@@ -14,6 +14,7 @@
     "createBot": "创建 Bot",
     "addApiKey": "添加 API 密钥",
     "manageApiKeys": "管理 API 密钥",
+    "viewApiKeys": "查看 API 密钥",
     "start": "启动",
     "stop": "停止",
     "delete": "删除",
@@ -371,7 +372,11 @@
       "cleaning": "清理中...",
       "refresh": "刷新",
       "noOrphanedResources": "没有孤立资源",
-      "cleanedUp": "已清理 {count} 个孤立资源"
+      "cleanedUp": "已清理 {count} 个孤立资源",
+      "confirmTitle": "确认清理",
+      "confirmDescription": "确定要清理 {count} 个孤立资源吗？此操作不可撤销。",
+      "cancel": "取消",
+      "confirmCleanup": "确认清理"
     }
   },
   "detail": {
@@ -400,6 +405,7 @@
       "realtimeLogs": "实时日志",
       "port": "端口",
       "processId": "进程 ID",
+      "containerId": "容器 ID",
       "memory": "内存",
       "uptime": "运行时间",
       "start": "启动",

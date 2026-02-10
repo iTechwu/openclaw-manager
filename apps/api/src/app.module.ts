@@ -50,6 +50,9 @@ import { PluginApiModule } from './modules/plugin-api/plugin-api.module';
 /** skill-api module */
 import { SkillApiModule } from './modules/skill-api/skill-api.module';
 
+/** skill-sync module */
+import { SkillSyncModule } from './modules/skill-sync/skill-sync.module';
+
 /** bot-channel-api module */
 import { BotChannelApiModule } from './modules/bot-channel-api/bot-channel-api.module';
 
@@ -216,6 +219,7 @@ import { DbMetricsService } from '@app/prisma/db-metrics/src/db-metrics.service'
     ChannelApiModule,
     PluginApiModule,
     SkillApiModule,
+    SkillSyncModule,
     BotChannelApiModule,
     SseApiModule,
   ],

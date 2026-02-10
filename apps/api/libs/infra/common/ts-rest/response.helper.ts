@@ -19,7 +19,7 @@ import {
 /**
  * 标准成功响应格式
  */
-interface SuccessBody<T> {
+export interface SuccessBody<T> {
   code: number;
   msg: string;
   data: T;
@@ -28,7 +28,7 @@ interface SuccessBody<T> {
 /**
  * 标准错误响应格式
  */
-interface ErrorBody {
+export interface ErrorBody {
   code: number;
   msg: string;
   error?: unknown;
@@ -91,7 +91,7 @@ export function paginated<T>(
   total: number,
   page: number,
   limit: number,
-): TsRestResponse<
+): TsRestSuccessResponse<
   { list: T[]; total: number; page: number; limit: number },
   200
 > {
@@ -123,6 +123,71 @@ export function deleted(): TsRestResponse<{ success: boolean }, 200> {
       msg: 'ok',
       data: { success: true },
     },
+  };
+}
+
+// ============================================================================
+// Plain NestJS Controller Helpers (不使用 ts-rest 的控制器)
+// ============================================================================
+
+/**
+ * 创建成功响应体（用于普通 NestJS 控制器，不使用 ts-rest）
+ *
+ * @example
+ * ```typescript
+ * @Get('items')
+ * async getItems() {
+ *   const items = await this.service.findAll();
+ *   return successBody({ list: items });
+ * }
+ * ```
+ */
+export function successBody<T>(data: T): SuccessBody<T> {
+  return {
+    code: 200,
+    msg: 'ok',
+    data: serializeDates(data),
+  };
+}
+
+/**
+ * 创建分页成功响应体（用于普通 NestJS 控制器）
+ */
+export function paginatedBody<T>(
+  list: T[],
+  total: number,
+  page: number,
+  limit: number,
+): SuccessBody<{ list: T[]; total: number; page: number; limit: number }> {
+  return successBody({ list, total, page, limit });
+}
+
+/**
+ * 创建删除成功响应体（用于普通 NestJS 控制器）
+ */
+export function deletedBody(): SuccessBody<{ success: boolean }> {
+  return {
+    code: 200,
+    msg: 'ok',
+    data: { success: true },
+  };
+}
+
+/**
+ * 创建错误响应体（用于普通 NestJS 控制器）
+ */
+export function errorBody(
+  errorCode: ApiErrorCode,
+  errorData?: unknown,
+): ErrorBody {
+  const errorType = getErrorType(errorCode) || 'unknown';
+  const numericCode = Number(errorCode);
+  const msg = getErrorMessage(errorType);
+
+  return {
+    code: numericCode,
+    msg,
+    error: errorData,
   };
 }
 

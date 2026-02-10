@@ -1,0 +1,49 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/app/workspace",
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "gateway": {
+    "port": 19000,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "enabled": true,
+      "allowInsecureAuth": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "6843699efbdfa2ac88df61bcc7078d65f653172e3b09671feba38164b44928f4"
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-10T11:36:54.493Z",
+    "lastRunVersion": "2026.1.30",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.1.30",
+    "lastTouchedAt": "2026-02-10T11:36:54.505Z"
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "baseUrl": "http://192.168.31.79:3200/api/v1/openai-compatible",
+        "models": []
+      }
+    }
+  }
+}

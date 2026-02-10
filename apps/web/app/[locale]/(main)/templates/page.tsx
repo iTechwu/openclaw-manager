@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Sparkles, User } from 'lucide-react';
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import type { PersonaTemplate } from '@repo/contracts';
 
 export default function TemplatesPage() {
   const t = useTranslations('templates');
+  const locale = useLocale();
   const {
     systemTemplates,
     userTemplates,
@@ -31,7 +32,7 @@ export default function TemplatesPage() {
     updateLoading,
     deleteLoading,
     duplicateLoading,
-  } = usePersonaTemplates();
+  } = usePersonaTemplates(locale);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editTemplate, setEditTemplate] = useState<PersonaTemplate | null>(
@@ -43,7 +44,9 @@ export default function TemplatesPage() {
   const [duplicateTemplate, setDuplicateTemplate] =
     useState<PersonaTemplate | null>(null);
 
-  const handleCreateWithToast = async (data: Parameters<typeof handleCreate>[0]) => {
+  const handleCreateWithToast = async (
+    data: Parameters<typeof handleCreate>[0],
+  ) => {
     try {
       await handleCreate(data);
       toast.success(t('messages.createSuccess'));
@@ -52,7 +55,10 @@ export default function TemplatesPage() {
     }
   };
 
-  const handleUpdateWithToast = async (id: string, data: Parameters<typeof handleUpdate>[1]) => {
+  const handleUpdateWithToast = async (
+    id: string,
+    data: Parameters<typeof handleUpdate>[1],
+  ) => {
     try {
       await handleUpdate(id, data);
       toast.success(t('messages.updateSuccess'));
@@ -70,7 +76,9 @@ export default function TemplatesPage() {
     }
   };
 
-  const handleDuplicateWithToast = async (data: Parameters<typeof handleDuplicate>[0]) => {
+  const handleDuplicateWithToast = async (
+    data: Parameters<typeof handleDuplicate>[0],
+  ) => {
     try {
       await handleDuplicate(data);
       toast.success(t('messages.duplicateSuccess'));
@@ -96,7 +104,9 @@ export default function TemplatesPage() {
     if (templates.length === 0) {
       return (
         <div className="text-muted-foreground py-8 text-center">
-          {isSystem ? t('messages.noSystemTemplates') : t('messages.noUserTemplates')}
+          {isSystem
+            ? t('messages.noSystemTemplates')
+            : t('messages.noUserTemplates')}
         </div>
       );
     }
@@ -179,7 +189,9 @@ export default function TemplatesPage() {
         template={deleteTemplate}
         open={!!deleteTemplate}
         onOpenChange={(open) => !open && setDeleteTemplate(null)}
-        onConfirm={() => deleteTemplate && handleDeleteWithToast(deleteTemplate.id)}
+        onConfirm={() =>
+          deleteTemplate && handleDeleteWithToast(deleteTemplate.id)
+        }
         loading={deleteLoading}
       />
 
@@ -189,7 +201,10 @@ export default function TemplatesPage() {
         onOpenChange={(open) => !open && setDuplicateTemplate(null)}
         onSubmit={(name) =>
           duplicateTemplate &&
-          handleDuplicateWithToast({ sourceTemplateId: duplicateTemplate.id, name })
+          handleDuplicateWithToast({
+            sourceTemplateId: duplicateTemplate.id,
+            name,
+          })
         }
         loading={duplicateLoading}
       />

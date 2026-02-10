@@ -2,13 +2,34 @@ import { z } from 'zod';
 import { PaginationQuerySchema, PaginatedResponseSchema } from '../base';
 
 /**
- * 技能类型 Schema
- * tool: 工具调用
- * prompt: 提示词模板
- * workflow: 工作流
+ * 技能类型/分类 Schema
+ * 用于对技能进行分类管理
  */
-export const SkillTypeSchema = z.enum(['tool', 'prompt', 'workflow']);
-export type SkillType = z.infer<typeof SkillTypeSchema>;
+export const SkillTypeItemSchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  name: z.string(),
+  nameZh: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  descriptionZh: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+  sortOrder: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type SkillTypeItem = z.infer<typeof SkillTypeItemSchema>;
+
+/**
+ * 技能类型（带技能数量）Schema
+ */
+export const SkillTypeWithCountSchema = SkillTypeItemSchema.extend({
+  _count: z.object({
+    skills: z.number(),
+  }),
+});
+
+export type SkillTypeWithCount = z.infer<typeof SkillTypeWithCountSchema>;
 
 /**
  * 工具定义 Schema
@@ -25,14 +46,16 @@ export const ToolDefinitionSchema = z.object({
  */
 export const PromptDefinitionSchema = z.object({
   template: z.string().min(1),
-  variables: z.array(
-    z.object({
-      name: z.string(),
-      description: z.string().optional(),
-      required: z.boolean().optional(),
-      defaultValue: z.string().optional(),
-    }),
-  ).optional(),
+  variables: z
+    .array(
+      z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        defaultValue: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 /**
@@ -80,15 +103,23 @@ export const SkillExampleSchema = z.object({
 export const SkillItemSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  nameZh: z.string().nullable().optional(),
   slug: z.string(),
   description: z.string().nullable(),
+  descriptionZh: z.string().nullable().optional(),
   version: z.string(),
-  skillType: SkillTypeSchema,
+  skillTypeId: z.string().uuid().nullable().optional(),
+  skillType: SkillTypeItemSchema.nullable().optional(),
   definition: z.record(z.string(), z.unknown()),
   examples: z.array(SkillExampleSchema).nullable(),
   isSystem: z.boolean(),
   isEnabled: z.boolean(),
   createdById: z.string().uuid().nullable(),
+  // 外部来源字段
+  source: z.string().nullable().optional(),
+  sourceUrl: z.string().nullable().optional(),
+  author: z.string().nullable().optional(),
+  lastSyncedAt: z.date().nullable().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -99,9 +130,10 @@ export type SkillItem = z.infer<typeof SkillItemSchema>;
  * 技能列表查询参数
  */
 export const SkillListQuerySchema = PaginationQuerySchema.extend({
-  skillType: SkillTypeSchema.optional(),
+  skillTypeId: z.string().uuid().optional(),
   isSystem: z.coerce.boolean().optional(),
   search: z.string().optional(),
+  source: z.string().optional(),
 });
 
 export type SkillListQuery = z.infer<typeof SkillListQuerySchema>;
@@ -121,7 +153,7 @@ export const CreateSkillRequestSchema = z.object({
   slug: z.string().min(1).max(100),
   description: z.string().max(1000).optional(),
   version: z.string().min(1).max(20).optional().default('1.0.0'),
-  skillType: SkillTypeSchema,
+  skillTypeId: z.string().uuid().optional(),
   definition: z.record(z.string(), z.unknown()),
   examples: z.array(SkillExampleSchema).optional(),
 });

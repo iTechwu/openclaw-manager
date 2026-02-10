@@ -170,7 +170,9 @@ export const BotRoutingConfigSchema = z.object({
   botId: z.string().uuid(),
   // 路由配置
   routingEnabled: z.boolean().default(true),
-  routingMode: z.enum(['auto', 'manual', 'cost-optimized']).default('auto'),
+  routingMode: z
+    .enum(['auto', 'manual', 'cost-optimized', 'complexity-based'])
+    .default('auto'),
   // Fallback 配置
   fallbackEnabled: z.boolean().default(true),
   fallbackChainId: z.string().nullable().optional(),
@@ -182,6 +184,9 @@ export const BotRoutingConfigSchema = z.object({
   alertThreshold: z.number().default(0.8),
   autoDowngrade: z.boolean().default(false),
   downgradeModel: z.string().nullable().optional(),
+  // 复杂度路由配置
+  complexityRoutingEnabled: z.boolean().default(false),
+  complexityRoutingConfigId: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -209,6 +214,11 @@ export const ConfigLoadStatusSchema = z.object({
     lastUpdate: z.string().optional(),
   }),
   costStrategies: z.object({
+    loaded: z.boolean(),
+    count: z.number(),
+    lastUpdate: z.string().optional(),
+  }),
+  complexityRoutingConfigs: z.object({
     loaded: z.boolean(),
     count: z.number(),
     lastUpdate: z.string().optional(),
@@ -248,3 +258,130 @@ export const BudgetStatusSchema = z.object({
 });
 
 export type BudgetStatus = z.infer<typeof BudgetStatusSchema>;
+
+// ============================================================================
+// Complexity Routing Schema - 复杂度路由配置
+// ============================================================================
+
+/**
+ * 复杂度等级
+ */
+export const ComplexityLevelSchema = z.enum([
+  'super_easy',
+  'easy',
+  'medium',
+  'hard',
+  'super_hard',
+]);
+
+export type ComplexityLevel = z.infer<typeof ComplexityLevelSchema>;
+
+/**
+ * 复杂度模型配置
+ */
+export const ComplexityModelConfigSchema = z.object({
+  vendor: z.string(),
+  model: z.string(),
+  apiType: z.string().nullable().optional(),
+  baseUrl: z.string().nullable().optional(),
+});
+
+export type ComplexityModelConfig = z.infer<typeof ComplexityModelConfigSchema>;
+
+/**
+ * 分类器配置
+ */
+export const ClassifierConfigSchema = z.object({
+  model: z.string().default('deepseek-v3-250324'),
+  vendor: z.string().default('deepseek'),
+  baseUrl: z.string().nullable().optional(),
+});
+
+export type ClassifierConfig = z.infer<typeof ClassifierConfigSchema>;
+
+/**
+ * 复杂度路由配置
+ */
+export const ComplexityRoutingConfigSchema = z.object({
+  id: z.string().uuid(),
+  configId: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  // 是否启用
+  isEnabled: z.boolean().default(true),
+  // 各复杂度对应的模型配置
+  models: z.object({
+    super_easy: ComplexityModelConfigSchema,
+    easy: ComplexityModelConfigSchema,
+    medium: ComplexityModelConfigSchema,
+    hard: ComplexityModelConfigSchema,
+    super_hard: ComplexityModelConfigSchema,
+  }),
+  // 分类器配置（用于判断消息复杂度的模型）
+  classifierModel: z.string().default('deepseek-v3-250324'),
+  classifierVendor: z.string().default('deepseek'),
+  classifierBaseUrl: z.string().nullable().optional(),
+  // 分类器配置（嵌套对象形式，可选）
+  classifier: ClassifierConfigSchema.optional(),
+  // 工具调用时的最低复杂度
+  toolMinComplexity: ComplexityLevelSchema.optional(),
+  // 是否为内置配置
+  isBuiltin: z.boolean().default(false),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type ComplexityRoutingConfig = z.infer<
+  typeof ComplexityRoutingConfigSchema
+>;
+
+/**
+ * 创建复杂度路由配置请求
+ */
+export const CreateComplexityRoutingConfigSchema =
+  ComplexityRoutingConfigSchema.omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  });
+
+export type CreateComplexityRoutingConfig = z.infer<
+  typeof CreateComplexityRoutingConfigSchema
+>;
+
+/**
+ * 更新复杂度路由配置请求
+ */
+export const UpdateComplexityRoutingConfigSchema =
+  CreateComplexityRoutingConfigSchema.partial();
+
+export type UpdateComplexityRoutingConfig = z.infer<
+  typeof UpdateComplexityRoutingConfigSchema
+>;
+
+/**
+ * 复杂度分类结果
+ */
+export const ComplexityClassificationResultSchema = z.object({
+  level: ComplexityLevelSchema,
+  latencyMs: z.number(),
+  inheritedFromContext: z.boolean().optional(),
+  rawResponse: z.string().optional(),
+});
+
+export type ComplexityClassificationResult = z.infer<
+  typeof ComplexityClassificationResultSchema
+>;
+
+/**
+ * 复杂度路由决策结果
+ */
+export const ComplexityRouteDecisionSchema = z.object({
+  complexity: ComplexityClassificationResultSchema,
+  selectedModel: ComplexityModelConfigSchema,
+  protocol: z.enum(['openai-compatible', 'anthropic-native']),
+});
+
+export type ComplexityRouteDecision = z.infer<
+  typeof ComplexityRouteDecisionSchema
+>;

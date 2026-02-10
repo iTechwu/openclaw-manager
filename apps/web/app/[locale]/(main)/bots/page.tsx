@@ -18,10 +18,12 @@ import {
 import { Plus, Key, AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
+import { useIsAdmin } from '@/lib/permissions';
 
 export default function BotsPage() {
   const t = useTranslations('bots');
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [showNoKeysDialog, setShowNoKeysDialog] = useState(false);
 
@@ -73,7 +75,7 @@ export default function BotsPage() {
           <Button variant="outline" asChild>
             <Link href="/secrets">
               <Key className="mr-2 size-4" />
-              {t('actions.manageApiKeys')}
+              {isAdmin ? t('actions.manageApiKeys') : t('actions.viewApiKeys')}
             </Link>
           </Button>
           <Button onClick={handleCreateBotClick}>
