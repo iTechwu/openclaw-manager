@@ -191,9 +191,7 @@ export class FallbackEngineService {
   createContext(requestId: string, chainId: string): FallbackContext | null {
     const chain = this.fallbackChains.get(chainId);
     if (!chain) {
-      this.logger.warn(
-        `[FallbackEngine] Fallback chain not found: ${chainId}`,
-      );
+      this.logger.warn(`[FallbackEngine] Fallback chain not found: ${chainId}`);
       return null;
     }
 

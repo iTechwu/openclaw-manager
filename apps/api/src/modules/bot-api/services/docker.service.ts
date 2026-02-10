@@ -219,7 +219,8 @@ export class DockerService implements OnModuleInit {
 
     // When using named volumes, bot needs to know its workspace subdirectory
     // This must match the condition in buildVolumeBinds
-    const useNamedVolumes = this.dataVolumeName && this.secretsVolumeName && this.openclawVolumeName;
+    const useNamedVolumes =
+      this.dataVolumeName && this.secretsVolumeName && this.openclawVolumeName;
     if (useNamedVolumes) {
       envVars.push(`BOT_WORKSPACE_DIR=/data/bots/${options.isolationKey}`);
       envVars.push(`BOT_SECRETS_DIR=/data/secrets/${options.isolationKey}`);

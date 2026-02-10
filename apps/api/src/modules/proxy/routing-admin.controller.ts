@@ -219,7 +219,7 @@ export class RoutingAdminController {
   @TsRestHandler(c.createComplexityRoutingConfig)
   async createComplexityRoutingConfig() {
     return tsRestHandler(c.createComplexityRoutingConfig, async ({ body }) => {
-      const config = await this.complexityRoutingConfigDb.create({
+      const config = (await this.complexityRoutingConfigDb.create({
         configId: body.configId,
         name: body.name,
         description: body.description,
@@ -228,7 +228,7 @@ export class RoutingAdminController {
         classifierModel: body.classifierModel || 'deepseek-v3-250324',
         classifierVendor: body.classifierVendor || 'deepseek',
         toolMinComplexity: body.toolMinComplexity,
-      }) as any;
+      })) as any;
 
       await this.configService.refreshConfigurations();
 
@@ -322,11 +322,11 @@ export class RoutingAdminController {
   @TsRestHandler(c.classifyComplexity)
   async classifyComplexity() {
     return tsRestHandler(c.classifyComplexity, async ({ body }) => {
-      const result = await this.complexityClassifier.classify({
+      const result = (await this.complexityClassifier.classify({
         message: body.message,
         context: body.context,
         hasTools: body.hasTools,
-      }) as any;
+      })) as any;
       return success(result) as any;
     });
   }

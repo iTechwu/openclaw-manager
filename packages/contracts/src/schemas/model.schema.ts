@@ -30,6 +30,20 @@ export const AvailableModelCapabilitySchema = z.enum([
 export type AvailableModelCapability = z.infer<typeof AvailableModelCapabilitySchema>;
 
 /**
+ * Provider 信息 Schema（仅管理员可见）
+ */
+export const ProviderInfoSchema = z.object({
+  /** Provider Key ID */
+  providerKeyId: z.string(),
+  /** Provider 标签 */
+  label: z.string().nullable(),
+  /** Provider 供应商 */
+  vendor: z.string(),
+});
+
+export type ProviderInfo = z.infer<typeof ProviderInfoSchema>;
+
+/**
  * 可用模型 Schema
  * 面向用户展示的模型信息，隐藏 Provider 细节
  */
@@ -58,6 +72,8 @@ export const AvailableModelSchema = z.object({
   creativityScore: z.number().optional(),
   /** 速度评分 */
   speedScore: z.number().optional(),
+  /** Provider 信息列表（仅管理员可见） */
+  providers: z.array(ProviderInfoSchema).optional(),
 });
 
 export type AvailableModel = z.infer<typeof AvailableModelSchema>;

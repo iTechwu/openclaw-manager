@@ -41,6 +41,26 @@ export const modelContract = c.router(
       },
       summary: '获取所有可用模型列表',
     },
+
+    /**
+     * POST /model/verify - 手动触发模型可用性验证
+     * 验证所有 Provider Key 的模型可用性
+     * 仅限管理员访问
+     */
+    verify: {
+      method: 'POST',
+      path: '/verify',
+      body: z.object({}).optional(),
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        ),
+      },
+      summary: '手动触发模型可用性验证',
+    },
   },
   {
     pathPrefix: '/model',

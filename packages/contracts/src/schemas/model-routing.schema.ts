@@ -1,16 +1,10 @@
 import { z } from 'zod';
 
-// ============================================================================
-// Model Routing Type Enum
-// ============================================================================
-
-export const ModelRoutingTypeSchema = z.enum([
-  'FUNCTION_ROUTE',
-  'LOAD_BALANCE',
-  'FAILOVER',
-]);
-
-export type ModelRoutingType = z.infer<typeof ModelRoutingTypeSchema>;
+// Import ModelRoutingTypeSchema from prisma-enums.generated (source of truth)
+import {
+  ModelRoutingTypeSchema,
+  type ModelRoutingType,
+} from './prisma-enums.generated';
 
 // ============================================================================
 // Routing Target Schema

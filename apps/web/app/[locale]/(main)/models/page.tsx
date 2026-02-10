@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAvailableModels } from '@/hooks/useModels';
+import { useIsAdmin } from '@/lib/permissions';
 import type { AvailableModel } from '@repo/contracts';
 import {
   Card,
@@ -15,6 +16,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  Button,
 } from '@repo/ui';
 import {
   Search,
@@ -24,6 +26,7 @@ import {
   Sparkles,
   CheckCircle,
   XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { ModelCard } from './components/model-card';
 
@@ -38,7 +41,9 @@ const MODEL_CATEGORIES = [
 ] as const;
 
 export default function ModelsPage() {
-  const { models, loading, error } = useAvailableModels();
+  const { models, loading, error, verifyModels, verifying, refresh } =
+    useAvailableModels();
+  const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
@@ -127,6 +132,19 @@ export default function ModelsPage() {
               {stats.available} / {stats.total} 可用
             </span>
           </div>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={verifyModels}
+              disabled={verifying}
+            >
+              <RefreshCw
+                className={`mr-1.5 size-4 ${verifying ? 'animate-spin' : ''}`}
+              />
+              {verifying ? '验证中...' : '验证模型'}
+            </Button>
+          )}
         </div>
       </div>
 

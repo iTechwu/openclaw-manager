@@ -19,6 +19,7 @@ import { BotApiService } from './bot-api.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { BotSseService } from './services/bot-sse.service';
 import { AvailableModelService } from './services/available-model.service';
+import { ModelVerificationService } from './services/model-verification.service';
 import { AuthenticatedRequest, Auth, SseAuth, AdminAuth } from '@app/auth';
 import type { Observable } from 'rxjs';
 
@@ -41,6 +42,7 @@ export class BotApiController {
     private readonly usageAnalyticsService: BotUsageAnalyticsService,
     private readonly sseService: BotSseService,
     private readonly availableModelService: AvailableModelService,
+    private readonly modelVerificationService: ModelVerificationService,
   ) {}
 
   // ============================================================================
@@ -404,10 +406,34 @@ export class BotApiController {
    * GET /model - 获取所有可用模型列表
    */
   @TsRestHandler(mc.list)
-  async listAvailableModels(): Promise<any> {
+  async listAvailableModels(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(mc.list, async () => {
-      const list = await this.availableModelService.getAvailableModels();
+      // 管理员可以看到 Provider 信息
+      const includeProviderInfo = req.isAdmin === true;
+      const list =
+        await this.availableModelService.getAvailableModels(
+          includeProviderInfo,
+        );
       return success({ list });
+    });
+  }
+
+  /**
+   * POST /model/verify - 手动触发模型可用性验证
+   * 仅限管理员访问
+   */
+  @TsRestHandler(mc.verify)
+  @AdminAuth()
+  async verifyModels(): Promise<any> {
+    return tsRestHandler(mc.verify, async () => {
+      // 异步执行验证，不阻塞响应
+      this.modelVerificationService.verifyAllProviderKeys().catch((err) => {
+        console.error('[ModelVerification] Manual verification failed', err);
+      });
+      return success({
+        success: true,
+        message: '模型验证已开始，请稍后刷新页面查看结果',
+      });
     });
   }
 

@@ -11,7 +11,11 @@ import {
 import { ModelRouterService } from './services/model-router.service';
 import { RoutingSuggestionService } from './services/routing-suggestion.service';
 import { EncryptionService } from './services/encryption.service';
-import type { BotModelRouting as PrismaBotModelRouting, ModelRoutingType, Prisma } from '@prisma/client';
+import type {
+  BotModelRouting as PrismaBotModelRouting,
+  ModelRoutingType,
+  Prisma,
+} from '@prisma/client';
 import type {
   BotModelRouting,
   CreateRoutingConfigInput,
@@ -28,7 +32,9 @@ import type {
  * Transform Prisma BotModelRouting to contract BotModelRouting
  * Excludes internal fields (isDeleted, deletedAt) that shouldn't be exposed in API
  */
-function toContractRouting(prismaRouting: PrismaBotModelRouting): BotModelRouting {
+function toContractRouting(
+  prismaRouting: PrismaBotModelRouting,
+): BotModelRouting {
   return {
     id: prismaRouting.id,
     botId: prismaRouting.botId,
@@ -240,10 +246,14 @@ export class ModelRoutingService {
     }
 
     // 从路由配置中提取模型列表用于统计查询
-    const models = this.extractModelsFromConfig(routing.config as unknown as RoutingConfig);
+    const models = this.extractModelsFromConfig(
+      routing.config as unknown as RoutingConfig,
+    );
 
     // 从 BotUsageLog 获取统计信息
-    const stats = await this.botUsageLogService.getRoutingStats(bot.id, { models });
+    const stats = await this.botUsageLogService.getRoutingStats(bot.id, {
+      models,
+    });
 
     return {
       routingId,
@@ -280,7 +290,12 @@ export class ModelRoutingService {
     routingId: string,
     userId: string,
   ): Promise<BotModelRouting> {
-    return this.updateRouting(hostname, routingId, { isEnabled: false }, userId);
+    return this.updateRouting(
+      hostname,
+      routingId,
+      { isEnabled: false },
+      userId,
+    );
   }
 
   /**
@@ -309,8 +324,10 @@ export class ModelRoutingService {
         return {
           id: bpk.id,
           providerKeyId: bpk.providerKeyId,
-          vendor: (providerKey?.vendor || 'openai') as BotProviderDetail['vendor'],
-          apiType: (providerKey?.apiType || null) as BotProviderDetail['apiType'],
+          vendor: (providerKey?.vendor ||
+            'openai') as BotProviderDetail['vendor'],
+          apiType: (providerKey?.apiType ||
+            null) as BotProviderDetail['apiType'],
           label: providerKey?.label || '',
           apiKeyMasked: '****',
           baseUrl: providerKey?.baseUrl || null,

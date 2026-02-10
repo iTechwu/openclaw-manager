@@ -35,6 +35,20 @@ const VENDOR_DEFAULT_MODELS: Record<string, string[]> = {
 };
 
 /**
+ * API 类型到默认模型的映射
+ * 用于 custom vendor 根据 apiType 确定要验证的模型
+ */
+const API_TYPE_DEFAULT_MODELS: Record<string, string[]> = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
+  anthropic: ['claude-sonnet-4-20250514', 'claude-3-5-haiku-20241022'],
+  gemini: ['gemini-2.0-flash', 'gemini-1.5-pro'],
+  'azure-openai': ['gpt-4o', 'gpt-4o-mini'],
+  ollama: [], // Ollama 需要动态查询
+  'new-api': ['gpt-4o', 'gpt-4o-mini', 'claude-sonnet-4-20250514'], // New API 通常支持多种模型
+  gateway: ['gpt-4o', 'gpt-4o-mini', 'claude-sonnet-4-20250514'],
+};
+
+/**
  * ModelVerificationService
  *
  * 负责验证 API Key 的有效性并缓存结果
@@ -111,14 +125,38 @@ export class ModelVerificationService implements OnModuleInit {
       throw new Error(`Provider key not found: ${providerKeyId}`);
     }
 
-    const { vendor, secretEncrypted } = providerKey;
+    const { vendor, apiType, secretEncrypted } = providerKey;
     const apiKey = this.encryptionService.decrypt(Buffer.from(secretEncrypted));
 
     // 获取该 vendor 支持的模型列表
-    const models = VENDOR_DEFAULT_MODELS[vendor] || [];
+    let models = VENDOR_DEFAULT_MODELS[vendor] || [];
+
+    // 如果是 custom vendor，根据 apiType 确定模型列表
+    if (models.length === 0 && vendor === 'custom' && apiType) {
+      models = API_TYPE_DEFAULT_MODELS[apiType] || [];
+      this.logger.info(
+        `[ModelVerification] Using apiType '${apiType}' models for custom vendor`,
+      );
+    }
+
+    // 如果仍然没有模型列表，尝试从 /models 端点动态获取
+    if (models.length === 0) {
+      const dynamicModels = await this.fetchAvailableModels(
+        apiKey,
+        providerKey.baseUrl,
+        apiType,
+      );
+      if (dynamicModels.length > 0) {
+        models = dynamicModels;
+        this.logger.info(
+          `[ModelVerification] Fetched ${models.length} models dynamically`,
+        );
+      }
+    }
+
     if (models.length === 0) {
       this.logger.warn(
-        `[ModelVerification] No default models for vendor: ${vendor}`,
+        `[ModelVerification] No models to verify for vendor: ${vendor}, apiType: ${apiType}`,
       );
       return [];
     }
@@ -146,6 +184,67 @@ export class ModelVerificationService implements OnModuleInit {
     }
 
     return results;
+  }
+
+  /**
+   * 从 /models 端点动态获取可用模型列表
+   */
+  private async fetchAvailableModels(
+    apiKey: string,
+    baseUrl?: string | null,
+    apiType?: string | null,
+  ): Promise<string[]> {
+    if (!baseUrl) {
+      return [];
+    }
+
+    try {
+      const headers = this.getAuthHeaders(apiType || 'openai', apiKey);
+      const url = `${baseUrl}/v1/models`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        this.logger.warn(
+          `[ModelVerification] Failed to fetch models: ${response.status}`,
+        );
+        return [];
+      }
+
+      const data = (await response.json()) as {
+        data?: Array<{ id: string }>;
+        object?: string;
+      };
+
+      // OpenAI 格式的响应
+      if (data.data && Array.isArray(data.data)) {
+        // 过滤出常用的聊天模型
+        const chatModels = data.data
+          .map((m) => m.id)
+          .filter(
+            (id) =>
+              id.includes('gpt') ||
+              id.includes('claude') ||
+              id.includes('gemini') ||
+              id.includes('deepseek') ||
+              id.includes('llama') ||
+              id.includes('mistral') ||
+              id.includes('qwen'),
+          )
+          .slice(0, 10); // 最多取 10 个模型
+
+        return chatModels;
+      }
+
+      return [];
+    } catch (error) {
+      this.logger.warn('[ModelVerification] Error fetching models', { error });
+      return [];
+    }
   }
 
   /**

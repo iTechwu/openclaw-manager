@@ -20,7 +20,10 @@ import type {
  * AI 模型定价（每 1M tokens，美元）
  * 作为数据库不可用时的后备方案
  */
-const FALLBACK_MODEL_PRICING: Record<string, { input: number; output: number }> = {
+const FALLBACK_MODEL_PRICING: Record<
+  string,
+  { input: number; output: number }
+> = {
   // OpenAI
   'gpt-4o': { input: 2.5, output: 10 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },

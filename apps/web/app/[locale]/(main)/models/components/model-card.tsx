@@ -10,6 +10,7 @@ import {
   Radio,
   Brain,
   Sparkles,
+  Key,
 } from 'lucide-react';
 
 interface ModelCardProps {
@@ -112,6 +113,28 @@ export function ModelCard({ model }: ModelCardProps) {
                 <div className="font-medium">{model.speedScore}</div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Provider Info (Admin only) */}
+        {model.providers && model.providers.length > 0 && (
+          <div className="mt-3 border-t pt-3">
+            <div className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+              <Key className="size-3" />
+              <span>Provider Keys</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {model.providers.map((provider) => (
+                <Badge
+                  key={provider.providerKeyId}
+                  variant="outline"
+                  className="text-xs"
+                  title={`ID: ${provider.providerKeyId}`}
+                >
+                  {provider.label || provider.vendor}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>

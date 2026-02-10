@@ -81,7 +81,7 @@ const MODEL_CAPABILITY_SCORES: Record<string, number> = {
   'claude-sonnet-4-20250514': 85,
   'claude-3-5-haiku-20241022': 60,
   // OpenAI
-  'o1': 95,
+  o1: 95,
   'o3-mini': 80,
   'gpt-4o': 82,
   'gpt-4o-mini': 55,
@@ -350,7 +350,9 @@ export class BotComplexityRoutingService {
       return {
         enabled: true,
         models: config.models as unknown as ComplexityModelMapping,
-        toolMinComplexity: config.toolMinComplexity as ComplexityLevel | undefined,
+        toolMinComplexity: config.toolMinComplexity as
+          | ComplexityLevel
+          | undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -440,4 +442,3 @@ export class BotComplexityRoutingService {
     return 50;
   }
 }
-

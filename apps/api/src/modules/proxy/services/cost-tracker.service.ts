@@ -330,8 +330,7 @@ export class CostTrackerService {
 
     let thinkingCost = 0;
     if (usage.thinkingTokens && pricing.thinkingPrice) {
-      thinkingCost =
-        (usage.thinkingTokens / 1_000_000) * pricing.thinkingPrice;
+      thinkingCost = (usage.thinkingTokens / 1_000_000) * pricing.thinkingPrice;
     }
 
     let cacheCost = 0;
@@ -432,14 +431,14 @@ export class CostTrackerService {
     if (dailyLimit && usage.dailyCost >= dailyLimit * alertThreshold) {
       status.alertTriggered = true;
       this.logger.warn(
-        `[CostTracker] Bot ${botId} daily budget alert: ${(usage.dailyCost / dailyLimit * 100).toFixed(1)}% used`,
+        `[CostTracker] Bot ${botId} daily budget alert: ${((usage.dailyCost / dailyLimit) * 100).toFixed(1)}% used`,
       );
     }
 
     if (monthlyLimit && usage.monthlyCost >= monthlyLimit * alertThreshold) {
       status.alertTriggered = true;
       this.logger.warn(
-        `[CostTracker] Bot ${botId} monthly budget alert: ${(usage.monthlyCost / monthlyLimit * 100).toFixed(1)}% used`,
+        `[CostTracker] Bot ${botId} monthly budget alert: ${((usage.monthlyCost / monthlyLimit) * 100).toFixed(1)}% used`,
       );
     }
 

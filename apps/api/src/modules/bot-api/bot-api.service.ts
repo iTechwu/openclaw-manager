@@ -307,7 +307,9 @@ export class BotApiService {
       createdBy: { connect: { id: userId } },
     });
 
-    this.logger.log(`Bot created in database: ${input.hostname} (id: ${bot.id})`);
+    this.logger.log(
+      `Bot created in database: ${input.hostname} (id: ${bot.id})`,
+    );
 
     // Create BotProviderKey relationships for all providers
     for (const provider of input.providers) {
@@ -358,7 +360,9 @@ export class BotApiService {
         // Update bot with proxyTokenHash
         await this.botService.update({ id: bot.id }, { proxyTokenHash });
 
-        this.logger.log(`Bot ${input.hostname} registered with proxy (token obtained)`);
+        this.logger.log(
+          `Bot ${input.hostname} registered with proxy (token obtained)`,
+        );
       } catch (error) {
         this.logger.warn(
           `Failed to register bot with proxy, falling back to direct mode:`,
@@ -413,7 +417,9 @@ export class BotApiService {
 
       // Update bot with container ID
       await this.botService.update({ id: bot.id }, { containerId });
-      this.logger.log(`Container created for bot ${input.hostname}: ${containerId}`);
+      this.logger.log(
+        `Container created for bot ${input.hostname}: ${containerId}`,
+      );
     } catch (error) {
       this.logger.warn(
         `Failed to create container for ${input.hostname}:`,
@@ -652,7 +658,10 @@ export class BotApiService {
       target: 'BOT',
       targetId: bot.id,
       targetName: bot.name,
-      detail: { hostname, pendingConfig: mergedPending } as Prisma.InputJsonValue,
+      detail: {
+        hostname,
+        pendingConfig: mergedPending,
+      } as Prisma.InputJsonValue,
     });
 
     this.logger.log(
@@ -717,7 +726,11 @@ export class BotApiService {
       target: 'BOT',
       targetId: bot.id,
       targetName: bot.name,
-      detail: { hostname, appliedFields, appliedConfig: pendingConfig } as Prisma.InputJsonValue,
+      detail: {
+        hostname,
+        appliedFields,
+        appliedConfig: pendingConfig,
+      } as Prisma.InputJsonValue,
     });
 
     this.logger.log(
@@ -758,7 +771,9 @@ export class BotApiService {
     // 在启动前应用待生效配置
     const pendingConfig = bot.pendingConfig as Record<string, unknown> | null;
     if (pendingConfig && Object.keys(pendingConfig).length > 0) {
-      this.logger.log(`Applying pending config before starting bot ${hostname}`);
+      this.logger.log(
+        `Applying pending config before starting bot ${hostname}`,
+      );
       await this.applyPendingConfig(hostname, userId);
       // 重新获取更新后的 bot
       bot = await this.getBotByHostname(hostname, userId);
@@ -785,7 +800,7 @@ export class BotApiService {
       // Check if container exists and is in a healthy state
       // IMPORTANT: We always recreate the container to ensure new configurations take effect
       // The OpenClaw data (memory, sessions) is persisted in a separate volume and won't be lost
-      let needsRecreate = true; // Always recreate to apply new config
+      const needsRecreate = true; // Always recreate to apply new config
       if (bot.containerId) {
         const containerStatus = await this.dockerService.getContainerStatus(
           bot.containerId,
@@ -835,7 +850,9 @@ export class BotApiService {
 
         // Check if zero-trust mode is enabled
         const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
-        this.logger.log(`Starting bot ${hostname} with zero-trust mode: ${useZeroTrust}`);
+        this.logger.log(
+          `Starting bot ${hostname} with zero-trust mode: ${useZeroTrust}`,
+        );
 
         if (botProviderKey) {
           try {
@@ -1268,7 +1285,8 @@ export class BotApiService {
           id: bpk.id,
           providerKeyId: bpk.providerKeyId,
           vendor: providerKey.vendor as BotProviderDetail['vendor'],
-          apiType: (providerKey.apiType as BotProviderDetail['apiType']) || null,
+          apiType:
+            (providerKey.apiType as BotProviderDetail['apiType']) || null,
           label: providerKey.label,
           apiKeyMasked,
           baseUrl: providerKey.baseUrl,
@@ -1584,7 +1602,10 @@ export class BotApiService {
             message: `${errorChannels.length} channel(s) have errors`,
           });
           recommendations.push('Check channel configurations for errors');
-        } else if (connectedChannels.length === 0 && enabledChannels.length > 0) {
+        } else if (
+          connectedChannels.length === 0 &&
+          enabledChannels.length > 0
+        ) {
           results.push({
             name: 'channel_tokens',
             status: 'warning',
@@ -1675,7 +1696,9 @@ export class BotApiService {
               message: 'Container not running, cannot verify network',
               latency,
             });
-            recommendations.push('Start the bot to verify network connectivity');
+            recommendations.push(
+              'Start the bot to verify network connectivity',
+            );
           } else {
             // Container is running, check if it has network access
             // Verify container is on the expected network

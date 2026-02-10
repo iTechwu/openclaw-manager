@@ -211,7 +211,8 @@ export class UpstreamService {
             rawResponse.end();
 
             // Log response data for debugging (concise summary)
-            const responseData = Buffer.concat(responseChunks).toString('utf-8');
+            const responseData =
+              Buffer.concat(responseChunks).toString('utf-8');
             if (responseData.length > 0) {
               // For SSE responses, extract usage from last event; for JSON, extract key fields
               if (contentType?.includes('text/event-stream')) {
@@ -229,8 +230,12 @@ export class UpstreamService {
                         if (parsed.usage) {
                           usageSummary = {
                             model: parsed.model,
-                            input_tokens: parsed.usage.input_tokens || parsed.usage.prompt_tokens,
-                            output_tokens: parsed.usage.output_tokens || parsed.usage.completion_tokens,
+                            input_tokens:
+                              parsed.usage.input_tokens ||
+                              parsed.usage.prompt_tokens,
+                            output_tokens:
+                              parsed.usage.output_tokens ||
+                              parsed.usage.completion_tokens,
                             total_tokens: parsed.usage.total_tokens,
                           };
                           break;
@@ -263,7 +268,9 @@ export class UpstreamService {
                 }
               }
             } else {
-              this.logger.info(`[Proxy] Response: status=${statusCode}, empty body`);
+              this.logger.info(
+                `[Proxy] Response: status=${statusCode}, empty body`,
+              );
             }
 
             // 提取 token 使用量

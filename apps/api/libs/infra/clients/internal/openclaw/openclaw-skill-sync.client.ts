@@ -316,10 +316,10 @@ export class OpenClawSkillSyncClient {
         // 检查是否已存在相同 slug（去重）
         if (skillsMap.has(trimmedSlug)) {
           duplicateCount++;
-          this.logger.debug(
-            'OpenClawSkillSyncClient: 跳过重复 slug',
-            { slug: trimmedSlug, sourceUrl: sourceUrl.trim() },
-          );
+          this.logger.debug('OpenClawSkillSyncClient: 跳过重复 slug', {
+            slug: trimmedSlug,
+            sourceUrl: sourceUrl.trim(),
+          });
           continue;
         }
 

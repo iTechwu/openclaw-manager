@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   modelApi,
@@ -26,7 +27,9 @@ export const modelKeys = {
  * Returns all models with their availability status
  */
 export function useAvailableModels() {
+  const queryClient = useQueryClient();
   const modelsQuery = modelApi.list.useQuery(modelKeys.list(), {});
+  const [verifying, setVerifying] = useState(false);
 
   const responseBody = modelsQuery.data?.body;
   const models: AvailableModel[] =
@@ -34,12 +37,31 @@ export function useAvailableModels() {
       ? ((responseBody.data as { list: AvailableModel[] }).list ?? [])
       : [];
 
+  // Verify models (admin only)
+  const verifyModels = async () => {
+    setVerifying(true);
+    try {
+      const result = await modelApi.verify.mutation({
+        body: {},
+      });
+      // Refresh models list after a short delay to allow verification to complete
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: modelKeys.list() });
+      }, 3000);
+      return result;
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   return {
     models,
     loading: modelsQuery.isLoading,
     error:
       modelsQuery.error instanceof Error ? modelsQuery.error.message : null,
     refresh: () => modelsQuery.refetch(),
+    verifyModels,
+    verifying,
   };
 }
 
