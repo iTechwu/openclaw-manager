@@ -36,7 +36,11 @@ import {
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
-import type { PluginCategory, BotPluginItem, PluginItem } from '@repo/contracts';
+import type {
+  PluginCategory,
+  BotPluginItem,
+  PluginItem,
+} from '@repo/contracts';
 
 /**
  * 分类图标映射
@@ -345,9 +349,7 @@ export default function BotPluginsPage() {
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>添加插件</DialogTitle>
-              <DialogDescription>
-                选择要安装到此 Bot 的插件
-              </DialogDescription>
+              <DialogDescription>选择要安装到此 Bot 的插件</DialogDescription>
             </DialogHeader>
             {availableLoading ? (
               <div className="grid gap-4 md:grid-cols-2">
