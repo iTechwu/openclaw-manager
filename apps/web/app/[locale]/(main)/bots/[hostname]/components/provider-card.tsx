@@ -43,6 +43,8 @@ const providerColors: Record<string, string> = {
   ollama: '#FFFFFF',
 };
 
+const COLLAPSED_MODEL_COUNT = 3;
+
 export function ProviderCard({
   vendor,
   apiType,
@@ -56,9 +58,14 @@ export function ProviderCard({
   loading,
 }: ProviderCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const [modelsExpanded, setModelsExpanded] = useState(false);
   const accentColor = providerColors[vendor] || '#6B7280';
   const primaryModel = models.find((m) => m.isPrimary);
   const displayType = apiType || vendor;
+  const hasMoreModels = models.length > COLLAPSED_MODEL_COUNT;
+  const displayedModels = modelsExpanded
+    ? models
+    : models.slice(0, COLLAPSED_MODEL_COUNT);
 
   return (
     <Card className="relative overflow-hidden">
@@ -131,38 +138,61 @@ export function ProviderCard({
                 <Skeleton className="h-12 w-full" />
               </>
             ) : (
-              models.map((model) => (
-                <div
-                  key={model.id}
-                  className={cn(
-                    'flex items-center justify-between p-3 rounded-lg border',
-                    model.isPrimary
-                      ? 'border-primary/50 bg-primary/5'
-                      : 'border-border bg-muted/30',
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bot className="size-4 text-muted-foreground" />
-                    <div>
-                      <span className="text-sm font-medium">{model.name}</span>
-                      {model.isPrimary && (
-                        <Badge variant="default" className="ml-2 text-xs">
-                          <Star className="size-3 mr-1" />
-                          主模型
-                        </Badge>
-                      )}
+              <>
+                {displayedModels.map((model) => (
+                  <div
+                    key={model.id}
+                    className={cn(
+                      'flex items-center justify-between p-3 rounded-lg border',
+                      model.isPrimary
+                        ? 'border-primary/50 bg-primary/5'
+                        : 'border-border bg-muted/30',
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bot className="size-4 text-muted-foreground" />
+                      <div>
+                        <span className="text-sm font-medium">
+                          {model.name}
+                        </span>
+                        {model.isPrimary && (
+                          <Badge variant="default" className="ml-2 text-xs">
+                            <Star className="size-3 mr-1" />
+                            主模型
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+                    {!model.isPrimary && (
+                      <button
+                        onClick={() => onSetPrimaryModel(model.id)}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        设为主模型
+                      </button>
+                    )}
                   </div>
-                  {!model.isPrimary && (
-                    <button
-                      onClick={() => onSetPrimaryModel(model.id)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      设为主模型
-                    </button>
-                  )}
-                </div>
-              ))
+                ))}
+                {hasMoreModels && (
+                  <button
+                    onClick={() => setModelsExpanded(!modelsExpanded)}
+                    className="w-full py-2 text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
+                  >
+                    {modelsExpanded ? (
+                      <>
+                        <ChevronUp className="size-3" />
+                        收起 ({models.length - COLLAPSED_MODEL_COUNT} 个模型)
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="size-3" />
+                        查看更多 ({models.length - COLLAPSED_MODEL_COUNT}{' '}
+                        个模型)
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
             )}
           </div>
 
