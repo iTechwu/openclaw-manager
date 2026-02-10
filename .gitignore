@@ -51,6 +51,7 @@ lerna-debug.log*
 *.gz
 
 # botenv
+apps/api/data/
 apps/api/data/bots/
 
 # Testing
@@ -83,9 +84,6 @@ uploads/
 **/uploads/
 undefined/
 secrets/
-data/bots/
-data/secrets/
-data/openclaw/
 
 # Keys and secrets
 keys/

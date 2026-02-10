@@ -47,15 +47,15 @@ const navItems = [
     badgeKey: 'userTemplates',
   },
   {
+    titleKey: 'routing',
+    href: '/routing',
+    icon: Route,
+  },
+  {
     titleKey: 'diagnostics',
     href: '/diagnostics',
     icon: Activity,
     adminOnly: true,
-  },
-  {
-    titleKey: 'routing',
-    href: '/routing',
-    icon: Route,
   },
 ];
 
