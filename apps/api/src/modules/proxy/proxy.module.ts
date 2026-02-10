@@ -36,6 +36,7 @@ import { RoutingEngineService } from './services/routing-engine.service';
 import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
+import { BotComplexityRoutingService } from './services/bot-complexity-routing.service';
 
 /**
  * ProxyModule - API 代理模块
@@ -89,6 +90,8 @@ import { ConfigurationService } from './services/configuration.service';
     FallbackEngineService,
     CostTrackerService,
     ConfigurationService,
+    // Bot complexity routing service
+    BotComplexityRoutingService,
   ],
   exports: [
     ProxyService,
@@ -101,6 +104,8 @@ import { ConfigurationService } from './services/configuration.service';
     FallbackEngineService,
     CostTrackerService,
     ConfigurationService,
+    // Bot complexity routing service
+    BotComplexityRoutingService,
   ],
 })
 export class ProxyModule {}

@@ -243,7 +243,10 @@ export default function BotPluginsPage() {
     botPluginApi.list.useQuery(
       ['bot-plugins', hostname],
       { params: { hostname } },
-      { enabled: !!hostname },
+      {
+        queryKey: ['bot-plugins', hostname],
+        enabled: !!hostname,
+      },
     );
 
   const installedPlugins = installedResponse?.body?.data || [];
@@ -254,7 +257,10 @@ export default function BotPluginsPage() {
     pluginApi.list.useQuery(
       ['plugins-available'],
       { query: { limit: 100 } },
-      { enabled: isAddDialogOpen },
+      {
+        queryKey: ['plugins-available'],
+        enabled: isAddDialogOpen,
+      },
     );
 
   const availablePlugins = (availableResponse?.body?.data?.list || []).filter(

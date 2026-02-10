@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { ServerResponse } from 'http';
 import { BotService, BotUsageLogService } from '@app/db';
@@ -12,6 +12,10 @@ import { getVendorConfigWithCustomUrl } from '../config/vendor.config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { normalizeModelForProxy } from '@/utils/model-normalizer';
+import {
+  BotComplexityRoutingService,
+  type ComplexityRouteResult,
+} from './bot-complexity-routing.service';
 
 /**
  * 代理请求参数
@@ -61,6 +65,8 @@ export class ProxyService {
     private readonly keyringProxyService: KeyringProxyService,
     private readonly upstreamService: UpstreamService,
     private readonly quotaService: QuotaService,
+    @Optional()
+    private readonly botComplexityRouting?: BotComplexityRoutingService,
   ) {}
 
   /**
@@ -205,7 +211,31 @@ export class ProxyService {
     // Normalize model name in request body
     // OpenClaw sends model names with provider prefix (e.g., openai-compatible/gpt-4o)
     // We need to strip the prefix before forwarding to the upstream
-    const normalizedBody = this.normalizeRequestBody(body, effectiveApiType);
+    let normalizedBody = this.normalizeRequestBody(body, effectiveApiType);
+
+    // Apply complexity-based routing if enabled
+    // This will analyze the request and potentially switch to a different model
+    const complexityRoute = await this.applyComplexityRouting(
+      botId,
+      normalizedBody,
+      keyId,
+      apiKey,
+      baseUrl,
+      effectiveApiType,
+    );
+
+    if (complexityRoute) {
+      // Update routing parameters based on complexity routing result
+      keyId = complexityRoute.keyId;
+      apiKey = complexityRoute.apiKey;
+      baseUrl = complexityRoute.baseUrl;
+      effectiveApiType = complexityRoute.effectiveApiType;
+      normalizedBody = complexityRoute.body;
+
+      this.logger.info(
+        `[Proxy] Complexity routing applied: ${complexityRoute.reason}`,
+      );
+    }
 
     // Log the actual model being used after normalization
     if (normalizedBody && normalizedBody.length > 0) {
@@ -433,5 +463,139 @@ export class ProxyService {
       apiType: vendor,
       isCustom: false,
     };
+  }
+
+  /**
+   * 应用复杂度路由
+   *
+   * 分析请求内容，根据复杂度选择最佳模型
+   * 如果复杂度路由成功，返回新的路由参数
+   * 如果失败或未启用，返回 null（使用原始路由）
+   */
+  private async applyComplexityRouting(
+    botId: string,
+    body: Buffer | null,
+    originalKeyId: string,
+    originalApiKey: string,
+    originalBaseUrl: string | null | undefined,
+    originalApiType: string,
+  ): Promise<{
+    keyId: string;
+    apiKey: string;
+    baseUrl: string | null | undefined;
+    effectiveApiType: string;
+    body: Buffer | null;
+    reason: string;
+  } | null> {
+    // 检查是否有复杂度路由服务
+    if (!this.botComplexityRouting) {
+      return null;
+    }
+
+    // 解析请求体
+    if (!body || body.length === 0) {
+      return null;
+    }
+
+    let bodyJson: {
+      model?: string;
+      messages?: Array<{ role: string; content: unknown }>;
+      tools?: unknown[];
+    };
+
+    try {
+      bodyJson = JSON.parse(body.toString('utf-8'));
+    } catch {
+      return null;
+    }
+
+    // 只对 chat completions 请求应用复杂度路由
+    if (!bodyJson.messages || !Array.isArray(bodyJson.messages)) {
+      return null;
+    }
+
+    // 提取用户消息
+    const userMessage = this.extractUserMessage(bodyJson.messages);
+    if (!userMessage) {
+      return null;
+    }
+
+    // 检查是否有工具调用
+    const hasTools = Array.isArray(bodyJson.tools) && bodyJson.tools.length > 0;
+
+    // 调用复杂度路由
+    try {
+      const routeResult = await this.botComplexityRouting.routeByComplexity(
+        botId,
+        userMessage,
+        hasTools,
+      );
+
+      if (!routeResult) {
+        return null;
+      }
+
+      // 获取新的 API key
+      const newKeySelection = await this.keyringService.selectKeyForBot(
+        routeResult.vendor,
+        [], // 使用空 tags，让 keyring 选择默认 key
+      );
+
+      if (!newKeySelection) {
+        this.logger.warn(
+          `[Proxy] Complexity routing: No API key for vendor ${routeResult.vendor}`,
+        );
+        return null;
+      }
+
+      // 修改请求体中的 model
+      bodyJson.model = routeResult.model;
+      const newBody = Buffer.from(JSON.stringify(bodyJson), 'utf-8');
+
+      return {
+        keyId: newKeySelection.keyId,
+        apiKey: newKeySelection.secret,
+        baseUrl: routeResult.baseUrl || newKeySelection.baseUrl,
+        effectiveApiType: routeResult.apiType || routeResult.vendor,
+        body: newBody,
+        reason: routeResult.reason,
+      };
+    } catch (error) {
+      this.logger.error('[Proxy] Complexity routing failed', { error });
+      return null;
+    }
+  }
+
+  /**
+   * 从消息数组中提取最后一条用户消息
+   */
+  private extractUserMessage(
+    messages: Array<{ role: string; content: unknown }>,
+  ): string | null {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'user') {
+        if (typeof msg.content === 'string') {
+          return msg.content;
+        }
+        if (Array.isArray(msg.content)) {
+          // 处理多模态消息
+          const textParts = msg.content
+            .filter(
+              (part): part is { type: string; text: string } =>
+                typeof part === 'object' &&
+                part !== null &&
+                'type' in part &&
+                part.type === 'text' &&
+                'text' in part,
+            )
+            .map((part) => part.text);
+          if (textParts.length > 0) {
+            return textParts.join(' ');
+          }
+        }
+      }
+    }
+    return null;
   }
 }

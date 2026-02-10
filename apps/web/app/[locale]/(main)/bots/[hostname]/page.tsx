@@ -144,15 +144,18 @@ export default function BotDashboardPage() {
   const loading = actionLoading || startLoading || stopLoading;
 
   // 从容器统计中获取当前 Bot 的统计信息
-  const currentBotStats = containerStats.find(
-    (s: { hostname: string }) => s.hostname === hostname,
-  ) as {
+  interface ContainerStat {
+    hostname: string;
     memoryUsage?: number;
     cpuPercent?: number;
     pid?: number | null;
     uptimeSeconds?: number | null;
     containerId?: string;
-  } | undefined;
+  }
+
+  const currentBotStats = (containerStats as ContainerStat[] | undefined)?.find(
+    (s) => s.hostname === hostname,
+  );
 
   // 构建服务状态对象
   const serviceStatus = bot
