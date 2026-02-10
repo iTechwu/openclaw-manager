@@ -24,6 +24,8 @@ export type SyncResult = z.infer<typeof SyncResultSchema>;
  */
 export const SyncStatusSchema = z.object({
   totalSkills: z.number(),
+  systemSkills: z.number(),
+  customSkills: z.number(),
   translatedSkills: z.number(),
   lastSyncedAt: z.date().nullable(),
   skillTypes: z.array(SkillTypeWithCountSchema),

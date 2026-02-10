@@ -8,6 +8,7 @@ import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { skillSyncContract } from '@repo/contracts';
+import { success } from '@/common/ts-rest/response.helper';
 import { SkillSyncService } from './skill-sync.service';
 
 const c = skillSyncContract;
@@ -30,14 +31,7 @@ export class SkillSyncController {
         enableTranslation,
       });
       const result = await this.skillSyncService.syncAll(enableTranslation);
-      return {
-        status: 200,
-        body: {
-          code: 0,
-          msg: 'success',
-          data: result,
-        },
-      };
+      return success(result);
     });
   }
 
@@ -49,14 +43,7 @@ export class SkillSyncController {
     return tsRestHandler(c.translate, async () => {
       this.logger.info('SkillSyncController: 翻译未翻译的技能');
       const result = await this.skillSyncService.translateUntranslated();
-      return {
-        status: 200,
-        body: {
-          code: 0,
-          msg: 'success',
-          data: result,
-        },
-      };
+      return success(result);
     });
   }
 
@@ -67,14 +54,7 @@ export class SkillSyncController {
   async status() {
     return tsRestHandler(c.status, async () => {
       const status = await this.skillSyncService.getSyncStatus();
-      return {
-        status: 200,
-        body: {
-          code: 0,
-          msg: 'success',
-          data: status,
-        },
-      };
+      return success(status);
     });
   }
 
@@ -85,14 +65,7 @@ export class SkillSyncController {
   async skillTypes() {
     return tsRestHandler(c.skillTypes, async () => {
       const skillTypes = await this.skillSyncService.getSkillTypes();
-      return {
-        status: 200,
-        body: {
-          code: 0,
-          msg: 'success',
-          data: { skillTypes },
-        },
-      };
+      return success({ skillTypes });
     });
   }
 }

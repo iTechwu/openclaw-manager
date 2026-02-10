@@ -279,11 +279,13 @@ export class OpenClawSkillSyncClient {
   /**
    * 解析 README 内容，提取技能信息
    * 只处理 URL 以 SKILL.md 结尾的技能
+   * 自动去重：相同 slug 只保留第一个
    */
   parseReadme(content: string): ParsedSkill[] {
-    const skills: ParsedSkill[] = [];
+    const skillsMap = new Map<string, ParsedSkill>();
     let currentCategory = '';
     let skippedCount = 0;
+    let duplicateCount = 0;
 
     // 按行解析
     const lines = content.split('\n');
@@ -309,6 +311,18 @@ export class OpenClawSkillSyncClient {
           continue;
         }
 
+        const trimmedSlug = slug.trim();
+
+        // 检查是否已存在相同 slug（去重）
+        if (skillsMap.has(trimmedSlug)) {
+          duplicateCount++;
+          this.logger.debug(
+            'OpenClawSkillSyncClient: 跳过重复 slug',
+            { slug: trimmedSlug, sourceUrl: sourceUrl.trim() },
+          );
+          continue;
+        }
+
         // 从 URL 提取作者
         // URL 格式: https://github.com/openclaw/skills/tree/main/skills/{author}/{slug}/SKILL.md
         const authorMatch = sourceUrl.match(
@@ -316,9 +330,9 @@ export class OpenClawSkillSyncClient {
         );
         const author = authorMatch ? authorMatch[1] : 'unknown';
 
-        skills.push({
-          slug: slug.trim(),
-          name: this.slugToName(slug.trim()),
+        skillsMap.set(trimmedSlug, {
+          slug: trimmedSlug,
+          name: this.slugToName(trimmedSlug),
           description: description.trim(),
           category:
             CATEGORY_MAP[currentCategory] || this.slugify(currentCategory),
@@ -328,9 +342,12 @@ export class OpenClawSkillSyncClient {
       }
     }
 
+    const skills = Array.from(skillsMap.values());
+
     this.logger.info('OpenClawSkillSyncClient: README 解析完成', {
       totalSkills: skills.length,
       skippedSkills: skippedCount,
+      duplicateSkills: duplicateCount,
       categories: [...new Set(skills.map((s) => s.category))].length,
     });
 

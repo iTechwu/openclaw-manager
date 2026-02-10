@@ -22,11 +22,15 @@
 
 ### v1.0.0 (2026-02)
 
+- **模型路由系统**：智能多模型路由，支持能力标签、降级链、成本策略和负载均衡
+- **技能管理系统**：新增 SkillType 模型，支持 upsert 功能和 OpenClaw 同步
+- **Bot 用量分析**：增强的 Token 使用追踪、路由统计和分析仪表板
 - **Bot 配置解析器**：运行时配置现从 `BotProviderKey` 和 `BotChannel` 表派生，确保数据一致性
 - **零信任架构**：Bot 容器永不直接接触 API 密钥 - 所有密钥在代理层注入
 - **10 个渠道集成**：支持飞书、Telegram、Slack、微信、Discord、WhatsApp、X、Instagram、Teams 和 LINE
 - **22 个 MCP 插件**：预置搜索、文件操作、数据库访问和开发工具等插件
 - **技能系统**：自定义工具、提示词模板和工作流，一键安装到 Bot
+- **通知系统**：后端配额通知，支持实时告警
 
 ---
 
@@ -87,8 +91,9 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 ### 已完成 ✅
 
 - **核心能力**：Bot CRUD、Provider Key 管理、AI 代理、Docker 容器编排
+- **模型路由系统**：能力标签、降级链、成本策略、负载均衡、路由统计
 - **插件系统**：MCP 插件管理、22 个预置插件（搜索、文件、数据库、开发工具等）、按区域过滤
-- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装到 Bot
+- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装到 Bot、OpenClaw 同步
 - **渠道系统**：10 个渠道定义（飞书、Telegram、Slack、微信、Discord、WhatsApp、X、Instagram、Teams、LINE）、渠道凭证管理、按语言环境推荐
 - **基础设施**：用户认证、多登录方式、文件上传、短信、国际化（中/英）
 - **诊断运维**：容器统计、孤立资源检测与清理、启动对账
@@ -96,11 +101,13 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 - **配额管理**：日/月 Token 限制、80% 阈值警告、超额系统消息
 - **模板系统**：Persona 模板（系统模板 + 用户模板）、Bot 创建向导
 - **审计日志**：操作日志记录（CREATE、START、STOP、DELETE）
+- **Bot 用量分析**：Token 使用追踪、路由统计、分析仪表板
+- **通知系统**：后端配额通知已实现
 
 ### 待实施 ⏳
 
 - **渠道连接器**：飞书、Telegram、微信等渠道的实际消息收发连接器
-- **Analytics 分析**：契约已定义，后端实现待完成
+- **Analytics 分析 UI**：后端分析已实现，前端仪表板待完成
 - **通知系统 UI**：后端配额通知已实现，前端 UI 待完成
 - **Webhook 处理器**：契约已定义，处理器待实现
 - **权限系统**：细粒度权限控制待实现
@@ -199,27 +206,55 @@ ClawBotManager 面向**需要部署和管理多个 AI Bot** 的团队与开发�
 clawbotmanager/
 ├── apps/
 │   ├── web/                    # Next.js 16 前端
-│   │   ├── app/[locale]/       # 路由（auth、main、bots、diagnostics）
+│   │   ├── app/[locale]/       # 路由
+│   │   │   ├── (auth)/         # 认证路由组
+│   │   │   └── (main)/         # 主路由组（需认证）
+│   │   │       ├── bots/       # Bot 管理
+│   │   │       ├── diagnostics/# 容器诊断
+│   │   │       ├── plugins/    # 插件管理
+│   │   │       ├── routing/    # 模型路由配置
+│   │   │       ├── secrets/    # API 密钥管理
+│   │   │       ├── settings/   # 设置
+│   │   │       ├── skills/     # 技能管理
+│   │   │       └── templates/  # Persona 模板
 │   │   ├── components/         # 通用组件
 │   │   ├── hooks/              # React Hooks
 │   │   └── lib/                # API 客户端、配置
 │   │
 │   └── api/                    # NestJS 11 后端
-│       ├── src/modules/        # 功能模块
+│       ├── src/modules/        # 功能模块（15 个模块）
 │       │   ├── bot-api/        # Bot CRUD、Provider Key、Docker、Workspace
+│       │   ├── bot-channel-api/# Bot 渠道管理
+│       │   ├── channel-api/    # 渠道定义
+│       │   ├── message-api/    # 消息系统
+│       │   ├── operate-log-api/# 操作审计日志
+│       │   ├── persona-template-api/ # Persona 模板
 │       │   ├── plugin-api/     # MCP 插件管理
-│       │   ├── skill-api/      # 技能管理（tool、prompt、workflow）
 │       │   ├── proxy/          # AI 请求代理、Keyring、Upstream
 │       │   ├── sign-api/       # 登录注册
+│       │   ├── skill-api/      # 技能管理
+│       │   ├── skill-sync/     # 技能同步
 │       │   ├── sms-api/        # 短信
-│       │   └── uploader/       # 文件上传
+│       │   ├── sse-api/        # 服务端推送事件
+│       │   ├── uploader/       # 文件上传
+│       │   └── user-api/       # 用户管理
 │       ├── libs/
 │       │   ├── infra/          # 基础设施（prisma、redis、jwt、clients…）
-│       │   └── domain/         # 领域（auth、db）
-│       └── prisma/             # Schema、迁移
+│       │   │   ├── common/     # 装饰器、拦截器、管道
+│       │   │   ├── clients/    # 第三方 API 客户端（18 个客户端）
+│       │   │   ├── prisma/     # 数据库连接、读写分离
+│       │   │   ├── redis/      # 缓存
+│       │   │   ├── rabbitmq/   # 消息队列
+│       │   │   ├── jwt/        # JWT 认证
+│       │   │   ├── utils/      # 纯工具函数
+│       │   │   ├── i18n/       # 国际化
+│       │   │   ├── shared-db/  # TransactionalServiceBase、UnitOfWork
+│       │   │   └── shared-services/ # 共享服务（7 个服务）
+│       │   └── domain/         # 领域（auth、services）
+│       └── prisma/             # Schema（33 个模型）、迁移
 │
-├── packages/                   # 共享包
-│   ├── contracts/              # ts-rest 契约 + Zod Schema
+├── packages/                   # 共享包（7 个包）
+│   ├── contracts/              # ts-rest 契约 + Zod Schema（25 个契约）
 │   ├── ui/                     # shadcn/ui 组件
 │   ├── utils/                  # 工具函数
 │   ├── validators/             # Zod 校验
@@ -227,6 +262,7 @@ clawbotmanager/
 │   ├── types/                  # 类型定义
 │   └── config/                 # ESLint、Prettier、TS 配置
 │
+├── docs/                       # 文档
 └── scripts/                    # 初始化与运维脚本
 ```
 
@@ -266,11 +302,14 @@ clawbotmanager/
 
 - **Bot 生命周期**：创建、启动、停止、删除，Docker 容器 + 工作区（config.json、soul.md、features.json）
 - **Provider Key 管理**：加密存储（AES-256-GCM）、标签路由、Round-robin、自定义 baseUrl
+- **模型路由系统**：能力标签、降级链、成本策略、负载均衡、路由统计
 - **AI 请求代理**：`/v1/:vendor/*` 统一入口，Bot Token 鉴权，流式响应（SSE）
 - **插件系统（MCP）**：22 个预置插件（搜索、文件、数据库、开发工具等）、按区域过滤、一键安装到 Bot
-- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装与配置
+- **技能系统**：自定义工具（tool）、提示词模板（prompt）、工作流（workflow）、技能安装与配置、OpenClaw 同步
+- **渠道系统**：10 个渠道定义、按语言环境推荐、渠道凭证管理
 - **零信任模式**：Bot 容器不接触 API 密钥，代理层注入密钥
 - **配额管理**：日/月 Token 限制、阈值警告、超额通知
+- **Bot 用量分析**：Token 使用追踪、路由统计、分析仪表板
 - **模板系统**：Persona 模板（系统/用户）、5 步创建向导
 - **诊断与运维**：容器统计、孤立资源检测与清理、启动对账
 - **审计日志**：操作日志记录，支持合规审计
@@ -457,6 +496,17 @@ pnpm dev:api      # 仅后端
 | POST   | `/api/bot/:hostname/skills`       | 安装技能到 Bot       |
 | PUT    | `/api/bot/:hostname/skills/:id`   | 更新技能配置         |
 | DELETE | `/api/bot/:hostname/skills/:id`   | 从 Bot 卸载技能      |
+
+### Model Routing 模型路由（需 JWT）
+
+| 方法   | 路径                              | 说明                 |
+| ------ | --------------------------------- | -------------------- |
+| GET    | `/api/bot/:hostname/routing`      | 获取 Bot 路由配置    |
+| PUT    | `/api/bot/:hostname/routing`      | 更新路由配置         |
+| GET    | `/api/routing/capability-tags`    | 列出能力标签         |
+| GET    | `/api/routing/fallback-chains`    | 列出降级链           |
+| GET    | `/api/routing/cost-strategies`    | 列出成本策略         |
+| GET    | `/api/routing/statistics`         | 获取路由统计         |
 
 ### Channel 渠道（需 JWT）
 

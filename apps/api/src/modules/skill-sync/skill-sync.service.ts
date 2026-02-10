@@ -58,6 +58,15 @@ export class SkillSyncService {
     };
 
     try {
+      // 0. 清理数据库中的重复项
+      const removedDuplicates =
+        await this.skillService.removeDuplicates(OPENCLAW_SOURCE);
+      if (removedDuplicates > 0) {
+        this.logger.info('SkillSyncService: 已清理重复技能', {
+          removed: removedDuplicates,
+        });
+      }
+
       // 1. 同步所有 SkillType
       await this.syncSkillTypes();
 
@@ -345,11 +354,32 @@ export class SkillSyncService {
    */
   async getSyncStatus(): Promise<{
     totalSkills: number;
+    systemSkills: number;
+    customSkills: number;
     translatedSkills: number;
     lastSyncedAt: Date | null;
     skillTypes: Array<SkillType & { _count: { skills: number } }>;
   }> {
-    const totalSkills = await this.skillService.countBySource(OPENCLAW_SOURCE);
+    // 获取系统技能数量（isSystem: true）
+    const { total: systemSkills } = await this.skillService.list(
+      {
+        source: OPENCLAW_SOURCE,
+        isSystem: true,
+      },
+      { limit: 1 },
+    );
+
+    // 获取自定义技能数量（isSystem: false）
+    const { total: customSkills } = await this.skillService.list(
+      {
+        source: OPENCLAW_SOURCE,
+        isSystem: false,
+      },
+      { limit: 1 },
+    );
+
+    // 总数 = 系统技能 + 自定义技能
+    const totalSkills = systemSkills + customSkills;
 
     // 获取已翻译的技能数量
     const { total: translatedSkills } = await this.skillService.list(
@@ -371,6 +401,8 @@ export class SkillSyncService {
 
     return {
       totalSkills,
+      systemSkills,
+      customSkills,
       translatedSkills,
       lastSyncedAt: latestSkill?.lastSyncedAt || null,
       skillTypes,

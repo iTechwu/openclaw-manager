@@ -18,6 +18,7 @@ import {
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
+import { ComplexityClassifierModule } from '@app/clients/internal/complexity-classifier';
 import { ProxyController } from './proxy.controller';
 import { ProxyAdminController } from './proxy-admin.controller';
 import { RoutingAdminController } from './routing-admin.controller';
@@ -68,6 +69,8 @@ import { ConfigurationService } from './services/configuration.service';
     CapabilityTagModule,
     FallbackChainModule,
     CostStrategyModule,
+    // Complexity classifier for complexity-based routing
+    ComplexityClassifierModule,
   ],
   controllers: [ProxyController, ProxyAdminController, RoutingAdminController],
   providers: [

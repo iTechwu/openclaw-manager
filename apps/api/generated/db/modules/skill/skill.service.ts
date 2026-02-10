@@ -143,4 +143,55 @@ export class SkillService extends TransactionalServiceBase {
       where: { source, isDeleted: false },
     });
   }
+
+  /**
+   * Find and remove duplicate skills by source and slug
+   * Keeps the oldest record (by createdAt) and soft-deletes the rest
+   * @returns Number of duplicates removed
+   */
+  @HandlePrismaError(DbOperationType.UPDATE)
+  async removeDuplicates(source: string): Promise<number> {
+    // Find all duplicates
+    const duplicates = await this.getReadClient().$queryRaw<
+      Array<{ source: string; slug: string; count: bigint }>
+    >`
+      SELECT source, slug, COUNT(*) as count
+      FROM b_skill
+      WHERE is_deleted = false AND source = ${source}
+      GROUP BY source, slug
+      HAVING COUNT(*) > 1
+    `;
+
+    if (duplicates.length === 0) {
+      return 0;
+    }
+
+    let removedCount = 0;
+
+    for (const dup of duplicates) {
+      // Get all records with this source+slug, ordered by createdAt
+      const records = await this.getReadClient().skill.findMany({
+        where: {
+          source: dup.source,
+          slug: dup.slug,
+          isDeleted: false,
+        },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true },
+      });
+
+      // Keep the first (oldest), soft-delete the rest
+      const idsToDelete = records.slice(1).map((r) => r.id);
+
+      if (idsToDelete.length > 0) {
+        await this.getWriteClient().skill.updateMany({
+          where: { id: { in: idsToDelete } },
+          data: { isDeleted: true, deletedAt: new Date() },
+        });
+        removedCount += idsToDelete.length;
+      }
+    }
+
+    return removedCount;
+  }
 }
