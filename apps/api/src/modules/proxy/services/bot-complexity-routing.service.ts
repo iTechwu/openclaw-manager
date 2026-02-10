@@ -245,6 +245,7 @@ export class BotComplexityRoutingService {
 
   /**
    * 从新的 BotModel 表获取可用模型
+   * vendor 信息从 ProviderKey 获取，不再从 ModelAvailability 获取
    */
   private async getBotAvailableModelsFromBotModel(
     botModels: Array<{ modelId: string; isPrimary: boolean }>,
@@ -268,7 +269,7 @@ export class BotComplexityRoutingService {
 
       availableModels.push({
         providerKeyId: availability.providerKeyId,
-        vendor: availability.vendor,
+        vendor: providerKey.vendor, // 从 ProviderKey 获取 vendor
         apiType: providerKey.apiType,
         baseUrl: providerKey.baseUrl,
         model: bm.modelId,

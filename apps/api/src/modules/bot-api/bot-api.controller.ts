@@ -438,6 +438,39 @@ export class BotApiController {
   }
 
   /**
+   * POST /model/refresh-models - 刷新模型列表
+   * 从 Provider 端点获取最新的模型列表（不进行验证）
+   * 仅限管理员访问
+   */
+  @TsRestHandler(mc.refreshModels)
+  @AdminAuth()
+  async refreshModels(): Promise<any> {
+    return tsRestHandler(mc.refreshModels, async ({ body }) => {
+      const result = await this.modelVerificationService.refreshModels(
+        body.providerKeyId,
+      );
+      return success(result);
+    });
+  }
+
+  /**
+   * POST /model/verify-single - 验证单个模型可用性
+   * 通过实际调用模型 API 验证单个模型是否可用
+   * 仅限管理员访问
+   */
+  @TsRestHandler(mc.verifySingle)
+  @AdminAuth()
+  async verifySingleModel(): Promise<any> {
+    return tsRestHandler(mc.verifySingle, async ({ body }) => {
+      const result = await this.modelVerificationService.verifySingleModel(
+        body.providerKeyId,
+        body.model,
+      );
+      return success(result);
+    });
+  }
+
+  /**
    * GET /bot/:hostname/models - 获取 Bot 的模型列表
    */
   @TsRestHandler(bmc.list)

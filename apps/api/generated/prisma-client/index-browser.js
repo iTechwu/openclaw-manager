@@ -346,7 +346,6 @@ exports.Prisma.BotModelScalarFieldEnum = {
 
 exports.Prisma.ModelAvailabilityScalarFieldEnum = {
   id: 'id',
-  vendor: 'vendor',
   model: 'model',
   providerKeyId: 'providerKeyId',
   isAvailable: 'isAvailable',

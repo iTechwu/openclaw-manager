@@ -105,6 +105,7 @@ export type BotModel = $Result.DefaultSelection<Prisma.$BotModelPayload>
  * Model ModelAvailability
  * ModelAvailability - 模型可用性缓存表
  * 缓存 API Key 验证结果，避免频繁调用外部 API
+ * vendor 信息从关联的 ProviderKey 中获取，避免数据冗余
  */
 export type ModelAvailability = $Result.DefaultSelection<Prisma.$ModelAvailabilityPayload>
 /**
@@ -22832,7 +22833,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMinAggregateOutputType = {
     id: string | null
-    vendor: string | null
     model: string | null
     providerKeyId: string | null
     isAvailable: boolean | null
@@ -22844,7 +22844,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMaxAggregateOutputType = {
     id: string | null
-    vendor: string | null
     model: string | null
     providerKeyId: string | null
     isAvailable: boolean | null
@@ -22856,7 +22855,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCountAggregateOutputType = {
     id: number
-    vendor: number
     model: number
     providerKeyId: number
     isAvailable: number
@@ -22870,7 +22868,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMinAggregateInputType = {
     id?: true
-    vendor?: true
     model?: true
     providerKeyId?: true
     isAvailable?: true
@@ -22882,7 +22879,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMaxAggregateInputType = {
     id?: true
-    vendor?: true
     model?: true
     providerKeyId?: true
     isAvailable?: true
@@ -22894,7 +22890,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCountAggregateInputType = {
     id?: true
-    vendor?: true
     model?: true
     providerKeyId?: true
     isAvailable?: true
@@ -22979,7 +22974,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityGroupByOutputType = {
     id: string
-    vendor: string
     model: string
     providerKeyId: string
     isAvailable: boolean
@@ -23008,7 +23002,6 @@ export namespace Prisma {
 
   export type ModelAvailabilitySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    vendor?: boolean
     model?: boolean
     providerKeyId?: boolean
     isAvailable?: boolean
@@ -23021,7 +23014,6 @@ export namespace Prisma {
 
   export type ModelAvailabilitySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    vendor?: boolean
     model?: boolean
     providerKeyId?: boolean
     isAvailable?: boolean
@@ -23034,7 +23026,6 @@ export namespace Prisma {
 
   export type ModelAvailabilitySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    vendor?: boolean
     model?: boolean
     providerKeyId?: boolean
     isAvailable?: boolean
@@ -23047,7 +23038,6 @@ export namespace Prisma {
 
   export type ModelAvailabilitySelectScalar = {
     id?: boolean
-    vendor?: boolean
     model?: boolean
     providerKeyId?: boolean
     isAvailable?: boolean
@@ -23057,7 +23047,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendor" | "model" | "providerKeyId" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
+  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
   export type ModelAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
   }
@@ -23076,15 +23066,11 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       /**
-       * 模型供应商，如 "openai", "anthropic"
-       */
-      vendor: string
-      /**
        * 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
        */
       model: string
       /**
-       * 关联的 Provider Key
+       * 关联的 Provider Key（vendor 信息从这里获取）
        */
       providerKeyId: string
       /**
@@ -23526,7 +23512,6 @@ export namespace Prisma {
    */
   interface ModelAvailabilityFieldRefs {
     readonly id: FieldRef<"ModelAvailability", 'String'>
-    readonly vendor: FieldRef<"ModelAvailability", 'String'>
     readonly model: FieldRef<"ModelAvailability", 'String'>
     readonly providerKeyId: FieldRef<"ModelAvailability", 'String'>
     readonly isAvailable: FieldRef<"ModelAvailability", 'Boolean'>
@@ -48626,7 +48611,6 @@ export namespace Prisma {
 
   export const ModelAvailabilityScalarFieldEnum: {
     id: 'id',
-    vendor: 'vendor',
     model: 'model',
     providerKeyId: 'providerKeyId',
     isAvailable: 'isAvailable',
@@ -50833,7 +50817,6 @@ export namespace Prisma {
     OR?: ModelAvailabilityWhereInput[]
     NOT?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
     id?: UuidFilter<"ModelAvailability"> | string
-    vendor?: StringFilter<"ModelAvailability"> | string
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
@@ -50846,7 +50829,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityOrderByWithRelationInput = {
     id?: SortOrder
-    vendor?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
     isAvailable?: SortOrder
@@ -50863,7 +50845,6 @@ export namespace Prisma {
     AND?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
     OR?: ModelAvailabilityWhereInput[]
     NOT?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
-    vendor?: StringFilter<"ModelAvailability"> | string
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
@@ -50876,7 +50857,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityOrderByWithAggregationInput = {
     id?: SortOrder
-    vendor?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
     isAvailable?: SortOrder
@@ -50894,7 +50874,6 @@ export namespace Prisma {
     OR?: ModelAvailabilityScalarWhereWithAggregatesInput[]
     NOT?: ModelAvailabilityScalarWhereWithAggregatesInput | ModelAvailabilityScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ModelAvailability"> | string
-    vendor?: StringWithAggregatesFilter<"ModelAvailability"> | string
     model?: StringWithAggregatesFilter<"ModelAvailability"> | string
     providerKeyId?: UuidWithAggregatesFilter<"ModelAvailability"> | string
     isAvailable?: BoolWithAggregatesFilter<"ModelAvailability"> | boolean
@@ -54691,7 +54670,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCreateInput = {
     id?: string
-    vendor: string
     model: string
     isAvailable?: boolean
     lastVerifiedAt: Date | string
@@ -54703,7 +54681,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedCreateInput = {
     id?: string
-    vendor: string
     model: string
     providerKeyId: string
     isAvailable?: boolean
@@ -54715,7 +54692,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -54727,7 +54703,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
@@ -54739,7 +54714,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCreateManyInput = {
     id?: string
-    vendor: string
     model: string
     providerKeyId: string
     isAvailable?: boolean
@@ -54751,7 +54725,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -54762,7 +54735,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
@@ -58702,7 +58674,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCountOrderByAggregateInput = {
     id?: SortOrder
-    vendor?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
     isAvailable?: SortOrder
@@ -58714,7 +58685,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMaxOrderByAggregateInput = {
     id?: SortOrder
-    vendor?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
     isAvailable?: SortOrder
@@ -58726,7 +58696,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityMinOrderByAggregateInput = {
     id?: SortOrder
-    vendor?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
     isAvailable?: SortOrder
@@ -66238,7 +66207,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCreateWithoutProviderKeyInput = {
     id?: string
-    vendor: string
     model: string
     isAvailable?: boolean
     lastVerifiedAt: Date | string
@@ -66249,7 +66217,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedCreateWithoutProviderKeyInput = {
     id?: string
-    vendor: string
     model: string
     isAvailable?: boolean
     lastVerifiedAt: Date | string
@@ -66430,7 +66397,6 @@ export namespace Prisma {
     OR?: ModelAvailabilityScalarWhereInput[]
     NOT?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
     id?: UuidFilter<"ModelAvailability"> | string
-    vendor?: StringFilter<"ModelAvailability"> | string
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
@@ -70462,7 +70428,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityCreateManyProviderKeyInput = {
     id?: string
-    vendor: string
     model: string
     isAvailable?: boolean
     lastVerifiedAt: Date | string
@@ -70620,7 +70585,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUpdateWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70631,7 +70595,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70642,7 +70605,6 @@ export namespace Prisma {
 
   export type ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    vendor?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string

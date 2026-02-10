@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useAvailableModels } from '@/hooks/useModels';
 import { useIsAdmin } from '@/lib/permissions';
 import type { AvailableModel } from '@repo/contracts';
@@ -17,6 +17,11 @@ import {
   TabsList,
   TabsTrigger,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Progress,
 } from '@repo/ui';
 import {
   Search,
@@ -27,8 +32,11 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  MoreVertical,
+  PlayCircle,
 } from 'lucide-react';
 import { ModelCard } from './components/model-card';
+import { toast } from 'sonner';
 
 /**
  * 模型分类配置
@@ -41,11 +49,26 @@ const MODEL_CATEGORIES = [
 ] as const;
 
 export default function ModelsPage() {
-  const { models, loading, error, verifyModels, verifying, refresh } =
-    useAvailableModels();
+  const {
+    models,
+    loading,
+    error,
+    verifyModels,
+    verifying,
+    refresh,
+    refreshModels,
+    refreshing,
+    verifySingleModel,
+    verifyingModel,
+    batchVerifyModels,
+  } = useAvailableModels();
   const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
 
   // Filter models by search and category
   const filteredModels = useMemo(() => {
@@ -92,6 +115,85 @@ export default function ModelsPage() {
     const available = models.filter((m) => m.isAvailable).length;
     return { total, available };
   }, [models]);
+
+  // Get unique provider keys from models
+  const providerKeys = useMemo(() => {
+    const keyMap = new Map<string, { id: string; label: string; vendor: string }>();
+    models.forEach((model) => {
+      model.providers?.forEach((provider) => {
+        if (!keyMap.has(provider.providerKeyId)) {
+          keyMap.set(provider.providerKeyId, {
+            id: provider.providerKeyId,
+            label: provider.label || provider.vendor,
+            vendor: provider.vendor,
+          });
+        }
+      });
+    });
+    return Array.from(keyMap.values());
+  }, [models]);
+
+  // Handle refresh models for a specific provider key
+  const handleRefreshModels = useCallback(
+    async (providerKeyId: string) => {
+      const result = await refreshModels(providerKeyId);
+      if (result) {
+        toast.success(
+          `刷新完成：${result.models.length} 个模型，新增 ${result.addedCount}，移除 ${result.removedCount}`,
+        );
+      }
+    },
+    [refreshModels],
+  );
+
+  // Handle verify single model
+  const handleVerifySingleModel = useCallback(
+    async (providerKeyId: string, model: string) => {
+      const result = await verifySingleModel(providerKeyId, model);
+      if (result) {
+        if (result.isAvailable) {
+          toast.success(`模型 ${model} 验证成功`);
+        } else {
+          toast.error(`模型 ${model} 不可用: ${result.errorMessage || '未知错误'}`);
+        }
+      }
+    },
+    [verifySingleModel],
+  );
+
+  // Handle batch verify all models for a provider key
+  const handleBatchVerify = useCallback(
+    async (providerKeyId: string) => {
+      // Get all models for this provider key
+      const modelsToVerify = models
+        .filter((m) => m.providers?.some((p) => p.providerKeyId === providerKeyId))
+        .map((m) => m.model);
+
+      if (modelsToVerify.length === 0) {
+        toast.error('没有找到需要验证的模型');
+        return;
+      }
+
+      setBatchProgress({ current: 0, total: modelsToVerify.length });
+
+      const results = await batchVerifyModels(
+        providerKeyId,
+        modelsToVerify,
+        (current, total, result) => {
+          setBatchProgress({ current, total });
+        },
+        1500, // 1.5 second delay between requests
+      );
+
+      setBatchProgress(null);
+
+      const successCount = results.filter((r) => r.isAvailable).length;
+      toast.success(
+        `批量验证完成：${successCount}/${results.length} 个模型可用`,
+      );
+    },
+    [models, batchVerifyModels],
+  );
 
   if (loading) {
     return (

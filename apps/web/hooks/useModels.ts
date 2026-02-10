@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   modelApi,
   botModelApi,
   botModelClient,
+  modelClient,
 } from '@/lib/api/contracts/client';
 import type {
   AvailableModel,
   BotModelInfo,
   UpdateBotModelsInput,
+  RefreshModelsResponse,
+  VerifySingleModelResponse,
 } from '@repo/contracts';
 
 /**
@@ -30,6 +33,8 @@ export function useAvailableModels() {
   const queryClient = useQueryClient();
   const modelsQuery = modelApi.list.useQuery(modelKeys.list(), {});
   const [verifying, setVerifying] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [verifyingModel, setVerifyingModel] = useState<string | null>(null);
 
   const responseBody = modelsQuery.data?.body;
   const models: AvailableModel[] =
@@ -37,7 +42,7 @@ export function useAvailableModels() {
       ? ((responseBody.data as { list: AvailableModel[] }).list ?? [])
       : [];
 
-  // Verify models (admin only)
+  // Verify all models (admin only) - legacy function
   const verifyModels = async () => {
     setVerifying(true);
     try {
@@ -54,14 +59,92 @@ export function useAvailableModels() {
     }
   };
 
+  // Refresh model list from provider endpoint (admin only)
+  const refreshModels = useCallback(
+    async (providerKeyId: string): Promise<RefreshModelsResponse | null> => {
+      setRefreshing(true);
+      try {
+        const result = await modelClient.refreshModels({
+          body: { providerKeyId },
+        });
+        // Refresh models list
+        queryClient.invalidateQueries({ queryKey: modelKeys.list() });
+        if (result.body && 'data' in result.body && result.body.data) {
+          return result.body.data as RefreshModelsResponse;
+        }
+        return null;
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [queryClient],
+  );
+
+  // Verify single model availability (admin only)
+  const verifySingleModel = useCallback(
+    async (
+      providerKeyId: string,
+      model: string,
+    ): Promise<VerifySingleModelResponse | null> => {
+      setVerifyingModel(model);
+      try {
+        const result = await modelClient.verifySingle({
+          body: { providerKeyId, model },
+        });
+        // Refresh models list
+        queryClient.invalidateQueries({ queryKey: modelKeys.list() });
+        if (result.body && 'data' in result.body && result.body.data) {
+          return result.body.data as VerifySingleModelResponse;
+        }
+        return null;
+      } finally {
+        setVerifyingModel(null);
+      }
+    },
+    [queryClient],
+  );
+
+  // Batch verify models with polling (admin only)
+  const batchVerifyModels = useCallback(
+    async (
+      providerKeyId: string,
+      modelList: string[],
+      onProgress?: (current: number, total: number, result: VerifySingleModelResponse) => void,
+      delayMs: number = 1000,
+    ): Promise<VerifySingleModelResponse[]> => {
+      const results: VerifySingleModelResponse[] = [];
+      for (let i = 0; i < modelList.length; i++) {
+        const model = modelList[i];
+        const result = await verifySingleModel(providerKeyId, model);
+        if (result) {
+          results.push(result);
+          onProgress?.(i + 1, modelList.length, result);
+        }
+        // Add delay between requests to avoid rate limiting
+        if (i < modelList.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      }
+      return results;
+    },
+    [verifySingleModel],
+  );
+
   return {
     models,
     loading: modelsQuery.isLoading,
     error:
       modelsQuery.error instanceof Error ? modelsQuery.error.message : null,
     refresh: () => modelsQuery.refetch(),
+    // Legacy verify all
     verifyModels,
     verifying,
+    // New functions
+    refreshModels,
+    refreshing,
+    verifySingleModel,
+    verifyingModel,
+    batchVerifyModels,
   };
 }
 

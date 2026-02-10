@@ -10,6 +10,10 @@ import {
   AvailableModelsResponseSchema,
   BotModelsResponseSchema,
   UpdateBotModelsInputSchema,
+  RefreshModelsInputSchema,
+  RefreshModelsResponseSchema,
+  VerifySingleModelInputSchema,
+  VerifySingleModelResponseSchema,
 } from '../schemas/model.schema';
 
 const c = initContract();
@@ -60,6 +64,38 @@ export const modelContract = c.router(
         ),
       },
       summary: '手动触发模型可用性验证',
+    },
+
+    /**
+     * POST /model/refresh-models - 刷新模型列表
+     * 从 Provider 端点获取最新的模型列表（不进行验证）
+     * 仅限管理员访问
+     */
+    refreshModels: {
+      method: 'POST',
+      path: '/refresh-models',
+      body: RefreshModelsInputSchema,
+      responses: {
+        200: ApiResponseSchema(RefreshModelsResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '刷新模型列表（从端点获取）',
+    },
+
+    /**
+     * POST /model/verify-single - 验证单个模型可用性
+     * 通过实际调用模型 API 验证单个模型是否可用
+     * 仅限管理员访问
+     */
+    verifySingle: {
+      method: 'POST',
+      path: '/verify-single',
+      body: VerifySingleModelInputSchema,
+      responses: {
+        200: ApiResponseSchema(VerifySingleModelResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '验证单个模型可用性',
     },
   },
   {

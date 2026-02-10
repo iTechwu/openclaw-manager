@@ -181,38 +181,45 @@ export class AvailableModelService {
     // 1. 获取所有模型定价信息
     const pricingList = await this.modelPricingService.listAll();
 
-    // 2. 获取所有模型可用性信息（仅可用的）
+    // 2. 获取所有 Provider Key（用于获取 vendor 信息）
+    const { list: providerKeys } = await this.providerKeyService.list(
+      {},
+      { limit: 1000 },
+    );
+    const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
+
+    // 3. 获取所有模型可用性信息（仅可用的）
     const { list: availableList } = await this.modelAvailabilityService.list(
       { isAvailable: true },
       { limit: 1000 },
     );
 
-    // 3. 构建可用模型集合
+    // 4. 构建可用模型集合（vendor 从 ProviderKey 获取）
     const availableModelsSet = new Set(
-      availableList.map((a) => `${a.vendor}:${a.model}`),
+      availableList
+        .map((a) => {
+          const pk = providerKeyMap.get(a.providerKeyId);
+          return pk ? `${pk.vendor}:${a.model}` : null;
+        })
+        .filter((key): key is string => key !== null),
     );
 
-    // 4. 构建最后验证时间映射（从可用列表）
+    // 5. 构建最后验证时间映射（从可用列表）
     const lastVerifiedMap = new Map<string, Date>();
     for (const a of availableList) {
-      const key = `${a.vendor}:${a.model}`;
+      const pk = providerKeyMap.get(a.providerKeyId);
+      if (!pk) continue;
+      const key = `${pk.vendor}:${a.model}`;
       const existing = lastVerifiedMap.get(key);
       if (!existing || a.lastVerifiedAt > existing) {
         lastVerifiedMap.set(key, a.lastVerifiedAt);
       }
     }
 
-    // 5. 如果需要 Provider 信息，构建 Provider 映射
+    // 6. 如果需要 Provider 信息，构建 Provider 映射
     const providerInfoMap = new Map<string, ProviderInfo[]>();
     const providerKeysByVendor = new Map<string, ProviderInfo[]>();
     if (includeProviderInfo) {
-      // 获取所有 Provider Key
-      const { list: providerKeys } = await this.providerKeyService.list(
-        {},
-        { limit: 1000 },
-      );
-      const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
-
       // 构建 vendor 到 Provider 的映射（用于没有 ModelAvailability 记录时的回退）
       for (const pk of providerKeys) {
         const providers = providerKeysByVendor.get(pk.vendor) || [];
@@ -230,25 +237,26 @@ export class AvailableModelService {
 
       // 构建模型到 Provider 的映射（包括所有记录，不仅仅是可用的）
       for (const a of allAvailabilityList) {
-        const key = `${a.vendor}:${a.model}`;
         const providerKey = providerKeyMap.get(a.providerKeyId);
-        if (providerKey) {
-          const providers = providerInfoMap.get(key) || [];
-          // 避免重复添加同一个 Provider
-          if (!providers.some((p) => p.providerKeyId === a.providerKeyId)) {
-            providers.push({
-              providerKeyId: a.providerKeyId,
-              label: providerKey.label,
-              vendor: providerKey.vendor,
-            });
-          }
-          providerInfoMap.set(key, providers);
+        if (!providerKey) continue;
+        const key = `${providerKey.vendor}:${a.model}`;
+        const providers = providerInfoMap.get(key) || [];
+        // 避免重复添加同一个 Provider
+        if (!providers.some((p) => p.providerKeyId === a.providerKeyId)) {
+          providers.push({
+            providerKeyId: a.providerKeyId,
+            label: providerKey.label,
+            vendor: providerKey.vendor,
+          });
         }
+        providerInfoMap.set(key, providers);
       }
 
       // 同时更新最后验证时间（从所有记录）
       for (const a of allAvailabilityList) {
-        const key = `${a.vendor}:${a.model}`;
+        const pk = providerKeyMap.get(a.providerKeyId);
+        if (!pk) continue;
+        const key = `${pk.vendor}:${a.model}`;
         const existing = lastVerifiedMap.get(key);
         if (!existing || a.lastVerifiedAt > existing) {
           lastVerifiedMap.set(key, a.lastVerifiedAt);
@@ -256,7 +264,7 @@ export class AvailableModelService {
       }
     }
 
-    // 6. 聚合模型信息
+    // 7. 聚合模型信息
     const models: AvailableModel[] = [];
 
     for (const pricing of pricingList) {

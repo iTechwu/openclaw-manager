@@ -1,7 +1,7 @@
 'use client';
 
 import type { AvailableModel } from '@repo/contracts';
-import { Card, CardContent, CardHeader, CardTitle, Badge } from '@repo/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@repo/ui';
 import {
   CheckCircle,
   XCircle,
@@ -11,10 +11,14 @@ import {
   Brain,
   Sparkles,
   Key,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ModelCardProps {
   model: AvailableModel;
+  isAdmin?: boolean;
+  onVerify?: (providerKeyId: string, model: string) => void;
+  verifying?: boolean;
 }
 
 /**
@@ -49,10 +53,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   general: '通用',
 };
 
-export function ModelCard({ model }: ModelCardProps) {
+export function ModelCard({ model, isAdmin, onVerify, verifying }: ModelCardProps) {
   const categoryColor =
     CATEGORY_COLORS[model.category] || CATEGORY_COLORS.general;
   const categoryLabel = CATEGORY_LABELS[model.category] || model.category;
+
+  // Get the first provider key ID for verification
+  const firstProviderKeyId = model.providers?.[0]?.providerKeyId;
+
+  const handleVerify = () => {
+    if (firstProviderKeyId && onVerify) {
+      onVerify(firstProviderKeyId, model.model);
+    }
+  };
 
   return (
     <Card className={model.isAvailable ? '' : 'opacity-60'}>
@@ -64,11 +77,27 @@ export function ModelCard({ model }: ModelCardProps) {
               {model.model}
             </p>
           </div>
-          {model.isAvailable ? (
-            <CheckCircle className="text-green-500 size-5 shrink-0" />
-          ) : (
-            <XCircle className="text-muted-foreground size-5 shrink-0" />
-          )}
+          <div className="flex items-center gap-2">
+            {isAdmin && firstProviderKeyId && onVerify && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6"
+                onClick={handleVerify}
+                disabled={verifying}
+                title="验证模型可用性"
+              >
+                <RefreshCw
+                  className={`size-3.5 ${verifying ? 'animate-spin' : ''}`}
+                />
+              </Button>
+            )}
+            {model.isAvailable ? (
+              <CheckCircle className="text-green-500 size-5 shrink-0" />
+            ) : (
+              <XCircle className="text-muted-foreground size-5 shrink-0" />
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-2">

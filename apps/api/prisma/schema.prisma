@@ -517,13 +517,12 @@ model BotModel {
 
 /// ModelAvailability - 模型可用性缓存表
 /// 缓存 API Key 验证结果，避免频繁调用外部 API
+/// vendor 信息从关联的 ProviderKey 中获取，避免数据冗余
 model ModelAvailability {
   id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  /// 模型供应商，如 "openai", "anthropic"
-  vendor         String   @db.VarChar(50)
   /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
   model          String   @db.VarChar(100)
-  /// 关联的 Provider Key
+  /// 关联的 Provider Key（vendor 信息从这里获取）
   providerKeyId  String   @map("provider_key_id") @db.Uuid
   /// 模型是否可用（API Key 验证通过）
   isAvailable    Boolean  @default(false) @map("is_available")
@@ -537,7 +536,7 @@ model ModelAvailability {
   providerKey ProviderKey @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
 
   @@unique([providerKeyId, model])
-  @@index([vendor, model])
+  @@index([model])
   @@index([isAvailable])
   @@map("b_model_availability")
 }

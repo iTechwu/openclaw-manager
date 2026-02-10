@@ -133,3 +133,59 @@ export const UpdateBotModelsInputSchema = z.object({
 });
 
 export type UpdateBotModelsInput = z.infer<typeof UpdateBotModelsInputSchema>;
+
+// ============================================================================
+// Admin Model Management Schemas
+// ============================================================================
+
+/**
+ * 刷新模型列表请求
+ */
+export const RefreshModelsInputSchema = z.object({
+  /** Provider Key ID */
+  providerKeyId: z.string().uuid(),
+});
+
+export type RefreshModelsInput = z.infer<typeof RefreshModelsInputSchema>;
+
+/**
+ * 刷新模型列表响应
+ */
+export const RefreshModelsResponseSchema = z.object({
+  /** 获取到的模型列表 */
+  models: z.array(z.string()),
+  /** 新增的模型数量 */
+  addedCount: z.number(),
+  /** 移除的模型数量 */
+  removedCount: z.number(),
+});
+
+export type RefreshModelsResponse = z.infer<typeof RefreshModelsResponseSchema>;
+
+/**
+ * 验证单个模型请求
+ */
+export const VerifySingleModelInputSchema = z.object({
+  /** Provider Key ID */
+  providerKeyId: z.string().uuid(),
+  /** 模型名称 */
+  model: z.string(),
+});
+
+export type VerifySingleModelInput = z.infer<typeof VerifySingleModelInputSchema>;
+
+/**
+ * 验证单个模型响应
+ */
+export const VerifySingleModelResponseSchema = z.object({
+  /** 模型名称 */
+  model: z.string(),
+  /** 是否可用 */
+  isAvailable: z.boolean(),
+  /** 延迟（毫秒） */
+  latencyMs: z.number().optional(),
+  /** 错误信息 */
+  errorMessage: z.string().optional(),
+});
+
+export type VerifySingleModelResponse = z.infer<typeof VerifySingleModelResponseSchema>;
