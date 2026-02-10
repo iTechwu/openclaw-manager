@@ -8,6 +8,7 @@ import {
   Puzzle,
   Sparkles,
   BarChart3,
+  Cpu,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -25,6 +26,7 @@ export interface BotNavItem {
 export const botNavItems: BotNavItem[] = [
   { id: 'overview', labelKey: 'overview', icon: LayoutDashboard, href: '' },
   { id: 'ai', labelKey: 'ai', icon: Bot, href: '/ai' },
+  { id: 'models', labelKey: 'models', icon: Cpu, href: '/models' },
   {
     id: 'channels',
     labelKey: 'channels',

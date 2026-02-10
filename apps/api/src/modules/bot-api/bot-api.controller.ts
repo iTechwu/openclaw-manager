@@ -11,11 +11,14 @@ import {
   botContract as bc,
   providerKeyContract as pkc,
   botUsageContract as buc,
+  modelContract as mc,
+  botModelContract as bmc,
 } from '@repo/contracts/api';
 import { success, created } from '@/common/ts-rest/response.helper';
 import { BotApiService } from './bot-api.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { BotSseService } from './services/bot-sse.service';
+import { AvailableModelService } from './services/available-model.service';
 import { AuthenticatedRequest, Auth, SseAuth, AdminAuth } from '@app/auth';
 import type { Observable } from 'rxjs';
 
@@ -37,6 +40,7 @@ export class BotApiController {
     private readonly botApiService: BotApiService,
     private readonly usageAnalyticsService: BotUsageAnalyticsService,
     private readonly sseService: BotSseService,
+    private readonly availableModelService: AvailableModelService,
   ) {}
 
   // ============================================================================
@@ -389,6 +393,57 @@ export class BotApiController {
         query,
       );
       return success(logs);
+    });
+  }
+
+  // ============================================================================
+  // Model Management (面向用户的模型管理，隐藏 Provider 细节)
+  // ============================================================================
+
+  /**
+   * GET /model - 获取所有可用模型列表
+   */
+  @TsRestHandler(mc.list)
+  async listAvailableModels(): Promise<any> {
+    return tsRestHandler(mc.list, async () => {
+      const list = await this.availableModelService.getAvailableModels();
+      return success({ list });
+    });
+  }
+
+  /**
+   * GET /bot/:hostname/models - 获取 Bot 的模型列表
+   */
+  @TsRestHandler(bmc.list)
+  async getBotModels(@Req() req: AuthenticatedRequest): Promise<any> {
+    return tsRestHandler(bmc.list, async ({ params }) => {
+      const userId = req.userId;
+      const bot = await this.botApiService.getBotByHostname(
+        params.hostname,
+        userId,
+      );
+      const list = await this.availableModelService.getBotModels(bot.id);
+      return success({ list });
+    });
+  }
+
+  /**
+   * PUT /bot/:hostname/models - 更新 Bot 的模型配置
+   */
+  @TsRestHandler(bmc.update)
+  async updateBotModels(@Req() req: AuthenticatedRequest): Promise<any> {
+    return tsRestHandler(bmc.update, async ({ params, body }) => {
+      const userId = req.userId;
+      const bot = await this.botApiService.getBotByHostname(
+        params.hostname,
+        userId,
+      );
+      await this.availableModelService.updateBotModels(
+        bot.id,
+        body.models,
+        body.primaryModel,
+      );
+      return success({ success: true });
     });
   }
 

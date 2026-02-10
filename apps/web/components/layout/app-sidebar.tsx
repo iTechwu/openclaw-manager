@@ -3,7 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Bot, Activity, Sparkles, Puzzle, Wrench, Route } from 'lucide-react';
+import {
+  Bot,
+  Activity,
+  Sparkles,
+  Puzzle,
+  Wrench,
+  Route,
+  Cpu,
+  Key,
+} from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +40,11 @@ const navItems = [
     badgeKey: 'runningBots',
   },
   {
+    titleKey: 'models',
+    href: '/models',
+    icon: Cpu,
+  },
+  {
     titleKey: 'plugins',
     href: '/plugins',
     icon: Puzzle,
@@ -50,6 +64,12 @@ const navItems = [
     titleKey: 'routing',
     href: '/routing',
     icon: Route,
+  },
+  {
+    titleKey: 'secrets',
+    href: '/secrets',
+    icon: Key,
+    adminOnly: true,
   },
   {
     titleKey: 'diagnostics',
@@ -72,7 +92,7 @@ export function AppSidebar() {
 
   // Filter nav items based on admin status
   const filteredNavItems = navItems.filter(
-    (item) => !item.adminOnly || isAdmin
+    (item) => !item.adminOnly || isAdmin,
   );
 
   // Calculate activity badges

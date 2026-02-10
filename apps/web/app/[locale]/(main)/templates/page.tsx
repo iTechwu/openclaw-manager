@@ -180,7 +180,9 @@ export default function TemplatesPage() {
         open={!!editTemplate}
         onOpenChange={(open) => !open && setEditTemplate(null)}
         onSubmit={(data) =>
-          editTemplate && handleUpdateWithToast(editTemplate.id, data)
+          editTemplate
+            ? handleUpdateWithToast(editTemplate.id, data)
+            : Promise.resolve()
         }
         loading={updateLoading}
       />
@@ -190,7 +192,9 @@ export default function TemplatesPage() {
         open={!!deleteTemplate}
         onOpenChange={(open) => !open && setDeleteTemplate(null)}
         onConfirm={() =>
-          deleteTemplate && handleDeleteWithToast(deleteTemplate.id)
+          deleteTemplate
+            ? handleDeleteWithToast(deleteTemplate.id)
+            : Promise.resolve()
         }
         loading={deleteLoading}
       />
@@ -200,11 +204,12 @@ export default function TemplatesPage() {
         open={!!duplicateTemplate}
         onOpenChange={(open) => !open && setDuplicateTemplate(null)}
         onSubmit={(name) =>
-          duplicateTemplate &&
-          handleDuplicateWithToast({
-            sourceTemplateId: duplicateTemplate.id,
-            name,
-          })
+          duplicateTemplate
+            ? handleDuplicateWithToast({
+                sourceTemplateId: duplicateTemplate.id,
+                name,
+              })
+            : Promise.resolve()
         }
         loading={duplicateLoading}
       />

@@ -36,3 +36,5 @@ export * from './modules/cost-strategy';
 export * from './modules/bot-routing-config';
 export * from './modules/skill-type';
 export * from './modules/complexity-routing-config';
+export * from './modules/bot-model';
+export * from './modules/model-availability';

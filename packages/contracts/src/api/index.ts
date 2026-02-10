@@ -4,6 +4,7 @@ export * from './bot-usage.contract';
 export * from './channel.contract';
 export * from './download.contract';
 export * from './message.contract';
+export * from './model.contract';
 export * from './model-routing.contract';
 export * from './notification.contract';
 export * from './operate-log.contract';

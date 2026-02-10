@@ -15,6 +15,9 @@ import {
   FallbackChainModule,
   CostStrategyModule,
   ComplexityRoutingConfigModule,
+  // New model management modules
+  BotModelModule,
+  ModelAvailabilityModule,
 } from '@app/db';
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
@@ -72,6 +75,9 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
     FallbackChainModule,
     CostStrategyModule,
     ComplexityRoutingConfigModule,
+    // New model management modules
+    BotModelModule,
+    ModelAvailabilityModule,
     // Complexity classifier for complexity-based routing
     ComplexityClassifierModule,
   ],

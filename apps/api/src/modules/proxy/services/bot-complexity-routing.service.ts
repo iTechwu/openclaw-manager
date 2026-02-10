@@ -5,6 +5,8 @@ import {
   BotProviderKeyService,
   ProviderKeyService,
   ComplexityRoutingConfigService,
+  BotModelService,
+  ModelAvailabilityService,
 } from '@app/db';
 import {
   ComplexityClassifierService,
@@ -123,6 +125,8 @@ export class BotComplexityRoutingService {
     private readonly botProviderKeyService: BotProviderKeyService,
     private readonly providerKeyService: ProviderKeyService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
+    private readonly botModelService: BotModelService,
+    private readonly modelAvailabilityService: ModelAvailabilityService,
     @Optional()
     private readonly complexityClassifier?: ComplexityClassifierService,
   ) {}
@@ -221,8 +225,66 @@ export class BotComplexityRoutingService {
 
   /**
    * 获取 bot 的所有可用模型
+   *
+   * 优先使用新的 BotModel 表，如果没有数据则回退到 BotProviderKey 表
    */
   async getBotAvailableModels(botId: string): Promise<BotAvailableModel[]> {
+    // 首先尝试从新的 BotModel 表获取
+    const { list: botModels } = await this.botModelService.list(
+      { botId, isEnabled: true },
+      { limit: 100 },
+    );
+
+    if (botModels.length > 0) {
+      return this.getBotAvailableModelsFromBotModel(botModels);
+    }
+
+    // 回退到旧的 BotProviderKey 表
+    return this.getBotAvailableModelsFromBotProviderKey(botId);
+  }
+
+  /**
+   * 从新的 BotModel 表获取可用模型
+   */
+  private async getBotAvailableModelsFromBotModel(
+    botModels: Array<{ modelId: string; isPrimary: boolean }>,
+  ): Promise<BotAvailableModel[]> {
+    const availableModels: BotAvailableModel[] = [];
+
+    for (const bm of botModels) {
+      // 从 ModelAvailability 表获取模型的 provider key 信息
+      const { list: availabilities } = await this.modelAvailabilityService.list(
+        { model: bm.modelId, isAvailable: true },
+        { limit: 1 },
+      );
+
+      if (availabilities.length === 0) continue;
+
+      const availability = availabilities[0];
+      const providerKey = await this.providerKeyService.getById(
+        availability.providerKeyId,
+      );
+      if (!providerKey) continue;
+
+      availableModels.push({
+        providerKeyId: availability.providerKeyId,
+        vendor: availability.vendor,
+        apiType: providerKey.apiType,
+        baseUrl: providerKey.baseUrl,
+        model: bm.modelId,
+        isPrimary: bm.isPrimary,
+      });
+    }
+
+    return availableModels;
+  }
+
+  /**
+   * 从旧的 BotProviderKey 表获取可用模型（向后兼容）
+   */
+  private async getBotAvailableModelsFromBotProviderKey(
+    botId: string,
+  ): Promise<BotAvailableModel[]> {
     const { list: botProviderKeys } = await this.botProviderKeyService.list(
       { botId },
       { limit: 100 },

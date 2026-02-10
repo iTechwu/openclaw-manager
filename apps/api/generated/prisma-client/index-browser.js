@@ -335,6 +335,27 @@ exports.Prisma.BotProviderKeyScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.BotModelScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  modelId: 'modelId',
+  isEnabled: 'isEnabled',
+  isPrimary: 'isPrimary',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ModelAvailabilityScalarFieldEnum = {
+  id: 'id',
+  vendor: 'vendor',
+  model: 'model',
+  providerKeyId: 'providerKeyId',
+  isAvailable: 'isAvailable',
+  lastVerifiedAt: 'lastVerifiedAt',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.BotUsageLogScalarFieldEnum = {
   id: 'id',
   botId: 'botId',
@@ -830,6 +851,8 @@ exports.Prisma.ModelName = {
   Bot: 'Bot',
   ProviderKey: 'ProviderKey',
   BotProviderKey: 'BotProviderKey',
+  BotModel: 'BotModel',
+  ModelAvailability: 'ModelAvailability',
   BotUsageLog: 'BotUsageLog',
   ProxyToken: 'ProxyToken',
   Message: 'Message',

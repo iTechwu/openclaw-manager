@@ -95,6 +95,19 @@ export type ProviderKey = $Result.DefaultSelection<Prisma.$ProviderKeyPayload>
  */
 export type BotProviderKey = $Result.DefaultSelection<Prisma.$BotProviderKeyPayload>
 /**
+ * Model BotModel
+ * BotModel - Bot 与模型的关联表
+ * 存储 Bot 可以使用的模型列表，替代 BotProviderKey 中的模型关联
+ * 普通用户只需要关心模型，不需要了解 Provider 概念
+ */
+export type BotModel = $Result.DefaultSelection<Prisma.$BotModelPayload>
+/**
+ * Model ModelAvailability
+ * ModelAvailability - 模型可用性缓存表
+ * 缓存 API Key 验证结果，避免频繁调用外部 API
+ */
+export type ModelAvailability = $Result.DefaultSelection<Prisma.$ModelAvailabilityPayload>
+/**
  * Model BotUsageLog
  * BotUsageLog - Bot API 使用日志
  * 记录每次 API 调用的使用情况
@@ -658,6 +671,26 @@ export class PrismaClient<
     * ```
     */
   get botProviderKey(): Prisma.BotProviderKeyDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botModel`: Exposes CRUD operations for the **BotModel** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotModels
+    * const botModels = await prisma.botModel.findMany()
+    * ```
+    */
+  get botModel(): Prisma.BotModelDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.modelAvailability`: Exposes CRUD operations for the **ModelAvailability** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ModelAvailabilities
+    * const modelAvailabilities = await prisma.modelAvailability.findMany()
+    * ```
+    */
+  get modelAvailability(): Prisma.ModelAvailabilityDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.botUsageLog`: Exposes CRUD operations for the **BotUsageLog** model.
@@ -1306,6 +1339,8 @@ export namespace Prisma {
     Bot: 'Bot',
     ProviderKey: 'ProviderKey',
     BotProviderKey: 'BotProviderKey',
+    BotModel: 'BotModel',
+    ModelAvailability: 'ModelAvailability',
     BotUsageLog: 'BotUsageLog',
     ProxyToken: 'ProxyToken',
     Message: 'Message',
@@ -1341,7 +1376,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelPricing" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botProviderKey" | "botModel" | "modelAvailability" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelPricing" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2378,6 +2413,154 @@ export namespace Prisma {
           count: {
             args: Prisma.BotProviderKeyCountArgs<ExtArgs>
             result: $Utils.Optional<BotProviderKeyCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotModel: {
+        payload: Prisma.$BotModelPayload<ExtArgs>
+        fields: Prisma.BotModelFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotModelFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotModelFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          findFirst: {
+            args: Prisma.BotModelFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotModelFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          findMany: {
+            args: Prisma.BotModelFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>[]
+          }
+          create: {
+            args: Prisma.BotModelCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          createMany: {
+            args: Prisma.BotModelCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotModelCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>[]
+          }
+          delete: {
+            args: Prisma.BotModelDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          update: {
+            args: Prisma.BotModelUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotModelDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotModelUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotModelUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotModelUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotModelPayload>
+          }
+          aggregate: {
+            args: Prisma.BotModelAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotModel>
+          }
+          groupBy: {
+            args: Prisma.BotModelGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotModelGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotModelCountArgs<ExtArgs>
+            result: $Utils.Optional<BotModelCountAggregateOutputType> | number
+          }
+        }
+      }
+      ModelAvailability: {
+        payload: Prisma.$ModelAvailabilityPayload<ExtArgs>
+        fields: Prisma.ModelAvailabilityFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ModelAvailabilityFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ModelAvailabilityFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          findFirst: {
+            args: Prisma.ModelAvailabilityFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ModelAvailabilityFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          findMany: {
+            args: Prisma.ModelAvailabilityFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>[]
+          }
+          create: {
+            args: Prisma.ModelAvailabilityCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          createMany: {
+            args: Prisma.ModelAvailabilityCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ModelAvailabilityCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>[]
+          }
+          delete: {
+            args: Prisma.ModelAvailabilityDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          update: {
+            args: Prisma.ModelAvailabilityUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          deleteMany: {
+            args: Prisma.ModelAvailabilityDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ModelAvailabilityUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ModelAvailabilityUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>[]
+          }
+          upsert: {
+            args: Prisma.ModelAvailabilityUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelAvailabilityPayload>
+          }
+          aggregate: {
+            args: Prisma.ModelAvailabilityAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateModelAvailability>
+          }
+          groupBy: {
+            args: Prisma.ModelAvailabilityGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ModelAvailabilityGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ModelAvailabilityCountArgs<ExtArgs>
+            result: $Utils.Optional<ModelAvailabilityCountAggregateOutputType> | number
           }
         }
       }
@@ -3983,6 +4166,8 @@ export namespace Prisma {
     bot?: BotOmit
     providerKey?: ProviderKeyOmit
     botProviderKey?: BotProviderKeyOmit
+    botModel?: BotModelOmit
+    modelAvailability?: ModelAvailabilityOmit
     botUsageLog?: BotUsageLogOmit
     proxyToken?: ProxyTokenOmit
     message?: MessageOmit
@@ -4245,6 +4430,7 @@ export namespace Prisma {
     skills: number
     channels: number
     modelRoutings: number
+    models: number
   }
 
   export type BotCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4254,6 +4440,7 @@ export namespace Prisma {
     skills?: boolean | BotCountOutputTypeCountSkillsArgs
     channels?: boolean | BotCountOutputTypeCountChannelsArgs
     modelRoutings?: boolean | BotCountOutputTypeCountModelRoutingsArgs
+    models?: boolean | BotCountOutputTypeCountModelsArgs
   }
 
   // Custom InputTypes
@@ -4309,6 +4496,13 @@ export namespace Prisma {
     where?: BotModelRoutingWhereInput
   }
 
+  /**
+   * BotCountOutputType without action
+   */
+  export type BotCountOutputTypeCountModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotModelWhereInput
+  }
+
 
   /**
    * Count Type ProviderKeyCountOutputType
@@ -4318,12 +4512,14 @@ export namespace Prisma {
     botProviderKeys: number
     usageLogs: number
     proxyTokens: number
+    modelAvailability: number
   }
 
   export type ProviderKeyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     botProviderKeys?: boolean | ProviderKeyCountOutputTypeCountBotProviderKeysArgs
     usageLogs?: boolean | ProviderKeyCountOutputTypeCountUsageLogsArgs
     proxyTokens?: boolean | ProviderKeyCountOutputTypeCountProxyTokensArgs
+    modelAvailability?: boolean | ProviderKeyCountOutputTypeCountModelAvailabilityArgs
   }
 
   // Custom InputTypes
@@ -4356,6 +4552,13 @@ export namespace Prisma {
    */
   export type ProviderKeyCountOutputTypeCountProxyTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProxyTokenWhereInput
+  }
+
+  /**
+   * ProviderKeyCountOutputType without action
+   */
+  export type ProviderKeyCountOutputTypeCountModelAvailabilityArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModelAvailabilityWhereInput
   }
 
 
@@ -17894,6 +18097,7 @@ export namespace Prisma {
     channels?: boolean | Bot$channelsArgs<ExtArgs>
     modelRoutings?: boolean | Bot$modelRoutingsArgs<ExtArgs>
     routingConfig?: boolean | Bot$routingConfigArgs<ExtArgs>
+    models?: boolean | Bot$modelsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["bot"]>
 
@@ -17988,6 +18192,7 @@ export namespace Prisma {
     channels?: boolean | Bot$channelsArgs<ExtArgs>
     modelRoutings?: boolean | Bot$modelRoutingsArgs<ExtArgs>
     routingConfig?: boolean | Bot$routingConfigArgs<ExtArgs>
+    models?: boolean | Bot$modelsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18015,6 +18220,7 @@ export namespace Prisma {
       channels: Prisma.$BotChannelPayload<ExtArgs>[]
       modelRoutings: Prisma.$BotModelRoutingPayload<ExtArgs>[]
       routingConfig: Prisma.$BotRoutingConfigPayload<ExtArgs> | null
+      models: Prisma.$BotModelPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -18443,6 +18649,7 @@ export namespace Prisma {
     channels<T extends Bot$channelsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     modelRoutings<T extends Bot$modelRoutingsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$modelRoutingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelRoutingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     routingConfig<T extends Bot$routingConfigArgs<ExtArgs> = {}>(args?: Subset<T, Bot$routingConfigArgs<ExtArgs>>): Prisma__BotRoutingConfigClient<$Result.GetResult<Prisma.$BotRoutingConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    models<T extends Bot$modelsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$modelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -19109,6 +19316,30 @@ export namespace Prisma {
   }
 
   /**
+   * Bot.models
+   */
+  export type Bot$modelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    where?: BotModelWhereInput
+    orderBy?: BotModelOrderByWithRelationInput | BotModelOrderByWithRelationInput[]
+    cursor?: BotModelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BotModelScalarFieldEnum | BotModelScalarFieldEnum[]
+  }
+
+  /**
    * Bot without action
    */
   export type BotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -19351,6 +19582,7 @@ export namespace Prisma {
     botProviderKeys?: boolean | ProviderKey$botProviderKeysArgs<ExtArgs>
     usageLogs?: boolean | ProviderKey$usageLogsArgs<ExtArgs>
     proxyTokens?: boolean | ProviderKey$proxyTokensArgs<ExtArgs>
+    modelAvailability?: boolean | ProviderKey$modelAvailabilityArgs<ExtArgs>
     _count?: boolean | ProviderKeyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["providerKey"]>
 
@@ -19407,6 +19639,7 @@ export namespace Prisma {
     botProviderKeys?: boolean | ProviderKey$botProviderKeysArgs<ExtArgs>
     usageLogs?: boolean | ProviderKey$usageLogsArgs<ExtArgs>
     proxyTokens?: boolean | ProviderKey$proxyTokensArgs<ExtArgs>
+    modelAvailability?: boolean | ProviderKey$modelAvailabilityArgs<ExtArgs>
     _count?: boolean | ProviderKeyCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProviderKeyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -19423,6 +19656,7 @@ export namespace Prisma {
       botProviderKeys: Prisma.$BotProviderKeyPayload<ExtArgs>[]
       usageLogs: Prisma.$BotUsageLogPayload<ExtArgs>[]
       proxyTokens: Prisma.$ProxyTokenPayload<ExtArgs>[]
+      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       /**
@@ -19860,6 +20094,7 @@ export namespace Prisma {
     botProviderKeys<T extends ProviderKey$botProviderKeysArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$botProviderKeysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProviderKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     usageLogs<T extends ProviderKey$usageLogsArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$usageLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotUsageLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proxyTokens<T extends ProviderKey$proxyTokensArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$proxyTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProxyTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    modelAvailability<T extends ProviderKey$modelAvailabilityArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKey$modelAvailabilityArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -20366,6 +20601,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProxyTokenScalarFieldEnum | ProxyTokenScalarFieldEnum[]
+  }
+
+  /**
+   * ProviderKey.modelAvailability
+   */
+  export type ProviderKey$modelAvailabilityArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    where?: ModelAvailabilityWhereInput
+    orderBy?: ModelAvailabilityOrderByWithRelationInput | ModelAvailabilityOrderByWithRelationInput[]
+    cursor?: ModelAvailabilityWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ModelAvailabilityScalarFieldEnum | ModelAvailabilityScalarFieldEnum[]
   }
 
   /**
@@ -21478,6 +21737,2214 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BotProviderKeyInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotModel
+   */
+
+  export type AggregateBotModel = {
+    _count: BotModelCountAggregateOutputType | null
+    _min: BotModelMinAggregateOutputType | null
+    _max: BotModelMaxAggregateOutputType | null
+  }
+
+  export type BotModelMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    modelId: string | null
+    isEnabled: boolean | null
+    isPrimary: boolean | null
+    createdAt: Date | null
+  }
+
+  export type BotModelMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    modelId: string | null
+    isEnabled: boolean | null
+    isPrimary: boolean | null
+    createdAt: Date | null
+  }
+
+  export type BotModelCountAggregateOutputType = {
+    id: number
+    botId: number
+    modelId: number
+    isEnabled: number
+    isPrimary: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type BotModelMinAggregateInputType = {
+    id?: true
+    botId?: true
+    modelId?: true
+    isEnabled?: true
+    isPrimary?: true
+    createdAt?: true
+  }
+
+  export type BotModelMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    modelId?: true
+    isEnabled?: true
+    isPrimary?: true
+    createdAt?: true
+  }
+
+  export type BotModelCountAggregateInputType = {
+    id?: true
+    botId?: true
+    modelId?: true
+    isEnabled?: true
+    isPrimary?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type BotModelAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotModel to aggregate.
+     */
+    where?: BotModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotModels to fetch.
+     */
+    orderBy?: BotModelOrderByWithRelationInput | BotModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotModels
+    **/
+    _count?: true | BotModelCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotModelMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotModelMaxAggregateInputType
+  }
+
+  export type GetBotModelAggregateType<T extends BotModelAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotModel]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotModel[P]>
+      : GetScalarType<T[P], AggregateBotModel[P]>
+  }
+
+
+
+
+  export type BotModelGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotModelWhereInput
+    orderBy?: BotModelOrderByWithAggregationInput | BotModelOrderByWithAggregationInput[]
+    by: BotModelScalarFieldEnum[] | BotModelScalarFieldEnum
+    having?: BotModelScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotModelCountAggregateInputType | true
+    _min?: BotModelMinAggregateInputType
+    _max?: BotModelMaxAggregateInputType
+  }
+
+  export type BotModelGroupByOutputType = {
+    id: string
+    botId: string
+    modelId: string
+    isEnabled: boolean
+    isPrimary: boolean
+    createdAt: Date
+    _count: BotModelCountAggregateOutputType | null
+    _min: BotModelMinAggregateOutputType | null
+    _max: BotModelMaxAggregateOutputType | null
+  }
+
+  type GetBotModelGroupByPayload<T extends BotModelGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotModelGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotModelGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotModelGroupByOutputType[P]>
+            : GetScalarType<T[P], BotModelGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotModelSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    modelId?: boolean
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botModel"]>
+
+  export type BotModelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    modelId?: boolean
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botModel"]>
+
+  export type BotModelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    modelId?: boolean
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botModel"]>
+
+  export type BotModelSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    modelId?: boolean
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: boolean
+  }
+
+  export type BotModelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "modelId" | "isEnabled" | "isPrimary" | "createdAt", ExtArgs["result"]["botModel"]>
+  export type BotModelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+  export type BotModelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+  export type BotModelIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+  }
+
+  export type $BotModelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotModel"
+    objects: {
+      bot: Prisma.$BotPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      /**
+       * 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+       */
+      modelId: string
+      /**
+       * 是否启用该模型
+       */
+      isEnabled: boolean
+      /**
+       * 是否为主模型（Bot 默认使用的模型）
+       */
+      isPrimary: boolean
+      createdAt: Date
+    }, ExtArgs["result"]["botModel"]>
+    composites: {}
+  }
+
+  type BotModelGetPayload<S extends boolean | null | undefined | BotModelDefaultArgs> = $Result.GetResult<Prisma.$BotModelPayload, S>
+
+  type BotModelCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotModelFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotModelCountAggregateInputType | true
+    }
+
+  export interface BotModelDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotModel'], meta: { name: 'BotModel' } }
+    /**
+     * Find zero or one BotModel that matches the filter.
+     * @param {BotModelFindUniqueArgs} args - Arguments to find a BotModel
+     * @example
+     * // Get one BotModel
+     * const botModel = await prisma.botModel.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotModelFindUniqueArgs>(args: SelectSubset<T, BotModelFindUniqueArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotModel that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotModelFindUniqueOrThrowArgs} args - Arguments to find a BotModel
+     * @example
+     * // Get one BotModel
+     * const botModel = await prisma.botModel.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotModelFindUniqueOrThrowArgs>(args: SelectSubset<T, BotModelFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotModel that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelFindFirstArgs} args - Arguments to find a BotModel
+     * @example
+     * // Get one BotModel
+     * const botModel = await prisma.botModel.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotModelFindFirstArgs>(args?: SelectSubset<T, BotModelFindFirstArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotModel that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelFindFirstOrThrowArgs} args - Arguments to find a BotModel
+     * @example
+     * // Get one BotModel
+     * const botModel = await prisma.botModel.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotModelFindFirstOrThrowArgs>(args?: SelectSubset<T, BotModelFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotModels that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotModels
+     * const botModels = await prisma.botModel.findMany()
+     * 
+     * // Get first 10 BotModels
+     * const botModels = await prisma.botModel.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botModelWithIdOnly = await prisma.botModel.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotModelFindManyArgs>(args?: SelectSubset<T, BotModelFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotModel.
+     * @param {BotModelCreateArgs} args - Arguments to create a BotModel.
+     * @example
+     * // Create one BotModel
+     * const BotModel = await prisma.botModel.create({
+     *   data: {
+     *     // ... data to create a BotModel
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotModelCreateArgs>(args: SelectSubset<T, BotModelCreateArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotModels.
+     * @param {BotModelCreateManyArgs} args - Arguments to create many BotModels.
+     * @example
+     * // Create many BotModels
+     * const botModel = await prisma.botModel.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotModelCreateManyArgs>(args?: SelectSubset<T, BotModelCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotModels and returns the data saved in the database.
+     * @param {BotModelCreateManyAndReturnArgs} args - Arguments to create many BotModels.
+     * @example
+     * // Create many BotModels
+     * const botModel = await prisma.botModel.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotModels and only return the `id`
+     * const botModelWithIdOnly = await prisma.botModel.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotModelCreateManyAndReturnArgs>(args?: SelectSubset<T, BotModelCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotModel.
+     * @param {BotModelDeleteArgs} args - Arguments to delete one BotModel.
+     * @example
+     * // Delete one BotModel
+     * const BotModel = await prisma.botModel.delete({
+     *   where: {
+     *     // ... filter to delete one BotModel
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotModelDeleteArgs>(args: SelectSubset<T, BotModelDeleteArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotModel.
+     * @param {BotModelUpdateArgs} args - Arguments to update one BotModel.
+     * @example
+     * // Update one BotModel
+     * const botModel = await prisma.botModel.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotModelUpdateArgs>(args: SelectSubset<T, BotModelUpdateArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotModels.
+     * @param {BotModelDeleteManyArgs} args - Arguments to filter BotModels to delete.
+     * @example
+     * // Delete a few BotModels
+     * const { count } = await prisma.botModel.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotModelDeleteManyArgs>(args?: SelectSubset<T, BotModelDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotModels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotModels
+     * const botModel = await prisma.botModel.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotModelUpdateManyArgs>(args: SelectSubset<T, BotModelUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotModels and returns the data updated in the database.
+     * @param {BotModelUpdateManyAndReturnArgs} args - Arguments to update many BotModels.
+     * @example
+     * // Update many BotModels
+     * const botModel = await prisma.botModel.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotModels and only return the `id`
+     * const botModelWithIdOnly = await prisma.botModel.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotModelUpdateManyAndReturnArgs>(args: SelectSubset<T, BotModelUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotModel.
+     * @param {BotModelUpsertArgs} args - Arguments to update or create a BotModel.
+     * @example
+     * // Update or create a BotModel
+     * const botModel = await prisma.botModel.upsert({
+     *   create: {
+     *     // ... data to create a BotModel
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotModel we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotModelUpsertArgs>(args: SelectSubset<T, BotModelUpsertArgs<ExtArgs>>): Prisma__BotModelClient<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotModels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelCountArgs} args - Arguments to filter BotModels to count.
+     * @example
+     * // Count the number of BotModels
+     * const count = await prisma.botModel.count({
+     *   where: {
+     *     // ... the filter for the BotModels we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotModelCountArgs>(
+      args?: Subset<T, BotModelCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotModelCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotModel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotModelAggregateArgs>(args: Subset<T, BotModelAggregateArgs>): Prisma.PrismaPromise<GetBotModelAggregateType<T>>
+
+    /**
+     * Group by BotModel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotModelGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotModelGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotModelGroupByArgs['orderBy'] }
+        : { orderBy?: BotModelGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotModelGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotModelGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotModel model
+   */
+  readonly fields: BotModelFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotModel.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotModelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    bot<T extends BotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotDefaultArgs<ExtArgs>>): Prisma__BotClient<$Result.GetResult<Prisma.$BotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotModel model
+   */
+  interface BotModelFieldRefs {
+    readonly id: FieldRef<"BotModel", 'String'>
+    readonly botId: FieldRef<"BotModel", 'String'>
+    readonly modelId: FieldRef<"BotModel", 'String'>
+    readonly isEnabled: FieldRef<"BotModel", 'Boolean'>
+    readonly isPrimary: FieldRef<"BotModel", 'Boolean'>
+    readonly createdAt: FieldRef<"BotModel", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotModel findUnique
+   */
+  export type BotModelFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotModel to fetch.
+     */
+    where: BotModelWhereUniqueInput
+  }
+
+  /**
+   * BotModel findUniqueOrThrow
+   */
+  export type BotModelFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotModel to fetch.
+     */
+    where: BotModelWhereUniqueInput
+  }
+
+  /**
+   * BotModel findFirst
+   */
+  export type BotModelFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotModel to fetch.
+     */
+    where?: BotModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotModels to fetch.
+     */
+    orderBy?: BotModelOrderByWithRelationInput | BotModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotModels.
+     */
+    cursor?: BotModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotModels.
+     */
+    distinct?: BotModelScalarFieldEnum | BotModelScalarFieldEnum[]
+  }
+
+  /**
+   * BotModel findFirstOrThrow
+   */
+  export type BotModelFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotModel to fetch.
+     */
+    where?: BotModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotModels to fetch.
+     */
+    orderBy?: BotModelOrderByWithRelationInput | BotModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotModels.
+     */
+    cursor?: BotModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotModels.
+     */
+    distinct?: BotModelScalarFieldEnum | BotModelScalarFieldEnum[]
+  }
+
+  /**
+   * BotModel findMany
+   */
+  export type BotModelFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter, which BotModels to fetch.
+     */
+    where?: BotModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotModels to fetch.
+     */
+    orderBy?: BotModelOrderByWithRelationInput | BotModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotModels.
+     */
+    cursor?: BotModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotModels.
+     */
+    skip?: number
+    distinct?: BotModelScalarFieldEnum | BotModelScalarFieldEnum[]
+  }
+
+  /**
+   * BotModel create
+   */
+  export type BotModelCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BotModel.
+     */
+    data: XOR<BotModelCreateInput, BotModelUncheckedCreateInput>
+  }
+
+  /**
+   * BotModel createMany
+   */
+  export type BotModelCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotModels.
+     */
+    data: BotModelCreateManyInput | BotModelCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotModel createManyAndReturn
+   */
+  export type BotModelCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotModels.
+     */
+    data: BotModelCreateManyInput | BotModelCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotModel update
+   */
+  export type BotModelUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BotModel.
+     */
+    data: XOR<BotModelUpdateInput, BotModelUncheckedUpdateInput>
+    /**
+     * Choose, which BotModel to update.
+     */
+    where: BotModelWhereUniqueInput
+  }
+
+  /**
+   * BotModel updateMany
+   */
+  export type BotModelUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotModels.
+     */
+    data: XOR<BotModelUpdateManyMutationInput, BotModelUncheckedUpdateManyInput>
+    /**
+     * Filter which BotModels to update
+     */
+    where?: BotModelWhereInput
+    /**
+     * Limit how many BotModels to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotModel updateManyAndReturn
+   */
+  export type BotModelUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * The data used to update BotModels.
+     */
+    data: XOR<BotModelUpdateManyMutationInput, BotModelUncheckedUpdateManyInput>
+    /**
+     * Filter which BotModels to update
+     */
+    where?: BotModelWhereInput
+    /**
+     * Limit how many BotModels to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotModel upsert
+   */
+  export type BotModelUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BotModel to update in case it exists.
+     */
+    where: BotModelWhereUniqueInput
+    /**
+     * In case the BotModel found by the `where` argument doesn't exist, create a new BotModel with this data.
+     */
+    create: XOR<BotModelCreateInput, BotModelUncheckedCreateInput>
+    /**
+     * In case the BotModel was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotModelUpdateInput, BotModelUncheckedUpdateInput>
+  }
+
+  /**
+   * BotModel delete
+   */
+  export type BotModelDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+    /**
+     * Filter which BotModel to delete.
+     */
+    where: BotModelWhereUniqueInput
+  }
+
+  /**
+   * BotModel deleteMany
+   */
+  export type BotModelDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotModels to delete
+     */
+    where?: BotModelWhereInput
+    /**
+     * Limit how many BotModels to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotModel without action
+   */
+  export type BotModelDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotModel
+     */
+    select?: BotModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotModel
+     */
+    omit?: BotModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotModelInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ModelAvailability
+   */
+
+  export type AggregateModelAvailability = {
+    _count: ModelAvailabilityCountAggregateOutputType | null
+    _min: ModelAvailabilityMinAggregateOutputType | null
+    _max: ModelAvailabilityMaxAggregateOutputType | null
+  }
+
+  export type ModelAvailabilityMinAggregateOutputType = {
+    id: string | null
+    vendor: string | null
+    model: string | null
+    providerKeyId: string | null
+    isAvailable: boolean | null
+    lastVerifiedAt: Date | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ModelAvailabilityMaxAggregateOutputType = {
+    id: string | null
+    vendor: string | null
+    model: string | null
+    providerKeyId: string | null
+    isAvailable: boolean | null
+    lastVerifiedAt: Date | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ModelAvailabilityCountAggregateOutputType = {
+    id: number
+    vendor: number
+    model: number
+    providerKeyId: number
+    isAvailable: number
+    lastVerifiedAt: number
+    errorMessage: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ModelAvailabilityMinAggregateInputType = {
+    id?: true
+    vendor?: true
+    model?: true
+    providerKeyId?: true
+    isAvailable?: true
+    lastVerifiedAt?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ModelAvailabilityMaxAggregateInputType = {
+    id?: true
+    vendor?: true
+    model?: true
+    providerKeyId?: true
+    isAvailable?: true
+    lastVerifiedAt?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ModelAvailabilityCountAggregateInputType = {
+    id?: true
+    vendor?: true
+    model?: true
+    providerKeyId?: true
+    isAvailable?: true
+    lastVerifiedAt?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ModelAvailabilityAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModelAvailability to aggregate.
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelAvailabilities to fetch.
+     */
+    orderBy?: ModelAvailabilityOrderByWithRelationInput | ModelAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ModelAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ModelAvailabilities
+    **/
+    _count?: true | ModelAvailabilityCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ModelAvailabilityMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ModelAvailabilityMaxAggregateInputType
+  }
+
+  export type GetModelAvailabilityAggregateType<T extends ModelAvailabilityAggregateArgs> = {
+        [P in keyof T & keyof AggregateModelAvailability]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateModelAvailability[P]>
+      : GetScalarType<T[P], AggregateModelAvailability[P]>
+  }
+
+
+
+
+  export type ModelAvailabilityGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModelAvailabilityWhereInput
+    orderBy?: ModelAvailabilityOrderByWithAggregationInput | ModelAvailabilityOrderByWithAggregationInput[]
+    by: ModelAvailabilityScalarFieldEnum[] | ModelAvailabilityScalarFieldEnum
+    having?: ModelAvailabilityScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ModelAvailabilityCountAggregateInputType | true
+    _min?: ModelAvailabilityMinAggregateInputType
+    _max?: ModelAvailabilityMaxAggregateInputType
+  }
+
+  export type ModelAvailabilityGroupByOutputType = {
+    id: string
+    vendor: string
+    model: string
+    providerKeyId: string
+    isAvailable: boolean
+    lastVerifiedAt: Date
+    errorMessage: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ModelAvailabilityCountAggregateOutputType | null
+    _min: ModelAvailabilityMinAggregateOutputType | null
+    _max: ModelAvailabilityMaxAggregateOutputType | null
+  }
+
+  type GetModelAvailabilityGroupByPayload<T extends ModelAvailabilityGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ModelAvailabilityGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ModelAvailabilityGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ModelAvailabilityGroupByOutputType[P]>
+            : GetScalarType<T[P], ModelAvailabilityGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ModelAvailabilitySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendor?: boolean
+    model?: boolean
+    providerKeyId?: boolean
+    isAvailable?: boolean
+    lastVerifiedAt?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modelAvailability"]>
+
+  export type ModelAvailabilitySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendor?: boolean
+    model?: boolean
+    providerKeyId?: boolean
+    isAvailable?: boolean
+    lastVerifiedAt?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modelAvailability"]>
+
+  export type ModelAvailabilitySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendor?: boolean
+    model?: boolean
+    providerKeyId?: boolean
+    isAvailable?: boolean
+    lastVerifiedAt?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modelAvailability"]>
+
+  export type ModelAvailabilitySelectScalar = {
+    id?: boolean
+    vendor?: boolean
+    model?: boolean
+    providerKeyId?: boolean
+    isAvailable?: boolean
+    lastVerifiedAt?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendor" | "model" | "providerKeyId" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
+  export type ModelAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+  export type ModelAvailabilityIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+  export type ModelAvailabilityIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
+  }
+
+  export type $ModelAvailabilityPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ModelAvailability"
+    objects: {
+      providerKey: Prisma.$ProviderKeyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 模型供应商，如 "openai", "anthropic"
+       */
+      vendor: string
+      /**
+       * 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+       */
+      model: string
+      /**
+       * 关联的 Provider Key
+       */
+      providerKeyId: string
+      /**
+       * 模型是否可用（API Key 验证通过）
+       */
+      isAvailable: boolean
+      /**
+       * 最后验证时间
+       */
+      lastVerifiedAt: Date
+      /**
+       * 验证失败时的错误信息
+       */
+      errorMessage: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["modelAvailability"]>
+    composites: {}
+  }
+
+  type ModelAvailabilityGetPayload<S extends boolean | null | undefined | ModelAvailabilityDefaultArgs> = $Result.GetResult<Prisma.$ModelAvailabilityPayload, S>
+
+  type ModelAvailabilityCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ModelAvailabilityFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ModelAvailabilityCountAggregateInputType | true
+    }
+
+  export interface ModelAvailabilityDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ModelAvailability'], meta: { name: 'ModelAvailability' } }
+    /**
+     * Find zero or one ModelAvailability that matches the filter.
+     * @param {ModelAvailabilityFindUniqueArgs} args - Arguments to find a ModelAvailability
+     * @example
+     * // Get one ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ModelAvailabilityFindUniqueArgs>(args: SelectSubset<T, ModelAvailabilityFindUniqueArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ModelAvailability that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ModelAvailabilityFindUniqueOrThrowArgs} args - Arguments to find a ModelAvailability
+     * @example
+     * // Get one ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ModelAvailabilityFindUniqueOrThrowArgs>(args: SelectSubset<T, ModelAvailabilityFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ModelAvailability that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityFindFirstArgs} args - Arguments to find a ModelAvailability
+     * @example
+     * // Get one ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ModelAvailabilityFindFirstArgs>(args?: SelectSubset<T, ModelAvailabilityFindFirstArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ModelAvailability that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityFindFirstOrThrowArgs} args - Arguments to find a ModelAvailability
+     * @example
+     * // Get one ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ModelAvailabilityFindFirstOrThrowArgs>(args?: SelectSubset<T, ModelAvailabilityFindFirstOrThrowArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ModelAvailabilities that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ModelAvailabilities
+     * const modelAvailabilities = await prisma.modelAvailability.findMany()
+     * 
+     * // Get first 10 ModelAvailabilities
+     * const modelAvailabilities = await prisma.modelAvailability.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const modelAvailabilityWithIdOnly = await prisma.modelAvailability.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ModelAvailabilityFindManyArgs>(args?: SelectSubset<T, ModelAvailabilityFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ModelAvailability.
+     * @param {ModelAvailabilityCreateArgs} args - Arguments to create a ModelAvailability.
+     * @example
+     * // Create one ModelAvailability
+     * const ModelAvailability = await prisma.modelAvailability.create({
+     *   data: {
+     *     // ... data to create a ModelAvailability
+     *   }
+     * })
+     * 
+     */
+    create<T extends ModelAvailabilityCreateArgs>(args: SelectSubset<T, ModelAvailabilityCreateArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ModelAvailabilities.
+     * @param {ModelAvailabilityCreateManyArgs} args - Arguments to create many ModelAvailabilities.
+     * @example
+     * // Create many ModelAvailabilities
+     * const modelAvailability = await prisma.modelAvailability.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ModelAvailabilityCreateManyArgs>(args?: SelectSubset<T, ModelAvailabilityCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ModelAvailabilities and returns the data saved in the database.
+     * @param {ModelAvailabilityCreateManyAndReturnArgs} args - Arguments to create many ModelAvailabilities.
+     * @example
+     * // Create many ModelAvailabilities
+     * const modelAvailability = await prisma.modelAvailability.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ModelAvailabilities and only return the `id`
+     * const modelAvailabilityWithIdOnly = await prisma.modelAvailability.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ModelAvailabilityCreateManyAndReturnArgs>(args?: SelectSubset<T, ModelAvailabilityCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ModelAvailability.
+     * @param {ModelAvailabilityDeleteArgs} args - Arguments to delete one ModelAvailability.
+     * @example
+     * // Delete one ModelAvailability
+     * const ModelAvailability = await prisma.modelAvailability.delete({
+     *   where: {
+     *     // ... filter to delete one ModelAvailability
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ModelAvailabilityDeleteArgs>(args: SelectSubset<T, ModelAvailabilityDeleteArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ModelAvailability.
+     * @param {ModelAvailabilityUpdateArgs} args - Arguments to update one ModelAvailability.
+     * @example
+     * // Update one ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ModelAvailabilityUpdateArgs>(args: SelectSubset<T, ModelAvailabilityUpdateArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ModelAvailabilities.
+     * @param {ModelAvailabilityDeleteManyArgs} args - Arguments to filter ModelAvailabilities to delete.
+     * @example
+     * // Delete a few ModelAvailabilities
+     * const { count } = await prisma.modelAvailability.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ModelAvailabilityDeleteManyArgs>(args?: SelectSubset<T, ModelAvailabilityDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ModelAvailabilities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ModelAvailabilities
+     * const modelAvailability = await prisma.modelAvailability.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ModelAvailabilityUpdateManyArgs>(args: SelectSubset<T, ModelAvailabilityUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ModelAvailabilities and returns the data updated in the database.
+     * @param {ModelAvailabilityUpdateManyAndReturnArgs} args - Arguments to update many ModelAvailabilities.
+     * @example
+     * // Update many ModelAvailabilities
+     * const modelAvailability = await prisma.modelAvailability.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ModelAvailabilities and only return the `id`
+     * const modelAvailabilityWithIdOnly = await prisma.modelAvailability.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ModelAvailabilityUpdateManyAndReturnArgs>(args: SelectSubset<T, ModelAvailabilityUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ModelAvailability.
+     * @param {ModelAvailabilityUpsertArgs} args - Arguments to update or create a ModelAvailability.
+     * @example
+     * // Update or create a ModelAvailability
+     * const modelAvailability = await prisma.modelAvailability.upsert({
+     *   create: {
+     *     // ... data to create a ModelAvailability
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ModelAvailability we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ModelAvailabilityUpsertArgs>(args: SelectSubset<T, ModelAvailabilityUpsertArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ModelAvailabilities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityCountArgs} args - Arguments to filter ModelAvailabilities to count.
+     * @example
+     * // Count the number of ModelAvailabilities
+     * const count = await prisma.modelAvailability.count({
+     *   where: {
+     *     // ... the filter for the ModelAvailabilities we want to count
+     *   }
+     * })
+    **/
+    count<T extends ModelAvailabilityCountArgs>(
+      args?: Subset<T, ModelAvailabilityCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ModelAvailabilityCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ModelAvailability.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ModelAvailabilityAggregateArgs>(args: Subset<T, ModelAvailabilityAggregateArgs>): Prisma.PrismaPromise<GetModelAvailabilityAggregateType<T>>
+
+    /**
+     * Group by ModelAvailability.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModelAvailabilityGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ModelAvailabilityGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ModelAvailabilityGroupByArgs['orderBy'] }
+        : { orderBy?: ModelAvailabilityGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ModelAvailabilityGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetModelAvailabilityGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ModelAvailability model
+   */
+  readonly fields: ModelAvailabilityFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ModelAvailability.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ModelAvailabilityClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    providerKey<T extends ProviderKeyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKeyDefaultArgs<ExtArgs>>): Prisma__ProviderKeyClient<$Result.GetResult<Prisma.$ProviderKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ModelAvailability model
+   */
+  interface ModelAvailabilityFieldRefs {
+    readonly id: FieldRef<"ModelAvailability", 'String'>
+    readonly vendor: FieldRef<"ModelAvailability", 'String'>
+    readonly model: FieldRef<"ModelAvailability", 'String'>
+    readonly providerKeyId: FieldRef<"ModelAvailability", 'String'>
+    readonly isAvailable: FieldRef<"ModelAvailability", 'Boolean'>
+    readonly lastVerifiedAt: FieldRef<"ModelAvailability", 'DateTime'>
+    readonly errorMessage: FieldRef<"ModelAvailability", 'String'>
+    readonly createdAt: FieldRef<"ModelAvailability", 'DateTime'>
+    readonly updatedAt: FieldRef<"ModelAvailability", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ModelAvailability findUnique
+   */
+  export type ModelAvailabilityFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which ModelAvailability to fetch.
+     */
+    where: ModelAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * ModelAvailability findUniqueOrThrow
+   */
+  export type ModelAvailabilityFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which ModelAvailability to fetch.
+     */
+    where: ModelAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * ModelAvailability findFirst
+   */
+  export type ModelAvailabilityFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which ModelAvailability to fetch.
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelAvailabilities to fetch.
+     */
+    orderBy?: ModelAvailabilityOrderByWithRelationInput | ModelAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModelAvailabilities.
+     */
+    cursor?: ModelAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModelAvailabilities.
+     */
+    distinct?: ModelAvailabilityScalarFieldEnum | ModelAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * ModelAvailability findFirstOrThrow
+   */
+  export type ModelAvailabilityFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which ModelAvailability to fetch.
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelAvailabilities to fetch.
+     */
+    orderBy?: ModelAvailabilityOrderByWithRelationInput | ModelAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModelAvailabilities.
+     */
+    cursor?: ModelAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelAvailabilities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModelAvailabilities.
+     */
+    distinct?: ModelAvailabilityScalarFieldEnum | ModelAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * ModelAvailability findMany
+   */
+  export type ModelAvailabilityFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter, which ModelAvailabilities to fetch.
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModelAvailabilities to fetch.
+     */
+    orderBy?: ModelAvailabilityOrderByWithRelationInput | ModelAvailabilityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ModelAvailabilities.
+     */
+    cursor?: ModelAvailabilityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModelAvailabilities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModelAvailabilities.
+     */
+    skip?: number
+    distinct?: ModelAvailabilityScalarFieldEnum | ModelAvailabilityScalarFieldEnum[]
+  }
+
+  /**
+   * ModelAvailability create
+   */
+  export type ModelAvailabilityCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ModelAvailability.
+     */
+    data: XOR<ModelAvailabilityCreateInput, ModelAvailabilityUncheckedCreateInput>
+  }
+
+  /**
+   * ModelAvailability createMany
+   */
+  export type ModelAvailabilityCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ModelAvailabilities.
+     */
+    data: ModelAvailabilityCreateManyInput | ModelAvailabilityCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ModelAvailability createManyAndReturn
+   */
+  export type ModelAvailabilityCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * The data used to create many ModelAvailabilities.
+     */
+    data: ModelAvailabilityCreateManyInput | ModelAvailabilityCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ModelAvailability update
+   */
+  export type ModelAvailabilityUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ModelAvailability.
+     */
+    data: XOR<ModelAvailabilityUpdateInput, ModelAvailabilityUncheckedUpdateInput>
+    /**
+     * Choose, which ModelAvailability to update.
+     */
+    where: ModelAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * ModelAvailability updateMany
+   */
+  export type ModelAvailabilityUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ModelAvailabilities.
+     */
+    data: XOR<ModelAvailabilityUpdateManyMutationInput, ModelAvailabilityUncheckedUpdateManyInput>
+    /**
+     * Filter which ModelAvailabilities to update
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * Limit how many ModelAvailabilities to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ModelAvailability updateManyAndReturn
+   */
+  export type ModelAvailabilityUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * The data used to update ModelAvailabilities.
+     */
+    data: XOR<ModelAvailabilityUpdateManyMutationInput, ModelAvailabilityUncheckedUpdateManyInput>
+    /**
+     * Filter which ModelAvailabilities to update
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * Limit how many ModelAvailabilities to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ModelAvailability upsert
+   */
+  export type ModelAvailabilityUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ModelAvailability to update in case it exists.
+     */
+    where: ModelAvailabilityWhereUniqueInput
+    /**
+     * In case the ModelAvailability found by the `where` argument doesn't exist, create a new ModelAvailability with this data.
+     */
+    create: XOR<ModelAvailabilityCreateInput, ModelAvailabilityUncheckedCreateInput>
+    /**
+     * In case the ModelAvailability was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ModelAvailabilityUpdateInput, ModelAvailabilityUncheckedUpdateInput>
+  }
+
+  /**
+   * ModelAvailability delete
+   */
+  export type ModelAvailabilityDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
+    /**
+     * Filter which ModelAvailability to delete.
+     */
+    where: ModelAvailabilityWhereUniqueInput
+  }
+
+  /**
+   * ModelAvailability deleteMany
+   */
+  export type ModelAvailabilityDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModelAvailabilities to delete
+     */
+    where?: ModelAvailabilityWhereInput
+    /**
+     * Limit how many ModelAvailabilities to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ModelAvailability without action
+   */
+  export type ModelAvailabilityDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelAvailability
+     */
+    select?: ModelAvailabilitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelAvailability
+     */
+    omit?: ModelAvailabilityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelAvailabilityInclude<ExtArgs> | null
   }
 
 
@@ -46145,6 +48612,33 @@ export namespace Prisma {
   export type BotProviderKeyScalarFieldEnum = (typeof BotProviderKeyScalarFieldEnum)[keyof typeof BotProviderKeyScalarFieldEnum]
 
 
+  export const BotModelScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    modelId: 'modelId',
+    isEnabled: 'isEnabled',
+    isPrimary: 'isPrimary',
+    createdAt: 'createdAt'
+  };
+
+  export type BotModelScalarFieldEnum = (typeof BotModelScalarFieldEnum)[keyof typeof BotModelScalarFieldEnum]
+
+
+  export const ModelAvailabilityScalarFieldEnum: {
+    id: 'id',
+    vendor: 'vendor',
+    model: 'model',
+    providerKeyId: 'providerKeyId',
+    isAvailable: 'isAvailable',
+    lastVerifiedAt: 'lastVerifiedAt',
+    errorMessage: 'errorMessage',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ModelAvailabilityScalarFieldEnum = (typeof ModelAvailabilityScalarFieldEnum)[keyof typeof ModelAvailabilityScalarFieldEnum]
+
+
   export const BotUsageLogScalarFieldEnum: {
     id: 'id',
     botId: 'botId',
@@ -47967,6 +50461,7 @@ export namespace Prisma {
     channels?: BotChannelListRelationFilter
     modelRoutings?: BotModelRoutingListRelationFilter
     routingConfig?: XOR<BotRoutingConfigNullableScalarRelationFilter, BotRoutingConfigWhereInput> | null
+    models?: BotModelListRelationFilter
   }
 
   export type BotOrderByWithRelationInput = {
@@ -48002,6 +50497,7 @@ export namespace Prisma {
     channels?: BotChannelOrderByRelationAggregateInput
     modelRoutings?: BotModelRoutingOrderByRelationAggregateInput
     routingConfig?: BotRoutingConfigOrderByWithRelationInput
+    models?: BotModelOrderByRelationAggregateInput
   }
 
   export type BotWhereUniqueInput = Prisma.AtLeast<{
@@ -48040,6 +50536,7 @@ export namespace Prisma {
     channels?: BotChannelListRelationFilter
     modelRoutings?: BotModelRoutingListRelationFilter
     routingConfig?: XOR<BotRoutingConfigNullableScalarRelationFilter, BotRoutingConfigWhereInput> | null
+    models?: BotModelListRelationFilter
   }, "id">
 
   export type BotOrderByWithAggregationInput = {
@@ -48118,6 +50615,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
     proxyTokens?: ProxyTokenListRelationFilter
+    modelAvailability?: ModelAvailabilityListRelationFilter
   }
 
   export type ProviderKeyOrderByWithRelationInput = {
@@ -48137,6 +50635,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyOrderByRelationAggregateInput
     usageLogs?: BotUsageLogOrderByRelationAggregateInput
     proxyTokens?: ProxyTokenOrderByRelationAggregateInput
+    modelAvailability?: ModelAvailabilityOrderByRelationAggregateInput
   }
 
   export type ProviderKeyWhereUniqueInput = Prisma.AtLeast<{
@@ -48160,6 +50659,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyListRelationFilter
     usageLogs?: BotUsageLogListRelationFilter
     proxyTokens?: ProxyTokenListRelationFilter
+    modelAvailability?: ModelAvailabilityListRelationFilter
   }, "id" | "provider_key_user_label_unique">
 
   export type ProviderKeyOrderByWithAggregationInput = {
@@ -48265,6 +50765,143 @@ export namespace Prisma {
     allowedModels?: StringNullableListFilter<"BotProviderKey">
     primaryModel?: StringNullableWithAggregatesFilter<"BotProviderKey"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"BotProviderKey"> | Date | string
+  }
+
+  export type BotModelWhereInput = {
+    AND?: BotModelWhereInput | BotModelWhereInput[]
+    OR?: BotModelWhereInput[]
+    NOT?: BotModelWhereInput | BotModelWhereInput[]
+    id?: UuidFilter<"BotModel"> | string
+    botId?: UuidFilter<"BotModel"> | string
+    modelId?: StringFilter<"BotModel"> | string
+    isEnabled?: BoolFilter<"BotModel"> | boolean
+    isPrimary?: BoolFilter<"BotModel"> | boolean
+    createdAt?: DateTimeFilter<"BotModel"> | Date | string
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+  }
+
+  export type BotModelOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    modelId?: SortOrder
+    isEnabled?: SortOrder
+    isPrimary?: SortOrder
+    createdAt?: SortOrder
+    bot?: BotOrderByWithRelationInput
+  }
+
+  export type BotModelWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId_modelId?: BotModelBotIdModelIdCompoundUniqueInput
+    AND?: BotModelWhereInput | BotModelWhereInput[]
+    OR?: BotModelWhereInput[]
+    NOT?: BotModelWhereInput | BotModelWhereInput[]
+    botId?: UuidFilter<"BotModel"> | string
+    modelId?: StringFilter<"BotModel"> | string
+    isEnabled?: BoolFilter<"BotModel"> | boolean
+    isPrimary?: BoolFilter<"BotModel"> | boolean
+    createdAt?: DateTimeFilter<"BotModel"> | Date | string
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+  }, "id" | "botId_modelId">
+
+  export type BotModelOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    modelId?: SortOrder
+    isEnabled?: SortOrder
+    isPrimary?: SortOrder
+    createdAt?: SortOrder
+    _count?: BotModelCountOrderByAggregateInput
+    _max?: BotModelMaxOrderByAggregateInput
+    _min?: BotModelMinOrderByAggregateInput
+  }
+
+  export type BotModelScalarWhereWithAggregatesInput = {
+    AND?: BotModelScalarWhereWithAggregatesInput | BotModelScalarWhereWithAggregatesInput[]
+    OR?: BotModelScalarWhereWithAggregatesInput[]
+    NOT?: BotModelScalarWhereWithAggregatesInput | BotModelScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"BotModel"> | string
+    botId?: UuidWithAggregatesFilter<"BotModel"> | string
+    modelId?: StringWithAggregatesFilter<"BotModel"> | string
+    isEnabled?: BoolWithAggregatesFilter<"BotModel"> | boolean
+    isPrimary?: BoolWithAggregatesFilter<"BotModel"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"BotModel"> | Date | string
+  }
+
+  export type ModelAvailabilityWhereInput = {
+    AND?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
+    OR?: ModelAvailabilityWhereInput[]
+    NOT?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
+    id?: UuidFilter<"ModelAvailability"> | string
+    vendor?: StringFilter<"ModelAvailability"> | string
+    model?: StringFilter<"ModelAvailability"> | string
+    providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    isAvailable?: BoolFilter<"ModelAvailability"> | boolean
+    lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
+    createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
+  }
+
+  export type ModelAvailabilityOrderByWithRelationInput = {
+    id?: SortOrder
+    vendor?: SortOrder
+    model?: SortOrder
+    providerKeyId?: SortOrder
+    isAvailable?: SortOrder
+    lastVerifiedAt?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    providerKey?: ProviderKeyOrderByWithRelationInput
+  }
+
+  export type ModelAvailabilityWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    providerKeyId_model?: ModelAvailabilityProviderKeyIdModelCompoundUniqueInput
+    AND?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
+    OR?: ModelAvailabilityWhereInput[]
+    NOT?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
+    vendor?: StringFilter<"ModelAvailability"> | string
+    model?: StringFilter<"ModelAvailability"> | string
+    providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    isAvailable?: BoolFilter<"ModelAvailability"> | boolean
+    lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
+    createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
+  }, "id" | "providerKeyId_model">
+
+  export type ModelAvailabilityOrderByWithAggregationInput = {
+    id?: SortOrder
+    vendor?: SortOrder
+    model?: SortOrder
+    providerKeyId?: SortOrder
+    isAvailable?: SortOrder
+    lastVerifiedAt?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ModelAvailabilityCountOrderByAggregateInput
+    _max?: ModelAvailabilityMaxOrderByAggregateInput
+    _min?: ModelAvailabilityMinOrderByAggregateInput
+  }
+
+  export type ModelAvailabilityScalarWhereWithAggregatesInput = {
+    AND?: ModelAvailabilityScalarWhereWithAggregatesInput | ModelAvailabilityScalarWhereWithAggregatesInput[]
+    OR?: ModelAvailabilityScalarWhereWithAggregatesInput[]
+    NOT?: ModelAvailabilityScalarWhereWithAggregatesInput | ModelAvailabilityScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ModelAvailability"> | string
+    vendor?: StringWithAggregatesFilter<"ModelAvailability"> | string
+    model?: StringWithAggregatesFilter<"ModelAvailability"> | string
+    providerKeyId?: UuidWithAggregatesFilter<"ModelAvailability"> | string
+    isAvailable?: BoolWithAggregatesFilter<"ModelAvailability"> | boolean
+    lastVerifiedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
+    errorMessage?: StringNullableWithAggregatesFilter<"ModelAvailability"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
   }
 
   export type BotUsageLogWhereInput = {
@@ -51631,6 +54268,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateInput = {
@@ -51663,6 +54301,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotUpdateInput = {
@@ -51695,6 +54334,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateInput = {
@@ -51727,6 +54367,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateManyInput = {
@@ -51814,6 +54455,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateInput = {
@@ -51832,6 +54474,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUpdateInput = {
@@ -51850,6 +54493,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateInput = {
@@ -51868,6 +54512,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyCreateManyInput = {
@@ -51980,6 +54625,151 @@ export namespace Prisma {
     allowedModels?: BotProviderKeyUpdateallowedModelsInput | string[]
     primaryModel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotModelCreateInput = {
+    id?: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
+    bot: BotCreateNestedOneWithoutModelsInput
+  }
+
+  export type BotModelUncheckedCreateInput = {
+    id?: string
+    botId: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
+  }
+
+  export type BotModelUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bot?: BotUpdateOneRequiredWithoutModelsNestedInput
+  }
+
+  export type BotModelUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotModelCreateManyInput = {
+    id?: string
+    botId: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
+  }
+
+  export type BotModelUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotModelUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityCreateInput = {
+    id?: string
+    vendor: string
+    model: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
+  }
+
+  export type ModelAvailabilityUncheckedCreateInput = {
+    id?: string
+    vendor: string
+    model: string
+    providerKeyId: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModelAvailabilityUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
+  }
+
+  export type ModelAvailabilityUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    providerKeyId?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityCreateManyInput = {
+    id?: string
+    vendor: string
+    model: string
+    providerKeyId: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModelAvailabilityUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    providerKeyId?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BotUsageLogCreateInput = {
@@ -55597,6 +58387,12 @@ export namespace Prisma {
     isNot?: BotRoutingConfigWhereInput | null
   }
 
+  export type BotModelListRelationFilter = {
+    every?: BotModelWhereInput
+    some?: BotModelWhereInput
+    none?: BotModelWhereInput
+  }
+
   export type BotProviderKeyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -55618,6 +58414,10 @@ export namespace Prisma {
   }
 
   export type BotModelRoutingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type BotModelOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -55746,7 +58546,17 @@ export namespace Prisma {
     none?: ProxyTokenWhereInput
   }
 
+  export type ModelAvailabilityListRelationFilter = {
+    every?: ModelAvailabilityWhereInput
+    some?: ModelAvailabilityWhereInput
+    none?: ModelAvailabilityWhereInput
+  }
+
   export type ProxyTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ModelAvailabilityOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -55851,6 +58661,79 @@ export namespace Prisma {
     isPrimary?: SortOrder
     primaryModel?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type BotModelBotIdModelIdCompoundUniqueInput = {
+    botId: string
+    modelId: string
+  }
+
+  export type BotModelCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    modelId?: SortOrder
+    isEnabled?: SortOrder
+    isPrimary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotModelMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    modelId?: SortOrder
+    isEnabled?: SortOrder
+    isPrimary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotModelMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    modelId?: SortOrder
+    isEnabled?: SortOrder
+    isPrimary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ModelAvailabilityProviderKeyIdModelCompoundUniqueInput = {
+    providerKeyId: string
+    model: string
+  }
+
+  export type ModelAvailabilityCountOrderByAggregateInput = {
+    id?: SortOrder
+    vendor?: SortOrder
+    model?: SortOrder
+    providerKeyId?: SortOrder
+    isAvailable?: SortOrder
+    lastVerifiedAt?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ModelAvailabilityMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vendor?: SortOrder
+    model?: SortOrder
+    providerKeyId?: SortOrder
+    isAvailable?: SortOrder
+    lastVerifiedAt?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ModelAvailabilityMinOrderByAggregateInput = {
+    id?: SortOrder
+    vendor?: SortOrder
+    model?: SortOrder
+    providerKeyId?: SortOrder
+    isAvailable?: SortOrder
+    lastVerifiedAt?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type DecimalNullableFilter<$PrismaModel = never> = {
@@ -58154,6 +61037,13 @@ export namespace Prisma {
     connect?: BotRoutingConfigWhereUniqueInput
   }
 
+  export type BotModelCreateNestedManyWithoutBotInput = {
+    create?: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput> | BotModelCreateWithoutBotInput[] | BotModelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotModelCreateOrConnectWithoutBotInput | BotModelCreateOrConnectWithoutBotInput[]
+    createMany?: BotModelCreateManyBotInputEnvelope
+    connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+  }
+
   export type BotProviderKeyUncheckedCreateNestedManyWithoutBotInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -58206,6 +61096,13 @@ export namespace Prisma {
     create?: XOR<BotRoutingConfigCreateWithoutBotInput, BotRoutingConfigUncheckedCreateWithoutBotInput>
     connectOrCreate?: BotRoutingConfigCreateOrConnectWithoutBotInput
     connect?: BotRoutingConfigWhereUniqueInput
+  }
+
+  export type BotModelUncheckedCreateNestedManyWithoutBotInput = {
+    create?: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput> | BotModelCreateWithoutBotInput[] | BotModelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotModelCreateOrConnectWithoutBotInput | BotModelCreateOrConnectWithoutBotInput[]
+    createMany?: BotModelCreateManyBotInputEnvelope
+    connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -58361,6 +61258,20 @@ export namespace Prisma {
     update?: XOR<XOR<BotRoutingConfigUpdateToOneWithWhereWithoutBotInput, BotRoutingConfigUpdateWithoutBotInput>, BotRoutingConfigUncheckedUpdateWithoutBotInput>
   }
 
+  export type BotModelUpdateManyWithoutBotNestedInput = {
+    create?: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput> | BotModelCreateWithoutBotInput[] | BotModelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotModelCreateOrConnectWithoutBotInput | BotModelCreateOrConnectWithoutBotInput[]
+    upsert?: BotModelUpsertWithWhereUniqueWithoutBotInput | BotModelUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: BotModelCreateManyBotInputEnvelope
+    set?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    disconnect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    delete?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    update?: BotModelUpdateWithWhereUniqueWithoutBotInput | BotModelUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: BotModelUpdateManyWithWhereWithoutBotInput | BotModelUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
+  }
+
   export type BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput = {
     create?: XOR<BotProviderKeyCreateWithoutBotInput, BotProviderKeyUncheckedCreateWithoutBotInput> | BotProviderKeyCreateWithoutBotInput[] | BotProviderKeyUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutBotInput | BotProviderKeyCreateOrConnectWithoutBotInput[]
@@ -58465,6 +61376,20 @@ export namespace Prisma {
     update?: XOR<XOR<BotRoutingConfigUpdateToOneWithWhereWithoutBotInput, BotRoutingConfigUpdateWithoutBotInput>, BotRoutingConfigUncheckedUpdateWithoutBotInput>
   }
 
+  export type BotModelUncheckedUpdateManyWithoutBotNestedInput = {
+    create?: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput> | BotModelCreateWithoutBotInput[] | BotModelUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: BotModelCreateOrConnectWithoutBotInput | BotModelCreateOrConnectWithoutBotInput[]
+    upsert?: BotModelUpsertWithWhereUniqueWithoutBotInput | BotModelUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: BotModelCreateManyBotInputEnvelope
+    set?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    disconnect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    delete?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+    update?: BotModelUpdateWithWhereUniqueWithoutBotInput | BotModelUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: BotModelUpdateManyWithWhereWithoutBotInput | BotModelUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
+  }
+
   export type UserInfoCreateNestedOneWithoutProviderKeysInput = {
     create?: XOR<UserInfoCreateWithoutProviderKeysInput, UserInfoUncheckedCreateWithoutProviderKeysInput>
     connectOrCreate?: UserInfoCreateOrConnectWithoutProviderKeysInput
@@ -58492,6 +61417,13 @@ export namespace Prisma {
     connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
   }
 
+  export type ModelAvailabilityCreateNestedManyWithoutProviderKeyInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput> | ModelAvailabilityCreateWithoutProviderKeyInput[] | ModelAvailabilityUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutProviderKeyInput | ModelAvailabilityCreateOrConnectWithoutProviderKeyInput[]
+    createMany?: ModelAvailabilityCreateManyProviderKeyInputEnvelope
+    connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+  }
+
   export type BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput = {
     create?: XOR<BotProviderKeyCreateWithoutProviderKeyInput, BotProviderKeyUncheckedCreateWithoutProviderKeyInput> | BotProviderKeyCreateWithoutProviderKeyInput[] | BotProviderKeyUncheckedCreateWithoutProviderKeyInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutProviderKeyInput | BotProviderKeyCreateOrConnectWithoutProviderKeyInput[]
@@ -58511,6 +61443,13 @@ export namespace Prisma {
     connectOrCreate?: ProxyTokenCreateOrConnectWithoutProviderKeyInput | ProxyTokenCreateOrConnectWithoutProviderKeyInput[]
     createMany?: ProxyTokenCreateManyProviderKeyInputEnvelope
     connect?: ProxyTokenWhereUniqueInput | ProxyTokenWhereUniqueInput[]
+  }
+
+  export type ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput> | ModelAvailabilityCreateWithoutProviderKeyInput[] | ModelAvailabilityUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutProviderKeyInput | ModelAvailabilityCreateOrConnectWithoutProviderKeyInput[]
+    createMany?: ModelAvailabilityCreateManyProviderKeyInputEnvelope
+    connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
   }
 
   export type BytesFieldUpdateOperationsInput = {
@@ -58567,6 +61506,20 @@ export namespace Prisma {
     deleteMany?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
   }
 
+  export type ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput> | ModelAvailabilityCreateWithoutProviderKeyInput[] | ModelAvailabilityUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutProviderKeyInput | ModelAvailabilityCreateOrConnectWithoutProviderKeyInput[]
+    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutProviderKeyInput | ModelAvailabilityUpsertWithWhereUniqueWithoutProviderKeyInput[]
+    createMany?: ModelAvailabilityCreateManyProviderKeyInputEnvelope
+    set?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    disconnect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    delete?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutProviderKeyInput | ModelAvailabilityUpdateWithWhereUniqueWithoutProviderKeyInput[]
+    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutProviderKeyInput | ModelAvailabilityUpdateManyWithWhereWithoutProviderKeyInput[]
+    deleteMany?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
+  }
+
   export type BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput = {
     create?: XOR<BotProviderKeyCreateWithoutProviderKeyInput, BotProviderKeyUncheckedCreateWithoutProviderKeyInput> | BotProviderKeyCreateWithoutProviderKeyInput[] | BotProviderKeyUncheckedCreateWithoutProviderKeyInput[]
     connectOrCreate?: BotProviderKeyCreateOrConnectWithoutProviderKeyInput | BotProviderKeyCreateOrConnectWithoutProviderKeyInput[]
@@ -58609,6 +61562,20 @@ export namespace Prisma {
     deleteMany?: ProxyTokenScalarWhereInput | ProxyTokenScalarWhereInput[]
   }
 
+  export type ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput> | ModelAvailabilityCreateWithoutProviderKeyInput[] | ModelAvailabilityUncheckedCreateWithoutProviderKeyInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutProviderKeyInput | ModelAvailabilityCreateOrConnectWithoutProviderKeyInput[]
+    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutProviderKeyInput | ModelAvailabilityUpsertWithWhereUniqueWithoutProviderKeyInput[]
+    createMany?: ModelAvailabilityCreateManyProviderKeyInputEnvelope
+    set?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    disconnect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    delete?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutProviderKeyInput | ModelAvailabilityUpdateWithWhereUniqueWithoutProviderKeyInput[]
+    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutProviderKeyInput | ModelAvailabilityUpdateManyWithWhereWithoutProviderKeyInput[]
+    deleteMany?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
+  }
+
   export type BotProviderKeyCreateallowedModelsInput = {
     set: string[]
   }
@@ -58644,6 +61611,34 @@ export namespace Prisma {
     upsert?: ProviderKeyUpsertWithoutBotProviderKeysInput
     connect?: ProviderKeyWhereUniqueInput
     update?: XOR<XOR<ProviderKeyUpdateToOneWithWhereWithoutBotProviderKeysInput, ProviderKeyUpdateWithoutBotProviderKeysInput>, ProviderKeyUncheckedUpdateWithoutBotProviderKeysInput>
+  }
+
+  export type BotCreateNestedOneWithoutModelsInput = {
+    create?: XOR<BotCreateWithoutModelsInput, BotUncheckedCreateWithoutModelsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutModelsInput
+    connect?: BotWhereUniqueInput
+  }
+
+  export type BotUpdateOneRequiredWithoutModelsNestedInput = {
+    create?: XOR<BotCreateWithoutModelsInput, BotUncheckedCreateWithoutModelsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutModelsInput
+    upsert?: BotUpsertWithoutModelsInput
+    connect?: BotWhereUniqueInput
+    update?: XOR<XOR<BotUpdateToOneWithWhereWithoutModelsInput, BotUpdateWithoutModelsInput>, BotUncheckedUpdateWithoutModelsInput>
+  }
+
+  export type ProviderKeyCreateNestedOneWithoutModelAvailabilityInput = {
+    create?: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
+    connectOrCreate?: ProviderKeyCreateOrConnectWithoutModelAvailabilityInput
+    connect?: ProviderKeyWhereUniqueInput
+  }
+
+  export type ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput = {
+    create?: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
+    connectOrCreate?: ProviderKeyCreateOrConnectWithoutModelAvailabilityInput
+    upsert?: ProviderKeyUpsertWithoutModelAvailabilityInput
+    connect?: ProviderKeyWhereUniqueInput
+    update?: XOR<XOR<ProviderKeyUpdateToOneWithWhereWithoutModelAvailabilityInput, ProviderKeyUpdateWithoutModelAvailabilityInput>, ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput>
   }
 
   export type BotCreateNestedOneWithoutUsageLogsInput = {
@@ -60058,6 +63053,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutCreatedByInput = {
@@ -60089,6 +63085,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutCreatedByInput = {
@@ -60116,6 +63113,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutCreatedByInput = {
@@ -60133,6 +63131,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutCreatedByInput = {
@@ -60834,6 +63833,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPersonaTemplateInput = {
@@ -60865,6 +63865,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPersonaTemplateInput = {
@@ -61908,6 +64909,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutAvatarFileInput = {
@@ -61939,6 +64941,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutAvatarFileInput = {
@@ -62499,6 +65502,32 @@ export namespace Prisma {
     create: XOR<BotRoutingConfigCreateWithoutBotInput, BotRoutingConfigUncheckedCreateWithoutBotInput>
   }
 
+  export type BotModelCreateWithoutBotInput = {
+    id?: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
+  }
+
+  export type BotModelUncheckedCreateWithoutBotInput = {
+    id?: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
+  }
+
+  export type BotModelCreateOrConnectWithoutBotInput = {
+    where: BotModelWhereUniqueInput
+    create: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput>
+  }
+
+  export type BotModelCreateManyBotInputEnvelope = {
+    data: BotModelCreateManyBotInput | BotModelCreateManyBotInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserInfoUpsertWithoutBotsInput = {
     update: XOR<UserInfoUpdateWithoutBotsInput, UserInfoUncheckedUpdateWithoutBotsInput>
     create: XOR<UserInfoCreateWithoutBotsInput, UserInfoUncheckedCreateWithoutBotsInput>
@@ -62982,6 +66011,34 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type BotModelUpsertWithWhereUniqueWithoutBotInput = {
+    where: BotModelWhereUniqueInput
+    update: XOR<BotModelUpdateWithoutBotInput, BotModelUncheckedUpdateWithoutBotInput>
+    create: XOR<BotModelCreateWithoutBotInput, BotModelUncheckedCreateWithoutBotInput>
+  }
+
+  export type BotModelUpdateWithWhereUniqueWithoutBotInput = {
+    where: BotModelWhereUniqueInput
+    data: XOR<BotModelUpdateWithoutBotInput, BotModelUncheckedUpdateWithoutBotInput>
+  }
+
+  export type BotModelUpdateManyWithWhereWithoutBotInput = {
+    where: BotModelScalarWhereInput
+    data: XOR<BotModelUpdateManyMutationInput, BotModelUncheckedUpdateManyWithoutBotInput>
+  }
+
+  export type BotModelScalarWhereInput = {
+    AND?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
+    OR?: BotModelScalarWhereInput[]
+    NOT?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
+    id?: UuidFilter<"BotModel"> | string
+    botId?: UuidFilter<"BotModel"> | string
+    modelId?: StringFilter<"BotModel"> | string
+    isEnabled?: BoolFilter<"BotModel"> | boolean
+    isPrimary?: BoolFilter<"BotModel"> | boolean
+    createdAt?: DateTimeFilter<"BotModel"> | Date | string
+  }
+
   export type UserInfoCreateWithoutProviderKeysInput = {
     id?: string
     nickname?: string
@@ -63179,6 +66236,38 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ModelAvailabilityCreateWithoutProviderKeyInput = {
+    id?: string
+    vendor: string
+    model: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModelAvailabilityUncheckedCreateWithoutProviderKeyInput = {
+    id?: string
+    vendor: string
+    model: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModelAvailabilityCreateOrConnectWithoutProviderKeyInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    create: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput>
+  }
+
+  export type ModelAvailabilityCreateManyProviderKeyInputEnvelope = {
+    data: ModelAvailabilityCreateManyProviderKeyInput | ModelAvailabilityCreateManyProviderKeyInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserInfoUpsertWithoutProviderKeysInput = {
     update: XOR<UserInfoUpdateWithoutProviderKeysInput, UserInfoUncheckedUpdateWithoutProviderKeysInput>
     create: XOR<UserInfoCreateWithoutProviderKeysInput, UserInfoUncheckedCreateWithoutProviderKeysInput>
@@ -63320,6 +66409,37 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ProxyToken"> | Date | string
   }
 
+  export type ModelAvailabilityUpsertWithWhereUniqueWithoutProviderKeyInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    update: XOR<ModelAvailabilityUpdateWithoutProviderKeyInput, ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput>
+    create: XOR<ModelAvailabilityCreateWithoutProviderKeyInput, ModelAvailabilityUncheckedCreateWithoutProviderKeyInput>
+  }
+
+  export type ModelAvailabilityUpdateWithWhereUniqueWithoutProviderKeyInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    data: XOR<ModelAvailabilityUpdateWithoutProviderKeyInput, ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput>
+  }
+
+  export type ModelAvailabilityUpdateManyWithWhereWithoutProviderKeyInput = {
+    where: ModelAvailabilityScalarWhereInput
+    data: XOR<ModelAvailabilityUpdateManyMutationInput, ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyInput>
+  }
+
+  export type ModelAvailabilityScalarWhereInput = {
+    AND?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
+    OR?: ModelAvailabilityScalarWhereInput[]
+    NOT?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
+    id?: UuidFilter<"ModelAvailability"> | string
+    vendor?: StringFilter<"ModelAvailability"> | string
+    model?: StringFilter<"ModelAvailability"> | string
+    providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    isAvailable?: BoolFilter<"ModelAvailability"> | boolean
+    lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
+    createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
+  }
+
   export type BotCreateWithoutProviderKeysInput = {
     id?: string
     name: string
@@ -63349,6 +66469,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProviderKeysInput = {
@@ -63380,6 +66501,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProviderKeysInput = {
@@ -63402,6 +66524,7 @@ export namespace Prisma {
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutBotProviderKeysInput = {
@@ -63419,6 +66542,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutBotProviderKeysInput = {
@@ -63466,6 +66590,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProviderKeysInput = {
@@ -63497,6 +66622,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutBotProviderKeysInput = {
@@ -63525,6 +66651,7 @@ export namespace Prisma {
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutBotProviderKeysInput = {
@@ -63540,6 +66667,239 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput
+  }
+
+  export type BotCreateWithoutModelsInput = {
+    id?: string
+    name: string
+    hostname: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    emoji?: string | null
+    soulMarkdown?: string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutBotsInput
+    personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
+    avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
+    providerKeys?: BotProviderKeyCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
+    plugins?: BotPluginCreateNestedManyWithoutBotInput
+    skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
+    modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
+    routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+  }
+
+  export type BotUncheckedCreateWithoutModelsInput = {
+    id?: string
+    name: string
+    hostname: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    createdById: string
+    personaTemplateId?: string | null
+    emoji?: string | null
+    avatarFileId?: string | null
+    soulMarkdown?: string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    providerKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutBotInput
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
+    plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
+    skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
+    modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
+    routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+  }
+
+  export type BotCreateOrConnectWithoutModelsInput = {
+    where: BotWhereUniqueInput
+    create: XOR<BotCreateWithoutModelsInput, BotUncheckedCreateWithoutModelsInput>
+  }
+
+  export type BotUpsertWithoutModelsInput = {
+    update: XOR<BotUpdateWithoutModelsInput, BotUncheckedUpdateWithoutModelsInput>
+    create: XOR<BotCreateWithoutModelsInput, BotUncheckedCreateWithoutModelsInput>
+    where?: BotWhereInput
+  }
+
+  export type BotUpdateToOneWithWhereWithoutModelsInput = {
+    where?: BotWhereInput
+    data: XOR<BotUpdateWithoutModelsInput, BotUncheckedUpdateWithoutModelsInput>
+  }
+
+  export type BotUpdateWithoutModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutBotsNestedInput
+    personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
+    avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
+    providerKeys?: BotProviderKeyUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
+    modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
+    routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+  }
+
+  export type BotUncheckedUpdateWithoutModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    createdById?: StringFieldUpdateOperationsInput | string
+    personaTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    providerKeys?: BotProviderKeyUncheckedUpdateManyWithoutBotNestedInput
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
+    modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
+    routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+  }
+
+  export type ProviderKeyCreateWithoutModelAvailabilityInput = {
+    id?: string
+    vendor: string
+    apiType?: string | null
+    secretEncrypted: Bytes
+    label: string
+    tag?: string | null
+    baseUrl?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
+    botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
+  }
+
+  export type ProviderKeyUncheckedCreateWithoutModelAvailabilityInput = {
+    id?: string
+    vendor: string
+    apiType?: string | null
+    secretEncrypted: Bytes
+    label: string
+    tag?: string | null
+    baseUrl?: string | null
+    createdById: string
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+    proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
+  }
+
+  export type ProviderKeyCreateOrConnectWithoutModelAvailabilityInput = {
+    where: ProviderKeyWhereUniqueInput
+    create: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
+  }
+
+  export type ProviderKeyUpsertWithoutModelAvailabilityInput = {
+    update: XOR<ProviderKeyUpdateWithoutModelAvailabilityInput, ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput>
+    create: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
+    where?: ProviderKeyWhereInput
+  }
+
+  export type ProviderKeyUpdateToOneWithWhereWithoutModelAvailabilityInput = {
+    where?: ProviderKeyWhereInput
+    data: XOR<ProviderKeyUpdateWithoutModelAvailabilityInput, ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput>
+  }
+
+  export type ProviderKeyUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    apiType?: NullableStringFieldUpdateOperationsInput | string | null
+    secretEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    label?: StringFieldUpdateOperationsInput | string
+    tag?: NullableStringFieldUpdateOperationsInput | string | null
+    baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
+    botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+    proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
+  }
+
+  export type ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    apiType?: NullableStringFieldUpdateOperationsInput | string | null
+    secretEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    label?: StringFieldUpdateOperationsInput | string
+    tag?: NullableStringFieldUpdateOperationsInput | string | null
+    baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
@@ -63573,6 +66933,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutUsageLogsInput = {
@@ -63604,6 +66965,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutUsageLogsInput = {
@@ -63626,6 +66988,7 @@ export namespace Prisma {
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutUsageLogsInput = {
@@ -63643,6 +67006,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     proxyTokens?: ProxyTokenUncheckedCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutUsageLogsInput = {
@@ -63690,6 +67054,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutUsageLogsInput = {
@@ -63721,6 +67086,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutUsageLogsInput = {
@@ -63749,6 +67115,7 @@ export namespace Prisma {
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutUsageLogsInput = {
@@ -63766,6 +67133,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type BotCreateWithoutProxyTokenInput = {
@@ -63797,6 +67165,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProxyTokenInput = {
@@ -63828,6 +67197,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProxyTokenInput = {
@@ -63850,6 +67220,7 @@ export namespace Prisma {
     createdBy: UserInfoCreateNestedOneWithoutProviderKeysInput
     botProviderKeys?: BotProviderKeyCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyUncheckedCreateWithoutProxyTokensInput = {
@@ -63867,6 +67238,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedCreateNestedManyWithoutProviderKeyInput
     usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutProviderKeyInput
+    modelAvailability?: ModelAvailabilityUncheckedCreateNestedManyWithoutProviderKeyInput
   }
 
   export type ProviderKeyCreateOrConnectWithoutProxyTokensInput = {
@@ -63914,6 +67286,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProxyTokenInput = {
@@ -63945,6 +67318,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutProxyTokensInput = {
@@ -63973,6 +67347,7 @@ export namespace Prisma {
     createdBy?: UserInfoUpdateOneRequiredWithoutProviderKeysNestedInput
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutProxyTokensInput = {
@@ -63990,6 +67365,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type UserInfoCreateWithoutSentMessagesInput = {
@@ -64769,6 +68145,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPluginsInput = {
@@ -64800,6 +68177,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPluginsInput = {
@@ -64898,6 +68276,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPluginsInput = {
@@ -64929,6 +68308,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type PluginUpsertWithoutInstallationsInput = {
@@ -65238,6 +68618,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutSkillsInput = {
@@ -65269,6 +68650,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutSkillsInput = {
@@ -65369,6 +68751,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutSkillsInput = {
@@ -65400,6 +68783,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type SkillUpsertWithoutInstallationsInput = {
@@ -65490,6 +68874,7 @@ export namespace Prisma {
     skills?: BotSkillCreateNestedManyWithoutBotInput
     channels?: BotChannelCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutModelRoutingsInput = {
@@ -65521,6 +68906,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutModelRoutingsInput = {
@@ -65568,6 +68954,7 @@ export namespace Prisma {
     skills?: BotSkillUpdateManyWithoutBotNestedInput
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutModelRoutingsInput = {
@@ -65599,6 +68986,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateWithoutChannelsInput = {
@@ -65630,6 +69018,7 @@ export namespace Prisma {
     skills?: BotSkillCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutChannelsInput = {
@@ -65661,6 +69050,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutChannelsInput = {
@@ -65708,6 +69098,7 @@ export namespace Prisma {
     skills?: BotSkillUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutChannelsInput = {
@@ -65739,6 +69130,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateWithoutRoutingConfigInput = {
@@ -65770,6 +69162,7 @@ export namespace Prisma {
     skills?: BotSkillCreateNestedManyWithoutBotInput
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutRoutingConfigInput = {
@@ -65801,6 +69194,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutRoutingConfigInput = {
@@ -65848,6 +69242,7 @@ export namespace Prisma {
     skills?: BotSkillUpdateManyWithoutBotNestedInput
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutRoutingConfigInput = {
@@ -65879,6 +69274,7 @@ export namespace Prisma {
     skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type MessageCreateManySenderInput = {
@@ -66069,6 +69465,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutCreatedByInput = {
@@ -66100,6 +69497,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutCreatedByInput = {
@@ -66140,6 +69538,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateWithoutCreatedByInput = {
@@ -66157,6 +69556,7 @@ export namespace Prisma {
     botProviderKeys?: BotProviderKeyUncheckedUpdateManyWithoutProviderKeyNestedInput
     usageLogs?: BotUsageLogUncheckedUpdateManyWithoutProviderKeyNestedInput
     proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
+    modelAvailability?: ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
   export type ProviderKeyUncheckedUpdateManyWithoutCreatedByInput = {
@@ -66311,6 +69711,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPersonaTemplateInput = {
@@ -66342,6 +69743,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutPersonaTemplateInput = {
@@ -66591,6 +69993,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutAvatarFileInput = {
@@ -66622,6 +70025,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutAvatarFileInput = {
@@ -66727,6 +70131,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+  }
+
+  export type BotModelCreateManyBotInput = {
+    id?: string
+    modelId: string
+    isEnabled?: boolean
+    isPrimary?: boolean
+    createdAt?: Date | string
   }
 
   export type BotProviderKeyUpdateWithoutBotInput = {
@@ -66975,6 +70387,30 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type BotModelUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotModelUncheckedUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotModelUncheckedUpdateManyWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelId?: StringFieldUpdateOperationsInput | string
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BotProviderKeyCreateManyProviderKeyInput = {
     id?: string
     botId: string
@@ -67020,6 +70456,17 @@ export namespace Prisma {
     revokedAt?: Date | string | null
     lastUsedAt?: Date | string | null
     requestCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModelAvailabilityCreateManyProviderKeyInput = {
+    id?: string
+    vendor: string
+    model: string
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -67167,6 +70614,39 @@ export namespace Prisma {
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityUpdateWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vendor?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

@@ -8,7 +8,30 @@
  * - VTT (WebVTT format)
  */
 
-import type { StreamingUtterance } from '@repo/contracts/schemas/streaming-asr.schema';
+/**
+ * Minimal StreamingUtterance type for transcript export.
+ * Mirrors the structure used in the backend streaming ASR service.
+ */
+export interface StreamingUtterance {
+  /** 说话人 ID */
+  speakerId: string;
+  /** 识别文本 */
+  text: string;
+  /** 开始时间（毫秒） */
+  startTime: number;
+  /** 结束时间（毫秒） */
+  endTime: number;
+  /** 是否确定（非中间结果） */
+  definite?: boolean;
+  /** 语速 */
+  speechRate?: number;
+  /** 音量 */
+  volume?: number;
+  /** 情绪 */
+  emotion?: string;
+  /** 性别 */
+  gender?: string;
+}
 
 /**
  * Speaker name mapping

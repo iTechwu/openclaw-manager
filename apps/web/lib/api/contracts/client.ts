@@ -27,6 +27,8 @@ import {
   routingAdminContract,
   notificationContract,
   skillSyncContract,
+  modelContract,
+  botModelContract,
 } from '@repo/contracts';
 import { getHeaders } from '@repo/utils/headers';
 import { API_VERSION_HEADER, APP_BUILD_HEADER } from '@repo/constants';
@@ -527,6 +529,26 @@ export const skillSyncClient = initClient(skillSyncContract, clientOptions);
  */
 export const skillSyncApi = initQueryClient(skillSyncContract, clientOptions);
 
+/**
+ * Model API - Direct client
+ */
+export const modelClient = initClient(modelContract, clientOptions);
+
+/**
+ * Model API - React Query hooks
+ */
+export const modelApi = initQueryClient(modelContract, clientOptions);
+
+/**
+ * Bot Model API - Direct client
+ */
+export const botModelClient = initClient(botModelContract, clientOptions);
+
+/**
+ * Bot Model API - React Query hooks
+ */
+export const botModelApi = initQueryClient(botModelContract, clientOptions);
+
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
 // ============================================================================
@@ -563,6 +585,8 @@ export const tsRestClient = {
   routingAdmin: routingAdminApi,
   notification: notificationApi,
   skillSync: skillSyncApi,
+  model: modelApi,
+  botModel: botModelApi,
   // Direct clients (for imperative calls)
   analyticsClient,
   botClient,
@@ -580,4 +604,6 @@ export const tsRestClient = {
   routingAdminClient,
   notificationClient,
   skillSyncClient,
+  modelClient,
+  botModelClient,
 };

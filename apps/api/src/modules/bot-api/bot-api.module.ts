@@ -13,6 +13,8 @@ import {
   BotChannelModule,
   ModelPricingModule,
   BotModelRoutingModule,
+  BotModelModule,
+  ModelAvailabilityModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { AuthModule } from '@app/auth';
@@ -33,6 +35,8 @@ import { HealthCheckService } from './services/health-check.service';
 import { BotConfigResolverService } from './services/bot-config-resolver.service';
 import { ModelRoutingModule } from './model-routing.module';
 import { ModelRoutingController } from './model-routing.controller';
+import { AvailableModelService } from './services/available-model.service';
+import { ModelVerificationService } from './services/model-verification.service';
 
 @Module({
   imports: [
@@ -54,6 +58,8 @@ import { ModelRoutingController } from './model-routing.controller';
     BotUsageLogModule,
     ModelPricingModule,
     BotModelRoutingModule,
+    BotModelModule,
+    ModelAvailabilityModule,
     ModelRoutingModule,
     PrismaModule,
   ],
@@ -69,6 +75,8 @@ import { ModelRoutingController } from './model-routing.controller';
     BotUsageAnalyticsService,
     HealthCheckService,
     BotConfigResolverService,
+    AvailableModelService,
+    ModelVerificationService,
   ],
   exports: [
     BotApiService,
@@ -80,6 +88,8 @@ import { ModelRoutingController } from './model-routing.controller';
     BotUsageAnalyticsService,
     HealthCheckService,
     BotConfigResolverService,
+    AvailableModelService,
+    ModelVerificationService,
     ModelRoutingModule,
   ],
 })

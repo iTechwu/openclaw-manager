@@ -19,6 +19,7 @@ import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
 import { BotConfigResolverService } from './services/bot-config-resolver.service';
+import { AvailableModelService } from './services/available-model.service';
 import type { Bot, ProviderKey, BotStatus, Prisma } from '@prisma/client';
 import type {
   CreateBotInput,
@@ -54,6 +55,7 @@ export class BotApiService {
     private readonly providerVerifyClient: ProviderVerifyClient,
     private readonly keyringProxyService: KeyringProxyService,
     private readonly botConfigResolver: BotConfigResolverService,
+    private readonly availableModelService: AvailableModelService,
   ) {
     this.logger.log(`BotApiService initialized`);
   }
@@ -502,6 +504,18 @@ export class BotApiService {
     });
 
     this.logger.log(`Bot created (draft): ${input.hostname}`);
+
+    // 自动绑定所有可用模型
+    try {
+      await this.availableModelService.bindAllAvailableModels(bot.id);
+      this.logger.log(`All available models bound to bot ${input.hostname}`);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to bind available models to bot ${input.hostname}:`,
+        error,
+      );
+      // 不影响主流程，继续执行
+    }
 
     // Log operation
     await this.operateLogService.create({

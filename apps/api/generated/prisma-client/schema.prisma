@@ -416,6 +416,7 @@ model Bot {
   channels        BotChannel[]
   modelRoutings   BotModelRouting[]
   routingConfig   BotRoutingConfig?
+  models          BotModel[]
 
   @@index([status])
   @@index([hostname])
@@ -457,10 +458,11 @@ model ProviderKey {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  createdBy       UserInfo         @relation(fields: [createdById], references: [id])
-  botProviderKeys BotProviderKey[]
-  usageLogs       BotUsageLog[]
-  proxyTokens     ProxyToken[]
+  createdBy         UserInfo            @relation(fields: [createdById], references: [id])
+  botProviderKeys   BotProviderKey[]
+  usageLogs         BotUsageLog[]
+  proxyTokens       ProxyToken[]
+  modelAvailability ModelAvailability[]
 
   @@unique([createdById, label], name: "provider_key_user_label_unique")
   @@index([vendor])
@@ -489,6 +491,55 @@ model BotProviderKey {
 
   @@unique([botId, providerKeyId])
   @@map("b_bot_provider_key")
+}
+
+/// BotModel - Bot 与模型的关联表
+/// 存储 Bot 可以使用的模型列表，替代 BotProviderKey 中的模型关联
+/// 普通用户只需要关心模型，不需要了解 Provider 概念
+model BotModel {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId     String   @map("bot_id") @db.Uuid
+  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+  modelId   String   @map("model_id") @db.VarChar(100)
+  /// 是否启用该模型
+  isEnabled Boolean  @default(true) @map("is_enabled")
+  /// 是否为主模型（Bot 默认使用的模型）
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, modelId])
+  @@index([botId])
+  @@index([modelId])
+  @@map("b_bot_model")
+}
+
+/// ModelAvailability - 模型可用性缓存表
+/// 缓存 API Key 验证结果，避免频繁调用外部 API
+model ModelAvailability {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 模型供应商，如 "openai", "anthropic"
+  vendor         String   @db.VarChar(50)
+  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+  model          String   @db.VarChar(100)
+  /// 关联的 Provider Key
+  providerKeyId  String   @map("provider_key_id") @db.Uuid
+  /// 模型是否可用（API Key 验证通过）
+  isAvailable    Boolean  @default(false) @map("is_available")
+  /// 最后验证时间
+  lastVerifiedAt DateTime @map("last_verified_at") @db.Timestamptz(6)
+  /// 验证失败时的错误信息
+  errorMessage   String?  @map("error_message") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  providerKey ProviderKey @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([providerKeyId, model])
+  @@index([vendor, model])
+  @@index([isAvailable])
+  @@map("b_model_availability")
 }
 
 /// BotUsageLog - Bot API 使用日志

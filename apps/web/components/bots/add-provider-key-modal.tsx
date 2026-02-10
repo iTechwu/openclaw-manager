@@ -66,11 +66,12 @@ export function AddProviderKeyModal({
     try {
       const defaultUrl = PROVIDER_DEFAULT_BASE_URLS[vendor];
       const customBaseUrl = baseUrl.trim();
+      const effectiveLabel = label.trim() || t(`providers.${vendor}`);
 
       await handleAdd({
         vendor,
         secret: secret.trim(),
-        label: label.trim() || undefined,
+        label: effectiveLabel,
         tag: tag.trim() || undefined,
         baseUrl: customBaseUrl !== defaultUrl ? customBaseUrl : undefined,
       });
@@ -147,7 +148,8 @@ export function AddProviderKeyModal({
                 disabled={addLoading}
               />
               <p className="text-muted-foreground text-xs">
-                {t('apiKeyModal.baseUrlDefault')}: {PROVIDER_DEFAULT_BASE_URLS[vendor]}
+                {t('apiKeyModal.baseUrlDefault')}:{' '}
+                {PROVIDER_DEFAULT_BASE_URLS[vendor]}
               </p>
             </div>
 

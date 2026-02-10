@@ -56,6 +56,9 @@ const NON_SOFT_DELETE_MODELS = [
   'BotProviderKey',
   'BotPlugin',
   'BotSkill',
+  'BotModel',
+  // 模型可用性缓存表（无需软删除）
+  'ModelAvailability',
   // 日志表（只追加，不删除）
   'BotUsageLog',
   'OperateLog',
