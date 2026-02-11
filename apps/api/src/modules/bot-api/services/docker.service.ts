@@ -429,8 +429,8 @@ export class DockerService implements OnModuleInit {
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
           # For custom provider, use AI_API_TYPE for auth (API key/base URL lookup)
           AUTH_PROVIDER="$AI_API_TYPE"
-          # Model prefix uses ${apiType}-compatible format for OpenClaw
-          MODEL_PROVIDER="${AI_API_TYPE}-compatible"
+          # Model prefix uses $AI_API_TYPE-compatible format for OpenClaw
+          MODEL_PROVIDER="$AI_API_TYPE-compatible"
         else
           AUTH_PROVIDER="$PROVIDER"
           MODEL_PROVIDER="$PROVIDER"
