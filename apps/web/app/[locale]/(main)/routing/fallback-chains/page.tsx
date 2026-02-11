@@ -65,20 +65,29 @@ function ChainModelNode({
           {model.vendor}
           {model.protocol && ` · ${model.protocol}`}
         </div>
-        {model.featuresOverride && (
-          <div className="flex gap-1 mt-1">
-            {model.featuresOverride.extendedThinking && (
-              <Badge variant="outline" className="text-xs">
-                ET
-              </Badge>
-            )}
-            {model.featuresOverride.cacheControl && (
-              <Badge variant="outline" className="text-xs">
-                CC
-              </Badge>
-            )}
-          </div>
-        )}
+        {/* 模型能力标签 */}
+        <div className="flex gap-1 mt-1">
+          {(model.featuresOverride?.extendedThinking || model.supportsExtendedThinking) && (
+            <Badge variant="outline" className="text-xs">
+              ET
+            </Badge>
+          )}
+          {(model.featuresOverride?.cacheControl || model.supportsCacheControl) && (
+            <Badge variant="outline" className="text-xs">
+              CC
+            </Badge>
+          )}
+          {model.supportsVision && (
+            <Badge variant="outline" className="text-xs">
+              Vision
+            </Badge>
+          )}
+          {model.supportsFunctionCalling && (
+            <Badge variant="outline" className="text-xs">
+              Fn
+            </Badge>
+          )}
+        </div>
       </div>
       {!isLast && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
     </div>

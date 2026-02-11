@@ -115,7 +115,21 @@ function ComplexityLevelConfig({
                     key={`${m.vendor}:${m.model}`}
                     value={`${m.vendor}:${m.model}`}
                   >
-                    {m.displayName || m.model}
+                    <span className="flex items-center gap-1.5">
+                      <span>{m.displayName || m.model}</span>
+                      {m.supportsExtendedThinking && (
+                        <span className="text-[10px] text-muted-foreground border rounded px-1">ET</span>
+                      )}
+                      {m.supportsCacheControl && (
+                        <span className="text-[10px] text-muted-foreground border rounded px-1">CC</span>
+                      )}
+                      {m.supportsVision && (
+                        <span className="text-[10px] text-muted-foreground border rounded px-1">Vision</span>
+                      )}
+                      {m.supportsFunctionCalling && (
+                        <span className="text-[10px] text-muted-foreground border rounded px-1">Fn</span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </div>

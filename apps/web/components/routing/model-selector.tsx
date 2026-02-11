@@ -177,9 +177,19 @@ export function ModelSelector({
                             ET
                           </Badge>
                         )}
+                        {model.supportsCacheControl && (
+                          <Badge variant="outline" className="text-[10px]">
+                            CC
+                          </Badge>
+                        )}
                         {model.supportsVision && (
                           <Badge variant="outline" className="text-[10px]">
                             Vision
+                          </Badge>
+                        )}
+                        {model.supportsFunctionCalling && (
+                          <Badge variant="outline" className="text-[10px]">
+                            Fn
                           </Badge>
                         )}
                       </div>
@@ -355,11 +365,23 @@ export function ModelMultiSelector({
                               {model.model}
                             </div>
                           </div>
-                          {model.supportsExtendedThinking && (
-                            <Badge variant="outline" className="text-[10px]">
-                              ET
-                            </Badge>
-                          )}
+                          <div className="flex gap-1 shrink-0">
+                            {model.supportsExtendedThinking && (
+                              <Badge variant="outline" className="text-[10px]">
+                                ET
+                              </Badge>
+                            )}
+                            {model.supportsCacheControl && (
+                              <Badge variant="outline" className="text-[10px]">
+                                CC
+                              </Badge>
+                            )}
+                            {model.supportsVision && (
+                              <Badge variant="outline" className="text-[10px]">
+                                Vision
+                              </Badge>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>

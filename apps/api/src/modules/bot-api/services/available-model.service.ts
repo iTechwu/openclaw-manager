@@ -32,8 +32,10 @@ export interface AvailableModel {
   vendor: string;
   /** 模型分类 */
   category: string;
-  /** 能力标签 */
+  /** 能力标签（tagId 列表，向后兼容） */
   capabilities: string[];
+  /** 能力标签详情（来自能力标签管理） */
+  capabilityTags?: Array<{ tagId: string; name: string; category?: string }>;
   /** 是否可用（有有效的 API Key） */
   isAvailable: boolean;
   /** 最后验证时间 */
@@ -234,20 +236,29 @@ export class AvailableModelService {
         {
           select: {
             modelAvailabilityId: true,
-            capabilityTag: { select: { tagId: true } },
+            capabilityTag: { select: { tagId: true, name: true, category: true } },
           },
         },
       );
 
-    // 构建 modelAvailabilityId -> tagIds 映射
+    // 构建 modelAvailabilityId -> tagIds 映射 和 tagId -> tagInfo 映射
+    interface TagInfo {
+      tagId: string;
+      name: string;
+      category?: string;
+    }
     const capabilityTagsByAvailabilityId = new Map<string, string[]>();
+    const tagInfoMap = new Map<string, TagInfo>();
     for (const ct of allCapabilityTags) {
       const tags =
         capabilityTagsByAvailabilityId.get(ct.modelAvailabilityId) || [];
-      const tagId = (ct as { capabilityTag?: { tagId: string } }).capabilityTag
-        ?.tagId;
+      const capTag = (ct as { capabilityTag?: { tagId: string; name: string; category: string } }).capabilityTag;
+      const tagId = capTag?.tagId;
       if (tagId && !tags.includes(tagId)) {
         tags.push(tagId);
+        if (capTag && !tagInfoMap.has(tagId)) {
+          tagInfoMap.set(tagId, { tagId, name: capTag.name, category: capTag.category });
+        }
       }
       capabilityTagsByAvailabilityId.set(ct.modelAvailabilityId, tags);
     }
@@ -341,6 +352,11 @@ export class AvailableModelService {
               'streaming',
             ];
 
+      // 构建能力标签详情（来自能力标签管理）
+      const capabilityTags = capabilities
+        .map((tagId) => tagInfoMap.get(tagId))
+        .filter((t): t is TagInfo => !!t);
+
       // 从能力标签推导分类
       const category = this.deriveCategoryFromCapabilities(
         capabilities,
@@ -360,6 +376,7 @@ export class AvailableModelService {
         vendor: aggregated.vendor,
         category,
         capabilities,
+        capabilityTags,
         isAvailable: aggregated.isAvailable,
         lastVerifiedAt: aggregated.lastVerifiedAt,
         reasoningScore: pricing?.reasoningScore || undefined,

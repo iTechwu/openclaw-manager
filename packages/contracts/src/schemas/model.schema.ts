@@ -61,8 +61,18 @@ export const AvailableModelSchema = z.object({
   vendor: z.string(),
   /** 模型分类 */
   category: z.string(),
-  /** 能力标签 */
+  /** 能力标签（tagId 列表，向后兼容） */
   capabilities: z.array(z.string()),
+  /** 能力标签详情（来自能力标签管理） */
+  capabilityTags: z
+    .array(
+      z.object({
+        tagId: z.string(),
+        name: z.string(),
+        category: z.string().optional(),
+      }),
+    )
+    .optional(),
   /** 是否可用（有有效的 API Key） */
   isAvailable: z.boolean(),
   /** 最后验证时间 */

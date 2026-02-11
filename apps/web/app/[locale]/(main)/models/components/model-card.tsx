@@ -27,6 +27,13 @@ import {
   Shield,
   Cpu,
   Database,
+  DollarSign,
+  Image,
+  Video,
+  Volume2,
+  Box,
+  Bot,
+  Calculator,
 } from 'lucide-react';
 
 interface ModelCardProps {
@@ -41,15 +48,37 @@ interface ModelCardProps {
  * 支持动态能力标签
  */
 const CAPABILITY_ICONS: Record<string, React.ElementType> = {
-  // 基础能力
-  vision: Eye,
-  tools: Wrench,
-  streaming: Radio,
+  // 推理能力
+  'deep-reasoning': Brain,
+  'fast-reasoning': Brain,
   reasoning: Brain,
-  'extended-thinking': Sparkles,
-  // 扩展能力
+  // 搜索与工具
+  'web-search': Globe,
+  'code-execution': Code,
+  tools: Wrench,
+  'function-calling': Wrench,
+  'agent-capable': Bot,
+  // 视觉与多模态
+  vision: Eye,
+  multimodal: Eye,
+  'image-generation': Image,
+  'video-generation': Video,
+  'audio-tts': Volume2,
+  '3d-generation': Box,
+  // 文本与语言
+  streaming: Radio,
+  'long-context': FileText,
+  'chinese-optimized': Globe,
+  creative: Sparkles,
+  'math-optimized': Calculator,
+  // 性能与成本
+  'cost-optimized': DollarSign,
+  'fast-response': Zap,
   fast: Zap,
   speed: Zap,
+  premium: Sparkles,
+  'general-purpose': Cpu,
+  // 其他
   chat: MessageSquare,
   code: Code,
   coding: Code,
@@ -58,30 +87,9 @@ const CAPABILITY_ICONS: Record<string, React.ElementType> = {
   safety: Shield,
   moderation: Shield,
   embedding: Database,
-  'function-calling': Wrench,
+  'extended-thinking': Sparkles,
   // 默认
   default: Cpu,
-};
-
-/**
- * 分类颜色映射
- */
-const CATEGORY_COLORS: Record<string, string> = {
-  reasoning:
-    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-  balanced: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  fast: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  general: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-};
-
-/**
- * 分类标签映射
- */
-const CATEGORY_LABELS: Record<string, string> = {
-  reasoning: '推理',
-  balanced: '均衡',
-  fast: '快速',
-  general: '通用',
 };
 
 export function ModelCard({
@@ -90,10 +98,6 @@ export function ModelCard({
   onVerify,
   verifying,
 }: ModelCardProps) {
-  const categoryColor =
-    CATEGORY_COLORS[model.category] || CATEGORY_COLORS.general;
-  const categoryLabel = CATEGORY_LABELS[model.category] || model.category;
-
   // Get the first provider key ID for verification
   const firstProviderKeyId = model.providers?.[0]?.providerKeyId;
 
@@ -137,21 +141,14 @@ export function ModelCard({
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-        {/* Category Badge */}
-        <div className="mb-3">
-          <Badge variant="secondary" className={categoryColor}>
-            {categoryLabel}
-          </Badge>
-        </div>
-
         {/* Capabilities */}
         <div className="flex flex-wrap gap-1.5">
-          {model.capabilities.map((cap) => {
-            const Icon = CAPABILITY_ICONS[cap] || CAPABILITY_ICONS.default;
+          {model.capabilityTags?.map((tag) => {
+            const Icon = CAPABILITY_ICONS[tag.tagId] || CAPABILITY_ICONS.default;
             return (
-              <Badge key={cap} variant="outline" className="gap-1 text-xs">
+              <Badge key={tag.tagId} variant="outline" className="gap-1 text-xs">
                 {Icon && <Icon className="size-3" />}
-                {cap}
+                {tag.name}
               </Badge>
             );
           })}

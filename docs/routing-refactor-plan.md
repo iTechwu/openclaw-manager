@@ -427,46 +427,88 @@ apps/web/components/routing/
 
 ---
 
-## 四、实施顺序
+## 四、实施顺序与当前状态
+
+> 最后更新：2026-02-11
 
 ```
-Phase 1 (Schema)
+Phase 1 (Schema)                                          ✅ 已完成
   │
-  ├── 1.1 新增 FallbackChainModel 表
-  ├── 1.2 新增 ComplexityRoutingModelMapping 表
-  ├── 1.3 修改 ModelAvailability 反向关联
-  └── 1.4 生成并执行 Prisma Migration
+  ├── 1.1 新增 FallbackChainModel 表                       ✅
+  ├── 1.2 新增 ComplexityRoutingModelMapping 表             ✅
+  ├── 1.3 修改 ModelAvailability 反向关联                   ✅
+  └── 1.4 生成并执行 Prisma Migration                      ✅
   │
-Phase 2 (后端)
+Phase 2 (后端)                                             ✅ 已完成
   │
-  ├── 2.1 新增 ModelReferenceIntegrityService
-  ├── 2.2 改造 FallbackEngine 服务
-  ├── 2.3 改造 Configuration 服务
-  ├── 2.4 改造 ComplexityRouting 服务
-  └── 2.5 新增 available-models-for-routing API
+  ├── 2.1 新增 ModelReferenceIntegrityService               ⏳ 延后（非核心路径）
+  ├── 2.2 改造 FallbackEngine 服务                          ✅ 双读逻辑已实现
+  ├── 2.3 改造 Configuration 服务                           ✅ 双读逻辑已实现
+  ├── 2.4 改造 ComplexityRouting 服务                       ✅ 双读逻辑已实现
+  └── 2.5 新增 available-models-for-routing API             ✅ 含定价+能力标签
   │
-Phase 3 (契约)
+Phase 3 (契约)                                             ✅ 已完成
   │
-  ├── 3.1 修改 routing.schema.ts
-  ├── 3.2 修改 routing-admin.contract.ts
-  └── 3.3 新增验证相关 Schema
+  ├── 3.1 修改 routing.schema.ts                            ✅ 新增 FallbackChainModelSchema,
+  │                                                            ComplexityRoutingModelMappingSchema,
+  │                                                            RoutingAvailableModelSchema
+  ├── 3.2 修改 routing-admin.contract.ts                    ✅ 新增 getAvailableModelsForRouting
+  └── 3.3 新增验证相关 Schema                               ⏳ validateConfig 端点延后
   │
-Phase 4 (前端)
+Phase 4 (前端)                                             ✅ 核心已完成
   │
-  ├── 4.1 新增 ModelSelector 组件
-  ├── 4.2 重构 Fallback 链页面
-  ├── 4.3 重构复杂度路由页面
-  ├── 4.4 重构模型定价页面
-  ├── 4.5 重构能力标签页面
-  └── 4.6 重构路由总览页面
+  ├── 4.1 新增 ModelSelector / ModelMultiSelector 组件       ✅ 含搜索、vendor 分组、价格、能力标签
+  ├── 4.2 重构 Fallback 链页面                              ✅ ChainModelNode + LegacyModelNode 双模式
+  ├── 4.3 重构复杂度路由页面                                 ✅ 动态可用模型替代硬编码
+  ├── 4.4 重构模型定价页面                                   ✅ 已有完整能力展示
+  ├── 4.5 重构能力标签页面                                   ✅ 已有完整标签展示
+  └── 4.6 重构路由总览页面                                   ✅ 无需改动（状态卡片已完整）
   │
-Phase 5 (迁移)
+Phase 5 (迁移)                                             ✅ 已完成
   │
-  ├── 5.1 编写数据迁移脚本
-  ├── 5.2 执行双写期迁移
-  ├── 5.3 验证数据一致性
-  └── 5.4 清理旧字段
+  ├── 5.1 编写数据迁移脚本                                   ✅ migrate-routing-models.ts
+  ├── 5.2 执行双写期迁移                                     🔄 当前处于双写期
+  ├── 5.3 验证数据一致性                                     ⏳ 待执行迁移后验证
+  └── 5.4 清理旧字段                                        ⏳ 待迁移完成后清理
 ```
+
+### 已完成的关键文件变更
+
+| 文件 | 变更类型 | 说明 |
+|------|---------|------|
+| `apps/api/prisma/schema.prisma` | Schema | 新增 FallbackChainModel、ComplexityRoutingModelMapping 表 |
+| `packages/contracts/src/schemas/routing.schema.ts` | 契约 | 新增 FallbackChainModelSchema、RoutingAvailableModelSchema 等 |
+| `packages/contracts/src/api/routing-admin.contract.ts` | 契约 | 新增 getAvailableModelsForRouting 端点 |
+| `apps/api/src/modules/proxy/routing-admin.controller.ts` | 后端 | 实现 getAvailableModelsForRouting handler |
+| `apps/api/src/modules/proxy/services/configuration.service.ts` | 后端 | 双读逻辑（关联表优先，JSON 回退） |
+| `apps/api/src/modules/proxy/services/fallback-engine.service.ts` | 后端 | FallbackModel 接口新增 modelAvailabilityId |
+| `apps/web/components/routing/model-selector.tsx` | 前端 | ModelSelector + ModelMultiSelector 组件 |
+| `apps/web/app/.../routing/fallback-chains/page.tsx` | 前端 | ChainModelNode + LegacyModelNode 双模式渲染 |
+| `apps/web/app/.../routing/complexity-routing/page.tsx` | 前端 | 动态可用模型替代硬编码 MODEL_OPTIONS |
+| `apps/web/app/.../bots/[hostname]/components/fallback-chain-selector.tsx` | 前端 | 修复 models 可选字段 TS 错误 |
+| `apps/api/scripts/migrate-routing-models.ts` | 迁移 | JSON → 关联表迁移脚本（幂等） |
+
+### 模型能力展示覆盖情况
+
+| 页面/组件 | ET | CC | Vision | FnCall | 定价 | 评分 | 标签 |
+|-----------|----|----|--------|--------|------|------|------|
+| ModelSelector（单选） | ✅ | ✅ | ✅ | ✅ | ✅ | - | - |
+| ModelMultiSelector（多选） | ✅ | ✅ | ✅ | - | - | - | - |
+| FallbackChain ChainModelNode | ✅ | ✅ | ✅ | ✅ | - | - | - |
+| FallbackChain LegacyModelNode | ✅ | ✅ | - | - | - | - | - |
+| ComplexityRouting 模型选择 | ✅ | ✅ | ✅ | ✅ | - | - | - |
+| ModelPricing 页面 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - |
+| CapabilityTags 页面 | - | - | - | - | - | - | ✅ |
+
+> ET = Extended Thinking, CC = Cache Control, FnCall = Function Calling
+
+### 待办事项（后续迭代）
+
+1. **validateConfig 端点** — 模型引用完整性校验 API（非核心路径，可后续补充）
+2. **ModelReferenceIntegrityService** — 模型不可用时的级联影响检测
+3. **路由总览健康检查** — 一键验证所有配置的模型引用
+4. **执行数据迁移** — 运行 `pnpm migrate:routing-models` 并验证一致性
+5. **清理旧 JSON 字段** — 迁移验证通过后移除 deprecated 的 models JSON 字段
 
 ---
 

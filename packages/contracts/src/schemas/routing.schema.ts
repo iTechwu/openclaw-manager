@@ -126,6 +126,11 @@ export const FallbackChainModelSchema = z.object({
   displayName: z.string().nullable().optional(),
   isAvailable: z.boolean(),
   protocol: z.enum(['openai-compatible', 'anthropic-native']).optional(),
+  // 模型能力（从 ModelPricing 获取）
+  supportsExtendedThinking: z.boolean().optional(),
+  supportsCacheControl: z.boolean().optional(),
+  supportsVision: z.boolean().optional(),
+  supportsFunctionCalling: z.boolean().optional(),
 });
 
 export type FallbackChainModelItem = z.infer<typeof FallbackChainModelSchema>;
@@ -475,6 +480,7 @@ export const RoutingAvailableModelSchema = z.object({
   supportsExtendedThinking: z.boolean().optional(),
   supportsCacheControl: z.boolean().optional(),
   supportsVision: z.boolean().optional(),
+  supportsFunctionCalling: z.boolean().optional(),
   // 能力标签
   capabilityTags: z.array(z.string()).optional(),
 });

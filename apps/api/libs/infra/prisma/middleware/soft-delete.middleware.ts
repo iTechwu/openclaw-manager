@@ -57,6 +57,8 @@ const NON_SOFT_DELETE_MODELS = [
   'BotSkill',
   'BotModel',
   'ModelCapabilityTag',
+  'FallbackChainModel',
+  'ComplexityRoutingModelMapping',
   // 模型可用性缓存表（无需软删除）
   'ModelAvailability',
   // 日志表（只追加，不删除）

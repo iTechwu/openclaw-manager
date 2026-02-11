@@ -6,7 +6,7 @@ import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
 import { ComplexityClassifierService } from '@app/clients/internal/complexity-classifier';
-import { ComplexityRoutingConfigService, ModelAvailabilityService } from '@app/db';
+import { ComplexityRoutingConfigService, ModelAvailabilityService, FallbackChainService, FallbackChainModelService } from '@app/db';
 import { success, error, deleted } from '@/common/ts-rest/response.helper';
 import { CommonErrorCode } from '@repo/contracts/errors';
 import { routingAdminContract as c } from '@repo/contracts';
@@ -36,6 +36,8 @@ export class RoutingAdminController {
     private readonly complexityClassifier: ComplexityClassifierService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
     private readonly modelAvailabilityDb: ModelAvailabilityService,
+    private readonly fallbackChainDb: FallbackChainService,
+    private readonly fallbackChainModelDb: FallbackChainModelService,
   ) {}
 
   // ============================================================================
@@ -101,16 +103,50 @@ export class RoutingAdminController {
   async getFallbackChains() {
     return tsRestHandler(c.getFallbackChains, async () => {
       const chains = this.fallbackEngine.getAllFallbackChains();
+
+      // 查询数据库中的 chainModels 关联数据（含能力信息）
+      const dbChains = await this.fallbackChainDb.list(
+        { isDeleted: false },
+        { orderBy: { createdAt: 'asc' }, limit: 1000 },
+      );
+      const chainModelsMap = new Map<string, any[]>();
+      for (const dbChain of dbChains.list) {
+        const chainModels = await this.fallbackChainModelDb.listByChainId(dbChain.id);
+        if (chainModels.length > 0) {
+          chainModelsMap.set(dbChain.chainId, chainModels);
+        }
+      }
+
       return success({
-        list: chains.map((chain) => ({
-          id: generateUUID(chain.chainId),
-          ...chain,
-          description: null,
-          isActive: true,
-          isBuiltin: true,
-          createdAt: now,
-          updatedAt: now,
-        })),
+        list: chains.map((chain) => {
+          const dbChainModels = chainModelsMap.get(chain.chainId);
+          return {
+            id: generateUUID(chain.chainId),
+            ...chain,
+            description: null,
+            isActive: true,
+            isBuiltin: true,
+            createdAt: now,
+            updatedAt: now,
+            // 新增：关联表模型数据（含能力信息）
+            chainModels: dbChainModels?.map((cm: any) => ({
+              id: cm.id,
+              modelAvailabilityId: cm.modelAvailabilityId,
+              priority: cm.priority,
+              protocolOverride: cm.protocolOverride,
+              featuresOverride: cm.featuresOverride,
+              model: cm.modelAvailability.model,
+              vendor: cm.modelAvailability.providerKey?.vendor ?? 'unknown',
+              displayName: cm.modelAvailability.modelPricing?.displayName ?? null,
+              isAvailable: cm.modelAvailability.isAvailable,
+              protocol: cm.protocolOverride || cm.modelAvailability.providerKey?.apiType || 'openai-compatible',
+              supportsExtendedThinking: cm.modelAvailability.modelPricing?.supportsExtendedThinking ?? false,
+              supportsCacheControl: cm.modelAvailability.modelPricing?.supportsCacheControl ?? false,
+              supportsVision: cm.modelAvailability.modelPricing?.supportsVision ?? false,
+              supportsFunctionCalling: cm.modelAvailability.modelPricing?.supportsFunctionCalling ?? true,
+            })) ?? undefined,
+          };
+        }),
       }) as any;
     });
   }
@@ -464,7 +500,7 @@ export class RoutingAdminController {
               include: { capabilityTag: true },
             },
           },
-        },
+        } as any,
       );
 
       const result = models.map((m: any) => ({
@@ -491,6 +527,8 @@ export class RoutingAdminController {
         supportsCacheControl:
           m.modelPricing?.supportsCacheControl ?? false,
         supportsVision: m.modelPricing?.supportsVision ?? false,
+        supportsFunctionCalling:
+          m.modelPricing?.supportsFunctionCalling ?? true,
         capabilityTags:
           m.capabilityTags?.map(
             (ct: any) => ct.capabilityTag?.tagId,

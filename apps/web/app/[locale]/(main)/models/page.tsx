@@ -10,9 +10,7 @@ import {
   CardContent,
   Input,
   ScrollArea,
-  Tabs,
-  TabsList,
-  TabsTrigger,
+  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -23,9 +21,6 @@ import {
 import {
   Search,
   Cpu,
-  Zap,
-  Brain,
-  Sparkles,
   CheckCircle,
   XCircle,
   RefreshCw,
@@ -34,20 +29,68 @@ import {
   Settings,
   DollarSign,
   Tag,
+  Brain,
+  Globe,
+  Code,
+  Wrench,
+  Bot,
+  Eye,
+  Image,
+  Video,
+  Volume2,
+  Box,
+  Radio,
+  FileText,
+  Sparkles,
+  Calculator,
+  Zap,
+  MessageSquare,
+  Shield,
+  Database,
 } from 'lucide-react';
 import { ModelCard } from './components/model-card';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
 /**
- * 模型分类配置
+ * 能力标签图标映射（与 model-card 保持一致）
  */
-const MODEL_CATEGORIES = [
-  { id: 'all', label: '全部', icon: Cpu },
-  { id: 'reasoning', label: '推理', icon: Brain },
-  { id: 'balanced', label: '均衡', icon: Sparkles },
-  { id: 'fast', label: '快速', icon: Zap },
-] as const;
+const CAPABILITY_TAG_ICONS: Record<string, React.ElementType> = {
+  'deep-reasoning': Brain,
+  'fast-reasoning': Brain,
+  reasoning: Brain,
+  'extended-thinking': Sparkles,
+  'web-search': Globe,
+  'code-execution': Code,
+  tools: Wrench,
+  'function-calling': Wrench,
+  'agent-capable': Bot,
+  vision: Eye,
+  multimodal: Eye,
+  'image-generation': Image,
+  'video-generation': Video,
+  'audio-tts': Volume2,
+  '3d-generation': Box,
+  streaming: Radio,
+  'long-context': FileText,
+  'chinese-optimized': Globe,
+  creative: Sparkles,
+  'math-optimized': Calculator,
+  'cost-optimized': DollarSign,
+  'fast-response': Zap,
+  fast: Zap,
+  speed: Zap,
+  premium: Sparkles,
+  'general-purpose': Cpu,
+  chat: MessageSquare,
+  code: Code,
+  coding: Code,
+  document: FileText,
+  multilingual: Globe,
+  safety: Shield,
+  moderation: Shield,
+  embedding: Database,
+};
 
 export default function ModelsPage() {
   const {
@@ -76,7 +119,7 @@ export default function ModelsPage() {
   } = useModelSync();
   const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeTag, setActiveTag] = useState<string>('all');
   const [batchProgress, setBatchProgress] = useState<{
     current: number;
     total: number;
@@ -85,7 +128,22 @@ export default function ModelsPage() {
   // Get provider keys list (for admin to know if any API keys are configured)
   const { keys: providerKeys } = useProviderKeys();
 
-  // Filter models by search and category
+  // Extract unique capability tags from all models
+  const availableTags = useMemo(() => {
+    const tagMap = new Map<string, string>();
+    for (const model of models) {
+      if (model.capabilityTags) {
+        for (const tag of model.capabilityTags) {
+          if (!tagMap.has(tag.tagId)) {
+            tagMap.set(tag.tagId, tag.name);
+          }
+        }
+      }
+    }
+    return Array.from(tagMap.entries()).map(([tagId, name]) => ({ tagId, name }));
+  }, [models]);
+
+  // Filter models by search and capability tag
   const filteredModels = useMemo(() => {
     let result = [...models];
 
@@ -100,13 +158,16 @@ export default function ModelsPage() {
       );
     }
 
-    // Filter by category
-    if (activeCategory !== 'all') {
-      result = result.filter((model) => model.category === activeCategory);
+    // Filter by capability tag
+    if (activeTag !== 'all') {
+      result = result.filter(
+        (model) =>
+          model.capabilityTags?.some((tag) => tag.tagId === activeTag),
+      );
     }
 
     return result;
-  }, [models, searchQuery, activeCategory]);
+  }, [models, searchQuery, activeTag]);
 
   // Group models by availability
   const { availableModels, unavailableModels } = useMemo(() => {
@@ -450,8 +511,8 @@ export default function ModelsPage() {
       )}
 
       {/* Search and Filter */}
-      <div className="mb-4 flex shrink-0 items-center gap-4">
-        <div className="relative max-w-md flex-1">
+      <div className="mb-4 shrink-0 space-y-3">
+        <div className="relative max-w-md">
           <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
             placeholder="搜索模型..."
@@ -460,16 +521,31 @@ export default function ModelsPage() {
             className="pl-9"
           />
         </div>
-        <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList>
-            {MODEL_CATEGORIES.map((cat) => (
-              <TabsTrigger key={cat.id} value={cat.id} className="gap-1.5">
-                <cat.icon className="size-4" />
-                {cat.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant={activeTag === 'all' ? 'default' : 'outline'}
+            className="cursor-pointer gap-1 px-3 py-1 text-xs select-none"
+            onClick={() => setActiveTag('all')}
+          >
+            <Cpu className="size-3" />
+            全部
+          </Badge>
+          {availableTags.map((tag) => {
+            const Icon = CAPABILITY_TAG_ICONS[tag.tagId] || Cpu;
+            const isActive = activeTag === tag.tagId;
+            return (
+              <Badge
+                key={tag.tagId}
+                variant={isActive ? 'default' : 'outline'}
+                className="cursor-pointer gap-1 px-3 py-1 text-xs select-none"
+                onClick={() => setActiveTag(isActive ? 'all' : tag.tagId)}
+              >
+                <Icon className="size-3" />
+                {tag.name}
+              </Badge>
+            );
+          })}
+        </div>
       </div>
 
       {/* Models List */}

@@ -66,6 +66,7 @@ import type {
 import { EnhancedModelSelector } from './enhanced-model-selector';
 import { FallbackChainSelector } from './fallback-chain-selector';
 import { CostStrategySelector } from './cost-strategy-selector';
+import type { EnhancedModelInfo } from '@/hooks/useRoutingConfig';
 
 /**
  * Provider info needed for model selection
@@ -328,6 +329,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
 
   const [routings, setRoutings] = useState<BotModelRouting[]>([]);
   const [botProviders, setBotProviders] = useState<ProviderInfo[]>([]);
+  const [enhancedModels, setEnhancedModels] = useState<EnhancedModelInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRouting, setEditingRouting] = useState<BotModelRouting | null>(
@@ -386,9 +388,12 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
         // Group models by providerKeyId
         const providerMap = new Map<string, ProviderInfo>();
         const availabilityList = availabilityResponse.body.data.list ?? [];
+        const enhanced: EnhancedModelInfo[] = [];
 
         for (const item of availabilityList) {
           if (!item.isAvailable) continue; // Only include available models
+
+          const vendor = item.providerKeys?.[0]?.vendor ?? '';
 
           const existing = providerMap.get(item.providerKeyId);
           if (existing) {
@@ -398,13 +403,26 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
           } else {
             providerMap.set(item.providerKeyId, {
               providerKeyId: item.providerKeyId,
-              vendor: item.providerKeys?.[0]?.vendor ?? '',
+              vendor,
               allowedModels: [item.model],
             });
           }
+
+          // Build enhanced model info with capability tags
+          enhanced.push({
+            providerKeyId: item.providerKeyId,
+            model: item.model,
+            vendor,
+            isAvailable: item.isAvailable,
+            lastVerifiedAt: item.lastVerifiedAt ?? null,
+            pricing: null,
+            capabilityTags: item.capabilityTags ?? [],
+            scores: null,
+          });
         }
 
         setBotProviders(Array.from(providerMap.values()));
+        setEnhancedModels(enhanced);
       }
     } catch {
       toast.error('Failed to load routing configurations');
@@ -758,6 +776,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     return (
       <EnhancedModelSelector
         providers={botProviders}
+        enhancedModels={enhancedModels}
         value={target.providerKeyId && target.model ? target : null}
         onChange={onChange}
         label={label}
