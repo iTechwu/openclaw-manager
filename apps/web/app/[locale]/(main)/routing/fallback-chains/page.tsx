@@ -25,12 +25,76 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { FallbackChain, FallbackModel } from '@repo/contracts';
+import type {
+  FallbackChain,
+  FallbackModel,
+  FallbackChainModelItem,
+} from '@repo/contracts';
 
 /**
- * 模型节点
+ * 新版模型节点（基于 ModelAvailability 关联）
  */
-function ModelNode({ model, isLast }: { model: FallbackModel; isLast: boolean }) {
+function ChainModelNode({
+  model,
+  index,
+  isLast,
+}: {
+  model: FallbackChainModelItem;
+  index: number;
+  isLast: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`rounded-lg px-3 py-2 text-sm ${
+          model.isAvailable
+            ? 'bg-muted'
+            : 'bg-destructive/10 border border-destructive/30'
+        }`}
+      >
+        <div className="font-medium flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">#{index + 1}</span>
+          {model.displayName || model.model}
+          {!model.isAvailable && (
+            <Badge variant="destructive" className="text-[10px]">
+              不可用
+            </Badge>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {model.vendor}
+          {model.protocol && ` · ${model.protocol}`}
+        </div>
+        {model.featuresOverride && (
+          <div className="flex gap-1 mt-1">
+            {model.featuresOverride.extendedThinking && (
+              <Badge variant="outline" className="text-xs">
+                ET
+              </Badge>
+            )}
+            {model.featuresOverride.cacheControl && (
+              <Badge variant="outline" className="text-xs">
+                CC
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+      {!isLast && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
+    </div>
+  );
+}
+
+/**
+ * 旧版模型节点（兼容 JSON 硬编码数据）
+ */
+function LegacyModelNode({
+  model,
+  isLast,
+}: {
+  model: FallbackModel;
+  isLast: boolean;
+}) {
   return (
     <div className="flex items-center gap-2">
       <div className="bg-muted rounded-lg px-3 py-2 text-sm">
@@ -41,10 +105,14 @@ function ModelNode({ model, isLast }: { model: FallbackModel; isLast: boolean })
         {model.features && (
           <div className="flex gap-1 mt-1">
             {model.features.extendedThinking && (
-              <Badge variant="outline" className="text-xs">ET</Badge>
+              <Badge variant="outline" className="text-xs">
+                ET
+              </Badge>
             )}
             {model.features.cacheControl && (
-              <Badge variant="outline" className="text-xs">CC</Badge>
+              <Badge variant="outline" className="text-xs">
+                CC
+              </Badge>
             )}
           </div>
         )}
@@ -56,8 +124,15 @@ function ModelNode({ model, isLast }: { model: FallbackModel; isLast: boolean })
 
 /**
  * Fallback 链卡片
+ * 优先使用 chainModels（新版关联数据），回退到 models（旧版 JSON）
  */
 function FallbackChainCard({ chain }: { chain: FallbackChain }) {
+  const useNewModels =
+    chain.chainModels && chain.chainModels.length > 0;
+  const hasUnavailable =
+    useNewModels &&
+    chain.chainModels!.some((m) => !m.isAvailable);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -79,7 +154,16 @@ function FallbackChainCard({ chain }: { chain: FallbackChain }) {
                 内置
               </Badge>
             )}
-            <Badge variant={chain.isActive ? 'default' : 'outline'} className="text-xs">
+            {hasUnavailable && (
+              <Badge variant="destructive" className="text-[10px]">
+                <AlertTriangle className="mr-1 h-3 w-3" />
+                含不可用模型
+              </Badge>
+            )}
+            <Badge
+              variant={chain.isActive ? 'default' : 'outline'}
+              className="text-xs"
+            >
               {chain.isActive ? (
                 <CheckCircle className="mr-1 h-3 w-3" />
               ) : (
@@ -96,17 +180,33 @@ function FallbackChainCard({ chain }: { chain: FallbackChain }) {
           <p className="text-sm text-muted-foreground">{chain.description}</p>
         )}
 
-        {/* 模型链 */}
+        {/* 模型链 - 优先使用新版 chainModels */}
         <div>
-          <div className="text-xs text-muted-foreground mb-2">Fallback 链:</div>
+          <div className="text-xs text-muted-foreground mb-2">
+            Fallback 链:
+            {useNewModels && (
+              <Badge variant="outline" className="ml-2 text-[10px]">
+                关联模型
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            {chain.models.map((model, index) => (
-              <ModelNode
-                key={`${model.vendor}-${model.model}`}
-                model={model}
-                isLast={index === chain.models.length - 1}
-              />
-            ))}
+            {useNewModels
+              ? chain.chainModels!.map((model, index) => (
+                  <ChainModelNode
+                    key={model.id}
+                    model={model}
+                    index={index}
+                    isLast={index === chain.chainModels!.length - 1}
+                  />
+                ))
+              : (chain.models || []).map((model, index) => (
+                  <LegacyModelNode
+                    key={`${model.vendor}-${model.model}`}
+                    model={model}
+                    isLast={index === (chain.models || []).length - 1}
+                  />
+                ))}
           </div>
         </div>
 

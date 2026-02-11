@@ -838,6 +838,7 @@
       "setPrimaryFailed": "Failed to set primary model",
       "addSelected": "Add {count} models",
       "addBtn": "Add",
+      "removeBtn": "Remove",
       "refresh": "Refresh",
       "refreshSuccess": "Refreshed successfully",
       "refreshFailed": "Failed to refresh",

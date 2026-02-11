@@ -719,6 +719,25 @@ exports.Prisma.ComplexityRoutingConfigScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.FallbackChainModelScalarFieldEnum = {
+  id: 'id',
+  fallbackChainId: 'fallbackChainId',
+  modelAvailabilityId: 'modelAvailabilityId',
+  priority: 'priority',
+  protocolOverride: 'protocolOverride',
+  featuresOverride: 'featuresOverride',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ComplexityRoutingModelMappingScalarFieldEnum = {
+  id: 'id',
+  complexityConfigId: 'complexityConfigId',
+  complexityLevel: 'complexityLevel',
+  modelAvailabilityId: 'modelAvailabilityId',
+  priority: 'priority',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -889,7 +908,9 @@ exports.Prisma.ModelName = {
   FallbackChain: 'FallbackChain',
   CostStrategy: 'CostStrategy',
   BotRoutingConfig: 'BotRoutingConfig',
-  ComplexityRoutingConfig: 'ComplexityRoutingConfig'
+  ComplexityRoutingConfig: 'ComplexityRoutingConfig',
+  FallbackChainModel: 'FallbackChainModel',
+  ComplexityRoutingModelMapping: 'ComplexityRoutingModelMapping'
 };
 
 /**

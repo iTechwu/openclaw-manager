@@ -13,6 +13,7 @@ import {
   ComplexityLevelSchema,
   ComplexityModelConfigSchema,
   ComplexityClassificationResultSchema,
+  RoutingAvailableModelSchema,
 } from '../schemas/routing.schema';
 
 const c = initContract();
@@ -119,19 +120,38 @@ export const CreateFallbackChainInputSchema = z.object({
   chainId: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  models: z.array(
-    z.object({
-      vendor: z.string(),
-      model: z.string(),
-      protocol: z.enum(['openai-compatible', 'anthropic-native']),
-      features: z
-        .object({
-          extendedThinking: z.boolean().optional(),
-          cacheControl: z.boolean().optional(),
-        })
-        .optional(),
-    }),
-  ),
+  /** @deprecated 旧版 JSON 模型列表 */
+  models: z
+    .array(
+      z.object({
+        vendor: z.string(),
+        model: z.string(),
+        protocol: z.enum(['openai-compatible', 'anthropic-native']),
+        features: z
+          .object({
+            extendedThinking: z.boolean().optional(),
+            cacheControl: z.boolean().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
+  /** 新版：通过 ModelAvailability ID 引用模型 */
+  chainModels: z
+    .array(
+      z.object({
+        modelAvailabilityId: z.string().uuid(),
+        priority: z.number().int().min(0).default(0),
+        protocolOverride: z.string().optional(),
+        featuresOverride: z
+          .object({
+            extendedThinking: z.boolean().optional(),
+            cacheControl: z.boolean().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
   triggerStatusCodes: z.array(z.number()),
   triggerErrorTypes: z.array(z.string()),
   triggerTimeoutMs: z.number().default(60000),
@@ -814,6 +834,29 @@ export const routingAdminContract = c.router(
         400: ApiResponseSchema(z.object({ error: z.string() })),
       },
       summary: '导入配置',
+    },
+
+    // ========================================================================
+    // 可用模型查询（路由配置用）
+    // ========================================================================
+
+    /**
+     * GET /proxy/admin/routing/available-models - 获取可用于路由配置的模型列表
+     * 返回 isAvailable=true 的模型，包含定价和能力标签信息
+     */
+    getAvailableModelsForRouting: {
+      method: 'GET',
+      path: '/available-models',
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            list: z.array(RoutingAvailableModelSchema),
+          }),
+        ),
+      },
+      summary: '获取可用于路由配置的模型列表',
+      description:
+        '返回 ModelAvailability 中 isAvailable=true 的模型，包含定价和能力标签信息，用于路由配置页面的模型选择器',
     },
   },
   {

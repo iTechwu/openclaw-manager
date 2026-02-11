@@ -545,6 +545,10 @@ model ModelAvailability {
   modelPricing   ModelPricing?        @relation(fields: [modelPricingId], references: [id], onDelete: SetNull)
   capabilityTags ModelCapabilityTag[]
 
+  // ============ 路由配置反向关联 ============
+  fallbackChainModels       FallbackChainModel[]
+  complexityRoutingMappings ComplexityRoutingModelMapping[]
+
   @@unique([providerKeyId, model])
   @@index([model])
   @@index([modelType])
@@ -1294,9 +1298,12 @@ model FallbackChain {
   /// 链描述
   description String? @db.Text
 
-  /// 模型链配置（JSON 数组，按优先级排序）
+  /// @deprecated 旧的 JSON 模型链配置，迁移到 FallbackChainModel 关联表后移除
   /// [{ vendor: "anthropic", model: "claude-sonnet-4", protocol: "anthropic-native", features: {...} }]
-  models Json @db.JsonB
+  models Json? @db.JsonB
+
+  // 新：通过关联表引用实际可用模型
+  chainModels FallbackChainModel[]
 
   // ============ 触发条件 ============
   /// 触发 Fallback 的 HTTP 状态码（JSON 数组）
@@ -1443,9 +1450,12 @@ model ComplexityRoutingConfig {
   description String? @db.Text
 
   // ============ 模型配置 ============
-  /// 各复杂度对应的模型配置（JSON）
+  /// @deprecated 旧的 JSON 模型配置，迁移到 ComplexityRoutingModelMapping 关联表后移除
   /// 格式: { super_easy: {vendor, model}, easy: {...}, medium: {...}, hard: {...}, super_hard: {...} }
-  models Json @db.JsonB
+  models Json? @db.JsonB
+
+  // 新：通过关联表引用实际可用模型
+  modelMappings ComplexityRoutingModelMapping[]
 
   // ============ 分类器配置 ============
   /// 分类器使用的模型
@@ -1472,4 +1482,56 @@ model ComplexityRoutingConfig {
   @@index([isEnabled])
   @@index([isDeleted])
   @@map("b_complexity_routing_config")
+}
+
+/// FallbackChainModel - Fallback 链模型关联表
+/// 替代 FallbackChain.models JSON 字段，通过外键引用实际可用模型
+model FallbackChainModel {
+  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 FallbackChain ID
+  fallbackChainId     String   @map("fallback_chain_id") @db.Uuid
+  /// 关联的 ModelAvailability ID（引用实际可用模型）
+  modelAvailabilityId String   @map("model_availability_id") @db.Uuid
+  /// 在链中的顺序（0 = 首选模型，数值越小优先级越高）
+  priority            Int      @default(0)
+  /// 协议覆盖（可选，默认使用 ProviderKey 的 apiType）
+  protocolOverride    String?  @map("protocol_override") @db.VarChar(50)
+  /// 特性覆盖配置（JSON），如 { extendedThinking: true, cacheControl: true }
+  featuresOverride    Json?    @map("features_override") @db.JsonB
+
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  fallbackChain     FallbackChain    @relation(fields: [fallbackChainId], references: [id], onDelete: Cascade)
+  modelAvailability ModelAvailability @relation(fields: [modelAvailabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([fallbackChainId, modelAvailabilityId])
+  @@index([fallbackChainId])
+  @@index([modelAvailabilityId])
+  @@index([priority])
+  @@map("b_fallback_chain_model")
+}
+
+/// ComplexityRoutingModelMapping - 复杂度路由模型映射表
+/// 替代 ComplexityRoutingConfig.models JSON 字段，通过外键引用实际可用模型
+model ComplexityRoutingModelMapping {
+  id                    String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 ComplexityRoutingConfig ID
+  complexityConfigId    String   @map("complexity_config_id") @db.Uuid
+  /// 复杂度级别：super_easy, easy, medium, hard, super_hard
+  complexityLevel       String   @map("complexity_level") @db.VarChar(20)
+  /// 关联的 ModelAvailability ID
+  modelAvailabilityId   String   @map("model_availability_id") @db.Uuid
+  /// 在同级别中的优先级（0 = 首选）
+  priority              Int      @default(0)
+
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  complexityConfig  ComplexityRoutingConfig @relation(fields: [complexityConfigId], references: [id], onDelete: Cascade)
+  modelAvailability ModelAvailability       @relation(fields: [modelAvailabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([complexityConfigId, complexityLevel, modelAvailabilityId])
+  @@index([complexityConfigId])
+  @@index([modelAvailabilityId])
+  @@index([complexityLevel])
+  @@map("b_complexity_routing_model_mapping")
 }

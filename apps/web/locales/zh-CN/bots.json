@@ -841,6 +841,7 @@
       "setPrimaryFailed": "设置主模型失败",
       "addSelected": "添加 {count} 个模型",
       "addBtn": "添加",
+      "removeBtn": "移除",
       "refresh": "刷新",
       "refreshSuccess": "刷新成功",
       "refreshFailed": "刷新失败",

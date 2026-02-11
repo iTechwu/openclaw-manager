@@ -18,6 +18,8 @@ import {
   FallbackChainService,
   CostStrategyService,
   ComplexityRoutingConfigService,
+  FallbackChainModelService,
+  ComplexityRoutingModelMappingService,
 } from '@app/db';
 import type {
   ModelPricing as DbModelPricing,
@@ -61,6 +63,8 @@ export class ConfigurationService implements OnModuleInit {
     private readonly fallbackChainDb: FallbackChainService,
     private readonly costStrategyDb: CostStrategyService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
+    private readonly fallbackChainModelDb: FallbackChainModelService,
+    private readonly complexityRoutingModelMappingDb: ComplexityRoutingModelMappingService,
   ) {}
 
   /**
@@ -195,7 +199,8 @@ export class ConfigurationService implements OnModuleInit {
 
   /**
    * 加载 Fallback 链配置
-   * 优先从数据库加载，如果数据库为空则使用默认配置
+   * 优先从关联表 FallbackChainModel 加载（新架构），
+   * 如果关联表为空则回退到旧的 JSON models 字段（兼容迁移期）
    */
   async loadFallbackChains(): Promise<void> {
     try {
@@ -208,9 +213,19 @@ export class ConfigurationService implements OnModuleInit {
       let chains: FallbackChain[];
 
       if (dbChains && dbChains.length > 0) {
-        // 转换数据库格式为内部格式
-        chains = dbChains.map((c: DbFallbackChain) =>
-          this.convertDbFallbackChain(c),
+        // 为每个链加载关联的模型
+        chains = await Promise.all(
+          dbChains.map(async (c: DbFallbackChain) => {
+            const chainModels =
+              await this.fallbackChainModelDb.listByChainId(c.id);
+
+            if (chainModels.length > 0) {
+              // 新架构：从关联表加载模型
+              return this.convertDbFallbackChainWithModels(c, chainModels);
+            }
+            // 兼容旧架构：从 JSON 字段加载
+            return this.convertDbFallbackChain(c);
+          }),
         );
         this.logger.info(
           `[ConfigurationService] Loaded ${chains.length} fallback chains from database`,
@@ -287,7 +302,8 @@ export class ConfigurationService implements OnModuleInit {
 
   /**
    * 加载复杂度路由配置
-   * 优先从数据库加载，如果数据库为空则使用默认配置
+   * 优先从关联表 ComplexityRoutingModelMapping 加载（新架构），
+   * 如果关联表为空则回退到旧的 JSON models 字段（兼容迁移期）
    */
   async loadComplexityRoutingConfigs(): Promise<void> {
     try {
@@ -304,10 +320,33 @@ export class ConfigurationService implements OnModuleInit {
 
         // 使用第一个启用的配置
         const activeConfig = dbConfigs[0];
-        const models = activeConfig.models as Record<
-          string,
-          { vendor: string; model: string }
-        >;
+
+        // 尝试从新关联表加载模型映射
+        const mappings =
+          await this.complexityRoutingModelMappingDb.listByConfigId(
+            activeConfig.id,
+          );
+
+        let models: Record<string, { vendor: string; model: string }>;
+
+        if (mappings.length > 0) {
+          // 新架构：从关联表构建模型映射
+          models = {} as Record<string, { vendor: string; model: string }>;
+          for (const m of mappings) {
+            if (!models[m.complexityLevel]) {
+              models[m.complexityLevel] = {
+                vendor: m.modelAvailability.providerKey.vendor,
+                model: m.modelAvailability.model,
+              };
+            }
+          }
+        } else {
+          // 兼容旧架构：从 JSON 字段加载
+          models = (activeConfig.models || {}) as Record<
+            string,
+            { vendor: string; model: string }
+          >;
+        }
 
         this.routingEngine.setComplexityRoutingConfig({
           enabled: true,
@@ -472,13 +511,47 @@ export class ConfigurationService implements OnModuleInit {
   }
 
   /**
-   * 转换数据库 FallbackChain 为内部格式
+   * 转换数据库 FallbackChain 为内部格式（旧 JSON 字段兼容）
    */
   private convertDbFallbackChain(db: DbFallbackChain): FallbackChain {
     return {
+      id: db.id,
       chainId: db.chainId,
       name: db.name,
-      models: db.models as unknown as FallbackModel[],
+      models: (db.models as unknown as FallbackModel[]) || [],
+      triggerStatusCodes: db.triggerStatusCodes as number[],
+      triggerErrorTypes: db.triggerErrorTypes as string[],
+      triggerTimeoutMs: db.triggerTimeoutMs,
+      maxRetries: db.maxRetries,
+      retryDelayMs: db.retryDelayMs,
+      preserveProtocol: db.preserveProtocol,
+    };
+  }
+
+  /**
+   * 转换数据库 FallbackChain + 关联模型为内部格式（新架构）
+   */
+  private convertDbFallbackChainWithModels(
+    db: DbFallbackChain,
+    chainModels: Awaited<
+      ReturnType<FallbackChainModelService['listByChainId']>
+    >,
+  ): FallbackChain {
+    return {
+      id: db.id,
+      chainId: db.chainId,
+      name: db.name,
+      models: chainModels.map((cm) => ({
+        modelAvailabilityId: cm.modelAvailabilityId,
+        vendor: cm.modelAvailability.providerKey.vendor,
+        model: cm.modelAvailability.model,
+        protocol: (cm.protocolOverride ||
+          cm.modelAvailability.providerKey.apiType ||
+          'openai-compatible') as 'openai-compatible' | 'anthropic-native',
+        features: cm.featuresOverride as FallbackModel['features'],
+        isAvailable: cm.modelAvailability.isAvailable,
+        displayName: cm.modelAvailability.modelPricing?.displayName ?? undefined,
+      })),
       triggerStatusCodes: db.triggerStatusCodes as number[],
       triggerErrorTypes: db.triggerErrorTypes as string[],
       triggerTimeoutMs: db.triggerTimeoutMs,

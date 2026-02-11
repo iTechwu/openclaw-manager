@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { routingAdminApi, routingAdminClient } from '@/lib/api/contracts/client';
 import {
   Card,
@@ -45,7 +45,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { getUser } from '@/lib/storage';
-import type { ComplexityRoutingConfig } from '@repo/contracts';
+import type { ComplexityRoutingConfig, RoutingAvailableModel } from '@repo/contracts';
 
 // 复杂度等级配置
 const COMPLEXITY_LEVELS = [
@@ -58,41 +58,33 @@ const COMPLEXITY_LEVELS = [
 
 type ComplexityLevel = (typeof COMPLEXITY_LEVELS)[number]['key'];
 
-// 默认模型配置
-const DEFAULT_MODELS: Record<ComplexityLevel, { vendor: string; model: string }> = {
-  super_easy: { vendor: 'deepseek', model: 'deepseek-v3-250324' },
-  easy: { vendor: 'deepseek', model: 'deepseek-v3-250324' },
-  medium: { vendor: 'anthropic', model: 'claude-sonnet-4-20250514' },
-  hard: { vendor: 'anthropic', model: 'claude-sonnet-4-20250514' },
-  super_hard: { vendor: 'anthropic', model: 'claude-opus-4-20250514' },
-};
-
-// 可用的模型选项
-const MODEL_OPTIONS = [
-  { vendor: 'deepseek', model: 'deepseek-v3-250324', label: 'DeepSeek V3' },
-  { vendor: 'deepseek', model: 'deepseek-chat', label: 'DeepSeek Chat' },
-  { vendor: 'anthropic', model: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-  { vendor: 'anthropic', model: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
-  { vendor: 'anthropic', model: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-  { vendor: 'openai', model: 'gpt-4o', label: 'GPT-4o' },
-  { vendor: 'openai', model: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-  { vendor: 'google', model: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-];
-
 /**
  * 复杂度等级模型配置组件
+ * 使用从 API 获取的可用模型列表替代硬编码选项
  */
 function ComplexityLevelConfig({
   level,
   config,
+  availableModels,
   onChange,
 }: {
   level: (typeof COMPLEXITY_LEVELS)[number];
   config: { vendor: string; model: string };
+  availableModels: RoutingAvailableModel[];
   onChange: (config: { vendor: string; model: string }) => void;
 }) {
   const Icon = level.icon;
   const modelKey = `${config.vendor}:${config.model}`;
+
+  // 按 vendor 分组
+  const groupedModels = useMemo(() => {
+    const groups: Record<string, RoutingAvailableModel[]> = {};
+    for (const m of availableModels) {
+      if (!groups[m.vendor]) groups[m.vendor] = [];
+      groups[m.vendor]!.push(m);
+    }
+    return groups;
+  }, [availableModels]);
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border">
@@ -104,9 +96,8 @@ function ComplexityLevelConfig({
         <Select
           value={modelKey}
           onValueChange={(value) => {
-            const parts = value.split(':');
-            const vendor = parts[0] || '';
-            const model = parts[1] || '';
+            const [vendor = '', ...rest] = value.split(':');
+            const model = rest.join(':');
             onChange({ vendor, model });
           }}
         >
@@ -114,10 +105,20 @@ function ComplexityLevelConfig({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {MODEL_OPTIONS.map((opt) => (
-              <SelectItem key={`${opt.vendor}:${opt.model}`} value={`${opt.vendor}:${opt.model}`}>
-                {opt.label}
-              </SelectItem>
+            {Object.entries(groupedModels).map(([vendor, models]) => (
+              <div key={vendor}>
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">
+                  {vendor}
+                </div>
+                {models.map((m) => (
+                  <SelectItem
+                    key={`${m.vendor}:${m.model}`}
+                    value={`${m.vendor}:${m.model}`}
+                  >
+                    {m.displayName || m.model}
+                  </SelectItem>
+                ))}
+              </div>
             ))}
           </SelectContent>
         </Select>
@@ -280,11 +281,13 @@ function ConfigDialog({
   open,
   onOpenChange,
   config,
+  availableModels,
   onSave,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: ComplexityRoutingConfig | null;
+  availableModels: RoutingAvailableModel[];
   onSave: (data: {
     configId: string;
     name: string;
@@ -298,16 +301,40 @@ function ConfigDialog({
 }) {
   const isEdit = !!config;
   const [loading, setLoading] = useState(false);
+
+  // 从可用模型中获取默认模型
+  const defaultModels = useMemo(() => {
+    const first = availableModels[0];
+    const fallback = { vendor: first?.vendor || '', model: first?.model || '' };
+    return {
+      super_easy: fallback,
+      easy: fallback,
+      medium: fallback,
+      hard: fallback,
+      super_hard: fallback,
+    };
+  }, [availableModels]);
+
   const [formData, setFormData] = useState({
     configId: config?.configId || '',
     name: config?.name || '',
     description: config?.description || '',
     isEnabled: config?.isEnabled ?? true,
-    models: (config?.models as Record<ComplexityLevel, { vendor: string; model: string }>) || DEFAULT_MODELS,
-    classifierModel: config?.classifierModel || 'deepseek-v3-250324',
-    classifierVendor: config?.classifierVendor || 'deepseek',
+    models: (config?.models as Record<ComplexityLevel, { vendor: string; model: string }>) || defaultModels,
+    classifierModel: config?.classifierModel || availableModels[0]?.model || '',
+    classifierVendor: config?.classifierVendor || availableModels[0]?.vendor || '',
     toolMinComplexity: (config?.toolMinComplexity as ComplexityLevel) || 'medium',
   });
+
+  // 按 vendor 分组（用于分类器选择）
+  const groupedModels = useMemo(() => {
+    const groups: Record<string, RoutingAvailableModel[]> = {};
+    for (const m of availableModels) {
+      if (!groups[m.vendor]) groups[m.vendor] = [];
+      groups[m.vendor]!.push(m);
+    }
+    return groups;
+  }, [availableModels]);
 
   const handleSubmit = async () => {
     if (!formData.configId || !formData.name) {
@@ -373,9 +400,8 @@ function ConfigDialog({
             <Select
               value={`${formData.classifierVendor}:${formData.classifierModel}`}
               onValueChange={(value) => {
-                const parts = value.split(':');
-                const vendor = parts[0] || '';
-                const model = parts[1] || '';
+                const [vendor = '', ...rest] = value.split(':');
+                const model = rest.join(':');
                 setFormData({ ...formData, classifierVendor: vendor, classifierModel: model });
               }}
             >
@@ -383,10 +409,20 @@ function ConfigDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {MODEL_OPTIONS.map((opt) => (
-                  <SelectItem key={`${opt.vendor}:${opt.model}`} value={`${opt.vendor}:${opt.model}`}>
-                    {opt.label}
-                  </SelectItem>
+                {Object.entries(groupedModels).map(([vendor, models]) => (
+                  <div key={vendor}>
+                    <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">
+                      {vendor}
+                    </div>
+                    {models.map((m) => (
+                      <SelectItem
+                        key={`${m.vendor}:${m.model}`}
+                        value={`${m.vendor}:${m.model}`}
+                      >
+                        {m.displayName || m.model}
+                      </SelectItem>
+                    ))}
+                  </div>
                 ))}
               </SelectContent>
             </Select>
@@ -401,6 +437,7 @@ function ConfigDialog({
                   key={level.key}
                   level={level}
                   config={formData.models[level.key]}
+                  availableModels={availableModels}
                   onChange={(newConfig) =>
                     setFormData({
                       ...formData,
@@ -483,6 +520,15 @@ export default function ComplexityRoutingPage() {
     { staleTime: 60000 } as any
   );
 
+  // 获取可用模型列表
+  const { data: modelsResponse } =
+    routingAdminApi.getAvailableModelsForRouting.useQuery(
+      ['routing-available-models'],
+      {},
+      { staleTime: 60000 } as any,
+    );
+
+  const availableModels = modelsResponse?.body?.data?.list || [];
   const configList = response?.body?.data?.list || [];
 
   // 过滤配置
@@ -643,6 +689,7 @@ export default function ComplexityRoutingPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         config={editingConfig}
+        availableModels={availableModels}
         onSave={handleSave}
       />
     </div>

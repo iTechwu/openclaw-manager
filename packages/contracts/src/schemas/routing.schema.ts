@@ -88,6 +88,9 @@ export type CapabilityTag = z.infer<typeof CapabilityTagSchema>;
 // Fallback Chain Schema - Fallback 链
 // ============================================================================
 
+/**
+ * 旧版 Fallback 模型配置（JSON 硬编码，兼容迁移期）
+ */
 export const FallbackModelSchema = z.object({
   vendor: z.string(),
   model: z.string(),
@@ -102,12 +105,40 @@ export const FallbackModelSchema = z.object({
 
 export type FallbackModel = z.infer<typeof FallbackModelSchema>;
 
+/**
+ * 新版 Fallback 链模型配置（引用 ModelAvailability）
+ */
+export const FallbackChainModelSchema = z.object({
+  id: z.string().uuid(),
+  modelAvailabilityId: z.string().uuid(),
+  priority: z.number().int().min(0),
+  protocolOverride: z.string().nullable().optional(),
+  featuresOverride: z
+    .object({
+      extendedThinking: z.boolean().optional(),
+      cacheControl: z.boolean().optional(),
+    })
+    .nullable()
+    .optional(),
+  // 展示用字段（从 ModelAvailability JOIN 获取）
+  model: z.string(),
+  vendor: z.string(),
+  displayName: z.string().nullable().optional(),
+  isAvailable: z.boolean(),
+  protocol: z.enum(['openai-compatible', 'anthropic-native']).optional(),
+});
+
+export type FallbackChainModelItem = z.infer<typeof FallbackChainModelSchema>;
+
 export const FallbackChainSchema = z.object({
   id: z.string().uuid(),
   chainId: z.string(),
   name: z.string(),
   description: z.string().nullable().optional(),
-  models: z.array(FallbackModelSchema),
+  /** @deprecated 旧版 JSON 模型列表，迁移后使用 chainModels */
+  models: z.array(FallbackModelSchema).optional(),
+  /** 新版：通过关联表引用的模型列表 */
+  chainModels: z.array(FallbackChainModelSchema).optional(),
   // 触发条件
   triggerStatusCodes: z.array(z.number()),
   triggerErrorTypes: z.array(z.string()),
@@ -384,4 +415,70 @@ export const ComplexityRouteDecisionSchema = z.object({
 
 export type ComplexityRouteDecision = z.infer<
   typeof ComplexityRouteDecisionSchema
+>;
+
+// ============================================================================
+// Complexity Routing Model Mapping Schema - 复杂度路由模型映射（新架构）
+// ============================================================================
+
+export const ComplexityRoutingModelMappingSchema = z.object({
+  id: z.string().uuid(),
+  complexityConfigId: z.string().uuid(),
+  complexityLevel: ComplexityLevelSchema,
+  modelAvailabilityId: z.string().uuid(),
+  priority: z.number().int().min(0).default(0),
+  // 展示用字段（从 ModelAvailability JOIN 获取）
+  model: z.string(),
+  vendor: z.string(),
+  displayName: z.string().nullable().optional(),
+  isAvailable: z.boolean(),
+});
+
+export type ComplexityRoutingModelMapping = z.infer<
+  typeof ComplexityRoutingModelMappingSchema
+>;
+
+// ============================================================================
+// Routing Available Model Schema - 可用于路由配置的模型
+// ============================================================================
+
+/**
+ * 用于路由配置页面的可用模型信息
+ * 只返回 isAvailable=true 的模型，包含定价和能力标签
+ */
+export const RoutingAvailableModelSchema = z.object({
+  /** ModelAvailability ID */
+  id: z.string().uuid(),
+  /** 模型标识符 */
+  model: z.string(),
+  /** 服务商 */
+  vendor: z.string(),
+  /** 显示名称 */
+  displayName: z.string().nullable().optional(),
+  /** API 协议类型 */
+  apiType: z.string().nullable().optional(),
+  /** 模型类型 */
+  modelType: z.string(),
+  /** 是否可用 */
+  isAvailable: z.boolean(),
+  /** 最后验证时间 */
+  lastVerifiedAt: z.string().nullable().optional(),
+  // 定价信息（来自 ModelPricing）
+  inputPrice: z.number().nullable().optional(),
+  outputPrice: z.number().nullable().optional(),
+  // 能力评分（来自 ModelPricing）
+  reasoningScore: z.number().nullable().optional(),
+  codingScore: z.number().nullable().optional(),
+  creativityScore: z.number().nullable().optional(),
+  speedScore: z.number().nullable().optional(),
+  // 特性支持
+  supportsExtendedThinking: z.boolean().optional(),
+  supportsCacheControl: z.boolean().optional(),
+  supportsVision: z.boolean().optional(),
+  // 能力标签
+  capabilityTags: z.array(z.string()).optional(),
+});
+
+export type RoutingAvailableModel = z.infer<
+  typeof RoutingAvailableModelSchema
 >;

@@ -6,7 +6,7 @@ import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
 import { ComplexityClassifierService } from '@app/clients/internal/complexity-classifier';
-import { ComplexityRoutingConfigService } from '@app/db';
+import { ComplexityRoutingConfigService, ModelAvailabilityService } from '@app/db';
 import { success, error, deleted } from '@/common/ts-rest/response.helper';
 import { CommonErrorCode } from '@repo/contracts/errors';
 import { routingAdminContract as c } from '@repo/contracts';
@@ -35,6 +35,7 @@ export class RoutingAdminController {
     private readonly configService: ConfigurationService,
     private readonly complexityClassifier: ComplexityClassifierService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
+    private readonly modelAvailabilityDb: ModelAvailabilityService,
   ) {}
 
   // ============================================================================
@@ -442,6 +443,61 @@ export class RoutingAdminController {
         strategy: body.strategyId,
         scenario: body.scenario,
       }) as any;
+    });
+  }
+
+  // ============================================================================
+  // 可用模型查询（路由配置用）
+  // ============================================================================
+
+  @TsRestHandler(c.getAvailableModelsForRouting)
+  async getAvailableModelsForRouting() {
+    return tsRestHandler(c.getAvailableModelsForRouting, async () => {
+      const { list: models } = await this.modelAvailabilityDb.list(
+        { isAvailable: true },
+        { orderBy: { model: 'asc' }, limit: 1000 },
+        {
+          include: {
+            providerKey: true,
+            modelPricing: true,
+            capabilityTags: {
+              include: { capabilityTag: true },
+            },
+          },
+        },
+      );
+
+      const result = models.map((m: any) => ({
+        id: m.id,
+        model: m.model,
+        vendor: m.providerKey?.vendor ?? 'unknown',
+        displayName: m.modelPricing?.displayName ?? null,
+        apiType: m.providerKey?.apiType ?? null,
+        modelType: m.modelType,
+        isAvailable: m.isAvailable,
+        lastVerifiedAt: m.lastVerifiedAt?.toISOString() ?? null,
+        inputPrice: m.modelPricing
+          ? Number(m.modelPricing.inputPrice)
+          : null,
+        outputPrice: m.modelPricing
+          ? Number(m.modelPricing.outputPrice)
+          : null,
+        reasoningScore: m.modelPricing?.reasoningScore ?? null,
+        codingScore: m.modelPricing?.codingScore ?? null,
+        creativityScore: m.modelPricing?.creativityScore ?? null,
+        speedScore: m.modelPricing?.speedScore ?? null,
+        supportsExtendedThinking:
+          m.modelPricing?.supportsExtendedThinking ?? false,
+        supportsCacheControl:
+          m.modelPricing?.supportsCacheControl ?? false,
+        supportsVision: m.modelPricing?.supportsVision ?? false,
+        capabilityTags:
+          m.capabilityTags?.map(
+            (ct: any) => ct.capabilityTag?.tagId,
+          ) ?? [],
+      }));
+
+      return success({ list: result }) as any;
     });
   }
 }

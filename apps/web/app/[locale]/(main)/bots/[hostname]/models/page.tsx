@@ -327,7 +327,7 @@ export default function BotModelsPage() {
             </span>
           </div>
 
-          {/* 模型列表 - 卡片式 */}
+          {/* 模型列表 */}
           {filteredModels.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -338,136 +338,156 @@ export default function BotModelsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-3">
+            <div className="border rounded-lg divide-y">
+              {/* 表头 */}
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-muted/50 text-xs font-medium text-muted-foreground">
+                <div className="w-6 shrink-0" />
+                <div className="flex-1 min-w-0">{t('colModel')}</div>
+                <div className="w-48 hidden md:block">{t('colTags')}</div>
+                <div className="w-16 text-center">{t('colStatus')}</div>
+                <div className="w-28 text-right">{t('colActions')}</div>
+              </div>
+
               {filteredModels.map((model) => {
                 const botModel = addedModelMap.get(model.id);
                 const isAdded = !!botModel;
                 const isSelected = selectedModels.has(model.id);
 
                 return (
-                  <Card
+                  <div
                     key={model.id}
                     className={cn(
-                      'transition-all',
-                      isAdded && 'ring-1 ring-blue-200 dark:ring-blue-800',
-                      isSelected && !isAdded && 'ring-2 ring-primary',
+                      'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/30',
+                      isAdded && 'bg-blue-50/50 dark:bg-blue-950/10',
+                      isSelected && !isAdded && 'bg-primary/5',
                     )}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {/* 选择框（未添加的模型） */}
-                          {!isAdded && (
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() =>
-                                toggleModelSelection(model.id)
-                              }
-                            />
-                          )}
+                    {/* 选择框 / 已添加标记 */}
+                    <div className="w-6 shrink-0 flex items-center justify-center">
+                      {!isAdded ? (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() =>
+                            toggleModelSelection(model.id)
+                          }
+                        />
+                      ) : (
+                        <div className="size-2 rounded-full bg-blue-500" />
+                      )}
+                    </div>
 
-                          {/* 模型信息 */}
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">
-                                {model.model}
-                              </span>
-                              {model.isAvailable ? (
-                                <CheckCircle2 className="size-4 text-green-500" />
-                              ) : (
-                                <XCircle className="size-4 text-red-500" />
-                              )}
-                              {isAdded && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {t('badgeAdded')}
-                                </Badge>
-                              )}
-                              {botModel?.isPrimary && (
-                                <Badge variant="default" className="text-xs">
-                                  {t('primary')}
-                                </Badge>
-                              )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {model.isAvailable
-                                ? t('available')
-                                : model.errorMessage || t('unavailable')}
+                    {/* 模型名称 + 标签 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm truncate">
+                          {model.model}
+                        </span>
+                        {botModel?.isPrimary && (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0 shrink-0">
+                            {t('primary')}
+                          </Badge>
+                        )}
+                      </div>
+                      {/* 移动端能力标签 */}
+                      {model.capabilityTags && model.capabilityTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1 md:hidden">
+                          {model.capabilityTags.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {tag.name}
+                            </Badge>
+                          ))}
+                          {model.capabilityTags.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground">
+                              +{model.capabilityTags.length - 3}
                             </span>
-                          </div>
+                          )}
                         </div>
+                      )}
+                    </div>
 
-                        {/* 操作按钮 */}
-                        <div className="flex items-center gap-1">
-                          {isAdded ? (
-                            <>
-                              <Button
-                                variant={
-                                  botModel?.isPrimary ? 'default' : 'ghost'
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handleSetPrimary(botModel!.modelId)
-                                }
-                                disabled={loading || botModel?.isPrimary}
-                                className="gap-1"
-                              >
-                                {botModel?.isPrimary ? (
-                                  <Star className="size-4 fill-current" />
-                                ) : (
-                                  <StarOff className="size-4" />
-                                )}
-                                <span className="hidden sm:inline">
-                                  {botModel?.isPrimary
-                                    ? t('primaryModel')
-                                    : t('setAsPrimary')}
-                                </span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                                onClick={() => handleRemoveModel(model)}
-                                disabled={loading}
-                              >
-                                <Trash2 className="size-4" />
-                              </Button>
-                            </>
-                          ) : (
+                    {/* 能力标签（桌面端） */}
+                    <div className="w-48 hidden md:flex flex-wrap gap-1">
+                      {model.capabilityTags && model.capabilityTags.length > 0 ? (
+                        <>
+                          {model.capabilityTags.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {tag.name}
+                            </Badge>
+                          ))}
+                          {model.capabilityTags.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground leading-5">
+                              +{model.capabilityTags.length - 3}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+
+                    {/* 状态 */}
+                    <div className="w-16 flex justify-center">
+                      {model.isAvailable ? (
+                        <CheckCircle2 className="size-4 text-green-500" />
+                      ) : (
+                        <XCircle className="size-4 text-red-400" />
+                      )}
+                    </div>
+
+                    {/* 操作 */}
+                    <div className="w-28 flex items-center justify-end gap-1">
+                      {isAdded ? (
+                        <>
+                          {!botModel?.isPrimary && (
                             <Button
                               variant="ghost"
-                              size="sm"
-                              onClick={() => handleAddModels([model])}
+                              size="icon"
+                              className="size-7"
+                              onClick={() =>
+                                handleSetPrimary(botModel!.modelId)
+                              }
                               disabled={loading}
+                              title={t('setAsPrimary')}
                             >
-                              <Plus className="size-4 mr-1" />
-                              {t('addBtn')}
+                              <StarOff className="size-3.5" />
                             </Button>
                           )}
-                        </div>
-                      </div>
-
-                      {/* 能力标签 */}
-                      {model.capabilityTags &&
-                        model.capabilityTags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t">
-                            {model.capabilityTags.slice(0, 5).map((tag) => (
-                              <Badge
-                                key={tag.id}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {tag.name}
-                              </Badge>
-                            ))}
-                            {model.capabilityTags.length > 5 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{model.capabilityTags.length - 5}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                    </CardContent>
-                  </Card>
+                          {botModel?.isPrimary && (
+                            <Star className="size-3.5 text-yellow-500 fill-yellow-500 mr-1" />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={() => handleRemoveModel(model)}
+                            disabled={loading}
+                            title={t('removeBtn')}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleAddModels([model])}
+                          disabled={loading}
+                        >
+                          <Plus className="size-3.5 mr-1" />
+                          {t('addBtn')}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>

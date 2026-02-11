@@ -232,6 +232,18 @@ export type BotRoutingConfig = $Result.DefaultSelection<Prisma.$BotRoutingConfig
  * 存储基于消息复杂度的模型路由配置
  */
 export type ComplexityRoutingConfig = $Result.DefaultSelection<Prisma.$ComplexityRoutingConfigPayload>
+/**
+ * Model FallbackChainModel
+ * FallbackChainModel - Fallback 链模型关联表
+ * 替代 FallbackChain.models JSON 字段，通过外键引用实际可用模型
+ */
+export type FallbackChainModel = $Result.DefaultSelection<Prisma.$FallbackChainModelPayload>
+/**
+ * Model ComplexityRoutingModelMapping
+ * ComplexityRoutingModelMapping - 复杂度路由模型映射表
+ * 替代 ComplexityRoutingConfig.models JSON 字段，通过外键引用实际可用模型
+ */
+export type ComplexityRoutingModelMapping = $Result.DefaultSelection<Prisma.$ComplexityRoutingModelMappingPayload>
 
 /**
  * Enums
@@ -910,6 +922,26 @@ export class PrismaClient<
     * ```
     */
   get complexityRoutingConfig(): Prisma.ComplexityRoutingConfigDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.fallbackChainModel`: Exposes CRUD operations for the **FallbackChainModel** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FallbackChainModels
+    * const fallbackChainModels = await prisma.fallbackChainModel.findMany()
+    * ```
+    */
+  get fallbackChainModel(): Prisma.FallbackChainModelDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.complexityRoutingModelMapping`: Exposes CRUD operations for the **ComplexityRoutingModelMapping** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ComplexityRoutingModelMappings
+    * const complexityRoutingModelMappings = await prisma.complexityRoutingModelMapping.findMany()
+    * ```
+    */
+  get complexityRoutingModelMapping(): Prisma.ComplexityRoutingModelMappingDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1379,7 +1411,9 @@ export namespace Prisma {
     FallbackChain: 'FallbackChain',
     CostStrategy: 'CostStrategy',
     BotRoutingConfig: 'BotRoutingConfig',
-    ComplexityRoutingConfig: 'ComplexityRoutingConfig'
+    ComplexityRoutingConfig: 'ComplexityRoutingConfig',
+    FallbackChainModel: 'FallbackChainModel',
+    ComplexityRoutingModelMapping: 'ComplexityRoutingModelMapping'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1395,7 +1429,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelPricing" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelPricing" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig" | "fallbackChainModel" | "complexityRoutingModelMapping"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4063,6 +4097,154 @@ export namespace Prisma {
           }
         }
       }
+      FallbackChainModel: {
+        payload: Prisma.$FallbackChainModelPayload<ExtArgs>
+        fields: Prisma.FallbackChainModelFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FallbackChainModelFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FallbackChainModelFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          findFirst: {
+            args: Prisma.FallbackChainModelFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FallbackChainModelFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          findMany: {
+            args: Prisma.FallbackChainModelFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>[]
+          }
+          create: {
+            args: Prisma.FallbackChainModelCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          createMany: {
+            args: Prisma.FallbackChainModelCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FallbackChainModelCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>[]
+          }
+          delete: {
+            args: Prisma.FallbackChainModelDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          update: {
+            args: Prisma.FallbackChainModelUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          deleteMany: {
+            args: Prisma.FallbackChainModelDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FallbackChainModelUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.FallbackChainModelUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>[]
+          }
+          upsert: {
+            args: Prisma.FallbackChainModelUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FallbackChainModelPayload>
+          }
+          aggregate: {
+            args: Prisma.FallbackChainModelAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFallbackChainModel>
+          }
+          groupBy: {
+            args: Prisma.FallbackChainModelGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FallbackChainModelGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FallbackChainModelCountArgs<ExtArgs>
+            result: $Utils.Optional<FallbackChainModelCountAggregateOutputType> | number
+          }
+        }
+      }
+      ComplexityRoutingModelMapping: {
+        payload: Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>
+        fields: Prisma.ComplexityRoutingModelMappingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ComplexityRoutingModelMappingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ComplexityRoutingModelMappingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          findFirst: {
+            args: Prisma.ComplexityRoutingModelMappingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ComplexityRoutingModelMappingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          findMany: {
+            args: Prisma.ComplexityRoutingModelMappingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>[]
+          }
+          create: {
+            args: Prisma.ComplexityRoutingModelMappingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          createMany: {
+            args: Prisma.ComplexityRoutingModelMappingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ComplexityRoutingModelMappingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>[]
+          }
+          delete: {
+            args: Prisma.ComplexityRoutingModelMappingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          update: {
+            args: Prisma.ComplexityRoutingModelMappingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          deleteMany: {
+            args: Prisma.ComplexityRoutingModelMappingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ComplexityRoutingModelMappingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ComplexityRoutingModelMappingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>[]
+          }
+          upsert: {
+            args: Prisma.ComplexityRoutingModelMappingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComplexityRoutingModelMappingPayload>
+          }
+          aggregate: {
+            args: Prisma.ComplexityRoutingModelMappingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateComplexityRoutingModelMapping>
+          }
+          groupBy: {
+            args: Prisma.ComplexityRoutingModelMappingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ComplexityRoutingModelMappingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ComplexityRoutingModelMappingCountArgs<ExtArgs>
+            result: $Utils.Optional<ComplexityRoutingModelMappingCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -4207,6 +4389,8 @@ export namespace Prisma {
     costStrategy?: CostStrategyOmit
     botRoutingConfig?: BotRoutingConfigOmit
     complexityRoutingConfig?: ComplexityRoutingConfigOmit
+    fallbackChainModel?: FallbackChainModelOmit
+    complexityRoutingModelMapping?: ComplexityRoutingModelMappingOmit
   }
 
   /* Types for Logging */
@@ -4569,10 +4753,14 @@ export namespace Prisma {
 
   export type ModelAvailabilityCountOutputType = {
     capabilityTags: number
+    fallbackChainModels: number
+    complexityRoutingMappings: number
   }
 
   export type ModelAvailabilityCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     capabilityTags?: boolean | ModelAvailabilityCountOutputTypeCountCapabilityTagsArgs
+    fallbackChainModels?: boolean | ModelAvailabilityCountOutputTypeCountFallbackChainModelsArgs
+    complexityRoutingMappings?: boolean | ModelAvailabilityCountOutputTypeCountComplexityRoutingMappingsArgs
   }
 
   // Custom InputTypes
@@ -4591,6 +4779,20 @@ export namespace Prisma {
    */
   export type ModelAvailabilityCountOutputTypeCountCapabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ModelCapabilityTagWhereInput
+  }
+
+  /**
+   * ModelAvailabilityCountOutputType without action
+   */
+  export type ModelAvailabilityCountOutputTypeCountFallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FallbackChainModelWhereInput
+  }
+
+  /**
+   * ModelAvailabilityCountOutputType without action
+   */
+  export type ModelAvailabilityCountOutputTypeCountComplexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComplexityRoutingModelMappingWhereInput
   }
 
 
@@ -4808,6 +5010,68 @@ export namespace Prisma {
    */
   export type CapabilityTagCountOutputTypeCountModelCapabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ModelCapabilityTagWhereInput
+  }
+
+
+  /**
+   * Count Type FallbackChainCountOutputType
+   */
+
+  export type FallbackChainCountOutputType = {
+    chainModels: number
+  }
+
+  export type FallbackChainCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    chainModels?: boolean | FallbackChainCountOutputTypeCountChainModelsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * FallbackChainCountOutputType without action
+   */
+  export type FallbackChainCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainCountOutputType
+     */
+    select?: FallbackChainCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * FallbackChainCountOutputType without action
+   */
+  export type FallbackChainCountOutputTypeCountChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FallbackChainModelWhereInput
+  }
+
+
+  /**
+   * Count Type ComplexityRoutingConfigCountOutputType
+   */
+
+  export type ComplexityRoutingConfigCountOutputType = {
+    modelMappings: number
+  }
+
+  export type ComplexityRoutingConfigCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    modelMappings?: boolean | ComplexityRoutingConfigCountOutputTypeCountModelMappingsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ComplexityRoutingConfigCountOutputType without action
+   */
+  export type ComplexityRoutingConfigCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingConfigCountOutputType
+     */
+    select?: ComplexityRoutingConfigCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ComplexityRoutingConfigCountOutputType without action
+   */
+  export type ComplexityRoutingConfigCountOutputTypeCountModelMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComplexityRoutingModelMappingWhereInput
   }
 
 
@@ -22003,6 +22267,8 @@ export namespace Prisma {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
     modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
     capabilityTags?: boolean | ModelAvailability$capabilityTagsArgs<ExtArgs>
+    fallbackChainModels?: boolean | ModelAvailability$fallbackChainModelsArgs<ExtArgs>
+    complexityRoutingMappings?: boolean | ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>
     _count?: boolean | ModelAvailabilityCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modelAvailability"]>
 
@@ -22066,6 +22332,8 @@ export namespace Prisma {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
     modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
     capabilityTags?: boolean | ModelAvailability$capabilityTagsArgs<ExtArgs>
+    fallbackChainModels?: boolean | ModelAvailability$fallbackChainModelsArgs<ExtArgs>
+    complexityRoutingMappings?: boolean | ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>
     _count?: boolean | ModelAvailabilityCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ModelAvailabilityIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -22083,6 +22351,8 @@ export namespace Prisma {
       providerKey: Prisma.$ProviderKeyPayload<ExtArgs>
       modelPricing: Prisma.$ModelPricingPayload<ExtArgs> | null
       capabilityTags: Prisma.$ModelCapabilityTagPayload<ExtArgs>[]
+      fallbackChainModels: Prisma.$FallbackChainModelPayload<ExtArgs>[]
+      complexityRoutingMappings: Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -22529,6 +22799,8 @@ export namespace Prisma {
     providerKey<T extends ProviderKeyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKeyDefaultArgs<ExtArgs>>): Prisma__ProviderKeyClient<$Result.GetResult<Prisma.$ProviderKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     modelPricing<T extends ModelAvailability$modelPricingArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$modelPricingArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     capabilityTags<T extends ModelAvailability$capabilityTagsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$capabilityTagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCapabilityTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    fallbackChainModels<T extends ModelAvailability$fallbackChainModelsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$fallbackChainModelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    complexityRoutingMappings<T extends ModelAvailability$complexityRoutingMappingsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -23008,6 +23280,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ModelCapabilityTagScalarFieldEnum | ModelCapabilityTagScalarFieldEnum[]
+  }
+
+  /**
+   * ModelAvailability.fallbackChainModels
+   */
+  export type ModelAvailability$fallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    where?: FallbackChainModelWhereInput
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    cursor?: FallbackChainModelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
+   * ModelAvailability.complexityRoutingMappings
+   */
+  export type ModelAvailability$complexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    where?: ComplexityRoutingModelMappingWhereInput
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
   }
 
   /**
@@ -44090,7 +44410,7 @@ export namespace Prisma {
     chainId: string
     name: string
     description: string | null
-    models: JsonValue
+    models: JsonValue | null
     triggerStatusCodes: JsonValue
     triggerErrorTypes: JsonValue
     triggerTimeoutMs: number
@@ -44142,6 +44462,8 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
+    chainModels?: boolean | FallbackChain$chainModelsArgs<ExtArgs>
+    _count?: boolean | FallbackChainCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["fallbackChain"]>
 
   export type FallbackChainSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -44205,10 +44527,18 @@ export namespace Prisma {
   }
 
   export type FallbackChainOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "chainId" | "name" | "description" | "models" | "triggerStatusCodes" | "triggerErrorTypes" | "triggerTimeoutMs" | "maxRetries" | "retryDelayMs" | "preserveProtocol" | "isActive" | "isBuiltin" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["fallbackChain"]>
+  export type FallbackChainInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    chainModels?: boolean | FallbackChain$chainModelsArgs<ExtArgs>
+    _count?: boolean | FallbackChainCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type FallbackChainIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type FallbackChainIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $FallbackChainPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "FallbackChain"
-    objects: {}
+    objects: {
+      chainModels: Prisma.$FallbackChainModelPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       /**
@@ -44224,10 +44554,10 @@ export namespace Prisma {
        */
       description: string | null
       /**
-       * 模型链配置（JSON 数组，按优先级排序）
+       * @deprecated 旧的 JSON 模型链配置，迁移到 FallbackChainModel 关联表后移除
        * [{ vendor: "anthropic", model: "claude-sonnet-4", protocol: "anthropic-native", features: {...} }]
        */
-      models: Prisma.JsonValue
+      models: Prisma.JsonValue | null
       /**
        * 触发 Fallback 的 HTTP 状态码（JSON 数组）
        */
@@ -44658,6 +44988,7 @@ export namespace Prisma {
    */
   export interface Prisma__FallbackChainClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    chainModels<T extends FallbackChain$chainModelsArgs<ExtArgs> = {}>(args?: Subset<T, FallbackChain$chainModelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -44721,6 +45052,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * Filter, which FallbackChain to fetch.
      */
     where: FallbackChainWhereUniqueInput
@@ -44739,6 +45074,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * Filter, which FallbackChain to fetch.
      */
     where: FallbackChainWhereUniqueInput
@@ -44756,6 +45095,10 @@ export namespace Prisma {
      * Omit specific fields from the FallbackChain
      */
     omit?: FallbackChainOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
     /**
      * Filter, which FallbackChain to fetch.
      */
@@ -44805,6 +45148,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * Filter, which FallbackChain to fetch.
      */
     where?: FallbackChainWhereInput
@@ -44853,6 +45200,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * Filter, which FallbackChains to fetch.
      */
     where?: FallbackChainWhereInput
@@ -44895,6 +45246,10 @@ export namespace Prisma {
      * Omit specific fields from the FallbackChain
      */
     omit?: FallbackChainOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
     /**
      * The data needed to create a FallbackChain.
      */
@@ -44943,6 +45298,10 @@ export namespace Prisma {
      * Omit specific fields from the FallbackChain
      */
     omit?: FallbackChainOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
     /**
      * The data needed to update a FallbackChain.
      */
@@ -45010,6 +45369,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * The filter to search for the FallbackChain to update in case it exists.
      */
     where: FallbackChainWhereUniqueInput
@@ -45036,6 +45399,10 @@ export namespace Prisma {
      */
     omit?: FallbackChainOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
+    /**
      * Filter which FallbackChain to delete.
      */
     where: FallbackChainWhereUniqueInput
@@ -45056,6 +45423,30 @@ export namespace Prisma {
   }
 
   /**
+   * FallbackChain.chainModels
+   */
+  export type FallbackChain$chainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    where?: FallbackChainModelWhereInput
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    cursor?: FallbackChainModelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
    * FallbackChain without action
    */
   export type FallbackChainDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -45067,6 +45458,10 @@ export namespace Prisma {
      * Omit specific fields from the FallbackChain
      */
     omit?: FallbackChainOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainInclude<ExtArgs> | null
   }
 
 
@@ -47785,7 +48180,7 @@ export namespace Prisma {
     configId: string
     name: string
     description: string | null
-    models: JsonValue
+    models: JsonValue | null
     classifierModel: string
     classifierVendor: string
     toolMinComplexity: string | null
@@ -47827,6 +48222,8 @@ export namespace Prisma {
     isDeleted?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    modelMappings?: boolean | ComplexityRoutingConfig$modelMappingsArgs<ExtArgs>
+    _count?: boolean | ComplexityRoutingConfigCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["complexityRoutingConfig"]>
 
   export type ComplexityRoutingConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -47878,10 +48275,18 @@ export namespace Prisma {
   }
 
   export type ComplexityRoutingConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "configId" | "name" | "description" | "models" | "classifierModel" | "classifierVendor" | "toolMinComplexity" | "isEnabled" | "isBuiltin" | "isDeleted" | "createdAt" | "updatedAt", ExtArgs["result"]["complexityRoutingConfig"]>
+  export type ComplexityRoutingConfigInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    modelMappings?: boolean | ComplexityRoutingConfig$modelMappingsArgs<ExtArgs>
+    _count?: boolean | ComplexityRoutingConfigCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ComplexityRoutingConfigIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ComplexityRoutingConfigIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ComplexityRoutingConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ComplexityRoutingConfig"
-    objects: {}
+    objects: {
+      modelMappings: Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       /**
@@ -47897,10 +48302,10 @@ export namespace Prisma {
        */
       description: string | null
       /**
-       * 各复杂度对应的模型配置（JSON）
+       * @deprecated 旧的 JSON 模型配置，迁移到 ComplexityRoutingModelMapping 关联表后移除
        * 格式: { super_easy: {vendor, model}, easy: {...}, medium: {...}, hard: {...}, super_hard: {...} }
        */
-      models: Prisma.JsonValue
+      models: Prisma.JsonValue | null
       /**
        * 分类器使用的模型
        */
@@ -48321,6 +48726,7 @@ export namespace Prisma {
    */
   export interface Prisma__ComplexityRoutingConfigClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    modelMappings<T extends ComplexityRoutingConfig$modelMappingsArgs<ExtArgs> = {}>(args?: Subset<T, ComplexityRoutingConfig$modelMappingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -48380,6 +48786,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * Filter, which ComplexityRoutingConfig to fetch.
      */
     where: ComplexityRoutingConfigWhereUniqueInput
@@ -48398,6 +48808,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * Filter, which ComplexityRoutingConfig to fetch.
      */
     where: ComplexityRoutingConfigWhereUniqueInput
@@ -48415,6 +48829,10 @@ export namespace Prisma {
      * Omit specific fields from the ComplexityRoutingConfig
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
     /**
      * Filter, which ComplexityRoutingConfig to fetch.
      */
@@ -48464,6 +48882,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * Filter, which ComplexityRoutingConfig to fetch.
      */
     where?: ComplexityRoutingConfigWhereInput
@@ -48512,6 +48934,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * Filter, which ComplexityRoutingConfigs to fetch.
      */
     where?: ComplexityRoutingConfigWhereInput
@@ -48554,6 +48980,10 @@ export namespace Prisma {
      * Omit specific fields from the ComplexityRoutingConfig
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
     /**
      * The data needed to create a ComplexityRoutingConfig.
      */
@@ -48602,6 +49032,10 @@ export namespace Prisma {
      * Omit specific fields from the ComplexityRoutingConfig
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
     /**
      * The data needed to update a ComplexityRoutingConfig.
      */
@@ -48669,6 +49103,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * The filter to search for the ComplexityRoutingConfig to update in case it exists.
      */
     where: ComplexityRoutingConfigWhereUniqueInput
@@ -48695,6 +49133,10 @@ export namespace Prisma {
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+    /**
      * Filter which ComplexityRoutingConfig to delete.
      */
     where: ComplexityRoutingConfigWhereUniqueInput
@@ -48715,6 +49157,30 @@ export namespace Prisma {
   }
 
   /**
+   * ComplexityRoutingConfig.modelMappings
+   */
+  export type ComplexityRoutingConfig$modelMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    where?: ComplexityRoutingModelMappingWhereInput
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+  }
+
+  /**
    * ComplexityRoutingConfig without action
    */
   export type ComplexityRoutingConfigDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -48726,6 +49192,2272 @@ export namespace Prisma {
      * Omit specific fields from the ComplexityRoutingConfig
      */
     omit?: ComplexityRoutingConfigOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingConfigInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model FallbackChainModel
+   */
+
+  export type AggregateFallbackChainModel = {
+    _count: FallbackChainModelCountAggregateOutputType | null
+    _avg: FallbackChainModelAvgAggregateOutputType | null
+    _sum: FallbackChainModelSumAggregateOutputType | null
+    _min: FallbackChainModelMinAggregateOutputType | null
+    _max: FallbackChainModelMaxAggregateOutputType | null
+  }
+
+  export type FallbackChainModelAvgAggregateOutputType = {
+    priority: number | null
+  }
+
+  export type FallbackChainModelSumAggregateOutputType = {
+    priority: number | null
+  }
+
+  export type FallbackChainModelMinAggregateOutputType = {
+    id: string | null
+    fallbackChainId: string | null
+    modelAvailabilityId: string | null
+    priority: number | null
+    protocolOverride: string | null
+    createdAt: Date | null
+  }
+
+  export type FallbackChainModelMaxAggregateOutputType = {
+    id: string | null
+    fallbackChainId: string | null
+    modelAvailabilityId: string | null
+    priority: number | null
+    protocolOverride: string | null
+    createdAt: Date | null
+  }
+
+  export type FallbackChainModelCountAggregateOutputType = {
+    id: number
+    fallbackChainId: number
+    modelAvailabilityId: number
+    priority: number
+    protocolOverride: number
+    featuresOverride: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type FallbackChainModelAvgAggregateInputType = {
+    priority?: true
+  }
+
+  export type FallbackChainModelSumAggregateInputType = {
+    priority?: true
+  }
+
+  export type FallbackChainModelMinAggregateInputType = {
+    id?: true
+    fallbackChainId?: true
+    modelAvailabilityId?: true
+    priority?: true
+    protocolOverride?: true
+    createdAt?: true
+  }
+
+  export type FallbackChainModelMaxAggregateInputType = {
+    id?: true
+    fallbackChainId?: true
+    modelAvailabilityId?: true
+    priority?: true
+    protocolOverride?: true
+    createdAt?: true
+  }
+
+  export type FallbackChainModelCountAggregateInputType = {
+    id?: true
+    fallbackChainId?: true
+    modelAvailabilityId?: true
+    priority?: true
+    protocolOverride?: true
+    featuresOverride?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type FallbackChainModelAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FallbackChainModel to aggregate.
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FallbackChainModels to fetch.
+     */
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FallbackChainModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FallbackChainModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FallbackChainModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FallbackChainModels
+    **/
+    _count?: true | FallbackChainModelCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: FallbackChainModelAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FallbackChainModelSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FallbackChainModelMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FallbackChainModelMaxAggregateInputType
+  }
+
+  export type GetFallbackChainModelAggregateType<T extends FallbackChainModelAggregateArgs> = {
+        [P in keyof T & keyof AggregateFallbackChainModel]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFallbackChainModel[P]>
+      : GetScalarType<T[P], AggregateFallbackChainModel[P]>
+  }
+
+
+
+
+  export type FallbackChainModelGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FallbackChainModelWhereInput
+    orderBy?: FallbackChainModelOrderByWithAggregationInput | FallbackChainModelOrderByWithAggregationInput[]
+    by: FallbackChainModelScalarFieldEnum[] | FallbackChainModelScalarFieldEnum
+    having?: FallbackChainModelScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FallbackChainModelCountAggregateInputType | true
+    _avg?: FallbackChainModelAvgAggregateInputType
+    _sum?: FallbackChainModelSumAggregateInputType
+    _min?: FallbackChainModelMinAggregateInputType
+    _max?: FallbackChainModelMaxAggregateInputType
+  }
+
+  export type FallbackChainModelGroupByOutputType = {
+    id: string
+    fallbackChainId: string
+    modelAvailabilityId: string
+    priority: number
+    protocolOverride: string | null
+    featuresOverride: JsonValue | null
+    createdAt: Date
+    _count: FallbackChainModelCountAggregateOutputType | null
+    _avg: FallbackChainModelAvgAggregateOutputType | null
+    _sum: FallbackChainModelSumAggregateOutputType | null
+    _min: FallbackChainModelMinAggregateOutputType | null
+    _max: FallbackChainModelMaxAggregateOutputType | null
+  }
+
+  type GetFallbackChainModelGroupByPayload<T extends FallbackChainModelGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FallbackChainModelGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FallbackChainModelGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FallbackChainModelGroupByOutputType[P]>
+            : GetScalarType<T[P], FallbackChainModelGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FallbackChainModelSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fallbackChainId?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    protocolOverride?: boolean
+    featuresOverride?: boolean
+    createdAt?: boolean
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["fallbackChainModel"]>
+
+  export type FallbackChainModelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fallbackChainId?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    protocolOverride?: boolean
+    featuresOverride?: boolean
+    createdAt?: boolean
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["fallbackChainModel"]>
+
+  export type FallbackChainModelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fallbackChainId?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    protocolOverride?: boolean
+    featuresOverride?: boolean
+    createdAt?: boolean
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["fallbackChainModel"]>
+
+  export type FallbackChainModelSelectScalar = {
+    id?: boolean
+    fallbackChainId?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    protocolOverride?: boolean
+    featuresOverride?: boolean
+    createdAt?: boolean
+  }
+
+  export type FallbackChainModelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fallbackChainId" | "modelAvailabilityId" | "priority" | "protocolOverride" | "featuresOverride" | "createdAt", ExtArgs["result"]["fallbackChainModel"]>
+  export type FallbackChainModelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+  export type FallbackChainModelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+  export type FallbackChainModelIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+
+  export type $FallbackChainModelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FallbackChainModel"
+    objects: {
+      fallbackChain: Prisma.$FallbackChainPayload<ExtArgs>
+      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 关联的 FallbackChain ID
+       */
+      fallbackChainId: string
+      /**
+       * 关联的 ModelAvailability ID（引用实际可用模型）
+       */
+      modelAvailabilityId: string
+      /**
+       * 在链中的顺序（0 = 首选模型，数值越小优先级越高）
+       */
+      priority: number
+      /**
+       * 协议覆盖（可选，默认使用 ProviderKey 的 apiType）
+       */
+      protocolOverride: string | null
+      /**
+       * 特性覆盖配置（JSON），如 { extendedThinking: true, cacheControl: true }
+       */
+      featuresOverride: Prisma.JsonValue | null
+      createdAt: Date
+    }, ExtArgs["result"]["fallbackChainModel"]>
+    composites: {}
+  }
+
+  type FallbackChainModelGetPayload<S extends boolean | null | undefined | FallbackChainModelDefaultArgs> = $Result.GetResult<Prisma.$FallbackChainModelPayload, S>
+
+  type FallbackChainModelCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<FallbackChainModelFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: FallbackChainModelCountAggregateInputType | true
+    }
+
+  export interface FallbackChainModelDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FallbackChainModel'], meta: { name: 'FallbackChainModel' } }
+    /**
+     * Find zero or one FallbackChainModel that matches the filter.
+     * @param {FallbackChainModelFindUniqueArgs} args - Arguments to find a FallbackChainModel
+     * @example
+     * // Get one FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FallbackChainModelFindUniqueArgs>(args: SelectSubset<T, FallbackChainModelFindUniqueArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one FallbackChainModel that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {FallbackChainModelFindUniqueOrThrowArgs} args - Arguments to find a FallbackChainModel
+     * @example
+     * // Get one FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FallbackChainModelFindUniqueOrThrowArgs>(args: SelectSubset<T, FallbackChainModelFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FallbackChainModel that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelFindFirstArgs} args - Arguments to find a FallbackChainModel
+     * @example
+     * // Get one FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FallbackChainModelFindFirstArgs>(args?: SelectSubset<T, FallbackChainModelFindFirstArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FallbackChainModel that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelFindFirstOrThrowArgs} args - Arguments to find a FallbackChainModel
+     * @example
+     * // Get one FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FallbackChainModelFindFirstOrThrowArgs>(args?: SelectSubset<T, FallbackChainModelFindFirstOrThrowArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more FallbackChainModels that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FallbackChainModels
+     * const fallbackChainModels = await prisma.fallbackChainModel.findMany()
+     * 
+     * // Get first 10 FallbackChainModels
+     * const fallbackChainModels = await prisma.fallbackChainModel.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const fallbackChainModelWithIdOnly = await prisma.fallbackChainModel.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FallbackChainModelFindManyArgs>(args?: SelectSubset<T, FallbackChainModelFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a FallbackChainModel.
+     * @param {FallbackChainModelCreateArgs} args - Arguments to create a FallbackChainModel.
+     * @example
+     * // Create one FallbackChainModel
+     * const FallbackChainModel = await prisma.fallbackChainModel.create({
+     *   data: {
+     *     // ... data to create a FallbackChainModel
+     *   }
+     * })
+     * 
+     */
+    create<T extends FallbackChainModelCreateArgs>(args: SelectSubset<T, FallbackChainModelCreateArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many FallbackChainModels.
+     * @param {FallbackChainModelCreateManyArgs} args - Arguments to create many FallbackChainModels.
+     * @example
+     * // Create many FallbackChainModels
+     * const fallbackChainModel = await prisma.fallbackChainModel.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FallbackChainModelCreateManyArgs>(args?: SelectSubset<T, FallbackChainModelCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FallbackChainModels and returns the data saved in the database.
+     * @param {FallbackChainModelCreateManyAndReturnArgs} args - Arguments to create many FallbackChainModels.
+     * @example
+     * // Create many FallbackChainModels
+     * const fallbackChainModel = await prisma.fallbackChainModel.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FallbackChainModels and only return the `id`
+     * const fallbackChainModelWithIdOnly = await prisma.fallbackChainModel.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FallbackChainModelCreateManyAndReturnArgs>(args?: SelectSubset<T, FallbackChainModelCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a FallbackChainModel.
+     * @param {FallbackChainModelDeleteArgs} args - Arguments to delete one FallbackChainModel.
+     * @example
+     * // Delete one FallbackChainModel
+     * const FallbackChainModel = await prisma.fallbackChainModel.delete({
+     *   where: {
+     *     // ... filter to delete one FallbackChainModel
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FallbackChainModelDeleteArgs>(args: SelectSubset<T, FallbackChainModelDeleteArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one FallbackChainModel.
+     * @param {FallbackChainModelUpdateArgs} args - Arguments to update one FallbackChainModel.
+     * @example
+     * // Update one FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FallbackChainModelUpdateArgs>(args: SelectSubset<T, FallbackChainModelUpdateArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more FallbackChainModels.
+     * @param {FallbackChainModelDeleteManyArgs} args - Arguments to filter FallbackChainModels to delete.
+     * @example
+     * // Delete a few FallbackChainModels
+     * const { count } = await prisma.fallbackChainModel.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FallbackChainModelDeleteManyArgs>(args?: SelectSubset<T, FallbackChainModelDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FallbackChainModels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FallbackChainModels
+     * const fallbackChainModel = await prisma.fallbackChainModel.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FallbackChainModelUpdateManyArgs>(args: SelectSubset<T, FallbackChainModelUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FallbackChainModels and returns the data updated in the database.
+     * @param {FallbackChainModelUpdateManyAndReturnArgs} args - Arguments to update many FallbackChainModels.
+     * @example
+     * // Update many FallbackChainModels
+     * const fallbackChainModel = await prisma.fallbackChainModel.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more FallbackChainModels and only return the `id`
+     * const fallbackChainModelWithIdOnly = await prisma.fallbackChainModel.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends FallbackChainModelUpdateManyAndReturnArgs>(args: SelectSubset<T, FallbackChainModelUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one FallbackChainModel.
+     * @param {FallbackChainModelUpsertArgs} args - Arguments to update or create a FallbackChainModel.
+     * @example
+     * // Update or create a FallbackChainModel
+     * const fallbackChainModel = await prisma.fallbackChainModel.upsert({
+     *   create: {
+     *     // ... data to create a FallbackChainModel
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FallbackChainModel we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FallbackChainModelUpsertArgs>(args: SelectSubset<T, FallbackChainModelUpsertArgs<ExtArgs>>): Prisma__FallbackChainModelClient<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of FallbackChainModels.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelCountArgs} args - Arguments to filter FallbackChainModels to count.
+     * @example
+     * // Count the number of FallbackChainModels
+     * const count = await prisma.fallbackChainModel.count({
+     *   where: {
+     *     // ... the filter for the FallbackChainModels we want to count
+     *   }
+     * })
+    **/
+    count<T extends FallbackChainModelCountArgs>(
+      args?: Subset<T, FallbackChainModelCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FallbackChainModelCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FallbackChainModel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FallbackChainModelAggregateArgs>(args: Subset<T, FallbackChainModelAggregateArgs>): Prisma.PrismaPromise<GetFallbackChainModelAggregateType<T>>
+
+    /**
+     * Group by FallbackChainModel.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FallbackChainModelGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FallbackChainModelGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FallbackChainModelGroupByArgs['orderBy'] }
+        : { orderBy?: FallbackChainModelGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FallbackChainModelGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFallbackChainModelGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FallbackChainModel model
+   */
+  readonly fields: FallbackChainModelFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FallbackChainModel.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FallbackChainModelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    fallbackChain<T extends FallbackChainDefaultArgs<ExtArgs> = {}>(args?: Subset<T, FallbackChainDefaultArgs<ExtArgs>>): Prisma__FallbackChainClient<$Result.GetResult<Prisma.$FallbackChainPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    modelAvailability<T extends ModelAvailabilityDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailabilityDefaultArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FallbackChainModel model
+   */
+  interface FallbackChainModelFieldRefs {
+    readonly id: FieldRef<"FallbackChainModel", 'String'>
+    readonly fallbackChainId: FieldRef<"FallbackChainModel", 'String'>
+    readonly modelAvailabilityId: FieldRef<"FallbackChainModel", 'String'>
+    readonly priority: FieldRef<"FallbackChainModel", 'Int'>
+    readonly protocolOverride: FieldRef<"FallbackChainModel", 'String'>
+    readonly featuresOverride: FieldRef<"FallbackChainModel", 'Json'>
+    readonly createdAt: FieldRef<"FallbackChainModel", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FallbackChainModel findUnique
+   */
+  export type FallbackChainModelFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter, which FallbackChainModel to fetch.
+     */
+    where: FallbackChainModelWhereUniqueInput
+  }
+
+  /**
+   * FallbackChainModel findUniqueOrThrow
+   */
+  export type FallbackChainModelFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter, which FallbackChainModel to fetch.
+     */
+    where: FallbackChainModelWhereUniqueInput
+  }
+
+  /**
+   * FallbackChainModel findFirst
+   */
+  export type FallbackChainModelFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter, which FallbackChainModel to fetch.
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FallbackChainModels to fetch.
+     */
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FallbackChainModels.
+     */
+    cursor?: FallbackChainModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FallbackChainModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FallbackChainModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FallbackChainModels.
+     */
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
+   * FallbackChainModel findFirstOrThrow
+   */
+  export type FallbackChainModelFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter, which FallbackChainModel to fetch.
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FallbackChainModels to fetch.
+     */
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FallbackChainModels.
+     */
+    cursor?: FallbackChainModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FallbackChainModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FallbackChainModels.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FallbackChainModels.
+     */
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
+   * FallbackChainModel findMany
+   */
+  export type FallbackChainModelFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter, which FallbackChainModels to fetch.
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FallbackChainModels to fetch.
+     */
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FallbackChainModels.
+     */
+    cursor?: FallbackChainModelWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FallbackChainModels from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FallbackChainModels.
+     */
+    skip?: number
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
+   * FallbackChainModel create
+   */
+  export type FallbackChainModelCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * The data needed to create a FallbackChainModel.
+     */
+    data: XOR<FallbackChainModelCreateInput, FallbackChainModelUncheckedCreateInput>
+  }
+
+  /**
+   * FallbackChainModel createMany
+   */
+  export type FallbackChainModelCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FallbackChainModels.
+     */
+    data: FallbackChainModelCreateManyInput | FallbackChainModelCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FallbackChainModel createManyAndReturn
+   */
+  export type FallbackChainModelCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * The data used to create many FallbackChainModels.
+     */
+    data: FallbackChainModelCreateManyInput | FallbackChainModelCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FallbackChainModel update
+   */
+  export type FallbackChainModelUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * The data needed to update a FallbackChainModel.
+     */
+    data: XOR<FallbackChainModelUpdateInput, FallbackChainModelUncheckedUpdateInput>
+    /**
+     * Choose, which FallbackChainModel to update.
+     */
+    where: FallbackChainModelWhereUniqueInput
+  }
+
+  /**
+   * FallbackChainModel updateMany
+   */
+  export type FallbackChainModelUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FallbackChainModels.
+     */
+    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyInput>
+    /**
+     * Filter which FallbackChainModels to update
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * Limit how many FallbackChainModels to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * FallbackChainModel updateManyAndReturn
+   */
+  export type FallbackChainModelUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * The data used to update FallbackChainModels.
+     */
+    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyInput>
+    /**
+     * Filter which FallbackChainModels to update
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * Limit how many FallbackChainModels to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FallbackChainModel upsert
+   */
+  export type FallbackChainModelUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * The filter to search for the FallbackChainModel to update in case it exists.
+     */
+    where: FallbackChainModelWhereUniqueInput
+    /**
+     * In case the FallbackChainModel found by the `where` argument doesn't exist, create a new FallbackChainModel with this data.
+     */
+    create: XOR<FallbackChainModelCreateInput, FallbackChainModelUncheckedCreateInput>
+    /**
+     * In case the FallbackChainModel was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FallbackChainModelUpdateInput, FallbackChainModelUncheckedUpdateInput>
+  }
+
+  /**
+   * FallbackChainModel delete
+   */
+  export type FallbackChainModelDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    /**
+     * Filter which FallbackChainModel to delete.
+     */
+    where: FallbackChainModelWhereUniqueInput
+  }
+
+  /**
+   * FallbackChainModel deleteMany
+   */
+  export type FallbackChainModelDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FallbackChainModels to delete
+     */
+    where?: FallbackChainModelWhereInput
+    /**
+     * Limit how many FallbackChainModels to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * FallbackChainModel without action
+   */
+  export type FallbackChainModelDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ComplexityRoutingModelMapping
+   */
+
+  export type AggregateComplexityRoutingModelMapping = {
+    _count: ComplexityRoutingModelMappingCountAggregateOutputType | null
+    _avg: ComplexityRoutingModelMappingAvgAggregateOutputType | null
+    _sum: ComplexityRoutingModelMappingSumAggregateOutputType | null
+    _min: ComplexityRoutingModelMappingMinAggregateOutputType | null
+    _max: ComplexityRoutingModelMappingMaxAggregateOutputType | null
+  }
+
+  export type ComplexityRoutingModelMappingAvgAggregateOutputType = {
+    priority: number | null
+  }
+
+  export type ComplexityRoutingModelMappingSumAggregateOutputType = {
+    priority: number | null
+  }
+
+  export type ComplexityRoutingModelMappingMinAggregateOutputType = {
+    id: string | null
+    complexityConfigId: string | null
+    complexityLevel: string | null
+    modelAvailabilityId: string | null
+    priority: number | null
+    createdAt: Date | null
+  }
+
+  export type ComplexityRoutingModelMappingMaxAggregateOutputType = {
+    id: string | null
+    complexityConfigId: string | null
+    complexityLevel: string | null
+    modelAvailabilityId: string | null
+    priority: number | null
+    createdAt: Date | null
+  }
+
+  export type ComplexityRoutingModelMappingCountAggregateOutputType = {
+    id: number
+    complexityConfigId: number
+    complexityLevel: number
+    modelAvailabilityId: number
+    priority: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ComplexityRoutingModelMappingAvgAggregateInputType = {
+    priority?: true
+  }
+
+  export type ComplexityRoutingModelMappingSumAggregateInputType = {
+    priority?: true
+  }
+
+  export type ComplexityRoutingModelMappingMinAggregateInputType = {
+    id?: true
+    complexityConfigId?: true
+    complexityLevel?: true
+    modelAvailabilityId?: true
+    priority?: true
+    createdAt?: true
+  }
+
+  export type ComplexityRoutingModelMappingMaxAggregateInputType = {
+    id?: true
+    complexityConfigId?: true
+    complexityLevel?: true
+    modelAvailabilityId?: true
+    priority?: true
+    createdAt?: true
+  }
+
+  export type ComplexityRoutingModelMappingCountAggregateInputType = {
+    id?: true
+    complexityConfigId?: true
+    complexityLevel?: true
+    modelAvailabilityId?: true
+    priority?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ComplexityRoutingModelMappingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComplexityRoutingModelMapping to aggregate.
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComplexityRoutingModelMappings to fetch.
+     */
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComplexityRoutingModelMappings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComplexityRoutingModelMappings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ComplexityRoutingModelMappings
+    **/
+    _count?: true | ComplexityRoutingModelMappingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ComplexityRoutingModelMappingAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ComplexityRoutingModelMappingSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ComplexityRoutingModelMappingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ComplexityRoutingModelMappingMaxAggregateInputType
+  }
+
+  export type GetComplexityRoutingModelMappingAggregateType<T extends ComplexityRoutingModelMappingAggregateArgs> = {
+        [P in keyof T & keyof AggregateComplexityRoutingModelMapping]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateComplexityRoutingModelMapping[P]>
+      : GetScalarType<T[P], AggregateComplexityRoutingModelMapping[P]>
+  }
+
+
+
+
+  export type ComplexityRoutingModelMappingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComplexityRoutingModelMappingWhereInput
+    orderBy?: ComplexityRoutingModelMappingOrderByWithAggregationInput | ComplexityRoutingModelMappingOrderByWithAggregationInput[]
+    by: ComplexityRoutingModelMappingScalarFieldEnum[] | ComplexityRoutingModelMappingScalarFieldEnum
+    having?: ComplexityRoutingModelMappingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ComplexityRoutingModelMappingCountAggregateInputType | true
+    _avg?: ComplexityRoutingModelMappingAvgAggregateInputType
+    _sum?: ComplexityRoutingModelMappingSumAggregateInputType
+    _min?: ComplexityRoutingModelMappingMinAggregateInputType
+    _max?: ComplexityRoutingModelMappingMaxAggregateInputType
+  }
+
+  export type ComplexityRoutingModelMappingGroupByOutputType = {
+    id: string
+    complexityConfigId: string
+    complexityLevel: string
+    modelAvailabilityId: string
+    priority: number
+    createdAt: Date
+    _count: ComplexityRoutingModelMappingCountAggregateOutputType | null
+    _avg: ComplexityRoutingModelMappingAvgAggregateOutputType | null
+    _sum: ComplexityRoutingModelMappingSumAggregateOutputType | null
+    _min: ComplexityRoutingModelMappingMinAggregateOutputType | null
+    _max: ComplexityRoutingModelMappingMaxAggregateOutputType | null
+  }
+
+  type GetComplexityRoutingModelMappingGroupByPayload<T extends ComplexityRoutingModelMappingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ComplexityRoutingModelMappingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ComplexityRoutingModelMappingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ComplexityRoutingModelMappingGroupByOutputType[P]>
+            : GetScalarType<T[P], ComplexityRoutingModelMappingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ComplexityRoutingModelMappingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    complexityConfigId?: boolean
+    complexityLevel?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["complexityRoutingModelMapping"]>
+
+  export type ComplexityRoutingModelMappingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    complexityConfigId?: boolean
+    complexityLevel?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["complexityRoutingModelMapping"]>
+
+  export type ComplexityRoutingModelMappingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    complexityConfigId?: boolean
+    complexityLevel?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["complexityRoutingModelMapping"]>
+
+  export type ComplexityRoutingModelMappingSelectScalar = {
+    id?: boolean
+    complexityConfigId?: boolean
+    complexityLevel?: boolean
+    modelAvailabilityId?: boolean
+    priority?: boolean
+    createdAt?: boolean
+  }
+
+  export type ComplexityRoutingModelMappingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "complexityConfigId" | "complexityLevel" | "modelAvailabilityId" | "priority" | "createdAt", ExtArgs["result"]["complexityRoutingModelMapping"]>
+  export type ComplexityRoutingModelMappingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+  export type ComplexityRoutingModelMappingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+  export type ComplexityRoutingModelMappingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
+    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+  }
+
+  export type $ComplexityRoutingModelMappingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ComplexityRoutingModelMapping"
+    objects: {
+      complexityConfig: Prisma.$ComplexityRoutingConfigPayload<ExtArgs>
+      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 关联的 ComplexityRoutingConfig ID
+       */
+      complexityConfigId: string
+      /**
+       * 复杂度级别：super_easy, easy, medium, hard, super_hard
+       */
+      complexityLevel: string
+      /**
+       * 关联的 ModelAvailability ID
+       */
+      modelAvailabilityId: string
+      /**
+       * 在同级别中的优先级（0 = 首选）
+       */
+      priority: number
+      createdAt: Date
+    }, ExtArgs["result"]["complexityRoutingModelMapping"]>
+    composites: {}
+  }
+
+  type ComplexityRoutingModelMappingGetPayload<S extends boolean | null | undefined | ComplexityRoutingModelMappingDefaultArgs> = $Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload, S>
+
+  type ComplexityRoutingModelMappingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ComplexityRoutingModelMappingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ComplexityRoutingModelMappingCountAggregateInputType | true
+    }
+
+  export interface ComplexityRoutingModelMappingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ComplexityRoutingModelMapping'], meta: { name: 'ComplexityRoutingModelMapping' } }
+    /**
+     * Find zero or one ComplexityRoutingModelMapping that matches the filter.
+     * @param {ComplexityRoutingModelMappingFindUniqueArgs} args - Arguments to find a ComplexityRoutingModelMapping
+     * @example
+     * // Get one ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ComplexityRoutingModelMappingFindUniqueArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingFindUniqueArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ComplexityRoutingModelMapping that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ComplexityRoutingModelMappingFindUniqueOrThrowArgs} args - Arguments to find a ComplexityRoutingModelMapping
+     * @example
+     * // Get one ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ComplexityRoutingModelMappingFindUniqueOrThrowArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComplexityRoutingModelMapping that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingFindFirstArgs} args - Arguments to find a ComplexityRoutingModelMapping
+     * @example
+     * // Get one ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ComplexityRoutingModelMappingFindFirstArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingFindFirstArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComplexityRoutingModelMapping that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingFindFirstOrThrowArgs} args - Arguments to find a ComplexityRoutingModelMapping
+     * @example
+     * // Get one ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ComplexityRoutingModelMappingFindFirstOrThrowArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingFindFirstOrThrowArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ComplexityRoutingModelMappings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ComplexityRoutingModelMappings
+     * const complexityRoutingModelMappings = await prisma.complexityRoutingModelMapping.findMany()
+     * 
+     * // Get first 10 ComplexityRoutingModelMappings
+     * const complexityRoutingModelMappings = await prisma.complexityRoutingModelMapping.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const complexityRoutingModelMappingWithIdOnly = await prisma.complexityRoutingModelMapping.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ComplexityRoutingModelMappingFindManyArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ComplexityRoutingModelMapping.
+     * @param {ComplexityRoutingModelMappingCreateArgs} args - Arguments to create a ComplexityRoutingModelMapping.
+     * @example
+     * // Create one ComplexityRoutingModelMapping
+     * const ComplexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.create({
+     *   data: {
+     *     // ... data to create a ComplexityRoutingModelMapping
+     *   }
+     * })
+     * 
+     */
+    create<T extends ComplexityRoutingModelMappingCreateArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingCreateArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ComplexityRoutingModelMappings.
+     * @param {ComplexityRoutingModelMappingCreateManyArgs} args - Arguments to create many ComplexityRoutingModelMappings.
+     * @example
+     * // Create many ComplexityRoutingModelMappings
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ComplexityRoutingModelMappingCreateManyArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ComplexityRoutingModelMappings and returns the data saved in the database.
+     * @param {ComplexityRoutingModelMappingCreateManyAndReturnArgs} args - Arguments to create many ComplexityRoutingModelMappings.
+     * @example
+     * // Create many ComplexityRoutingModelMappings
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ComplexityRoutingModelMappings and only return the `id`
+     * const complexityRoutingModelMappingWithIdOnly = await prisma.complexityRoutingModelMapping.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ComplexityRoutingModelMappingCreateManyAndReturnArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ComplexityRoutingModelMapping.
+     * @param {ComplexityRoutingModelMappingDeleteArgs} args - Arguments to delete one ComplexityRoutingModelMapping.
+     * @example
+     * // Delete one ComplexityRoutingModelMapping
+     * const ComplexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.delete({
+     *   where: {
+     *     // ... filter to delete one ComplexityRoutingModelMapping
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ComplexityRoutingModelMappingDeleteArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingDeleteArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ComplexityRoutingModelMapping.
+     * @param {ComplexityRoutingModelMappingUpdateArgs} args - Arguments to update one ComplexityRoutingModelMapping.
+     * @example
+     * // Update one ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ComplexityRoutingModelMappingUpdateArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingUpdateArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ComplexityRoutingModelMappings.
+     * @param {ComplexityRoutingModelMappingDeleteManyArgs} args - Arguments to filter ComplexityRoutingModelMappings to delete.
+     * @example
+     * // Delete a few ComplexityRoutingModelMappings
+     * const { count } = await prisma.complexityRoutingModelMapping.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ComplexityRoutingModelMappingDeleteManyArgs>(args?: SelectSubset<T, ComplexityRoutingModelMappingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComplexityRoutingModelMappings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ComplexityRoutingModelMappings
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ComplexityRoutingModelMappingUpdateManyArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComplexityRoutingModelMappings and returns the data updated in the database.
+     * @param {ComplexityRoutingModelMappingUpdateManyAndReturnArgs} args - Arguments to update many ComplexityRoutingModelMappings.
+     * @example
+     * // Update many ComplexityRoutingModelMappings
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ComplexityRoutingModelMappings and only return the `id`
+     * const complexityRoutingModelMappingWithIdOnly = await prisma.complexityRoutingModelMapping.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ComplexityRoutingModelMappingUpdateManyAndReturnArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ComplexityRoutingModelMapping.
+     * @param {ComplexityRoutingModelMappingUpsertArgs} args - Arguments to update or create a ComplexityRoutingModelMapping.
+     * @example
+     * // Update or create a ComplexityRoutingModelMapping
+     * const complexityRoutingModelMapping = await prisma.complexityRoutingModelMapping.upsert({
+     *   create: {
+     *     // ... data to create a ComplexityRoutingModelMapping
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ComplexityRoutingModelMapping we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ComplexityRoutingModelMappingUpsertArgs>(args: SelectSubset<T, ComplexityRoutingModelMappingUpsertArgs<ExtArgs>>): Prisma__ComplexityRoutingModelMappingClient<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ComplexityRoutingModelMappings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingCountArgs} args - Arguments to filter ComplexityRoutingModelMappings to count.
+     * @example
+     * // Count the number of ComplexityRoutingModelMappings
+     * const count = await prisma.complexityRoutingModelMapping.count({
+     *   where: {
+     *     // ... the filter for the ComplexityRoutingModelMappings we want to count
+     *   }
+     * })
+    **/
+    count<T extends ComplexityRoutingModelMappingCountArgs>(
+      args?: Subset<T, ComplexityRoutingModelMappingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ComplexityRoutingModelMappingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ComplexityRoutingModelMapping.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ComplexityRoutingModelMappingAggregateArgs>(args: Subset<T, ComplexityRoutingModelMappingAggregateArgs>): Prisma.PrismaPromise<GetComplexityRoutingModelMappingAggregateType<T>>
+
+    /**
+     * Group by ComplexityRoutingModelMapping.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComplexityRoutingModelMappingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ComplexityRoutingModelMappingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ComplexityRoutingModelMappingGroupByArgs['orderBy'] }
+        : { orderBy?: ComplexityRoutingModelMappingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ComplexityRoutingModelMappingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetComplexityRoutingModelMappingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ComplexityRoutingModelMapping model
+   */
+  readonly fields: ComplexityRoutingModelMappingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ComplexityRoutingModelMapping.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ComplexityRoutingModelMappingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    complexityConfig<T extends ComplexityRoutingConfigDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ComplexityRoutingConfigDefaultArgs<ExtArgs>>): Prisma__ComplexityRoutingConfigClient<$Result.GetResult<Prisma.$ComplexityRoutingConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    modelAvailability<T extends ModelAvailabilityDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailabilityDefaultArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ComplexityRoutingModelMapping model
+   */
+  interface ComplexityRoutingModelMappingFieldRefs {
+    readonly id: FieldRef<"ComplexityRoutingModelMapping", 'String'>
+    readonly complexityConfigId: FieldRef<"ComplexityRoutingModelMapping", 'String'>
+    readonly complexityLevel: FieldRef<"ComplexityRoutingModelMapping", 'String'>
+    readonly modelAvailabilityId: FieldRef<"ComplexityRoutingModelMapping", 'String'>
+    readonly priority: FieldRef<"ComplexityRoutingModelMapping", 'Int'>
+    readonly createdAt: FieldRef<"ComplexityRoutingModelMapping", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ComplexityRoutingModelMapping findUnique
+   */
+  export type ComplexityRoutingModelMappingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter, which ComplexityRoutingModelMapping to fetch.
+     */
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+  }
+
+  /**
+   * ComplexityRoutingModelMapping findUniqueOrThrow
+   */
+  export type ComplexityRoutingModelMappingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter, which ComplexityRoutingModelMapping to fetch.
+     */
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+  }
+
+  /**
+   * ComplexityRoutingModelMapping findFirst
+   */
+  export type ComplexityRoutingModelMappingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter, which ComplexityRoutingModelMapping to fetch.
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComplexityRoutingModelMappings to fetch.
+     */
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComplexityRoutingModelMappings.
+     */
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComplexityRoutingModelMappings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComplexityRoutingModelMappings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComplexityRoutingModelMappings.
+     */
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+  }
+
+  /**
+   * ComplexityRoutingModelMapping findFirstOrThrow
+   */
+  export type ComplexityRoutingModelMappingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter, which ComplexityRoutingModelMapping to fetch.
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComplexityRoutingModelMappings to fetch.
+     */
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComplexityRoutingModelMappings.
+     */
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComplexityRoutingModelMappings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComplexityRoutingModelMappings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComplexityRoutingModelMappings.
+     */
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+  }
+
+  /**
+   * ComplexityRoutingModelMapping findMany
+   */
+  export type ComplexityRoutingModelMappingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter, which ComplexityRoutingModelMappings to fetch.
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComplexityRoutingModelMappings to fetch.
+     */
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ComplexityRoutingModelMappings.
+     */
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComplexityRoutingModelMappings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComplexityRoutingModelMappings.
+     */
+    skip?: number
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+  }
+
+  /**
+   * ComplexityRoutingModelMapping create
+   */
+  export type ComplexityRoutingModelMappingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ComplexityRoutingModelMapping.
+     */
+    data: XOR<ComplexityRoutingModelMappingCreateInput, ComplexityRoutingModelMappingUncheckedCreateInput>
+  }
+
+  /**
+   * ComplexityRoutingModelMapping createMany
+   */
+  export type ComplexityRoutingModelMappingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ComplexityRoutingModelMappings.
+     */
+    data: ComplexityRoutingModelMappingCreateManyInput | ComplexityRoutingModelMappingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ComplexityRoutingModelMapping createManyAndReturn
+   */
+  export type ComplexityRoutingModelMappingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * The data used to create many ComplexityRoutingModelMappings.
+     */
+    data: ComplexityRoutingModelMappingCreateManyInput | ComplexityRoutingModelMappingCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ComplexityRoutingModelMapping update
+   */
+  export type ComplexityRoutingModelMappingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ComplexityRoutingModelMapping.
+     */
+    data: XOR<ComplexityRoutingModelMappingUpdateInput, ComplexityRoutingModelMappingUncheckedUpdateInput>
+    /**
+     * Choose, which ComplexityRoutingModelMapping to update.
+     */
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+  }
+
+  /**
+   * ComplexityRoutingModelMapping updateMany
+   */
+  export type ComplexityRoutingModelMappingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ComplexityRoutingModelMappings.
+     */
+    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyInput>
+    /**
+     * Filter which ComplexityRoutingModelMappings to update
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * Limit how many ComplexityRoutingModelMappings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComplexityRoutingModelMapping updateManyAndReturn
+   */
+  export type ComplexityRoutingModelMappingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * The data used to update ComplexityRoutingModelMappings.
+     */
+    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyInput>
+    /**
+     * Filter which ComplexityRoutingModelMappings to update
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * Limit how many ComplexityRoutingModelMappings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ComplexityRoutingModelMapping upsert
+   */
+  export type ComplexityRoutingModelMappingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ComplexityRoutingModelMapping to update in case it exists.
+     */
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    /**
+     * In case the ComplexityRoutingModelMapping found by the `where` argument doesn't exist, create a new ComplexityRoutingModelMapping with this data.
+     */
+    create: XOR<ComplexityRoutingModelMappingCreateInput, ComplexityRoutingModelMappingUncheckedCreateInput>
+    /**
+     * In case the ComplexityRoutingModelMapping was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ComplexityRoutingModelMappingUpdateInput, ComplexityRoutingModelMappingUncheckedUpdateInput>
+  }
+
+  /**
+   * ComplexityRoutingModelMapping delete
+   */
+  export type ComplexityRoutingModelMappingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    /**
+     * Filter which ComplexityRoutingModelMapping to delete.
+     */
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+  }
+
+  /**
+   * ComplexityRoutingModelMapping deleteMany
+   */
+  export type ComplexityRoutingModelMappingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComplexityRoutingModelMappings to delete
+     */
+    where?: ComplexityRoutingModelMappingWhereInput
+    /**
+     * Limit how many ComplexityRoutingModelMappings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComplexityRoutingModelMapping without action
+   */
+  export type ComplexityRoutingModelMappingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
   }
 
 
@@ -49448,6 +52180,31 @@ export namespace Prisma {
   };
 
   export type ComplexityRoutingConfigScalarFieldEnum = (typeof ComplexityRoutingConfigScalarFieldEnum)[keyof typeof ComplexityRoutingConfigScalarFieldEnum]
+
+
+  export const FallbackChainModelScalarFieldEnum: {
+    id: 'id',
+    fallbackChainId: 'fallbackChainId',
+    modelAvailabilityId: 'modelAvailabilityId',
+    priority: 'priority',
+    protocolOverride: 'protocolOverride',
+    featuresOverride: 'featuresOverride',
+    createdAt: 'createdAt'
+  };
+
+  export type FallbackChainModelScalarFieldEnum = (typeof FallbackChainModelScalarFieldEnum)[keyof typeof FallbackChainModelScalarFieldEnum]
+
+
+  export const ComplexityRoutingModelMappingScalarFieldEnum: {
+    id: 'id',
+    complexityConfigId: 'complexityConfigId',
+    complexityLevel: 'complexityLevel',
+    modelAvailabilityId: 'modelAvailabilityId',
+    priority: 'priority',
+    createdAt: 'createdAt'
+  };
+
+  export type ComplexityRoutingModelMappingScalarFieldEnum = (typeof ComplexityRoutingModelMappingScalarFieldEnum)[keyof typeof ComplexityRoutingModelMappingScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -51182,6 +53939,8 @@ export namespace Prisma {
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
     modelPricing?: XOR<ModelPricingNullableScalarRelationFilter, ModelPricingWhereInput> | null
     capabilityTags?: ModelCapabilityTagListRelationFilter
+    fallbackChainModels?: FallbackChainModelListRelationFilter
+    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
   }
 
   export type ModelAvailabilityOrderByWithRelationInput = {
@@ -51202,6 +53961,8 @@ export namespace Prisma {
     providerKey?: ProviderKeyOrderByWithRelationInput
     modelPricing?: ModelPricingOrderByWithRelationInput
     capabilityTags?: ModelCapabilityTagOrderByRelationAggregateInput
+    fallbackChainModels?: FallbackChainModelOrderByRelationAggregateInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingOrderByRelationAggregateInput
   }
 
   export type ModelAvailabilityWhereUniqueInput = Prisma.AtLeast<{
@@ -51226,6 +53987,8 @@ export namespace Prisma {
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
     modelPricing?: XOR<ModelPricingNullableScalarRelationFilter, ModelPricingWhereInput> | null
     capabilityTags?: ModelCapabilityTagListRelationFilter
+    fallbackChainModels?: FallbackChainModelListRelationFilter
+    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
   }, "id" | "providerKeyId_model">
 
   export type ModelAvailabilityOrderByWithAggregationInput = {
@@ -53041,7 +55804,7 @@ export namespace Prisma {
     chainId?: StringFilter<"FallbackChain"> | string
     name?: StringFilter<"FallbackChain"> | string
     description?: StringNullableFilter<"FallbackChain"> | string | null
-    models?: JsonFilter<"FallbackChain">
+    models?: JsonNullableFilter<"FallbackChain">
     triggerStatusCodes?: JsonFilter<"FallbackChain">
     triggerErrorTypes?: JsonFilter<"FallbackChain">
     triggerTimeoutMs?: IntFilter<"FallbackChain"> | number
@@ -53054,6 +55817,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"FallbackChain"> | Date | string
     updatedAt?: DateTimeFilter<"FallbackChain"> | Date | string
     deletedAt?: DateTimeNullableFilter<"FallbackChain"> | Date | string | null
+    chainModels?: FallbackChainModelListRelationFilter
   }
 
   export type FallbackChainOrderByWithRelationInput = {
@@ -53061,7 +55825,7 @@ export namespace Prisma {
     chainId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    models?: SortOrder
+    models?: SortOrderInput | SortOrder
     triggerStatusCodes?: SortOrder
     triggerErrorTypes?: SortOrder
     triggerTimeoutMs?: SortOrder
@@ -53074,6 +55838,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
+    chainModels?: FallbackChainModelOrderByRelationAggregateInput
   }
 
   export type FallbackChainWhereUniqueInput = Prisma.AtLeast<{
@@ -53084,7 +55849,7 @@ export namespace Prisma {
     NOT?: FallbackChainWhereInput | FallbackChainWhereInput[]
     name?: StringFilter<"FallbackChain"> | string
     description?: StringNullableFilter<"FallbackChain"> | string | null
-    models?: JsonFilter<"FallbackChain">
+    models?: JsonNullableFilter<"FallbackChain">
     triggerStatusCodes?: JsonFilter<"FallbackChain">
     triggerErrorTypes?: JsonFilter<"FallbackChain">
     triggerTimeoutMs?: IntFilter<"FallbackChain"> | number
@@ -53097,6 +55862,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"FallbackChain"> | Date | string
     updatedAt?: DateTimeFilter<"FallbackChain"> | Date | string
     deletedAt?: DateTimeNullableFilter<"FallbackChain"> | Date | string | null
+    chainModels?: FallbackChainModelListRelationFilter
   }, "id" | "chainId">
 
   export type FallbackChainOrderByWithAggregationInput = {
@@ -53104,7 +55870,7 @@ export namespace Prisma {
     chainId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    models?: SortOrder
+    models?: SortOrderInput | SortOrder
     triggerStatusCodes?: SortOrder
     triggerErrorTypes?: SortOrder
     triggerTimeoutMs?: SortOrder
@@ -53132,7 +55898,7 @@ export namespace Prisma {
     chainId?: StringWithAggregatesFilter<"FallbackChain"> | string
     name?: StringWithAggregatesFilter<"FallbackChain"> | string
     description?: StringNullableWithAggregatesFilter<"FallbackChain"> | string | null
-    models?: JsonWithAggregatesFilter<"FallbackChain">
+    models?: JsonNullableWithAggregatesFilter<"FallbackChain">
     triggerStatusCodes?: JsonWithAggregatesFilter<"FallbackChain">
     triggerErrorTypes?: JsonWithAggregatesFilter<"FallbackChain">
     triggerTimeoutMs?: IntWithAggregatesFilter<"FallbackChain"> | number
@@ -53386,7 +56152,7 @@ export namespace Prisma {
     configId?: StringFilter<"ComplexityRoutingConfig"> | string
     name?: StringFilter<"ComplexityRoutingConfig"> | string
     description?: StringNullableFilter<"ComplexityRoutingConfig"> | string | null
-    models?: JsonFilter<"ComplexityRoutingConfig">
+    models?: JsonNullableFilter<"ComplexityRoutingConfig">
     classifierModel?: StringFilter<"ComplexityRoutingConfig"> | string
     classifierVendor?: StringFilter<"ComplexityRoutingConfig"> | string
     toolMinComplexity?: StringNullableFilter<"ComplexityRoutingConfig"> | string | null
@@ -53395,6 +56161,7 @@ export namespace Prisma {
     isDeleted?: BoolFilter<"ComplexityRoutingConfig"> | boolean
     createdAt?: DateTimeFilter<"ComplexityRoutingConfig"> | Date | string
     updatedAt?: DateTimeFilter<"ComplexityRoutingConfig"> | Date | string
+    modelMappings?: ComplexityRoutingModelMappingListRelationFilter
   }
 
   export type ComplexityRoutingConfigOrderByWithRelationInput = {
@@ -53402,7 +56169,7 @@ export namespace Prisma {
     configId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    models?: SortOrder
+    models?: SortOrderInput | SortOrder
     classifierModel?: SortOrder
     classifierVendor?: SortOrder
     toolMinComplexity?: SortOrderInput | SortOrder
@@ -53411,6 +56178,7 @@ export namespace Prisma {
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    modelMappings?: ComplexityRoutingModelMappingOrderByRelationAggregateInput
   }
 
   export type ComplexityRoutingConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -53421,7 +56189,7 @@ export namespace Prisma {
     NOT?: ComplexityRoutingConfigWhereInput | ComplexityRoutingConfigWhereInput[]
     name?: StringFilter<"ComplexityRoutingConfig"> | string
     description?: StringNullableFilter<"ComplexityRoutingConfig"> | string | null
-    models?: JsonFilter<"ComplexityRoutingConfig">
+    models?: JsonNullableFilter<"ComplexityRoutingConfig">
     classifierModel?: StringFilter<"ComplexityRoutingConfig"> | string
     classifierVendor?: StringFilter<"ComplexityRoutingConfig"> | string
     toolMinComplexity?: StringNullableFilter<"ComplexityRoutingConfig"> | string | null
@@ -53430,6 +56198,7 @@ export namespace Prisma {
     isDeleted?: BoolFilter<"ComplexityRoutingConfig"> | boolean
     createdAt?: DateTimeFilter<"ComplexityRoutingConfig"> | Date | string
     updatedAt?: DateTimeFilter<"ComplexityRoutingConfig"> | Date | string
+    modelMappings?: ComplexityRoutingModelMappingListRelationFilter
   }, "id" | "configId">
 
   export type ComplexityRoutingConfigOrderByWithAggregationInput = {
@@ -53437,7 +56206,7 @@ export namespace Prisma {
     configId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    models?: SortOrder
+    models?: SortOrderInput | SortOrder
     classifierModel?: SortOrder
     classifierVendor?: SortOrder
     toolMinComplexity?: SortOrderInput | SortOrder
@@ -53459,7 +56228,7 @@ export namespace Prisma {
     configId?: StringWithAggregatesFilter<"ComplexityRoutingConfig"> | string
     name?: StringWithAggregatesFilter<"ComplexityRoutingConfig"> | string
     description?: StringNullableWithAggregatesFilter<"ComplexityRoutingConfig"> | string | null
-    models?: JsonWithAggregatesFilter<"ComplexityRoutingConfig">
+    models?: JsonNullableWithAggregatesFilter<"ComplexityRoutingConfig">
     classifierModel?: StringWithAggregatesFilter<"ComplexityRoutingConfig"> | string
     classifierVendor?: StringWithAggregatesFilter<"ComplexityRoutingConfig"> | string
     toolMinComplexity?: StringNullableWithAggregatesFilter<"ComplexityRoutingConfig"> | string | null
@@ -53468,6 +56237,143 @@ export namespace Prisma {
     isDeleted?: BoolWithAggregatesFilter<"ComplexityRoutingConfig"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ComplexityRoutingConfig"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ComplexityRoutingConfig"> | Date | string
+  }
+
+  export type FallbackChainModelWhereInput = {
+    AND?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
+    OR?: FallbackChainModelWhereInput[]
+    NOT?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
+    id?: UuidFilter<"FallbackChainModel"> | string
+    fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
+    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
+    priority?: IntFilter<"FallbackChainModel"> | number
+    protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
+    featuresOverride?: JsonNullableFilter<"FallbackChainModel">
+    createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
+    fallbackChain?: XOR<FallbackChainScalarRelationFilter, FallbackChainWhereInput>
+    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+  }
+
+  export type FallbackChainModelOrderByWithRelationInput = {
+    id?: SortOrder
+    fallbackChainId?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    protocolOverride?: SortOrderInput | SortOrder
+    featuresOverride?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    fallbackChain?: FallbackChainOrderByWithRelationInput
+    modelAvailability?: ModelAvailabilityOrderByWithRelationInput
+  }
+
+  export type FallbackChainModelWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    fallbackChainId_modelAvailabilityId?: FallbackChainModelFallbackChainIdModelAvailabilityIdCompoundUniqueInput
+    AND?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
+    OR?: FallbackChainModelWhereInput[]
+    NOT?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
+    fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
+    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
+    priority?: IntFilter<"FallbackChainModel"> | number
+    protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
+    featuresOverride?: JsonNullableFilter<"FallbackChainModel">
+    createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
+    fallbackChain?: XOR<FallbackChainScalarRelationFilter, FallbackChainWhereInput>
+    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+  }, "id" | "fallbackChainId_modelAvailabilityId">
+
+  export type FallbackChainModelOrderByWithAggregationInput = {
+    id?: SortOrder
+    fallbackChainId?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    protocolOverride?: SortOrderInput | SortOrder
+    featuresOverride?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: FallbackChainModelCountOrderByAggregateInput
+    _avg?: FallbackChainModelAvgOrderByAggregateInput
+    _max?: FallbackChainModelMaxOrderByAggregateInput
+    _min?: FallbackChainModelMinOrderByAggregateInput
+    _sum?: FallbackChainModelSumOrderByAggregateInput
+  }
+
+  export type FallbackChainModelScalarWhereWithAggregatesInput = {
+    AND?: FallbackChainModelScalarWhereWithAggregatesInput | FallbackChainModelScalarWhereWithAggregatesInput[]
+    OR?: FallbackChainModelScalarWhereWithAggregatesInput[]
+    NOT?: FallbackChainModelScalarWhereWithAggregatesInput | FallbackChainModelScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
+    fallbackChainId?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
+    modelAvailabilityId?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
+    priority?: IntWithAggregatesFilter<"FallbackChainModel"> | number
+    protocolOverride?: StringNullableWithAggregatesFilter<"FallbackChainModel"> | string | null
+    featuresOverride?: JsonNullableWithAggregatesFilter<"FallbackChainModel">
+    createdAt?: DateTimeWithAggregatesFilter<"FallbackChainModel"> | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingWhereInput = {
+    AND?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
+    OR?: ComplexityRoutingModelMappingWhereInput[]
+    NOT?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
+    id?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
+    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
+    createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
+    complexityConfig?: XOR<ComplexityRoutingConfigScalarRelationFilter, ComplexityRoutingConfigWhereInput>
+    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+  }
+
+  export type ComplexityRoutingModelMappingOrderByWithRelationInput = {
+    id?: SortOrder
+    complexityConfigId?: SortOrder
+    complexityLevel?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    complexityConfig?: ComplexityRoutingConfigOrderByWithRelationInput
+    modelAvailability?: ModelAvailabilityOrderByWithRelationInput
+  }
+
+  export type ComplexityRoutingModelMappingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    complexityConfigId_complexityLevel_modelAvailabilityId?: ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelAvailabilityIdCompoundUniqueInput
+    AND?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
+    OR?: ComplexityRoutingModelMappingWhereInput[]
+    NOT?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
+    complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
+    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
+    createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
+    complexityConfig?: XOR<ComplexityRoutingConfigScalarRelationFilter, ComplexityRoutingConfigWhereInput>
+    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+  }, "id" | "complexityConfigId_complexityLevel_modelAvailabilityId">
+
+  export type ComplexityRoutingModelMappingOrderByWithAggregationInput = {
+    id?: SortOrder
+    complexityConfigId?: SortOrder
+    complexityLevel?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    _count?: ComplexityRoutingModelMappingCountOrderByAggregateInput
+    _avg?: ComplexityRoutingModelMappingAvgOrderByAggregateInput
+    _max?: ComplexityRoutingModelMappingMaxOrderByAggregateInput
+    _min?: ComplexityRoutingModelMappingMinOrderByAggregateInput
+    _sum?: ComplexityRoutingModelMappingSumOrderByAggregateInput
+  }
+
+  export type ComplexityRoutingModelMappingScalarWhereWithAggregatesInput = {
+    AND?: ComplexityRoutingModelMappingScalarWhereWithAggregatesInput | ComplexityRoutingModelMappingScalarWhereWithAggregatesInput[]
+    OR?: ComplexityRoutingModelMappingScalarWhereWithAggregatesInput[]
+    NOT?: ComplexityRoutingModelMappingScalarWhereWithAggregatesInput | ComplexityRoutingModelMappingScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
+    complexityConfigId?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
+    complexityLevel?: StringWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
+    modelAvailabilityId?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
+    priority?: IntWithAggregatesFilter<"ComplexityRoutingModelMapping"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ComplexityRoutingModelMapping"> | Date | string
   }
 
   export type UserInfoCreateInput = {
@@ -55075,6 +57981,8 @@ export namespace Prisma {
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
     modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
     capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUncheckedCreateInput = {
@@ -55093,6 +58001,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUpdateInput = {
@@ -55111,6 +58021,8 @@ export namespace Prisma {
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
     modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
     capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateInput = {
@@ -55129,6 +58041,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityCreateManyInput = {
@@ -57239,7 +60153,7 @@ export namespace Prisma {
     chainId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: number
@@ -57252,6 +60166,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    chainModels?: FallbackChainModelCreateNestedManyWithoutFallbackChainInput
   }
 
   export type FallbackChainUncheckedCreateInput = {
@@ -57259,7 +60174,7 @@ export namespace Prisma {
     chainId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: number
@@ -57272,6 +60187,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    chainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutFallbackChainInput
   }
 
   export type FallbackChainUpdateInput = {
@@ -57279,7 +60195,7 @@ export namespace Prisma {
     chainId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
@@ -57292,6 +60208,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    chainModels?: FallbackChainModelUpdateManyWithoutFallbackChainNestedInput
   }
 
   export type FallbackChainUncheckedUpdateInput = {
@@ -57299,7 +60216,7 @@ export namespace Prisma {
     chainId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
@@ -57312,6 +60229,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    chainModels?: FallbackChainModelUncheckedUpdateManyWithoutFallbackChainNestedInput
   }
 
   export type FallbackChainCreateManyInput = {
@@ -57319,7 +60237,7 @@ export namespace Prisma {
     chainId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: number
@@ -57339,7 +60257,7 @@ export namespace Prisma {
     chainId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
@@ -57359,7 +60277,7 @@ export namespace Prisma {
     chainId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     triggerStatusCodes?: JsonNullValueInput | InputJsonValue
     triggerErrorTypes?: JsonNullValueInput | InputJsonValue
     triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
@@ -57658,7 +60576,7 @@ export namespace Prisma {
     configId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: string
     classifierVendor?: string
     toolMinComplexity?: string | null
@@ -57667,6 +60585,7 @@ export namespace Prisma {
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    modelMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutComplexityConfigInput
   }
 
   export type ComplexityRoutingConfigUncheckedCreateInput = {
@@ -57674,7 +60593,7 @@ export namespace Prisma {
     configId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: string
     classifierVendor?: string
     toolMinComplexity?: string | null
@@ -57683,6 +60602,7 @@ export namespace Prisma {
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    modelMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutComplexityConfigInput
   }
 
   export type ComplexityRoutingConfigUpdateInput = {
@@ -57690,7 +60610,7 @@ export namespace Prisma {
     configId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: StringFieldUpdateOperationsInput | string
     classifierVendor?: StringFieldUpdateOperationsInput | string
     toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57699,6 +60619,7 @@ export namespace Prisma {
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    modelMappings?: ComplexityRoutingModelMappingUpdateManyWithoutComplexityConfigNestedInput
   }
 
   export type ComplexityRoutingConfigUncheckedUpdateInput = {
@@ -57706,7 +60627,7 @@ export namespace Prisma {
     configId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: StringFieldUpdateOperationsInput | string
     classifierVendor?: StringFieldUpdateOperationsInput | string
     toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57715,6 +60636,7 @@ export namespace Prisma {
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    modelMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutComplexityConfigNestedInput
   }
 
   export type ComplexityRoutingConfigCreateManyInput = {
@@ -57722,7 +60644,7 @@ export namespace Prisma {
     configId: string
     name: string
     description?: string | null
-    models: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: string
     classifierVendor?: string
     toolMinComplexity?: string | null
@@ -57738,7 +60660,7 @@ export namespace Prisma {
     configId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: StringFieldUpdateOperationsInput | string
     classifierVendor?: StringFieldUpdateOperationsInput | string
     toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57754,7 +60676,7 @@ export namespace Prisma {
     configId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    models?: JsonNullValueInput | InputJsonValue
+    models?: NullableJsonNullValueInput | InputJsonValue
     classifierModel?: StringFieldUpdateOperationsInput | string
     classifierVendor?: StringFieldUpdateOperationsInput | string
     toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57763,6 +60685,135 @@ export namespace Prisma {
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelCreateInput = {
+    id?: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    fallbackChain: FallbackChainCreateNestedOneWithoutChainModelsInput
+    modelAvailability: ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput
+  }
+
+  export type FallbackChainModelUncheckedCreateInput = {
+    id?: string
+    fallbackChainId: string
+    modelAvailabilityId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fallbackChain?: FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput
+    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput
+  }
+
+  export type FallbackChainModelUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelCreateManyInput = {
+    id?: string
+    fallbackChainId: string
+    modelAvailabilityId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateInput = {
+    id?: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+    complexityConfig: ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput
+    modelAvailability: ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    modelAvailabilityId: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    complexityConfig?: ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput
+    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    modelAvailabilityId: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -59161,7 +62212,27 @@ export namespace Prisma {
     none?: ModelCapabilityTagWhereInput
   }
 
+  export type FallbackChainModelListRelationFilter = {
+    every?: FallbackChainModelWhereInput
+    some?: FallbackChainModelWhereInput
+    none?: FallbackChainModelWhereInput
+  }
+
+  export type ComplexityRoutingModelMappingListRelationFilter = {
+    every?: ComplexityRoutingModelMappingWhereInput
+    some?: ComplexityRoutingModelMappingWhereInput
+    none?: ComplexityRoutingModelMappingWhereInput
+  }
+
   export type ModelCapabilityTagOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FallbackChainModelOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -60749,6 +63820,98 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type FallbackChainScalarRelationFilter = {
+    is?: FallbackChainWhereInput
+    isNot?: FallbackChainWhereInput
+  }
+
+  export type FallbackChainModelFallbackChainIdModelAvailabilityIdCompoundUniqueInput = {
+    fallbackChainId: string
+    modelAvailabilityId: string
+  }
+
+  export type FallbackChainModelCountOrderByAggregateInput = {
+    id?: SortOrder
+    fallbackChainId?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    protocolOverride?: SortOrder
+    featuresOverride?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FallbackChainModelAvgOrderByAggregateInput = {
+    priority?: SortOrder
+  }
+
+  export type FallbackChainModelMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fallbackChainId?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    protocolOverride?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FallbackChainModelMinOrderByAggregateInput = {
+    id?: SortOrder
+    fallbackChainId?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    protocolOverride?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FallbackChainModelSumOrderByAggregateInput = {
+    priority?: SortOrder
+  }
+
+  export type ComplexityRoutingConfigScalarRelationFilter = {
+    is?: ComplexityRoutingConfigWhereInput
+    isNot?: ComplexityRoutingConfigWhereInput
+  }
+
+  export type ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelAvailabilityIdCompoundUniqueInput = {
+    complexityConfigId: string
+    complexityLevel: string
+    modelAvailabilityId: string
+  }
+
+  export type ComplexityRoutingModelMappingCountOrderByAggregateInput = {
+    id?: SortOrder
+    complexityConfigId?: SortOrder
+    complexityLevel?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingAvgOrderByAggregateInput = {
+    priority?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    complexityConfigId?: SortOrder
+    complexityLevel?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingMinOrderByAggregateInput = {
+    id?: SortOrder
+    complexityConfigId?: SortOrder
+    complexityLevel?: SortOrder
+    modelAvailabilityId?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingSumOrderByAggregateInput = {
+    priority?: SortOrder
+  }
+
   export type FileSourceCreateNestedOneWithoutUserAvatarsInput = {
     create?: XOR<FileSourceCreateWithoutUserAvatarsInput, FileSourceUncheckedCreateWithoutUserAvatarsInput>
     connectOrCreate?: FileSourceCreateOrConnectWithoutUserAvatarsInput
@@ -62076,11 +65239,39 @@ export namespace Prisma {
     connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
   }
 
+  export type FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
+    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+  }
+
   export type ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
     create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
     connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
     createMany?: ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope
     connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+  }
+
+  export type FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
+    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
   }
 
   export type EnumModelTypeFieldUpdateOperationsInput = {
@@ -62119,6 +65310,34 @@ export namespace Prisma {
     deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
   }
 
+  export type FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
+    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput | FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+  }
+
   export type ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
     create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
     connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
@@ -62131,6 +65350,34 @@ export namespace Prisma {
     update?: ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput | ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
     updateMany?: ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput | ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput[]
     deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
+    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput | FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
   }
 
   export type ModelAvailabilityCreateNestedOneWithoutCapabilityTagsInput = {
@@ -62743,6 +65990,48 @@ export namespace Prisma {
     deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
   }
 
+  export type FallbackChainModelCreateNestedManyWithoutFallbackChainInput = {
+    create?: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput> | FallbackChainModelCreateWithoutFallbackChainInput[] | FallbackChainModelUncheckedCreateWithoutFallbackChainInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutFallbackChainInput | FallbackChainModelCreateOrConnectWithoutFallbackChainInput[]
+    createMany?: FallbackChainModelCreateManyFallbackChainInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type FallbackChainModelUncheckedCreateNestedManyWithoutFallbackChainInput = {
+    create?: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput> | FallbackChainModelCreateWithoutFallbackChainInput[] | FallbackChainModelUncheckedCreateWithoutFallbackChainInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutFallbackChainInput | FallbackChainModelCreateOrConnectWithoutFallbackChainInput[]
+    createMany?: FallbackChainModelCreateManyFallbackChainInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type FallbackChainModelUpdateManyWithoutFallbackChainNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput> | FallbackChainModelCreateWithoutFallbackChainInput[] | FallbackChainModelUncheckedCreateWithoutFallbackChainInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutFallbackChainInput | FallbackChainModelCreateOrConnectWithoutFallbackChainInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutFallbackChainInput | FallbackChainModelUpsertWithWhereUniqueWithoutFallbackChainInput[]
+    createMany?: FallbackChainModelCreateManyFallbackChainInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutFallbackChainInput | FallbackChainModelUpdateWithWhereUniqueWithoutFallbackChainInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutFallbackChainInput | FallbackChainModelUpdateManyWithWhereWithoutFallbackChainInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutFallbackChainNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput> | FallbackChainModelCreateWithoutFallbackChainInput[] | FallbackChainModelUncheckedCreateWithoutFallbackChainInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutFallbackChainInput | FallbackChainModelCreateOrConnectWithoutFallbackChainInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutFallbackChainInput | FallbackChainModelUpsertWithWhereUniqueWithoutFallbackChainInput[]
+    createMany?: FallbackChainModelCreateManyFallbackChainInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutFallbackChainInput | FallbackChainModelUpdateWithWhereUniqueWithoutFallbackChainInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutFallbackChainInput | FallbackChainModelUpdateManyWithWhereWithoutFallbackChainInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
   export type BotCreateNestedOneWithoutRoutingConfigInput = {
     create?: XOR<BotCreateWithoutRoutingConfigInput, BotUncheckedCreateWithoutRoutingConfigInput>
     connectOrCreate?: BotCreateOrConnectWithoutRoutingConfigInput
@@ -62755,6 +66044,104 @@ export namespace Prisma {
     upsert?: BotUpsertWithoutRoutingConfigInput
     connect?: BotWhereUniqueInput
     update?: XOR<XOR<BotUpdateToOneWithWhereWithoutRoutingConfigInput, BotUpdateWithoutRoutingConfigInput>, BotUncheckedUpdateWithoutRoutingConfigInput>
+  }
+
+  export type ComplexityRoutingModelMappingCreateNestedManyWithoutComplexityConfigInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput> | ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput | ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyComplexityConfigInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutComplexityConfigInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput> | ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput | ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyComplexityConfigInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithoutComplexityConfigNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput> | ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput | ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutComplexityConfigInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyComplexityConfigInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutComplexityConfigInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutComplexityConfigInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutComplexityConfigNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput> | ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput | ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutComplexityConfigInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyComplexityConfigInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutComplexityConfigInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutComplexityConfigInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutComplexityConfigInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+  }
+
+  export type FallbackChainCreateNestedOneWithoutChainModelsInput = {
+    create?: XOR<FallbackChainCreateWithoutChainModelsInput, FallbackChainUncheckedCreateWithoutChainModelsInput>
+    connectOrCreate?: FallbackChainCreateOrConnectWithoutChainModelsInput
+    connect?: FallbackChainWhereUniqueInput
+  }
+
+  export type ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput
+    connect?: ModelAvailabilityWhereUniqueInput
+  }
+
+  export type FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput = {
+    create?: XOR<FallbackChainCreateWithoutChainModelsInput, FallbackChainUncheckedCreateWithoutChainModelsInput>
+    connectOrCreate?: FallbackChainCreateOrConnectWithoutChainModelsInput
+    upsert?: FallbackChainUpsertWithoutChainModelsInput
+    connect?: FallbackChainWhereUniqueInput
+    update?: XOR<XOR<FallbackChainUpdateToOneWithWhereWithoutChainModelsInput, FallbackChainUpdateWithoutChainModelsInput>, FallbackChainUncheckedUpdateWithoutChainModelsInput>
+  }
+
+  export type ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput
+    upsert?: ModelAvailabilityUpsertWithoutFallbackChainModelsInput
+    connect?: ModelAvailabilityWhereUniqueInput
+    update?: XOR<XOR<ModelAvailabilityUpdateToOneWithWhereWithoutFallbackChainModelsInput, ModelAvailabilityUpdateWithoutFallbackChainModelsInput>, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
+  }
+
+  export type ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput = {
+    create?: XOR<ComplexityRoutingConfigCreateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput>
+    connectOrCreate?: ComplexityRoutingConfigCreateOrConnectWithoutModelMappingsInput
+    connect?: ComplexityRoutingConfigWhereUniqueInput
+  }
+
+  export type ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput
+    connect?: ModelAvailabilityWhereUniqueInput
+  }
+
+  export type ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput = {
+    create?: XOR<ComplexityRoutingConfigCreateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput>
+    connectOrCreate?: ComplexityRoutingConfigCreateOrConnectWithoutModelMappingsInput
+    upsert?: ComplexityRoutingConfigUpsertWithoutModelMappingsInput
+    connect?: ComplexityRoutingConfigWhereUniqueInput
+    update?: XOR<XOR<ComplexityRoutingConfigUpdateToOneWithWhereWithoutModelMappingsInput, ComplexityRoutingConfigUpdateWithoutModelMappingsInput>, ComplexityRoutingConfigUncheckedUpdateWithoutModelMappingsInput>
+  }
+
+  export type ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput
+    upsert?: ModelAvailabilityUpsertWithoutComplexityRoutingMappingsInput
+    connect?: ModelAvailabilityWhereUniqueInput
+    update?: XOR<XOR<ModelAvailabilityUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput, ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput>, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -66779,6 +70166,8 @@ export namespace Prisma {
     updatedAt?: Date | string
     modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
     capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUncheckedCreateWithoutProviderKeyInput = {
@@ -66796,6 +70185,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityCreateOrConnectWithoutProviderKeyInput = {
@@ -67251,6 +70642,60 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type FallbackChainModelCreateWithoutModelAvailabilityInput = {
+    id?: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    fallbackChain: FallbackChainCreateNestedOneWithoutChainModelsInput
+  }
+
+  export type FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput = {
+    id?: string
+    fallbackChainId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput = {
+    where: FallbackChainModelWhereUniqueInput
+    create: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput>
+  }
+
+  export type FallbackChainModelCreateManyModelAvailabilityInputEnvelope = {
+    data: FallbackChainModelCreateManyModelAvailabilityInput | FallbackChainModelCreateManyModelAvailabilityInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput = {
+    id?: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+    complexityConfig: ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput>
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope = {
+    data: ComplexityRoutingModelMappingCreateManyModelAvailabilityInput | ComplexityRoutingModelMappingCreateManyModelAvailabilityInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ProviderKeyUpsertWithoutModelAvailabilityInput = {
     update: XOR<ProviderKeyUpdateWithoutModelAvailabilityInput, ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput>
     create: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
@@ -67407,6 +70852,63 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ModelCapabilityTag"> | Date | string
   }
 
+  export type FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput = {
+    where: FallbackChainModelWhereUniqueInput
+    update: XOR<FallbackChainModelUpdateWithoutModelAvailabilityInput, FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput>
+    create: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput>
+  }
+
+  export type FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput = {
+    where: FallbackChainModelWhereUniqueInput
+    data: XOR<FallbackChainModelUpdateWithoutModelAvailabilityInput, FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput>
+  }
+
+  export type FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput = {
+    where: FallbackChainModelScalarWhereInput
+    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityInput>
+  }
+
+  export type FallbackChainModelScalarWhereInput = {
+    AND?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+    OR?: FallbackChainModelScalarWhereInput[]
+    NOT?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+    id?: UuidFilter<"FallbackChainModel"> | string
+    fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
+    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
+    priority?: IntFilter<"FallbackChainModel"> | number
+    protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
+    featuresOverride?: JsonNullableFilter<"FallbackChainModel">
+    createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    update: XOR<ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput>
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    data: XOR<ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput = {
+    where: ComplexityRoutingModelMappingScalarWhereInput
+    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityInput>
+  }
+
+  export type ComplexityRoutingModelMappingScalarWhereInput = {
+    AND?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+    OR?: ComplexityRoutingModelMappingScalarWhereInput[]
+    NOT?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+    id?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
+    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
+    createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
+  }
+
   export type ModelAvailabilityCreateWithoutCapabilityTagsInput = {
     id?: string
     model: string
@@ -67422,6 +70924,8 @@ export namespace Prisma {
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
     modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput = {
@@ -67439,6 +70943,8 @@ export namespace Prisma {
     tagsSyncedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityCreateOrConnectWithoutCapabilityTagsInput = {
@@ -67521,6 +71027,8 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
     modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateWithoutCapabilityTagsInput = {
@@ -67538,6 +71046,8 @@ export namespace Prisma {
     tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type CapabilityTagUpsertWithoutModelCapabilityTagsInput = {
@@ -69527,6 +73037,8 @@ export namespace Prisma {
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
     capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUncheckedCreateWithoutModelPricingInput = {
@@ -69544,6 +73056,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityCreateOrConnectWithoutModelPricingInput = {
@@ -69894,6 +73408,50 @@ export namespace Prisma {
     data: XOR<ModelCapabilityTagUpdateManyMutationInput, ModelCapabilityTagUncheckedUpdateManyWithoutCapabilityTagInput>
   }
 
+  export type FallbackChainModelCreateWithoutFallbackChainInput = {
+    id?: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    modelAvailability: ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput
+  }
+
+  export type FallbackChainModelUncheckedCreateWithoutFallbackChainInput = {
+    id?: string
+    modelAvailabilityId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelCreateOrConnectWithoutFallbackChainInput = {
+    where: FallbackChainModelWhereUniqueInput
+    create: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput>
+  }
+
+  export type FallbackChainModelCreateManyFallbackChainInputEnvelope = {
+    data: FallbackChainModelCreateManyFallbackChainInput | FallbackChainModelCreateManyFallbackChainInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type FallbackChainModelUpsertWithWhereUniqueWithoutFallbackChainInput = {
+    where: FallbackChainModelWhereUniqueInput
+    update: XOR<FallbackChainModelUpdateWithoutFallbackChainInput, FallbackChainModelUncheckedUpdateWithoutFallbackChainInput>
+    create: XOR<FallbackChainModelCreateWithoutFallbackChainInput, FallbackChainModelUncheckedCreateWithoutFallbackChainInput>
+  }
+
+  export type FallbackChainModelUpdateWithWhereUniqueWithoutFallbackChainInput = {
+    where: FallbackChainModelWhereUniqueInput
+    data: XOR<FallbackChainModelUpdateWithoutFallbackChainInput, FallbackChainModelUncheckedUpdateWithoutFallbackChainInput>
+  }
+
+  export type FallbackChainModelUpdateManyWithWhereWithoutFallbackChainInput = {
+    where: FallbackChainModelScalarWhereInput
+    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyWithoutFallbackChainInput>
+  }
+
   export type BotCreateWithoutRoutingConfigInput = {
     id?: string
     name: string
@@ -70032,6 +73590,408 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+  }
+
+  export type ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput = {
+    id?: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+    modelAvailability: ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput = {
+    id?: string
+    complexityLevel: string
+    modelAvailabilityId: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateOrConnectWithoutComplexityConfigInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput>
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyComplexityConfigInputEnvelope = {
+    data: ComplexityRoutingModelMappingCreateManyComplexityConfigInput | ComplexityRoutingModelMappingCreateManyComplexityConfigInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutComplexityConfigInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    update: XOR<ComplexityRoutingModelMappingUpdateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutComplexityConfigInput>
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutComplexityConfigInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    data: XOR<ComplexityRoutingModelMappingUpdateWithoutComplexityConfigInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutComplexityConfigInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithWhereWithoutComplexityConfigInput = {
+    where: ComplexityRoutingModelMappingScalarWhereInput
+    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyWithoutComplexityConfigInput>
+  }
+
+  export type FallbackChainCreateWithoutChainModelsInput = {
+    id?: string
+    chainId: string
+    name: string
+    description?: string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    triggerStatusCodes?: JsonNullValueInput | InputJsonValue
+    triggerErrorTypes?: JsonNullValueInput | InputJsonValue
+    triggerTimeoutMs?: number
+    maxRetries?: number
+    retryDelayMs?: number
+    preserveProtocol?: boolean
+    isActive?: boolean
+    isBuiltin?: boolean
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FallbackChainUncheckedCreateWithoutChainModelsInput = {
+    id?: string
+    chainId: string
+    name: string
+    description?: string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    triggerStatusCodes?: JsonNullValueInput | InputJsonValue
+    triggerErrorTypes?: JsonNullValueInput | InputJsonValue
+    triggerTimeoutMs?: number
+    maxRetries?: number
+    retryDelayMs?: number
+    preserveProtocol?: boolean
+    isActive?: boolean
+    isBuiltin?: boolean
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FallbackChainCreateOrConnectWithoutChainModelsInput = {
+    where: FallbackChainWhereUniqueInput
+    create: XOR<FallbackChainCreateWithoutChainModelsInput, FallbackChainUncheckedCreateWithoutChainModelsInput>
+  }
+
+  export type ModelAvailabilityCreateWithoutFallbackChainModelsInput = {
+    id?: string
+    model: string
+    modelType?: $Enums.ModelType
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    pricingSynced?: boolean
+    pricingSyncedAt?: Date | string | null
+    tagsSynced?: boolean
+    tagsSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
+    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
+  }
+
+  export type ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput = {
+    id?: string
+    model: string
+    providerKeyId: string
+    modelType?: $Enums.ModelType
+    modelPricingId?: string | null
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    pricingSynced?: boolean
+    pricingSyncedAt?: Date | string | null
+    tagsSynced?: boolean
+    tagsSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
+  }
+
+  export type ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    create: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
+  }
+
+  export type FallbackChainUpsertWithoutChainModelsInput = {
+    update: XOR<FallbackChainUpdateWithoutChainModelsInput, FallbackChainUncheckedUpdateWithoutChainModelsInput>
+    create: XOR<FallbackChainCreateWithoutChainModelsInput, FallbackChainUncheckedCreateWithoutChainModelsInput>
+    where?: FallbackChainWhereInput
+  }
+
+  export type FallbackChainUpdateToOneWithWhereWithoutChainModelsInput = {
+    where?: FallbackChainWhereInput
+    data: XOR<FallbackChainUpdateWithoutChainModelsInput, FallbackChainUncheckedUpdateWithoutChainModelsInput>
+  }
+
+  export type FallbackChainUpdateWithoutChainModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    triggerStatusCodes?: JsonNullValueInput | InputJsonValue
+    triggerErrorTypes?: JsonNullValueInput | InputJsonValue
+    triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
+    maxRetries?: IntFieldUpdateOperationsInput | number
+    retryDelayMs?: IntFieldUpdateOperationsInput | number
+    preserveProtocol?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isBuiltin?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FallbackChainUncheckedUpdateWithoutChainModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    triggerStatusCodes?: JsonNullValueInput | InputJsonValue
+    triggerErrorTypes?: JsonNullValueInput | InputJsonValue
+    triggerTimeoutMs?: IntFieldUpdateOperationsInput | number
+    maxRetries?: IntFieldUpdateOperationsInput | number
+    retryDelayMs?: IntFieldUpdateOperationsInput | number
+    preserveProtocol?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isBuiltin?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ModelAvailabilityUpsertWithoutFallbackChainModelsInput = {
+    update: XOR<ModelAvailabilityUpdateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
+    create: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
+    where?: ModelAvailabilityWhereInput
+  }
+
+  export type ModelAvailabilityUpdateToOneWithWhereWithoutFallbackChainModelsInput = {
+    where?: ModelAvailabilityWhereInput
+    data: XOR<ModelAvailabilityUpdateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
+  }
+
+  export type ModelAvailabilityUpdateWithoutFallbackChainModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
+    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
+    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
+    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
+  }
+
+  export type ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    providerKeyId?: StringFieldUpdateOperationsInput | string
+    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
+    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
+    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
+    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+  }
+
+  export type ComplexityRoutingConfigCreateWithoutModelMappingsInput = {
+    id?: string
+    configId: string
+    name: string
+    description?: string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    classifierModel?: string
+    classifierVendor?: string
+    toolMinComplexity?: string | null
+    isEnabled?: boolean
+    isBuiltin?: boolean
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput = {
+    id?: string
+    configId: string
+    name: string
+    description?: string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    classifierModel?: string
+    classifierVendor?: string
+    toolMinComplexity?: string | null
+    isEnabled?: boolean
+    isBuiltin?: boolean
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComplexityRoutingConfigCreateOrConnectWithoutModelMappingsInput = {
+    where: ComplexityRoutingConfigWhereUniqueInput
+    create: XOR<ComplexityRoutingConfigCreateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput>
+  }
+
+  export type ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput = {
+    id?: string
+    model: string
+    modelType?: $Enums.ModelType
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    pricingSynced?: boolean
+    pricingSyncedAt?: Date | string | null
+    tagsSynced?: boolean
+    tagsSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
+    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+  }
+
+  export type ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput = {
+    id?: string
+    model: string
+    providerKeyId: string
+    modelType?: $Enums.ModelType
+    modelPricingId?: string | null
+    isAvailable?: boolean
+    lastVerifiedAt: Date | string
+    errorMessage?: string | null
+    pricingSynced?: boolean
+    pricingSyncedAt?: Date | string | null
+    tagsSynced?: boolean
+    tagsSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+  }
+
+  export type ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    create: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
+  }
+
+  export type ComplexityRoutingConfigUpsertWithoutModelMappingsInput = {
+    update: XOR<ComplexityRoutingConfigUpdateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedUpdateWithoutModelMappingsInput>
+    create: XOR<ComplexityRoutingConfigCreateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput>
+    where?: ComplexityRoutingConfigWhereInput
+  }
+
+  export type ComplexityRoutingConfigUpdateToOneWithWhereWithoutModelMappingsInput = {
+    where?: ComplexityRoutingConfigWhereInput
+    data: XOR<ComplexityRoutingConfigUpdateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedUpdateWithoutModelMappingsInput>
+  }
+
+  export type ComplexityRoutingConfigUpdateWithoutModelMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    configId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    classifierModel?: StringFieldUpdateOperationsInput | string
+    classifierVendor?: StringFieldUpdateOperationsInput | string
+    toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isBuiltin?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingConfigUncheckedUpdateWithoutModelMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    configId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    models?: NullableJsonNullValueInput | InputJsonValue
+    classifierModel?: StringFieldUpdateOperationsInput | string
+    classifierVendor?: StringFieldUpdateOperationsInput | string
+    toolMinComplexity?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isBuiltin?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelAvailabilityUpsertWithoutComplexityRoutingMappingsInput = {
+    update: XOR<ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
+    create: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    where?: ModelAvailabilityWhereInput
+  }
+
+  export type ModelAvailabilityUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput = {
+    where?: ModelAvailabilityWhereInput
+    data: XOR<ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
+  }
+
+  export type ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
+    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
+    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
+    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+  }
+
+  export type ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    providerKeyId?: StringFieldUpdateOperationsInput | string
+    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
+    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
+    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
+    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type MessageCreateManySenderInput = {
@@ -71315,6 +75275,8 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
     capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput = {
@@ -71332,6 +75294,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyInput = {
@@ -71358,6 +75322,23 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type FallbackChainModelCreateManyModelAvailabilityInput = {
+    id?: string
+    fallbackChainId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyModelAvailabilityInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
   export type ModelCapabilityTagUpdateWithoutModelAvailabilityInput = {
     id?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
@@ -71379,6 +75360,57 @@ export namespace Prisma {
     capabilityTagId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fallbackChain?: FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput
+  }
+
+  export type FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    complexityConfig?: ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -71679,6 +75711,8 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
     capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateWithoutModelPricingInput = {
@@ -71696,6 +75730,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateManyWithoutModelPricingInput = {
@@ -71743,6 +75779,74 @@ export namespace Prisma {
     modelAvailabilityId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelCreateManyFallbackChainInput = {
+    id?: string
+    modelAvailabilityId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelUpdateWithoutFallbackChainInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput
+  }
+
+  export type FallbackChainModelUncheckedUpdateWithoutFallbackChainInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutFallbackChainInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyComplexityConfigInput = {
+    id?: string
+    complexityLevel: string
+    modelAvailabilityId: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithoutComplexityConfigInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateWithoutComplexityConfigInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutComplexityConfigInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

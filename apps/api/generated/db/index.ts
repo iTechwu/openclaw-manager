@@ -38,3 +38,5 @@ export * from './modules/complexity-routing-config';
 export * from './modules/bot-model';
 export * from './modules/model-availability';
 export * from './modules/model-capability-tag';
+export * from './modules/fallback-chain-model';
+export * from './modules/complexity-routing-model-mapping';

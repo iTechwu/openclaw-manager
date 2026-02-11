@@ -188,7 +188,7 @@ export function FallbackChainSelector({
                   <Shield className="size-4" />
                   <span>{chain.name}</span>
                   <Badge variant="outline" className="text-xs">
-                    {chain.models.length} {t('fallbackChain.models')}
+                    {(chain.models || []).length} {t('fallbackChain.models')}
                   </Badge>
                   {!chain.isActive && (
                     <Badge variant="secondary" className="text-xs">
@@ -224,7 +224,7 @@ export function FallbackChainSelector({
             </p>
           )}
           <div className="flex flex-wrap gap-1">
-            {selectedChain.models.map((model, index) => (
+            {(selectedChain.models || []).map((model, index) => (
               <Badge
                 key={`${model.vendor}:${model.model}`}
                 variant={index === 0 ? 'default' : 'outline'}
