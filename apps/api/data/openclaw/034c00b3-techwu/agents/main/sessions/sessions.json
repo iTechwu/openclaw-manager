@@ -1,7 +1,7 @@
 {
   "agent:main:main": {
     "sessionId": "9bd3804c-2d80-45ab-abad-6f9ce6356e4f",
-    "updatedAt": 1770822251466,
+    "updatedAt": 1770827921669,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -92,15 +92,15 @@
       ],
       "version": 0
     },
-    "inputTokens": 9228,
-    "outputTokens": 35,
-    "totalTokens": 9228,
+    "inputTokens": 18422,
+    "outputTokens": 909,
+    "totalTokens": 18422,
     "modelProvider": "openai",
     "model": "doubao-seed-1-8-251228",
     "contextTokens": 128000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1770822250298,
+      "generatedAt": 1770827856049,
       "sessionId": "9bd3804c-2d80-45ab-abad-6f9ce6356e4f",
       "sessionKey": "agent:main:main",
       "provider": "openai",

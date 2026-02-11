@@ -410,10 +410,12 @@ export class ProxyService {
         }
       }
 
+      // Determine if this is a native OpenAI request (not a custom/compatible provider)
+      const isNativeOpenAI = vendor === 'openai' && !isCustom;
+
       // Inject stream_options for streaming requests to get usage data
-      // This is required for OpenAI-compatible APIs to return token usage in streaming responses
-      if (bodyJson.stream === true) {
-        // Only inject if not already present
+      // Only for native OpenAI — custom providers (e.g. Doubao) may reject unknown fields
+      if (bodyJson.stream === true && isNativeOpenAI) {
         if (!bodyJson.stream_options) {
           bodyJson.stream_options = { include_usage: true };
           modified = true;
@@ -425,11 +427,9 @@ export class ProxyService {
         }
       }
 
-      // Strip non-standard fields that some upstream APIs reject
-      // Only native OpenAI (vendor=openai, not custom) supports prompt_cache_key
-      const isNativeOpenAI = vendor === 'openai' && !isCustom;
+      // Strip non-standard fields that custom upstream APIs reject
       if (!isNativeOpenAI) {
-        const nonStandardFields = ['prompt_cache_key'];
+        const nonStandardFields = ['prompt_cache_key', 'stream_options'];
         for (const field of nonStandardFields) {
           if (field in bodyJson) {
             delete bodyJson[field];
