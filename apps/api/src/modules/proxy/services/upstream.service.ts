@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import * as https from 'https';
 import * as http from 'http';
+import * as zlib from 'zlib';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { VendorConfig } from '../config/vendor.config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
@@ -211,8 +212,24 @@ export class UpstreamService {
             rawResponse.end();
 
             // Log response data for debugging (concise summary)
-            const responseData =
-              Buffer.concat(responseChunks).toString('utf-8');
+            const rawBuffer = Buffer.concat(responseChunks);
+            // Decompress gzip/deflate responses for readable logging
+            const contentEncoding =
+              proxyRes.headers['content-encoding']?.toLowerCase();
+            let responseData: string;
+            try {
+              if (contentEncoding === 'gzip') {
+                responseData = zlib.gunzipSync(rawBuffer).toString('utf-8');
+              } else if (contentEncoding === 'deflate') {
+                responseData = zlib.inflateSync(rawBuffer).toString('utf-8');
+              } else if (contentEncoding === 'br') {
+                responseData = zlib.brotliDecompressSync(rawBuffer).toString('utf-8');
+              } else {
+                responseData = rawBuffer.toString('utf-8');
+              }
+            } catch {
+              responseData = rawBuffer.toString('utf-8');
+            }
             if (responseData.length > 0) {
               // For SSE responses, extract usage from last event; for JSON, extract key fields
               if (contentType?.includes('text/event-stream')) {

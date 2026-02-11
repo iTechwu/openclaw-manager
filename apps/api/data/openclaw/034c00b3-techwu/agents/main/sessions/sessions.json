@@ -1,7 +1,7 @@
 {
   "agent:main:main": {
     "sessionId": "9bd3804c-2d80-45ab-abad-6f9ce6356e4f",
-    "updatedAt": 1770818787602,
+    "updatedAt": 1770822251466,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -96,15 +96,15 @@
     "outputTokens": 35,
     "totalTokens": 9228,
     "modelProvider": "openai",
-    "model": "gpt-4o",
+    "model": "doubao-seed-1-8-251228",
     "contextTokens": 128000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1770816586490,
+      "generatedAt": 1770822250298,
       "sessionId": "9bd3804c-2d80-45ab-abad-6f9ce6356e4f",
       "sessionKey": "agent:main:main",
       "provider": "openai",
-      "model": "gpt-4o",
+      "model": "doubao-seed-1-8-251228",
       "workspaceDir": "/app/workspace",
       "bootstrapMaxChars": 20000,
       "sandbox": {
@@ -112,9 +112,9 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 22425,
+        "chars": 22457,
         "projectContextChars": 13368,
-        "nonProjectContextChars": 9057
+        "nonProjectContextChars": 9089
       },
       "injectedWorkspaceFiles": [
         {
@@ -329,7 +329,7 @@
           },
           {
             "name": "image",
-            "summaryChars": 184,
+            "summaryChars": 118,
             "schemaChars": 163,
             "propertiesCount": 4
           },

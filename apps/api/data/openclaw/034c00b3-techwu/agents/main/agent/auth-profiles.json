@@ -1,5 +1,7 @@
 {
-  "custom": {
-    "apiKey": ""
+  "openai": {
+    "apiKey": "4dabd2b996244fc049b6f29f98c418bf12de2c881ec692f75381c360997eeedb",
+    "baseUrl": "http://192.168.43.4:3200/api/v1/openai-compatible",
+    "baseURL": "http://192.168.43.4:3200/api/v1/openai-compatible"
   }
 }

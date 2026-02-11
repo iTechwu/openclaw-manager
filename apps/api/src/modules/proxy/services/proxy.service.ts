@@ -211,7 +211,7 @@ export class ProxyService {
     // Normalize model name in request body
     // OpenClaw sends model names with provider prefix (e.g., openai-compatible/gpt-4o)
     // We need to strip the prefix before forwarding to the upstream
-    let normalizedBody = this.normalizeRequestBody(body, effectiveApiType);
+    let normalizedBody = this.normalizeRequestBody(body, effectiveApiType, isCustom);
 
     // Apply complexity-based routing if enabled
     // This will analyze the request and potentially switch to a different model
@@ -385,6 +385,7 @@ export class ProxyService {
   private normalizeRequestBody(
     body: Buffer | null,
     vendor: string,
+    isCustom = false,
   ): Buffer | null {
     if (!body || body.length === 0) {
       return body;
@@ -421,6 +422,20 @@ export class ProxyService {
           bodyJson.stream_options.include_usage = true;
           modified = true;
           this.logger.debug('Enabled include_usage in stream_options');
+        }
+      }
+
+      // Strip non-standard fields that some upstream APIs reject
+      // Only native OpenAI (vendor=openai, not custom) supports prompt_cache_key
+      const isNativeOpenAI = vendor === 'openai' && !isCustom;
+      if (!isNativeOpenAI) {
+        const nonStandardFields = ['prompt_cache_key'];
+        for (const field of nonStandardFields) {
+          if (field in bodyJson) {
+            delete bodyJson[field];
+            modified = true;
+            this.logger.debug(`Stripped non-standard field: ${field} (vendor: ${vendor}, isCustom: ${isCustom})`);
+          }
         }
       }
 

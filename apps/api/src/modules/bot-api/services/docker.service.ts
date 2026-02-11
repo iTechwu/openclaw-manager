@@ -427,10 +427,13 @@ export class DockerService implements OnModuleInit {
         # Determine the provider for auth configuration and model prefix
         PROVIDER="${options.aiProvider}"
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
-          # For custom provider, use AI_API_TYPE for auth (API key/base URL lookup)
+          # For custom provider, use AI_API_TYPE for BOTH auth and model prefix
+          # IMPORTANT: Use the standard provider (e.g., 'openai') NOT 'openai-compatible'
+          # because OpenClaw's -compatible providers have known integration gaps (Issue #9498)
+          # The custom base URL (OPENAI_BASE_URL) already points to the proxy's
+          # openai-compatible endpoint, so the proxy handles routing correctly
           AUTH_PROVIDER="$AI_API_TYPE"
-          # Model prefix uses $AI_API_TYPE-compatible format for OpenClaw
-          MODEL_PROVIDER="$AI_API_TYPE-compatible"
+          MODEL_PROVIDER="$AI_API_TYPE"
         else
           AUTH_PROVIDER="$PROVIDER"
           MODEL_PROVIDER="$PROVIDER"
@@ -553,42 +556,13 @@ JSON_EOF
         echo "Created openclaw.json:"
         cat "$JSON_CONFIG_FILE"
 
-        # Create auth-profiles.json with the API key and base URL
-        # OpenClaw looks for API keys and base URLs in this file for each provider
+        # Prepare auth-profiles directory (file created as LAST step before gateway)
         AUTH_PROFILES_DIR="$CONFIG_DIR/agents/main/agent"
         mkdir -p "$AUTH_PROFILES_DIR"
         AUTH_PROFILES_FILE="$AUTH_PROFILES_DIR/auth-profiles.json"
 
-        # Build auth-profiles.json with baseUrl for the provider
-        # Include both baseUrl and baseURL since different SDKs use different naming conventions
-        echo "Creating auth-profiles.json for provider: $AUTH_PROVIDER"
-        if [ -n "$OPENAI_BASE_URL" ]; then
-          # Include both baseUrl and baseURL for compatibility
-          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
-{
-  "$AUTH_PROVIDER": {
-    "apiKey": "$API_KEY",
-    "baseUrl": "$OPENAI_BASE_URL",
-    "baseURL": "$OPENAI_BASE_URL"
-  }
-}
-AUTH_EOF
-        else
-          # No custom base URL
-          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
-{
-  "$AUTH_PROVIDER": {
-    "apiKey": "$API_KEY"
-  }
-}
-AUTH_EOF
-        fi
-        echo "Created auth-profiles.json:"
-        cat "$AUTH_PROFILES_FILE"
-
         # Clean up any invalid config keys from previous runs
         # OpenClaw validates config strictly and rejects unknown keys
-        # Note: Run this AFTER creating our config to avoid overwriting
         echo "Running openclaw doctor --fix to clean up config..."
         node /app/openclaw.mjs doctor --fix 2>/dev/null || true
 
@@ -598,24 +572,27 @@ AUTH_EOF
         if [ -n "$OPENAI_BASE_URL" ]; then
           echo "Setting OpenAI base URL: $OPENAI_BASE_URL"
           # Try to set via CLI first (may fail due to schema validation)
-          node /app/openclaw.mjs config set models.providers.openai.baseUrl "$OPENAI_BASE_URL" 2>/dev/null || true
-          node /app/openclaw.mjs config set models.providers.openai.models '[]' 2>/dev/null || true
+          # Use MODEL_PROVIDER so the provider key matches the model prefix
+          node /app/openclaw.mjs config set "models.providers.$MODEL_PROVIDER.baseUrl" "$OPENAI_BASE_URL" 2>/dev/null || true
+          node /app/openclaw.mjs config set "models.providers.$MODEL_PROVIDER.models" '[]' 2>/dev/null || true
 
           # Directly patch the openclaw.json file using node (primary method)
           # This is more reliable than the CLI config set command
-          echo "Configuring models.providers in openclaw.json..."
+          # Use MODEL_PROVIDER as the key so it matches the model prefix
+          echo "Configuring models.providers.$MODEL_PROVIDER in openclaw.json..."
           node -e "
             const fs = require('fs');
             const configPath = '$JSON_CONFIG_FILE';
+            const providerKey = '$MODEL_PROVIDER';
             try {
               const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
               config.models = config.models || {};
               config.models.providers = config.models.providers || {};
-              config.models.providers.openai = config.models.providers.openai || {};
-              config.models.providers.openai.baseUrl = '$OPENAI_BASE_URL';
-              config.models.providers.openai.models = [];
+              config.models.providers[providerKey] = config.models.providers[providerKey] || {};
+              config.models.providers[providerKey].baseUrl = '$OPENAI_BASE_URL';
+              config.models.providers[providerKey].models = [];
               fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-              console.log('Successfully patched openclaw.json with baseUrl');
+              console.log('Successfully patched openclaw.json with provider: ' + providerKey);
             } catch (e) {
               console.error('Failed to patch config:', e.message);
             }
@@ -628,10 +605,42 @@ AUTH_EOF
           node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model"
         fi
 
+        # CRITICAL: Create auth-profiles.json as the VERY LAST config step
+        # Must be after doctor --fix AND after models set, as both can overwrite this file
+        # Use MODEL_PROVIDER as the key so it matches the model prefix
+        # e.g., model "openai-compatible/doubao-..." needs provider key "openai-compatible"
+        echo "Creating auth-profiles.json for provider: $MODEL_PROVIDER"
+        if [ -n "$OPENAI_BASE_URL" ]; then
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$MODEL_PROVIDER": {
+    "apiKey": "$API_KEY",
+    "baseUrl": "$OPENAI_BASE_URL",
+    "baseURL": "$OPENAI_BASE_URL"
+  }
+}
+AUTH_EOF
+        else
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$MODEL_PROVIDER": {
+    "apiKey": "$API_KEY"
+  }
+}
+AUTH_EOF
+        fi
+        echo "Created auth-profiles.json:"
+        cat "$AUTH_PROFILES_FILE"
+
         # Debug: Show final openclaw.json configuration
         echo "=== Final openclaw.json ==="
         cat "$JSON_CONFIG_FILE" 2>/dev/null || echo "Config file not found"
         echo "==========================="
+
+        # Debug: Show final auth-profiles.json to verify it wasn't overwritten
+        echo "=== Final auth-profiles.json ==="
+        cat "$AUTH_PROFILES_FILE" 2>/dev/null || echo "Auth profiles file not found"
+        echo "================================"
 
         # Debug: Output all relevant environment variables
         echo "=== Environment Configuration ==="

@@ -1,13 +1,21 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.1.30",
-    "lastTouchedAt": "2026-02-11T14:06:07.545Z"
+    "lastTouchedAt": "2026-02-11T15:03:48.491Z"
   },
   "wizard": {
-    "lastRunAt": "2026-02-11T14:06:04.258Z",
+    "lastRunAt": "2026-02-11T15:03:37.963Z",
     "lastRunVersion": "2026.1.30",
     "lastRunCommand": "doctor",
     "lastRunMode": "local"
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "baseUrl": "http://192.168.43.4:3200/api/v1/openai-compatible",
+        "models": []
+      }
+    }
   },
   "agents": {
     "defaults": {
@@ -17,10 +25,10 @@
         "maxConcurrent": 8
       },
       "model": {
-        "primary": "custom/doubao-seed-1-8-251228"
+        "primary": "openai/doubao-seed-1-8-251228"
       },
       "models": {
-        "custom/doubao-seed-1-8-251228": {}
+        "openai/doubao-seed-1-8-251228": {}
       }
     }
   },

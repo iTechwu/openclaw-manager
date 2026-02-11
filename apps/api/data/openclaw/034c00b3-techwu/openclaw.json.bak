@@ -29,13 +29,21 @@
     "ackReactionScope": "group-mentions"
   },
   "wizard": {
-    "lastRunAt": "2026-02-11T14:06:04.258Z",
+    "lastRunAt": "2026-02-11T15:03:37.963Z",
     "lastRunVersion": "2026.1.30",
     "lastRunCommand": "doctor",
     "lastRunMode": "local"
   },
   "meta": {
     "lastTouchedVersion": "2026.1.30",
-    "lastTouchedAt": "2026-02-11T14:06:04.262Z"
+    "lastTouchedAt": "2026-02-11T15:03:37.967Z"
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "baseUrl": "http://192.168.43.4:3200/api/v1/openai-compatible",
+        "models": []
+      }
+    }
   }
 }
