@@ -732,6 +732,8 @@ export class BotApiController {
         body.modelAvailabilityIds,
         body.primaryModelAvailabilityId,
       );
+      // 检查并更新 Bot 状态（从 draft 到 created）
+      await this.botApiService.checkAndUpdateBotStatus(bot.id);
       return created(result);
     });
   }

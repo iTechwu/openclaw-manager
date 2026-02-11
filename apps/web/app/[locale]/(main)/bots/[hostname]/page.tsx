@@ -11,7 +11,7 @@ import { DraftConfigGuide } from './components/draft-config-guide';
 import { toast } from 'sonner';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@repo/ui';
-import { botClient, botChannelClient } from '@/lib/api/contracts';
+import { botModelClient, botChannelClient } from '@/lib/api/contracts';
 
 export default function BotDashboardPage() {
   const params = useParams<{ hostname: string }>();
@@ -38,11 +38,11 @@ export default function BotDashboardPage() {
       setConfigLoading(true);
       try {
         // 检查 Model (替代原来的 Provider 检查)
-        const modelRes = await botClient.getModels({
+        const modelRes = await botModelClient.list({
           params: { hostname },
         });
         if (modelRes.status === 200 && modelRes.body.data) {
-          setHasProvider(modelRes.body.data.models.length > 0);
+          setHasProvider(modelRes.body.data.list.length > 0);
         }
 
         // 检查 Channel

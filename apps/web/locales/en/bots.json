@@ -644,6 +644,7 @@
         "useExistingChain": "Use Preset Fallback Chain",
         "useExistingChainHint": "Select a pre-configured fallback chain, or configure manually below",
         "chainSelected": "Fallback chain selected: {chainId}",
+        "chainApplied": "Applied fallback chain \"{name}\" ({count} models)",
         "orConfigureManually": "Or configure failover manually",
         "templates": {
           "title": "Preset Templates",

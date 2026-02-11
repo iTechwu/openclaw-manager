@@ -67,6 +67,7 @@ import { EnhancedModelSelector } from './enhanced-model-selector';
 import { FallbackChainSelector } from './fallback-chain-selector';
 import { CostStrategySelector } from './cost-strategy-selector';
 import type { EnhancedModelInfo } from '@/hooks/useRoutingConfig';
+import { useFallbackChains } from '@/hooks/useRoutingConfig';
 
 /**
  * Provider info needed for model selection
@@ -326,6 +327,7 @@ const LOAD_BALANCE_TEMPLATE_KEYS = [
 
 export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
   const t = useTranslations('bots.detail.modelRouting');
+  const { chains: fallbackChains } = useFallbackChains();
 
   const [routings, setRoutings] = useState<BotModelRouting[]>([]);
   const [botProviders, setBotProviders] = useState<ProviderInfo[]>([]);
@@ -368,6 +370,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     model: '',
   });
   const [failoverChain, setFailoverChain] = useState<RoutingTarget[]>([]);
+  const [selectedChainId, setSelectedChainId] = useState<string | null>(null);
   const [retryMaxAttempts, setRetryMaxAttempts] = useState(3);
   const [retryDelayMs, setRetryDelayMs] = useState(1000);
 
@@ -503,6 +506,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     setLbCostStrategyId(null);
     setFailoverPrimary({ providerKeyId: '', model: '' });
     setFailoverChain([]);
+    setSelectedChainId(null);
     setRetryMaxAttempts(3);
     setRetryDelayMs(1000);
     setEditingRouting(null);
@@ -1551,10 +1555,48 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
                     {t('failover.useExistingChain')}
                   </div>
                   <FallbackChainSelector
-                    value={null}
+                    value={selectedChainId}
                     onChange={(chainId) => {
+                      setSelectedChainId(chainId);
                       if (chainId) {
-                        toast.info(t('failover.chainSelected', { chainId }));
+                        // Resolve chain models into failover form fields
+                        const chain = fallbackChains.find(
+                          (c) => c.chainId === chainId,
+                        );
+                        const chainModels = chain?.models ?? [];
+                        if (chainModels.length > 0) {
+                          // Find matching providerKeyId for each model
+                          const resolveTarget = (m: {
+                            vendor: string;
+                            model: string;
+                          }): RoutingTarget => {
+                            const provider = botProviders.find(
+                              (p) =>
+                                p.vendor === m.vendor &&
+                                p.allowedModels.includes(m.model),
+                            );
+                            return {
+                              providerKeyId: provider?.providerKeyId ?? '',
+                              model: m.model,
+                            };
+                          };
+                          setFailoverPrimary(resolveTarget(chainModels[0]));
+                          setFailoverChain(
+                            chainModels.slice(1).map(resolveTarget),
+                          );
+                          toast.success(
+                            t('failover.chainApplied', {
+                              name: chain?.name ?? chainId,
+                              count: chainModels.length,
+                            }),
+                          );
+                        } else {
+                          toast.info(t('failover.chainSelected', { chainId }));
+                        }
+                      } else {
+                        // Cleared selection — reset failover fields
+                        setFailoverPrimary({ providerKeyId: '', model: '' });
+                        setFailoverChain([]);
                       }
                     }}
                     providers={botProviders}

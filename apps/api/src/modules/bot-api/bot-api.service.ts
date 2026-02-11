@@ -818,11 +818,18 @@ export class BotApiService {
         let proxyToken: string | undefined;
         let apiType: string | undefined;
 
-        // Get primary model from BotModel
-        const primaryBotModel = await this.botModelService.get({
+        // Get primary model from BotModel (fallback to any model if no primary)
+        let primaryBotModel = await this.botModelService.get({
           botId: bot.id,
           isPrimary: true,
         });
+        if (!primaryBotModel) {
+          const { list: allModels } = await this.botModelService.list(
+            { botId: bot.id },
+            { limit: 1 },
+          );
+          primaryBotModel = allModels[0] || null;
+        }
 
         // Check if zero-trust mode is enabled
         const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
@@ -844,12 +851,15 @@ export class BotApiService {
               });
 
               if (providerKey) {
-                // Get API type from provider config
+                // Get API type: prefer providerKey.apiType from DB, fallback to PROVIDER_CONFIGS
                 const providerConfig =
                   PROVIDER_CONFIGS[
                     providerKey.vendor as keyof typeof PROVIDER_CONFIGS
                   ];
-                apiType = providerConfig?.apiType || 'openai';
+                apiType =
+                  providerKey.apiType ||
+                  providerConfig?.apiType ||
+                  'openai';
                 apiBaseUrl = providerKey.baseUrl || undefined;
 
                 if (useZeroTrust) {
@@ -1711,8 +1721,9 @@ export class BotApiService {
   /**
    * 检查并更新 Bot 状态
    * 当 Bot 同时配置了渠道和模型时，自动将状态从 draft 更新为 created
+   * 使用 BotConfigResolverService.isConfigured() 进行判断
    */
-  private async checkAndUpdateBotStatus(botId: string): Promise<void> {
+  async checkAndUpdateBotStatus(botId: string): Promise<void> {
     try {
       // 获取当前 bot 状态
       const bot = await this.botService.getById(botId);
@@ -1729,24 +1740,14 @@ export class BotApiService {
         return;
       }
 
-      // 检查是否有渠道配置
-      const { total: channelCount } = await this.botChannelService.list({
-        botId,
-      });
-      const hasChannel = channelCount > 0;
-
-      // 检查是否有模型配置
-      const { total: modelCount } = await this.botModelService.list({
-        botId,
-      });
-      const hasModel = modelCount > 0;
+      const configured = await this.botConfigResolver.isConfigured(botId);
 
       this.logger.debug(
-        `Bot ${botId} configuration status: hasChannel=${hasChannel}, hasModel=${hasModel}`,
+        `Bot ${botId} configuration status: isConfigured=${configured}`,
       );
 
-      // 如果同时配置了渠道和模型，更新状态为 created
-      if (hasChannel && hasModel) {
+      // 如果配置完成，更新状态为 created
+      if (configured) {
         await this.botService.update({ id: botId }, { status: 'created' });
         this.logger.log(
           `Bot ${botId} status updated from draft to created (both channel and model configured)`,

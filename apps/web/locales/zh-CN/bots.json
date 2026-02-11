@@ -647,6 +647,7 @@
         "useExistingChain": "使用预设故障转移链",
         "useExistingChainHint": "选择已配置的故障转移链，或在下方手动配置",
         "chainSelected": "已选择故障转移链: {chainId}",
+        "chainApplied": "已应用故障转移链「{name}」（{count} 个模型）",
         "orConfigureManually": "或手动配置故障转移",
         "templates": {
           "title": "预设模板",

@@ -158,10 +158,19 @@ export class BotConfigResolverService {
   }
 
   /**
-   * 检查 Bot 是否已完成配置（有 Model 和 Channel）
+   * 检查 Bot 是否已完成配置
+   * 只需要判断：1) BotModel 中存在记录  2) BotChannel 中存在记录
+   * 不再要求完整的运行时配置解析（ProviderKey 等）
    */
   async isConfigured(botId: string): Promise<boolean> {
-    const config = await this.getBotRuntimeConfig(botId);
-    return !!(config?.model && config?.channelType);
+    const { total: modelCount } = await this.botModelService.list(
+      { botId },
+      { limit: 1 },
+    );
+    const { total: channelCount } = await this.botChannelService.list(
+      { botId },
+      { limit: 1 },
+    );
+    return modelCount > 0 && channelCount > 0;
   }
 }
