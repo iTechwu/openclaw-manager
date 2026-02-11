@@ -6,6 +6,8 @@ import {
   BotModelModule,
   BotUsageLogModule,
   ModelAvailabilityModule,
+  CapabilityTagModule,
+  ModelCapabilityTagModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { ModelRouterService } from './services/model-router.service';
@@ -26,6 +28,8 @@ import { ModelRoutingService } from './model-routing.service';
     BotModelModule,
     ModelAvailabilityModule,
     BotUsageLogModule,
+    CapabilityTagModule,
+    ModelCapabilityTagModule,
   ],
   providers: [
     RoutingSuggestionService,

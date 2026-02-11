@@ -87,6 +87,8 @@ export const LoadBalanceConfigSchema = z.object({
   strategy: LoadBalanceStrategySchema,
   /** 目标列表 */
   targets: z.array(LoadBalanceTargetSchema).min(2),
+  /** 成本策略 ID（可选） */
+  costStrategyId: z.string().nullable().optional(),
 });
 
 export type LoadBalanceConfig = z.infer<typeof LoadBalanceConfigSchema>;

@@ -360,6 +360,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     'round_robin' | 'weighted' | 'least_latency'
   >('round_robin');
   const [lbTargets, setLbTargets] = useState<LoadBalanceTarget[]>([]);
+  const [lbCostStrategyId, setLbCostStrategyId] = useState<string | null>(null);
 
   // Failover state
   const [failoverPrimary, setFailoverPrimary] = useState<RoutingTarget>({
@@ -383,7 +384,10 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
         setRoutings(routingsResponse.body.data.routings);
       }
 
-      if (availabilityResponse.status === 200 && availabilityResponse.body.data) {
+      if (
+        availabilityResponse.status === 200 &&
+        availabilityResponse.body.data
+      ) {
         // Transform ModelAvailabilityItem[] to ProviderInfo[]
         // Group models by providerKeyId
         const providerMap = new Map<string, ProviderInfo>();
@@ -496,6 +500,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     setDefaultTarget({ providerKeyId: '', model: '' });
     setLbStrategy('round_robin');
     setLbTargets([]);
+    setLbCostStrategyId(null);
     setFailoverPrimary({ providerKeyId: '', model: '' });
     setFailoverChain([]);
     setRetryMaxAttempts(3);
@@ -521,6 +526,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     } else if (config.type === 'LOAD_BALANCE') {
       setLbStrategy(config.strategy);
       setLbTargets(config.targets);
+      setLbCostStrategyId(config.costStrategyId ?? null);
     } else if (config.type === 'FAILOVER') {
       setFailoverPrimary(config.primary);
       setFailoverChain(config.fallbackChain);
@@ -544,6 +550,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
           type: 'LOAD_BALANCE',
           strategy: lbStrategy,
           targets: lbTargets,
+          costStrategyId: lbCostStrategyId,
         };
       case 'FAILOVER':
         return {
@@ -1366,8 +1373,9 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
                     {t('loadBalance.costOptimization')}
                   </div>
                   <CostStrategySelector
-                    value={null}
+                    value={lbCostStrategyId}
                     onChange={(strategyId) => {
+                      setLbCostStrategyId(strategyId);
                       if (strategyId) {
                         toast.info(
                           t('loadBalance.strategySelected', { strategyId }),

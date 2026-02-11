@@ -8,6 +8,8 @@ import {
   BotModelService,
   BotUsageLogService,
   ModelAvailabilityService,
+  CapabilityTagService,
+  ModelCapabilityTagService,
 } from '@app/db';
 import { ModelRouterService } from './services/model-router.service';
 import { RoutingSuggestionService } from './services/routing-suggestion.service';
@@ -64,6 +66,8 @@ export class ModelRoutingService {
     private readonly botUsageLogService: BotUsageLogService,
     private readonly modelRouterService: ModelRouterService,
     private readonly routingSuggestionService: RoutingSuggestionService,
+    private readonly capabilityTagService: CapabilityTagService,
+    private readonly modelCapabilityTagService: ModelCapabilityTagService,
   ) {}
 
   /**
@@ -367,8 +371,54 @@ export class ModelRoutingService {
       }
     }
 
+    // Fetch capability tags and model-tag associations from DB
+    const { list: capabilityTagsRaw } = await this.capabilityTagService.list(
+      { isActive: true },
+      { limit: 100 },
+    );
+    const capabilityTags = capabilityTagsRaw.map((t) => ({
+      tagId: t.tagId,
+      name: t.name,
+      description: t.description,
+      category: t.category,
+      priority: t.priority,
+      requiredModels: (t.requiredModels as string[] | null) ?? null,
+    }));
+
+    // Get model-tag associations for all bot models
+    const modelIds = modelInfos.map((m) => m.modelId);
+    const { list: modelCapTags } = await this.modelCapabilityTagService.list(
+      {},
+      { limit: 5000 },
+      {
+        include: {
+          modelAvailability: { select: { model: true } },
+          capabilityTag: { select: { tagId: true } },
+        },
+      } as any,
+    );
+    // Build model -> tagIds associations (only for bot's models)
+    const modelIdSet = new Set(modelIds);
+    const assocMap = new Map<string, string[]>();
+    for (const mct of modelCapTags as any[]) {
+      const modelName = mct.modelAvailability?.model;
+      const tagId = mct.capabilityTag?.tagId;
+      if (!modelName || !tagId || !modelIdSet.has(modelName)) continue;
+      const existing = assocMap.get(modelName);
+      if (existing) {
+        existing.push(tagId);
+      } else {
+        assocMap.set(modelName, [tagId]);
+      }
+    }
+    const modelTagAssociations = Array.from(assocMap.entries()).map(
+      ([modelId, tagIds]) => ({ modelId, tagIds }),
+    );
+
     return this.routingSuggestionService.generateSuggestions(
       Array.from(providerMap.values()),
+      capabilityTags,
+      modelTagAssociations,
     );
   }
 
