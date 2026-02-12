@@ -9,6 +9,7 @@
  */
 import { Injectable, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { firstValueFrom, timeout, catchError } from 'rxjs';
@@ -200,16 +201,22 @@ export class OpenClawSkillSyncClient {
     'https://raw.githubusercontent.com/VoltAgent/awesome-openclaw-skills/main/README.md';
   private readonly requestTimeout = 60000; // 60 秒超时
   private readonly localCachePath: string;
+  private readonly githubToken?: string;
+  private readonly githubProxyUrl?: string;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {
     // 本地缓存文件路径：apps/api/openclaw-skills/README.md
     this.localCachePath = path.resolve(
       __dirname,
       '../../../../../openclaw-skills/README.md',
     );
+    // GitHub Token 和代理 URL（可选）
+    this.githubToken = this.configService.get<string>('GITHUB_TOKEN');
+    this.githubProxyUrl = this.configService.get<string>('GITHUB_PROXY_URL');
   }
 
   /**
@@ -240,11 +247,34 @@ export class OpenClawSkillSyncClient {
   }
 
   /**
+   * 构建 GitHub 请求的 headers 和 URL
+   */
+  private getGitHubRequestConfig(url: string): {
+    url: string;
+    headers: Record<string, string>;
+  } {
+    const headers: Record<string, string> = {};
+    if (this.githubToken) {
+      headers['Authorization'] = `token ${this.githubToken}`;
+    }
+    // 如果配置了代理 URL，替换 GitHub 域名
+    let finalUrl = url;
+    if (this.githubProxyUrl) {
+      finalUrl = url.replace(
+        'https://raw.githubusercontent.com',
+        this.githubProxyUrl,
+      );
+    }
+    return { url: finalUrl, headers };
+  }
+
+  /**
    * 从 GitHub 获取 README 内容
    */
   private async fetchFromGitHub(): Promise<string> {
+    const { url, headers } = this.getGitHubRequestConfig(this.repoUrl);
     const response = await firstValueFrom(
-      this.httpService.get<string>(this.repoUrl).pipe(
+      this.httpService.get<string>(url, { headers }).pipe(
         timeout(this.requestTimeout),
         catchError((error) => {
           this.logger.error('OpenClawSkillSyncClient: GitHub 请求失败', {
@@ -431,14 +461,13 @@ export class OpenClawSkillSyncClient {
       sourceUrl,
     });
 
-    // 将 tree URL 转换为 raw URL
-    // https://github.com/openclaw/skills/tree/main/skills/author/slug/SKILL.md
-    // -> https://raw.githubusercontent.com/openclaw/skills/main/skills/author/slug/SKILL.md
+    // 将 tree URL 转换为 raw URL，并应用代理配置
     const rawUrl = this.convertToRawUrl(sourceUrl);
+    const { url, headers } = this.getGitHubRequestConfig(rawUrl);
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get<string>(rawUrl).pipe(
+        this.httpService.get<string>(url, { headers }).pipe(
           timeout(this.requestTimeout),
           catchError((error) => {
             this.logger.error('OpenClawSkillSyncClient: 获取 SKILL.md 失败', {

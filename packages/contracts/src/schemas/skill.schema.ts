@@ -202,3 +202,23 @@ export const UpdateBotSkillRequestSchema = z.object({
 });
 
 export type UpdateBotSkillRequest = z.infer<typeof UpdateBotSkillRequestSchema>;
+
+/**
+ * 批量安装技能请求 Schema
+ */
+export const BatchInstallSkillRequestSchema = z.object({
+  skillIds: z.array(z.string().uuid()).min(1).max(20),
+});
+
+export type BatchInstallSkillRequest = z.infer<typeof BatchInstallSkillRequestSchema>;
+
+/**
+ * 批量安装技能响应 Schema
+ */
+export const BatchInstallResultSchema = z.object({
+  installed: z.number(),
+  skipped: z.number(),
+  failed: z.number(),
+});
+
+export type BatchInstallResult = z.infer<typeof BatchInstallResultSchema>;

@@ -18,6 +18,7 @@ import type {
   UpdateSkillRequest,
   InstallSkillRequest,
   UpdateBotSkillRequest,
+  BatchInstallResult,
 } from '@repo/contracts';
 
 const OPENCLAW_SOURCE = 'openclaw';
@@ -47,6 +48,8 @@ export class SkillApiService {
     const {
       page = 1,
       limit = 20,
+      sort,
+      asc,
       skillTypeId,
       isSystem,
       search,
@@ -88,9 +91,17 @@ export class SkillApiService {
       ];
     }
 
+    // 构建排序
+    const orderBy: Record<string, string> = {};
+    if (sort && ['name', 'createdAt'].includes(sort)) {
+      orderBy[sort] = asc || 'desc';
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+
     const result = await this.skillService.list(
       where,
-      { page, limit },
+      { page, limit, orderBy },
       {
         select: {
           id: true,
@@ -420,8 +431,65 @@ export class SkillApiService {
   }
 
   /**
-   * 更新 Bot 技能配置
+   * 批量安装技能到 Bot
    */
+  async batchInstallSkills(
+    userId: string,
+    hostname: string,
+    skillIds: string[],
+  ): Promise<BatchInstallResult> {
+    const bot = await this.botService.get({ hostname, createdById: userId });
+    if (!bot) {
+      throw new NotFoundException('Bot 不存在');
+    }
+
+    let installed = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const skillId of skillIds) {
+      try {
+        const skill = await this.skillService.getById(skillId);
+        if (!skill) {
+          failed++;
+          continue;
+        }
+
+        if (!skill.isSystem && skill.createdById !== userId) {
+          failed++;
+          continue;
+        }
+
+        const existing = await this.botSkillService.get({
+          botId: bot.id,
+          skillId,
+        });
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        await this.botSkillService.create({
+          bot: { connect: { id: bot.id } },
+          skill: { connect: { id: skillId } },
+          config: {},
+          isEnabled: true,
+        });
+        installed++;
+      } catch {
+        failed++;
+      }
+    }
+
+    this.logger.info('Batch skill install completed', {
+      hostname,
+      installed,
+      skipped,
+      failed,
+    });
+
+    return { installed, skipped, failed };
+  }
   async updateBotSkillConfig(
     userId: string,
     hostname: string,

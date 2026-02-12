@@ -55,10 +55,16 @@ Bot (b_bot)                     机器人实例
 
 **文件**: `apps/web/app/[locale]/(main)/bots/[hostname]/skills/page.tsx`
 
-用户在 Bot 技能管理页面点击"添加技能"按钮，弹出可安装技能列表对话框。选择目标技能后点击"安装"：
+用户在 Bot 技能管理页面点击"添加技能"按钮，弹出可安装技能列表对话框。对话框支持：
+- 搜索（带 300ms 防抖，支持中英文名称和描述）
+- 分类筛选（Tab 切换，显示各分类技能数量）
+- 技能详情预览（点击卡片查看版本、作者、标签、GitHub 链接等）
+
+选择目标技能后点击"安装"（按钮显示 loading 状态）：
 
 ```typescript
 const handleInstall = async (skillId: string) => {
+  setInstallingSkillId(skillId);
   const response = await botSkillApi.install.mutation({
     params: { hostname },
     body: { skillId },
@@ -66,6 +72,10 @@ const handleInstall = async (skillId: string) => {
   if (response.status === 200) {
     toast.success(t('installSuccess'));
     queryClient.invalidateQueries({ queryKey: ['bot-skills', hostname] });
+  } else if (response.status === 409) {
+    toast.warning(t('alreadyInstalled'));
+  } else {
+    toast.error(t('installFailed'));
   }
 };
 ```
@@ -84,6 +94,7 @@ install: {
   body: InstallSkillRequestSchema,  // { skillId: UUID, config?: Record }
   responses: {
     200: createApiResponse(BotSkillItemSchema),
+    409: createApiResponse(z.null()),  // 技能已安装
   },
 }
 ```
@@ -127,14 +138,18 @@ installSkill(userId, hostname, data)
 │      ├─ 系统技能 (isSystem: true) → 所有人可安装
 │      └─ 自定义技能 → 只有创建者可安装，否则抛出 ForbiddenException
 │
-├─ 4.4 OpenClaw 技能按需同步 SKILL.md（核心逻辑）
+├─ 4.4 检查是否已安装（防止重复安装）
+│      botSkillService.get({ botId, skillId })
+│      → 已存在则抛出 ConflictException (409)
+│
+├─ 4.5 OpenClaw 技能按需同步 SKILL.md（核心逻辑）
 │      条件: skill.source === 'openclaw' && skill.sourceUrl && !definition.content
 │      ├─ 调用 openClawSyncClient.fetchSkillDefinition(sourceUrl)
 │      ├─ 更新 skill.definition 字段（写入完整内容）
 │      ├─ 更新 skill.version 字段
 │      └─ ⚠️ 同步失败不阻止安装，仅记录 warn 日志
 │
-├─ 4.5 创建 BotSkill 关联记录
+├─ 4.6 创建 BotSkill 关联记录
 │      botSkillService.create({
 │        bot: { connect: { id: bot.id } },
 │        skill: { connect: { id: skillId } },
@@ -142,8 +157,10 @@ installSkill(userId, hostname, data)
 │        isEnabled: true,
 │      })
 │
-└─ 4.6 查询完整 BotSkill 信息（含 Skill 详情）返回
-       botSkillService.getById(botSkill.id, { select: { ..., skill: true } })
+└─ 4.7 查询完整 BotSkill 信息（含 Skill + SkillType 详情）返回
+       botSkillService.getById(botSkill.id, {
+         select: { ..., skill: { include: { skillType: true } } }
+       })
 ```
 
 ### Step 5 — OpenClaw SKILL.md 同步
@@ -203,10 +220,14 @@ DB Service 层自动处理读写分离（`getWriteClient()`）和错误处理（
 
 ### Step 7 — 前端响应处理
 
-安装成功后：
-1. 显示成功 Toast 提示
-2. 刷新已安装技能列表 (`invalidateQueries`)
-3. 关闭安装对话框
+根据 `response.status` 分支处理（ts-rest mutation 返回 response 对象，不抛异常）：
+
+- **200**: 安装成功 → 显示成功 Toast → 刷新已安装列表 → 关闭对话框
+- **409**: 技能已安装 → 显示警告 Toast → 刷新已安装列表（同步状态）
+- **其他**: 安装失败 → 显示错误 Toast
+- **catch**: 网络异常等 → 显示错误 Toast
+
+安装按钮在请求期间显示 `Loader2` 旋转动画 + "安装中" 文案。
 
 ## definition 字段结构
 
@@ -237,7 +258,7 @@ DB Service 层自动处理读写分离（`getWriteClient()`）和错误处理（
 ### 启用/禁用技能
 
 ```
-PATCH /bot/:hostname/skills/:skillId
+PUT /bot/:hostname/skills/:skillId
 Body: { isEnabled: boolean }
 ```
 
@@ -247,7 +268,7 @@ Body: { isEnabled: boolean }
 DELETE /bot/:hostname/skills/:skillId
 ```
 
-物理删除 `b_bot_skill` 记录，不影响 `b_skill` 表。
+物理删除 `b_bot_skill` 记录，不影响 `b_skill` 表。前端通过二次确认弹窗（显示技能名称）防止误操作，卸载按钮带 loading 状态。
 
 ### 技能列表查询
 

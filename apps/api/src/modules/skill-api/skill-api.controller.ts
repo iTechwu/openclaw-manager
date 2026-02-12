@@ -99,6 +99,18 @@ export class SkillApiController {
     });
   }
 
+  @TsRestHandler(botSkillC.batchInstall)
+  async batchInstallSkills(@Req() req: AuthenticatedRequest): Promise<any> {
+    return tsRestHandler(botSkillC.batchInstall, async ({ params, body }) => {
+      const result = await this.skillApiService.batchInstallSkills(
+        req.userId,
+        params.hostname,
+        body.skillIds,
+      );
+      return success(result);
+    });
+  }
+
   @TsRestHandler(botSkillC.updateConfig)
   async updateBotSkillConfig(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(botSkillC.updateConfig, async ({ params, body }) => {

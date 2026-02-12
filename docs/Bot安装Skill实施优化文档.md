@@ -30,7 +30,7 @@
 
 #### 2.1 重复安装未做前置检查 ✅ 已完成
 
-**实现位置**: `skill-api.service.ts:321-328`
+**实现位置**: `skill-api.service.ts:328-334`
 
 ```typescript
 const existing = await this.botSkillService.get({
@@ -56,34 +56,31 @@ if (existing) {
 
 #### 2.3 安装对话框搜索和分类筛选 ✅ 已完成
 
-**实现位置**: `skills/page.tsx:350-351,370-395,504-538`
+**实现位置**: `skills/page.tsx`
 
-- `searchQuery` + `selectedTypeId` 状态
+- `searchQuery` + `debouncedSearch`（300ms 防抖）+ `selectedTypeId` 状态
 - `skillSyncApi.skillTypes.useQuery` 获取分类列表
 - `useMemo` 构建 `skillListQuery`，传入 `search` 和 `skillTypeId`
 - 搜索框带 Search 图标，分类 Tab 带技能数量 Badge
+- Tab 支持横向滚动（`overflow-x-auto` + `shrink-0`）
 
 #### 2.4 卸载操作二次确认 ✅ 已完成
 
-**实现位置**: `skills/page.tsx:353-356,612-638`
+**实现位置**: `skills/page.tsx`
 
-- 使用 `Dialog` + `DialogFooter` 实现确认弹窗（因 `AlertDialog` 未在 `@repo/ui` 中导出）
-- `uninstallTarget` 状态管理，destructive 按钮样式
+- 使用 `Dialog` + `DialogFooter` 实现确认弹窗
+- `uninstallTarget` 状态管理（含 skillId + name），destructive 按钮样式
+- 确认弹窗显示技能名称，卸载中禁止关闭弹窗
 
 #### 2.5 安装时同步进度反馈 ✅ 已完成
-
-**实现位置**: `skills/page.tsx:207-217,321-331`
 
 - `Loader2` 旋转动画 + `installing` 文案
 - 在 `AvailableSkillCard` 和 `SkillDetailPreview` 中均有实现
 
 #### 2.6 技能详情预览 ✅ 已完成
 
-**实现位置**: `skills/page.tsx:249-335`
-
 - `SkillDetailPreview` 组件：图标、名称、描述、版本、作者、来源、分类 Badge
-- 点击卡片进入预览，返回列表按钮
-- 预览页面也可直接安装
+- 展示 `definition.tags` 标签列表 + GitHub 源链接
 
 ---
 
@@ -91,142 +88,63 @@ if (existing) {
 
 ### 🔴 Bug 级别
 
-#### 3.1 已安装技能缺少 skillType 关联查询
+#### 3.1 已安装技能缺少 skillType 关联查询 ✅ 已修复
 
-**位置**: `skill-api.service.ts:277-292`
+`getBotSkills`、`installSkill`、`updateBotSkillConfig` 三个方法均已修复为 `skill: { include: { skillType: true } }`。
 
-`getBotSkills` 方法中 `select: { skill: true }` 只加载 Skill 的标量字段，不会自动加载嵌套的 `skillType` 关联。导致已安装技能卡片上的分类 Badge 始终为空。
+#### 3.2 前端未区分 409 Conflict 错误 ✅ 已修复
 
-```typescript
-// 当前代码（有问题）
-select: {
-  ...
-  skill: true,  // ❌ 不会加载 skill.skillType
-}
+合约层添加 `409: createApiResponse(z.null())` 响应定义，前端通过 `response.status` 判断。
 
-// 应改为
-select: {
-  ...
-  skill: {
-    include: {
-      skillType: true,  // ✅ 显式加载 skillType
-    },
-  },
-}
-```
+#### 3.3 后端搜索未覆盖中文字段 ✅ 已修复
 
-#### 3.2 前端未区分 409 Conflict 错误
-
-**位置**: `skills/page.tsx:415-416`
-
-`handleInstall` 的 catch 块对所有错误统一显示 `installFailed`。当后端返回 409（技能已安装）时，应显示 `alreadyInstalled` 提示而非通用错误。
-
-```typescript
-// 当前代码
-} catch (error) {
-  toast.error(t('installFailed'));  // ❌ 所有错误一视同仁
-}
-
-// 建议
-} catch (error: any) {
-  if (error?.status === 409) {
-    toast.warning(t('alreadyInstalled'));
-    queryClient.invalidateQueries({ queryKey: ['bot-skills', hostname] });
-  } else {
-    toast.error(t('installFailed'));
-  }
-}
-```
-
-#### 3.3 后端搜索未覆盖中文字段
-
-**位置**: `skill-api.service.ts:78-87`
-
-搜索只匹配 `name` 和 `description`，未匹配 `nameZh` 和 `descriptionZh`。中文用户搜索中文名称时无结果。
-
-```typescript
-// 当前代码
-OR: [
-  { name: { contains: search, mode: 'insensitive' } },
-  { description: { contains: search, mode: 'insensitive' } },
-]
-
-// 应改为
-OR: [
-  { name: { contains: search, mode: 'insensitive' } },
-  { nameZh: { contains: search, mode: 'insensitive' } },
-  { description: { contains: search, mode: 'insensitive' } },
-  { descriptionZh: { contains: search, mode: 'insensitive' } },
-]
-```
+`nameZh` + `descriptionZh` 加入 OR 搜索条件。
 
 ### 🟡 体验问题
 
-#### 3.4 搜索无防抖
+#### 3.4 搜索无防抖 ✅ 已修复
 
-**位置**: `skills/page.tsx:510`
+使用 `useDebouncedValue(searchQuery, 300)`。
 
-每次按键都触发 `setSearchQuery` → `useMemo` 重算 → `useQuery` 重新请求。快速输入时会产生大量无效 API 调用。
+#### 3.5 卸载确认未显示技能名称 ✅ 已修复
 
-**建议**: 添加 300ms 防抖，可用 `useDeferredValue` 或自定义 `useDebounce` hook。
+#### 3.6 InstalledSkillCard 的 hostname prop 未使用 ✅ 已修复
 
-#### 3.5 卸载确认未显示技能名称
+#### 3.7 安装对话框硬编码 limit: 100 ✅ 已修复
 
-**位置**: `skills/page.tsx:619-622`
+替换为 `PAGE_SIZE = 20` + 分页加载（"加载更多"按钮），后端 `sort`/`asc` 参数传递到 DB 层。
 
-`uninstallTarget.name` 已存储但未在确认弹窗中使用。用户看到的是通用文案，不知道要卸载哪个技能。
-
-**建议**: 在 `DialogDescription` 中插入技能名称：
-```
-确定要卸载「{uninstallTarget.name}」吗？
-```
-
-#### 3.6 InstalledSkillCard 的 hostname prop 未使用
-
-**位置**: `skills/page.tsx:65,71`
-
-`hostname` 作为 prop 传入但组件内部从未引用。应移除以保持接口干净。
-
-#### 3.7 安装对话框仍硬编码 limit: 100
-
-**位置**: `skills/page.tsx:380`
-
-虽然添加了搜索和筛选，但仍一次性加载 100 条。当技能库增长到 500+ 时，应改为分页加载或无限滚动。
-
-#### 3.8 卸载操作无 loading 状态
-
-**位置**: `skills/page.tsx:438-454`
-
-卸载 API 调用期间，确认按钮没有 loading 状态，用户可能重复点击。
+#### 3.8 卸载操作无 loading 状态 ✅ 已修复
 
 ---
 
 ## 4. 进一步 UI 优化建议
 
-### P1.5 — 应尽快修复
+### P1.5 — 应尽快修复 ✅ 全部完成
 
-| # | 优化项 | 说明 | 涉及文件 |
-|---|--------|------|----------|
-| 4.1 | 搜索防抖 | 添加 300ms 防抖减少 API 调用 | `skills/page.tsx` |
-| 4.2 | 卸载确认显示技能名 | 在确认弹窗中显示要卸载的技能名称 | `skills/page.tsx` |
-| 4.3 | 修复 skillType 关联 | `getBotSkills` 显式 include skillType | `skill-api.service.ts` |
-| 4.4 | 搜索覆盖中文字段 | 添加 nameZh/descriptionZh 到搜索条件 | `skill-api.service.ts` |
-| 4.5 | 409 错误区分处理 | 前端区分 Conflict 和其他错误 | `skills/page.tsx` |
+| # | 优化项 | 状态 | 说明 |
+|---|--------|------|------|
+| 4.1 | 搜索防抖 | ✅ | `useDebouncedValue(searchQuery, 300)` |
+| 4.2 | 卸载确认显示技能名 | ✅ | `uninstallTarget.name` 显示在弹窗中 |
+| 4.3 | 修复 skillType 关联 | ✅ | 3 处 `skill: { include: { skillType: true } }` |
+| 4.4 | 搜索覆盖中文字段 | ✅ | `nameZh` + `descriptionZh` 加入 OR 条件 |
+| 4.5 | 409 错误区分处理 | ✅ | 合约 + 前端 `response.status` 判断 |
+| 4.6 | 安装弹框布局优化 | ✅ | 固定头部 + 可滚动内容区 + Tab 横向滚动 |
 
-### P2 — 可选优化（提升体验）
+### P2 — 可选优化（提升体验）✅ 全部完成
 
-| # | 优化项 | 说明 | 涉及文件 |
-|---|--------|------|----------|
-| 4.6 | 已安装技能搜索 | 列表上方添加搜索框 | `skills/page.tsx` |
-| 4.7 | 分页/无限滚动 | 替换 limit:100 为分页加载 | `skills/page.tsx` |
-| 4.8 | 批量安装 | 多选 + 批量安装 API | `skill.contract.ts` + `skill-api.service.ts` |
-| 4.9 | 技能配置面板 | 根据 definition.frontmatter 动态生成配置表单 | `skills/page.tsx` |
-| 4.10 | GitHub 请求代理 | HTTP 代理 / GitHub API + Token / 本地缓存 | `openclaw-skill-sync.client.ts` |
-| 4.11 | 卸载 loading 状态 | 确认按钮显示 loading | `skills/page.tsx` |
-| 4.12 | 移除未使用 prop | InstalledSkillCard 移除 hostname | `skills/page.tsx` |
-| 4.13 | 排序选项 | 支持按名称、日期、热度排序 | `skills/page.tsx` |
-| 4.14 | GitHub 链接 | 详情预览中添加 GitHub 源链接 | `skills/page.tsx` |
-| 4.15 | 技能标签展示 | 详情预览中展示 definition.tags | `skills/page.tsx` |
+| # | 优化项 | 状态 | 说明 | 涉及文件 |
+|---|--------|------|------|----------|
+| 4.7 | 已安装技能搜索 | ✅ | 安装 3 个以上时显示搜索框，客户端过滤 | `skills/page.tsx` |
+| 4.8 | 分页加载 | ✅ | `PAGE_SIZE=20` + "加载更多"按钮 + 后端 sort/asc 传递 | `skills/page.tsx` + `skill-api.service.ts` |
+| 4.9 | 批量安装 | ✅ | 多选模式 + `batchInstall` API（合约+后端+前端） | `skill.contract.ts` + `skill.schema.ts` + `skill-api.service.ts` + `skill-api.controller.ts` + `skills/page.tsx` |
+| 4.10 | 技能配置面板 | ✅ | `SkillConfigDialog` 组件，Key-Value 动态表单 | `skills/page.tsx` |
+| 4.11 | GitHub 请求代理 | ✅ | `GITHUB_TOKEN` + `GITHUB_PROXY_URL` 环境变量支持 | `openclaw-skill-sync.client.ts` + `openclaw.module.ts` |
+| 4.12 | 卸载 loading 状态 | ✅ | `isUninstalling` + `Loader2` | `skills/page.tsx` |
+| 4.13 | 移除未使用 prop | ✅ | `InstalledSkillCard` 移除 `hostname` | `skills/page.tsx` |
+| 4.14 | 排序选项 | ✅ | Select 下拉：名称 A-Z/Z-A、日期升/降序，后端 orderBy 支持 | `skills/page.tsx` + `skill-api.service.ts` |
+| 4.15 | GitHub 链接 | ✅ | 详情预览中 `skill.sourceUrl` 外链 | `skills/page.tsx` |
+| 4.16 | 技能标签展示 | ✅ | 详情预览中展示 `definition.tags` | `skills/page.tsx` |
 
 ---
 
@@ -234,11 +152,65 @@ OR: [
 
 | 文件 | 修改类型 | 阶段 | 状态 |
 |------|---------|------|------|
-| `apps/api/src/modules/skill-api/skill-api.service.ts` | 修改 | P0 | ✅ 已完成 |
-| `apps/api/libs/infra/clients/internal/openclaw/openclaw-skill-sync.client.ts` | 修改 | P0 | ✅ 已完成 |
+| `apps/api/src/modules/skill-api/skill-api.service.ts` | 修改 | P0+P1.5+P2 | ✅ 已完成（排序+批量安装） |
+| `apps/api/src/modules/skill-api/skill-api.controller.ts` | 修改 | P2 | ✅ 已完成（批量安装 handler） |
+| `apps/api/libs/infra/clients/internal/openclaw/openclaw-skill-sync.client.ts` | 修改 | P0+P2 | ✅ 已完成（GitHub Token+代理） |
+| `apps/api/libs/infra/clients/internal/openclaw/openclaw.module.ts` | 修改 | P2 | ✅ 已完成（ConfigModule 导入） |
 | `apps/api/package.json` | 修改 | P0 | ✅ 已完成 |
-| `apps/web/app/[locale]/(main)/bots/[hostname]/skills/page.tsx` | 修改 | P1 | ✅ 已完成 |
-| `apps/web/locales/zh-CN/botSkills.json` | 修改 | P1 | ✅ 已完成 |
-| `apps/web/locales/en/botSkills.json` | 修改 | P1 | ✅ 已完成 |
-| `packages/contracts/src/api/skill.contract.ts` | 不变 | — | — |
-| `packages/contracts/src/schemas/skill.schema.ts` | 不变 | — | — |
+| `apps/web/app/[locale]/(main)/bots/[hostname]/skills/page.tsx` | 修改 | P1+P1.5+P2 | ✅ 已完成（排序+分页+批量+配置面板） |
+| `apps/web/locales/zh-CN/botSkills.json` | 修改 | P1+P2 | ✅ 已完成 |
+| `apps/web/locales/en/botSkills.json` | 修改 | P1+P2 | ✅ 已完成 |
+| `packages/contracts/src/api/skill.contract.ts` | 修改 | P1.5+P2 | ✅ 已完成（409 响应+批量安装端点） |
+| `packages/contracts/src/schemas/skill.schema.ts` | 修改 | P2 | ✅ 已完成（BatchInstall Schema） |
+
+---
+
+## 6. 完成度总结
+
+| 优先级 | 总数 | 已完成 | 完成率 |
+|--------|------|--------|--------|
+| P0 | 2 | 2 | 100% |
+| P1 | 4 | 4 | 100% |
+| P1.5 | 6 | 6 | 100% |
+| P2 | 10 | 10 | 100% |
+| **总计** | **22** | **22** | **100%** |
+
+所有优化项已全部完成。
+
+---
+
+## 7. P2 新增功能详细说明
+
+### 7.1 排序选项（4.14）
+
+- 前端：安装对话框搜索栏右侧新增 `Select` 下拉，支持 4 种排序：日期降序/升序、名称 A-Z/Z-A
+- 后端：`listSkills` 方法从 query 中提取 `sort`/`asc`，转换为 Prisma `orderBy` 传入 DB 层
+- 搜索/筛选/排序变化时自动重置分页到第 1 页
+
+### 7.2 分页加载（4.8）
+
+- 前端：`PAGE_SIZE = 20`，`currentPage` 状态，底部"加载更多"按钮
+- 后端：已有 `PaginationQuerySchema` 支持 `page`/`limit`，无需额外修改
+- 当 `currentPage * PAGE_SIZE >= total` 时显示"没有更多了"
+
+### 7.3 批量安装（4.9）
+
+- 合约：`BatchInstallSkillRequestSchema`（`skillIds: uuid[].min(1).max(20)`）+ `BatchInstallResultSchema`
+- 后端：`batchInstallSkills` 方法逐个安装，跳过已安装/无权限的，返回 `{ installed, skipped, failed }`
+- 前端：`CheckSquare` 图标切换批量模式，全选/取消全选，选中后显示"安装选中 (N)"按钮
+- 关闭对话框时自动退出批量模式
+
+### 7.4 技能配置面板（4.10）
+
+- `SkillConfigDialog` 组件：Key-Value 动态表单
+- 从 `botSkill.config` 初始化条目，支持添加/删除参数
+- 值自动尝试 JSON.parse，失败则作为字符串保存
+- 调用 `botSkillApi.updateConfig` 保存配置
+
+### 7.5 GitHub 请求代理（4.11）
+
+- 新增 `GITHUB_TOKEN` 环境变量：设置后自动在 GitHub 请求中添加 `Authorization: token xxx` 头
+- 新增 `GITHUB_PROXY_URL` 环境变量：设置后替换 `raw.githubusercontent.com` 为代理地址
+- `getGitHubRequestConfig()` 统一处理 Token 和代理 URL
+- `fetchFromGitHub()` 和 `fetchSkillDefinition()` 均已适配
+- `OpenClawModule` 新增 `ConfigModule` 导入

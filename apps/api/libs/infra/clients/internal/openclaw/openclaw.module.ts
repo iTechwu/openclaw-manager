@@ -2,6 +2,7 @@
  * OpenClaw 客户端模块
  */
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { OpenClawClient } from './openclaw.client';
 import { OpenClawSkillSyncClient } from './openclaw-skill-sync.client';
@@ -10,6 +11,7 @@ import { OpenAIClientModule } from '@app/clients/internal/openai';
 
 @Module({
   imports: [
+    ConfigModule,
     HttpModule.register({
       timeout: 120000,
       maxRedirects: 5,
