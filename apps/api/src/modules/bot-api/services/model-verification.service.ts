@@ -4,7 +4,7 @@ import { Logger } from 'winston';
 import {
   ProviderKeyService,
   ModelAvailabilityService,
-  ModelPricingService,
+  ModelCatalogService,
 } from '@app/db';
 import { EncryptionService } from './encryption.service';
 import { CapabilityTagMatchingService } from './capability-tag-matching.service';
@@ -121,7 +121,7 @@ export class ModelVerificationService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly providerKeyService: ProviderKeyService,
     private readonly modelAvailabilityService: ModelAvailabilityService,
-    private readonly modelPricingService: ModelPricingService,
+    private readonly modelCatalogService: ModelCatalogService,
     private readonly encryptionService: EncryptionService,
     private readonly capabilityTagMatchingService: CapabilityTagMatchingService,
   ) {}
@@ -405,15 +405,18 @@ export class ModelVerificationService {
     );
 
     // 判断是否需要二次验证（火山云、阿里云百炼等需要开通的平台）
-    const needsVerification = this.requiresVerification(effectiveBaseUrl, vendor);
+    const needsVerification = this.requiresVerification(
+      effectiveBaseUrl,
+      vendor,
+    );
 
     // 添加新模型
-    const createdModelAvailabilities: Array<{ id: string; model: string }> = [];
+    const createdModelCatalogs: Array<{ catalogId: string; model: string }> = [];
     for (const model of newModels) {
       const modelType = this.classifyModelType(model);
 
-      // 查找对应的 ModelPricing 记录
-      const pricing = await this.modelPricingService.getByModel(model);
+      // 查找对应的 ModelCatalog 记录
+      const catalog = await this.modelCatalogService.getByModel(model);
 
       const created = await this.modelAvailabilityService.create({
         model,
@@ -423,18 +426,20 @@ export class ModelVerificationService {
         isAvailable: !needsVerification,
         lastVerifiedAt: needsVerification ? new Date(0) : new Date(),
         errorMessage: needsVerification ? 'Not verified yet' : null,
-        // 关联 ModelPricing（如果存在）
-        ...(pricing ? { modelPricing: { connect: { id: pricing.id } } } : {}),
+        // 关联 ModelCatalog（如果存在）
+        ...(catalog ? { modelCatalog: { connect: { id: catalog.id } } } : {}),
       });
 
-      createdModelAvailabilities.push({ id: created.id, model: created.model });
+      if (catalog) {
+        createdModelCatalogs.push({ catalogId: catalog.id, model: created.model });
+      }
     }
 
-    // 为新创建的 ModelAvailability 分配能力标签
-    for (const { id, model } of createdModelAvailabilities) {
+    // 为新关联的 ModelCatalog 分配能力标签
+    for (const { catalogId, model } of createdModelCatalogs) {
       try {
-        await this.capabilityTagMatchingService.assignTagsToModelAvailability(
-          id,
+        await this.capabilityTagMatchingService.assignTagsToModelCatalog(
+          catalogId,
           model,
           vendor,
         );

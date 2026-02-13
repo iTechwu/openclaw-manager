@@ -19,7 +19,7 @@ export const routingConfigKeys = {
   fallbackChains: () => [...routingConfigKeys.all, 'fallback-chains'] as const,
   costStrategies: () => [...routingConfigKeys.all, 'cost-strategies'] as const,
   capabilityTags: () => [...routingConfigKeys.all, 'capability-tags'] as const,
-  modelPricing: () => [...routingConfigKeys.all, 'model-pricing'] as const,
+  modelCatalog: () => [...routingConfigKeys.all, 'model-catalog'] as const,
 };
 
 /**

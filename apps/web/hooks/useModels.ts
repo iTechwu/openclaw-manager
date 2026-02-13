@@ -298,11 +298,11 @@ export function useModelSync() {
 
   // Sync tags for all models or a specific model
   const syncTags = useCallback(
-    async (modelAvailabilityId?: string): Promise<SyncTagsResponse | null> => {
+    async (modelCatalogId?: string): Promise<SyncTagsResponse | null> => {
       setSyncingTags(true);
       try {
         const result = await modelClient.syncTags({
-          body: modelAvailabilityId ? { modelAvailabilityId } : undefined,
+          body: modelCatalogId ? { modelCatalogId } : undefined,
         });
         queryClient.invalidateQueries({ queryKey: modelKeys.list() });
         queryClient.invalidateQueries({ queryKey: modelKeys.availability() });

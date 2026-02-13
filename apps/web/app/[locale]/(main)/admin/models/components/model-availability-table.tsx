@@ -230,7 +230,7 @@ function ModelRow({
         )}
       </TableCell>
       <TableCell>
-        {model.modelPricingId ? (
+        {model.modelCatalogId ? (
           <Badge variant="secondary">
             <DollarSign className="mr-1 size-3" />
             已关联

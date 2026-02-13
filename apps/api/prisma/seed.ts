@@ -25,7 +25,7 @@ import { PLUGIN_DEFINITIONS } from '../scripts/plugin-definitions.data';
 // Persona templates data
 import { SYSTEM_TEMPLATES } from '../scripts/persona-templates.data';
 
-// Model pricing data
+// Model catalog data
 import { MODEL_PRICING_DATA } from '../scripts/model-pricing.data';
 
 // Capability tags data
@@ -294,11 +294,11 @@ async function seedPlugins() {
   );
 }
 
-async function seedModelPricing() {
-  console.log('\n💰 Seeding model pricing...');
+async function seedModelCatalog() {
+  console.log('\n💰 Seeding model catalog...');
 
   for (const pricingData of MODEL_PRICING_DATA) {
-    const existing = await prisma.modelPricing.findUnique({
+    const existing = await prisma.modelCatalog.findUnique({
       where: { model: pricingData.model },
     });
 
@@ -332,15 +332,15 @@ async function seedModelPricing() {
     };
 
     if (existing) {
-      // Update existing pricing
-      await prisma.modelPricing.update({
+      // Update existing
+      await prisma.modelCatalog.update({
         where: { model: pricingData.model },
         data,
       });
       console.log(`  ⏭️  Updated: ${pricingData.model}`);
     } else {
-      // Create new pricing
-      await prisma.modelPricing.create({
+      // Create new
+      await prisma.modelCatalog.create({
         data: {
           model: pricingData.model,
           ...data,
@@ -350,10 +350,10 @@ async function seedModelPricing() {
     }
   }
 
-  const count = await prisma.modelPricing.count({
+  const count = await prisma.modelCatalog.count({
     where: { isDeleted: false },
   });
-  const vendorCounts = await prisma.modelPricing.groupBy({
+  const vendorCounts = await prisma.modelCatalog.groupBy({
     by: ['vendor'],
     where: { isDeleted: false },
     _count: true,
@@ -362,7 +362,7 @@ async function seedModelPricing() {
     .map((v) => `${v.vendor}: ${v._count}`)
     .join(', ');
   console.log(
-    `💰 Model pricing seeding completed! (${count} models - ${vendorSummary})`,
+    `💰 Model catalog seeding completed! (${count} models - ${vendorSummary})`,
   );
 }
 
@@ -513,7 +513,7 @@ async function main() {
   await seedCountryCodes();
   await seedChannelDefinitions();
   await seedPlugins();
-  await seedModelPricing();
+  await seedModelCatalog();
   // Hybrid architecture routing configuration
   await seedCapabilityTags();
   await seedFallbackChains();

@@ -33,19 +33,14 @@ export class ComplexityRoutingModelMappingService extends TransactionalServiceBa
   }
 
   /**
-   * 获取指定 ComplexityRoutingConfig 的所有模型映射，包含 ModelAvailability 信息
+   * 获取指定 ComplexityRoutingConfig 的所有模型映射，包含 ModelCatalog 信息
    */
   @HandlePrismaError(DbOperationType.QUERY)
   async listByConfigId(complexityConfigId: string) {
     return this.getReadClient().complexityRoutingModelMapping.findMany({
       where: { complexityConfigId },
       include: {
-        modelAvailability: {
-          include: {
-            providerKey: true,
-            modelPricing: true,
-          },
-        },
+        modelCatalog: true,
       },
       orderBy: [{ complexityLevel: 'asc' }, { priority: 'asc' }],
     });

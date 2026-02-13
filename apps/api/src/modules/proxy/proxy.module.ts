@@ -9,7 +9,7 @@ import {
   BotModelRoutingModule,
   UserInfoModule,
   // Routing configuration DB modules
-  ModelPricingModule,
+  ModelCatalogModule,
   CapabilityTagModule,
   FallbackChainModule,
   CostStrategyModule,
@@ -71,7 +71,7 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
     ProxyTokenModule,
     BotModelRoutingModule,
     // Routing configuration DB modules
-    ModelPricingModule,
+    ModelCatalogModule,
     CapabilityTagModule,
     FallbackChainModule,
     CostStrategyModule,

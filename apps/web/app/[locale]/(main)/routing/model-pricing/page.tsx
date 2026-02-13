@@ -27,7 +27,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { ModelPricing } from '@repo/contracts';
+import type { ModelCatalog } from '@repo/contracts';
 
 /**
  * 能力评分条
@@ -72,7 +72,7 @@ function FeatureBadge({
 /**
  * 模型定价卡片
  */
-function ModelPricingCard({ pricing }: { pricing: ModelPricing }) {
+function ModelCatalogCard({ pricing }: { pricing: ModelCatalog }) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -161,7 +161,7 @@ function ModelPricingCard({ pricing }: { pricing: ModelPricing }) {
 /**
  * 模型定价卡片骨架屏
  */
-function ModelPricingCardSkeleton() {
+function ModelCatalogCardSkeleton() {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -196,12 +196,12 @@ function ModelPricingCardSkeleton() {
 /**
  * 模型定价管理页面
  */
-export default function ModelPricingPage() {
+export default function ModelCatalogPage() {
   const [search, setSearch] = useState('');
 
   const { data: response, isLoading } =
-    routingAdminApi.getModelPricingList.useQuery(
-      ['model-pricing-list'],
+    routingAdminApi.getModelCatalogList.useQuery(
+      ['model-catalog-list'],
       {},
       { staleTime: 60000 } as any
     );
@@ -248,7 +248,7 @@ export default function ModelPricingPage() {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <ModelPricingCardSkeleton key={i} />
+            <ModelCatalogCardSkeleton key={i} />
           ))}
         </div>
       ) : filteredList.length === 0 ? (
@@ -260,7 +260,7 @@ export default function ModelPricingPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredList.map((pricing) => (
-            <ModelPricingCard key={pricing.id} pricing={pricing} />
+            <ModelCatalogCard key={pricing.id} pricing={pricing} />
           ))}
         </div>
       )}

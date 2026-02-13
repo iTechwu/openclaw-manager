@@ -339,22 +339,20 @@ exports.Prisma.ModelAvailabilityScalarFieldEnum = {
   id: 'id',
   model: 'model',
   providerKeyId: 'providerKeyId',
+  modelCatalogId: 'modelCatalogId',
   modelType: 'modelType',
-  modelPricingId: 'modelPricingId',
   isAvailable: 'isAvailable',
   lastVerifiedAt: 'lastVerifiedAt',
   errorMessage: 'errorMessage',
-  pricingSynced: 'pricingSynced',
-  pricingSyncedAt: 'pricingSyncedAt',
-  tagsSynced: 'tagsSynced',
-  tagsSyncedAt: 'tagsSyncedAt',
+  vendorPriority: 'vendorPriority',
+  healthScore: 'healthScore',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
 exports.Prisma.ModelCapabilityTagScalarFieldEnum = {
   id: 'id',
-  modelAvailabilityId: 'modelAvailabilityId',
+  modelCatalogId: 'modelCatalogId',
   capabilityTagId: 'capabilityTagId',
   matchSource: 'matchSource',
   confidence: 'confidence',
@@ -560,7 +558,7 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.ModelPricingScalarFieldEnum = {
+exports.Prisma.ModelCatalogScalarFieldEnum = {
   id: 'id',
   model: 'model',
   vendor: 'vendor',
@@ -728,7 +726,7 @@ exports.Prisma.ComplexityRoutingConfigScalarFieldEnum = {
 exports.Prisma.FallbackChainModelScalarFieldEnum = {
   id: 'id',
   fallbackChainId: 'fallbackChainId',
-  modelAvailabilityId: 'modelAvailabilityId',
+  modelCatalogId: 'modelCatalogId',
   priority: 'priority',
   protocolOverride: 'protocolOverride',
   featuresOverride: 'featuresOverride',
@@ -739,7 +737,7 @@ exports.Prisma.ComplexityRoutingModelMappingScalarFieldEnum = {
   id: 'id',
   complexityConfigId: 'complexityConfigId',
   complexityLevel: 'complexityLevel',
-  modelAvailabilityId: 'modelAvailabilityId',
+  modelCatalogId: 'modelCatalogId',
   priority: 'priority',
   createdAt: 'createdAt'
 };
@@ -907,7 +905,7 @@ exports.Prisma.ModelName = {
   SkillType: 'SkillType',
   Skill: 'Skill',
   BotSkill: 'BotSkill',
-  ModelPricing: 'ModelPricing',
+  ModelCatalog: 'ModelCatalog',
   BotModelRouting: 'BotModelRouting',
   BotChannel: 'BotChannel',
   CapabilityTag: 'CapabilityTag',

@@ -42,7 +42,7 @@ interface UpdateStats {
   errors: string[];
 }
 
-async function updateModelPricing(): Promise<UpdateStats> {
+async function updateModelCatalog(): Promise<UpdateStats> {
   const stats: UpdateStats = {
     created: 0,
     updated: 0,
@@ -50,12 +50,12 @@ async function updateModelPricing(): Promise<UpdateStats> {
     errors: [],
   };
 
-  console.log('💰 Starting model pricing update...');
+  console.log('💰 Starting model catalog update...');
   console.log(`📊 Processing ${MODEL_PRICING_DATA.length} models...\n`);
 
   for (const pricingData of MODEL_PRICING_DATA) {
     try {
-      const existing = await prisma.modelPricing.findUnique({
+      const existing = await prisma.modelCatalog.findUnique({
         where: { model: pricingData.model },
       });
 
@@ -69,7 +69,7 @@ async function updateModelPricing(): Promise<UpdateStats> {
           existing.notes !== pricingData.notes;
 
         if (hasChanged) {
-          await prisma.modelPricing.update({
+          await prisma.modelCatalog.update({
             where: { model: pricingData.model },
             data: {
               vendor: pricingData.vendor,
@@ -87,7 +87,7 @@ async function updateModelPricing(): Promise<UpdateStats> {
           stats.skipped++;
         }
       } else {
-        await prisma.modelPricing.create({
+        await prisma.modelCatalog.create({
           data: {
             model: pricingData.model,
             vendor: pricingData.vendor,
@@ -115,11 +115,11 @@ async function printSummary(stats: UpdateStats): Promise<void> {
   console.log('📊 Update Summary');
   console.log('='.repeat(60));
 
-  const totalCount = await prisma.modelPricing.count({
+  const totalCount = await prisma.modelCatalog.count({
     where: { isDeleted: false },
   });
 
-  const vendorCounts = await prisma.modelPricing.groupBy({
+  const vendorCounts = await prisma.modelCatalog.groupBy({
     by: ['vendor'],
     where: { isDeleted: false },
     _count: true,
@@ -146,18 +146,20 @@ async function printSummary(stats: UpdateStats): Promise<void> {
   }
 
   console.log('\n' + '='.repeat(60));
-  console.log(`✅ Model pricing update completed at ${new Date().toISOString()}`);
+  console.log(
+    `✅ Model catalog update completed at ${new Date().toISOString()}`,
+  );
   console.log('='.repeat(60));
 }
 
 async function main(): Promise<void> {
   console.log('='.repeat(60));
-  console.log('🚀 Model Pricing Update Script');
+  console.log('🚀 Model Catalog Update Script');
   console.log(`📅 Started at: ${new Date().toISOString()}`);
   console.log('='.repeat(60) + '\n');
 
   try {
-    const stats = await updateModelPricing();
+    const stats = await updateModelCatalog();
     await printSummary(stats);
 
     if (stats.errors.length > 0) {

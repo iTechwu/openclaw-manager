@@ -105,7 +105,7 @@ export type ModelAvailability = $Result.DefaultSelection<Prisma.$ModelAvailabili
 /**
  * Model ModelCapabilityTag
  * ModelCapabilityTag - 模型与能力标签的关联表
- * 存储模型与能力标签的多对多关系，支持匹配来源追踪
+ * 存储模型（非 vendor 实例）与能力标签的多对多关系，支持匹配来源追踪
  */
 export type ModelCapabilityTag = $Result.DefaultSelection<Prisma.$ModelCapabilityTagPayload>
 /**
@@ -183,12 +183,16 @@ export type Skill = $Result.DefaultSelection<Prisma.$SkillPayload>
  */
 export type BotSkill = $Result.DefaultSelection<Prisma.$BotSkillPayload>
 /**
- * Model ModelPricing
+ * Model ModelCatalog
  * ModelPricing - AI 模型定价与能力目录
  * 存储各 AI 模型的定价信息、能力评分和特性支持，用于成本估算和智能路由
  * 价格单位：美元/百万 tokens
+ * ModelCatalog - 模型目录（全局模型注册中心）
+ * 以 model 为唯一标识，存储模型身份、定价、能力评分、特性支持等信息
+ * 所有路由配置（能力标签、Fallback、复杂度路由）均引用此表
+ * 原表名 b_model_pricing，重构后升级为 b_model_catalog
  */
-export type ModelPricing = $Result.DefaultSelection<Prisma.$ModelPricingPayload>
+export type ModelCatalog = $Result.DefaultSelection<Prisma.$ModelCatalogPayload>
 /**
  * Model BotModelRouting
  * BotModelRouting - Bot 模型路由配置
@@ -235,13 +239,13 @@ export type ComplexityRoutingConfig = $Result.DefaultSelection<Prisma.$Complexit
 /**
  * Model FallbackChainModel
  * FallbackChainModel - Fallback 链模型关联表
- * 替代 FallbackChain.models JSON 字段，通过外键引用实际可用模型
+ * 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
  */
 export type FallbackChainModel = $Result.DefaultSelection<Prisma.$FallbackChainModelPayload>
 /**
  * Model ComplexityRoutingModelMapping
  * ComplexityRoutingModelMapping - 复杂度路由模型映射表
- * 替代 ComplexityRoutingConfig.models JSON 字段，通过外键引用实际可用模型
+ * 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
  */
 export type ComplexityRoutingModelMapping = $Result.DefaultSelection<Prisma.$ComplexityRoutingModelMappingPayload>
 
@@ -844,14 +848,14 @@ export class PrismaClient<
   get botSkill(): Prisma.BotSkillDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.modelPricing`: Exposes CRUD operations for the **ModelPricing** model.
+   * `prisma.modelCatalog`: Exposes CRUD operations for the **ModelCatalog** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ModelPricings
-    * const modelPricings = await prisma.modelPricing.findMany()
+    * // Fetch zero or more ModelCatalogs
+    * const modelCatalogs = await prisma.modelCatalog.findMany()
     * ```
     */
-  get modelPricing(): Prisma.ModelPricingDelegate<ExtArgs, ClientOptions>;
+  get modelCatalog(): Prisma.ModelCatalogDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.botModelRouting`: Exposes CRUD operations for the **BotModelRouting** model.
@@ -1404,7 +1408,7 @@ export namespace Prisma {
     SkillType: 'SkillType',
     Skill: 'Skill',
     BotSkill: 'BotSkill',
-    ModelPricing: 'ModelPricing',
+    ModelCatalog: 'ModelCatalog',
     BotModelRouting: 'BotModelRouting',
     BotChannel: 'BotChannel',
     CapabilityTag: 'CapabilityTag',
@@ -1429,7 +1433,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelPricing" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig" | "fallbackChainModel" | "complexityRoutingModelMapping"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelCatalog" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig" | "fallbackChainModel" | "complexityRoutingModelMapping"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3505,77 +3509,77 @@ export namespace Prisma {
           }
         }
       }
-      ModelPricing: {
-        payload: Prisma.$ModelPricingPayload<ExtArgs>
-        fields: Prisma.ModelPricingFieldRefs
+      ModelCatalog: {
+        payload: Prisma.$ModelCatalogPayload<ExtArgs>
+        fields: Prisma.ModelCatalogFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ModelPricingFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload> | null
+            args: Prisma.ModelCatalogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ModelPricingFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           findFirst: {
-            args: Prisma.ModelPricingFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload> | null
+            args: Prisma.ModelCatalogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ModelPricingFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           findMany: {
-            args: Prisma.ModelPricingFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+            args: Prisma.ModelCatalogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>[]
           }
           create: {
-            args: Prisma.ModelPricingCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           createMany: {
-            args: Prisma.ModelPricingCreateManyArgs<ExtArgs>
+            args: Prisma.ModelCatalogCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ModelPricingCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+            args: Prisma.ModelCatalogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>[]
           }
           delete: {
-            args: Prisma.ModelPricingDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           update: {
-            args: Prisma.ModelPricingUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           deleteMany: {
-            args: Prisma.ModelPricingDeleteManyArgs<ExtArgs>
+            args: Prisma.ModelCatalogDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ModelPricingUpdateManyArgs<ExtArgs>
+            args: Prisma.ModelCatalogUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.ModelPricingUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>[]
+            args: Prisma.ModelCatalogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>[]
           }
           upsert: {
-            args: Prisma.ModelPricingUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ModelPricingPayload>
+            args: Prisma.ModelCatalogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModelCatalogPayload>
           }
           aggregate: {
-            args: Prisma.ModelPricingAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateModelPricing>
+            args: Prisma.ModelCatalogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateModelCatalog>
           }
           groupBy: {
-            args: Prisma.ModelPricingGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ModelPricingGroupByOutputType>[]
+            args: Prisma.ModelCatalogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ModelCatalogGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ModelPricingCountArgs<ExtArgs>
-            result: $Utils.Optional<ModelPricingCountAggregateOutputType> | number
+            args: Prisma.ModelCatalogCountArgs<ExtArgs>
+            result: $Utils.Optional<ModelCatalogCountAggregateOutputType> | number
           }
         }
       }
@@ -4381,7 +4385,7 @@ export namespace Prisma {
     skillType?: SkillTypeOmit
     skill?: SkillOmit
     botSkill?: BotSkillOmit
-    modelPricing?: ModelPricingOmit
+    modelCatalog?: ModelCatalogOmit
     botModelRouting?: BotModelRoutingOmit
     botChannel?: BotChannelOmit
     capabilityTag?: CapabilityTagOmit
@@ -4748,55 +4752,6 @@ export namespace Prisma {
 
 
   /**
-   * Count Type ModelAvailabilityCountOutputType
-   */
-
-  export type ModelAvailabilityCountOutputType = {
-    capabilityTags: number
-    fallbackChainModels: number
-    complexityRoutingMappings: number
-  }
-
-  export type ModelAvailabilityCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    capabilityTags?: boolean | ModelAvailabilityCountOutputTypeCountCapabilityTagsArgs
-    fallbackChainModels?: boolean | ModelAvailabilityCountOutputTypeCountFallbackChainModelsArgs
-    complexityRoutingMappings?: boolean | ModelAvailabilityCountOutputTypeCountComplexityRoutingMappingsArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * ModelAvailabilityCountOutputType without action
-   */
-  export type ModelAvailabilityCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ModelAvailabilityCountOutputType
-     */
-    select?: ModelAvailabilityCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * ModelAvailabilityCountOutputType without action
-   */
-  export type ModelAvailabilityCountOutputTypeCountCapabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ModelCapabilityTagWhereInput
-  }
-
-  /**
-   * ModelAvailabilityCountOutputType without action
-   */
-  export type ModelAvailabilityCountOutputTypeCountFallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FallbackChainModelWhereInput
-  }
-
-  /**
-   * ModelAvailabilityCountOutputType without action
-   */
-  export type ModelAvailabilityCountOutputTypeCountComplexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ComplexityRoutingModelMappingWhereInput
-  }
-
-
-  /**
    * Count Type MessageCountOutputType
    */
 
@@ -4952,33 +4907,60 @@ export namespace Prisma {
 
 
   /**
-   * Count Type ModelPricingCountOutputType
+   * Count Type ModelCatalogCountOutputType
    */
 
-  export type ModelPricingCountOutputType = {
-    modelAvailabilities: number
+  export type ModelCatalogCountOutputType = {
+    availabilities: number
+    capabilityTags: number
+    fallbackChainModels: number
+    complexityRoutingMappings: number
   }
 
-  export type ModelPricingCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    modelAvailabilities?: boolean | ModelPricingCountOutputTypeCountModelAvailabilitiesArgs
+  export type ModelCatalogCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    availabilities?: boolean | ModelCatalogCountOutputTypeCountAvailabilitiesArgs
+    capabilityTags?: boolean | ModelCatalogCountOutputTypeCountCapabilityTagsArgs
+    fallbackChainModels?: boolean | ModelCatalogCountOutputTypeCountFallbackChainModelsArgs
+    complexityRoutingMappings?: boolean | ModelCatalogCountOutputTypeCountComplexityRoutingMappingsArgs
   }
 
   // Custom InputTypes
   /**
-   * ModelPricingCountOutputType without action
+   * ModelCatalogCountOutputType without action
    */
-  export type ModelPricingCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricingCountOutputType
+     * Select specific fields to fetch from the ModelCatalogCountOutputType
      */
-    select?: ModelPricingCountOutputTypeSelect<ExtArgs> | null
+    select?: ModelCatalogCountOutputTypeSelect<ExtArgs> | null
   }
 
   /**
-   * ModelPricingCountOutputType without action
+   * ModelCatalogCountOutputType without action
    */
-  export type ModelPricingCountOutputTypeCountModelAvailabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogCountOutputTypeCountAvailabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ModelAvailabilityWhereInput
+  }
+
+  /**
+   * ModelCatalogCountOutputType without action
+   */
+  export type ModelCatalogCountOutputTypeCountCapabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModelCapabilityTagWhereInput
+  }
+
+  /**
+   * ModelCatalogCountOutputType without action
+   */
+  export type ModelCatalogCountOutputTypeCountFallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FallbackChainModelWhereInput
+  }
+
+  /**
+   * ModelCatalogCountOutputType without action
+   */
+  export type ModelCatalogCountOutputTypeCountComplexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComplexityRoutingModelMappingWhereInput
   }
 
 
@@ -22046,23 +22028,33 @@ export namespace Prisma {
 
   export type AggregateModelAvailability = {
     _count: ModelAvailabilityCountAggregateOutputType | null
+    _avg: ModelAvailabilityAvgAggregateOutputType | null
+    _sum: ModelAvailabilitySumAggregateOutputType | null
     _min: ModelAvailabilityMinAggregateOutputType | null
     _max: ModelAvailabilityMaxAggregateOutputType | null
+  }
+
+  export type ModelAvailabilityAvgAggregateOutputType = {
+    vendorPriority: number | null
+    healthScore: number | null
+  }
+
+  export type ModelAvailabilitySumAggregateOutputType = {
+    vendorPriority: number | null
+    healthScore: number | null
   }
 
   export type ModelAvailabilityMinAggregateOutputType = {
     id: string | null
     model: string | null
     providerKeyId: string | null
+    modelCatalogId: string | null
     modelType: $Enums.ModelType | null
-    modelPricingId: string | null
     isAvailable: boolean | null
     lastVerifiedAt: Date | null
     errorMessage: string | null
-    pricingSynced: boolean | null
-    pricingSyncedAt: Date | null
-    tagsSynced: boolean | null
-    tagsSyncedAt: Date | null
+    vendorPriority: number | null
+    healthScore: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -22071,15 +22063,13 @@ export namespace Prisma {
     id: string | null
     model: string | null
     providerKeyId: string | null
+    modelCatalogId: string | null
     modelType: $Enums.ModelType | null
-    modelPricingId: string | null
     isAvailable: boolean | null
     lastVerifiedAt: Date | null
     errorMessage: string | null
-    pricingSynced: boolean | null
-    pricingSyncedAt: Date | null
-    tagsSynced: boolean | null
-    tagsSyncedAt: Date | null
+    vendorPriority: number | null
+    healthScore: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -22088,34 +22078,40 @@ export namespace Prisma {
     id: number
     model: number
     providerKeyId: number
+    modelCatalogId: number
     modelType: number
-    modelPricingId: number
     isAvailable: number
     lastVerifiedAt: number
     errorMessage: number
-    pricingSynced: number
-    pricingSyncedAt: number
-    tagsSynced: number
-    tagsSyncedAt: number
+    vendorPriority: number
+    healthScore: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
+  export type ModelAvailabilityAvgAggregateInputType = {
+    vendorPriority?: true
+    healthScore?: true
+  }
+
+  export type ModelAvailabilitySumAggregateInputType = {
+    vendorPriority?: true
+    healthScore?: true
+  }
+
   export type ModelAvailabilityMinAggregateInputType = {
     id?: true
     model?: true
     providerKeyId?: true
+    modelCatalogId?: true
     modelType?: true
-    modelPricingId?: true
     isAvailable?: true
     lastVerifiedAt?: true
     errorMessage?: true
-    pricingSynced?: true
-    pricingSyncedAt?: true
-    tagsSynced?: true
-    tagsSyncedAt?: true
+    vendorPriority?: true
+    healthScore?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -22124,15 +22120,13 @@ export namespace Prisma {
     id?: true
     model?: true
     providerKeyId?: true
+    modelCatalogId?: true
     modelType?: true
-    modelPricingId?: true
     isAvailable?: true
     lastVerifiedAt?: true
     errorMessage?: true
-    pricingSynced?: true
-    pricingSyncedAt?: true
-    tagsSynced?: true
-    tagsSyncedAt?: true
+    vendorPriority?: true
+    healthScore?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -22141,15 +22135,13 @@ export namespace Prisma {
     id?: true
     model?: true
     providerKeyId?: true
+    modelCatalogId?: true
     modelType?: true
-    modelPricingId?: true
     isAvailable?: true
     lastVerifiedAt?: true
     errorMessage?: true
-    pricingSynced?: true
-    pricingSyncedAt?: true
-    tagsSynced?: true
-    tagsSyncedAt?: true
+    vendorPriority?: true
+    healthScore?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -22193,6 +22185,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ModelAvailabilityAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ModelAvailabilitySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ModelAvailabilityMinAggregateInputType
@@ -22223,6 +22227,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ModelAvailabilityCountAggregateInputType | true
+    _avg?: ModelAvailabilityAvgAggregateInputType
+    _sum?: ModelAvailabilitySumAggregateInputType
     _min?: ModelAvailabilityMinAggregateInputType
     _max?: ModelAvailabilityMaxAggregateInputType
   }
@@ -22231,18 +22237,18 @@ export namespace Prisma {
     id: string
     model: string
     providerKeyId: string
+    modelCatalogId: string | null
     modelType: $Enums.ModelType
-    modelPricingId: string | null
     isAvailable: boolean
     lastVerifiedAt: Date
     errorMessage: string | null
-    pricingSynced: boolean
-    pricingSyncedAt: Date | null
-    tagsSynced: boolean
-    tagsSyncedAt: Date | null
+    vendorPriority: number
+    healthScore: number
     createdAt: Date
     updatedAt: Date
     _count: ModelAvailabilityCountAggregateOutputType | null
+    _avg: ModelAvailabilityAvgAggregateOutputType | null
+    _sum: ModelAvailabilitySumAggregateOutputType | null
     _min: ModelAvailabilityMinAggregateOutputType | null
     _max: ModelAvailabilityMaxAggregateOutputType | null
   }
@@ -22265,106 +22271,87 @@ export namespace Prisma {
     id?: boolean
     model?: boolean
     providerKeyId?: boolean
+    modelCatalogId?: boolean
     modelType?: boolean
-    modelPricingId?: boolean
     isAvailable?: boolean
     lastVerifiedAt?: boolean
     errorMessage?: boolean
-    pricingSynced?: boolean
-    pricingSyncedAt?: boolean
-    tagsSynced?: boolean
-    tagsSyncedAt?: boolean
+    vendorPriority?: boolean
+    healthScore?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
-    capabilityTags?: boolean | ModelAvailability$capabilityTagsArgs<ExtArgs>
-    fallbackChainModels?: boolean | ModelAvailability$fallbackChainModelsArgs<ExtArgs>
-    complexityRoutingMappings?: boolean | ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>
-    _count?: boolean | ModelAvailabilityCountOutputTypeDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }, ExtArgs["result"]["modelAvailability"]>
 
   export type ModelAvailabilitySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     model?: boolean
     providerKeyId?: boolean
+    modelCatalogId?: boolean
     modelType?: boolean
-    modelPricingId?: boolean
     isAvailable?: boolean
     lastVerifiedAt?: boolean
     errorMessage?: boolean
-    pricingSynced?: boolean
-    pricingSyncedAt?: boolean
-    tagsSynced?: boolean
-    tagsSyncedAt?: boolean
+    vendorPriority?: boolean
+    healthScore?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }, ExtArgs["result"]["modelAvailability"]>
 
   export type ModelAvailabilitySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     model?: boolean
     providerKeyId?: boolean
+    modelCatalogId?: boolean
     modelType?: boolean
-    modelPricingId?: boolean
     isAvailable?: boolean
     lastVerifiedAt?: boolean
     errorMessage?: boolean
-    pricingSynced?: boolean
-    pricingSyncedAt?: boolean
-    tagsSynced?: boolean
-    tagsSyncedAt?: boolean
+    vendorPriority?: boolean
+    healthScore?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }, ExtArgs["result"]["modelAvailability"]>
 
   export type ModelAvailabilitySelectScalar = {
     id?: boolean
     model?: boolean
     providerKeyId?: boolean
+    modelCatalogId?: boolean
     modelType?: boolean
-    modelPricingId?: boolean
     isAvailable?: boolean
     lastVerifiedAt?: boolean
     errorMessage?: boolean
-    pricingSynced?: boolean
-    pricingSyncedAt?: boolean
-    tagsSynced?: boolean
-    tagsSyncedAt?: boolean
+    vendorPriority?: boolean
+    healthScore?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelType" | "modelPricingId" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "pricingSynced" | "pricingSyncedAt" | "tagsSynced" | "tagsSyncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
+  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelCatalogId" | "modelType" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "vendorPriority" | "healthScore" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
   export type ModelAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
-    capabilityTags?: boolean | ModelAvailability$capabilityTagsArgs<ExtArgs>
-    fallbackChainModels?: boolean | ModelAvailability$fallbackChainModelsArgs<ExtArgs>
-    complexityRoutingMappings?: boolean | ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>
-    _count?: boolean | ModelAvailabilityCountOutputTypeDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }
   export type ModelAvailabilityIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }
   export type ModelAvailabilityIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
-    modelPricing?: boolean | ModelAvailability$modelPricingArgs<ExtArgs>
+    modelCatalog?: boolean | ModelAvailability$modelCatalogArgs<ExtArgs>
   }
 
   export type $ModelAvailabilityPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ModelAvailability"
     objects: {
       providerKey: Prisma.$ProviderKeyPayload<ExtArgs>
-      modelPricing: Prisma.$ModelPricingPayload<ExtArgs> | null
-      capabilityTags: Prisma.$ModelCapabilityTagPayload<ExtArgs>[]
-      fallbackChainModels: Prisma.$FallbackChainModelPayload<ExtArgs>[]
-      complexityRoutingMappings: Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>[]
+      modelCatalog: Prisma.$ModelCatalogPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -22377,13 +22364,13 @@ export namespace Prisma {
        */
       providerKeyId: string
       /**
+       * 关联的 ModelCatalog ID（建立正式外键关联）
+       */
+      modelCatalogId: string | null
+      /**
        * 模型类型（llm, image, video, tts, embedding 等）
        */
       modelType: $Enums.ModelType
-      /**
-       * 关联的 ModelPricing ID（可选，用于快速查询定价）
-       */
-      modelPricingId: string | null
       /**
        * 模型是否可用（API Key 验证通过）
        */
@@ -22397,21 +22384,13 @@ export namespace Prisma {
        */
       errorMessage: string | null
       /**
-       * 是否已同步定价信息
+       * 该 vendor 实例的优先级（用于同模型多 vendor 时的选择）
        */
-      pricingSynced: boolean
+      vendorPriority: number
       /**
-       * 定价同步时间
+       * 该 vendor 实例的健康评分（基于历史成功率动态计算）
        */
-      pricingSyncedAt: Date | null
-      /**
-       * 是否已同步能力标签
-       */
-      tagsSynced: boolean
-      /**
-       * 标签同步时间
-       */
-      tagsSyncedAt: Date | null
+      healthScore: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["modelAvailability"]>
@@ -22809,10 +22788,7 @@ export namespace Prisma {
   export interface Prisma__ModelAvailabilityClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     providerKey<T extends ProviderKeyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProviderKeyDefaultArgs<ExtArgs>>): Prisma__ProviderKeyClient<$Result.GetResult<Prisma.$ProviderKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    modelPricing<T extends ModelAvailability$modelPricingArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$modelPricingArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    capabilityTags<T extends ModelAvailability$capabilityTagsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$capabilityTagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCapabilityTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    fallbackChainModels<T extends ModelAvailability$fallbackChainModelsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$fallbackChainModelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    complexityRoutingMappings<T extends ModelAvailability$complexityRoutingMappingsArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$complexityRoutingMappingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    modelCatalog<T extends ModelAvailability$modelCatalogArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailability$modelCatalogArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -22845,15 +22821,13 @@ export namespace Prisma {
     readonly id: FieldRef<"ModelAvailability", 'String'>
     readonly model: FieldRef<"ModelAvailability", 'String'>
     readonly providerKeyId: FieldRef<"ModelAvailability", 'String'>
+    readonly modelCatalogId: FieldRef<"ModelAvailability", 'String'>
     readonly modelType: FieldRef<"ModelAvailability", 'ModelType'>
-    readonly modelPricingId: FieldRef<"ModelAvailability", 'String'>
     readonly isAvailable: FieldRef<"ModelAvailability", 'Boolean'>
     readonly lastVerifiedAt: FieldRef<"ModelAvailability", 'DateTime'>
     readonly errorMessage: FieldRef<"ModelAvailability", 'String'>
-    readonly pricingSynced: FieldRef<"ModelAvailability", 'Boolean'>
-    readonly pricingSyncedAt: FieldRef<"ModelAvailability", 'DateTime'>
-    readonly tagsSynced: FieldRef<"ModelAvailability", 'Boolean'>
-    readonly tagsSyncedAt: FieldRef<"ModelAvailability", 'DateTime'>
+    readonly vendorPriority: FieldRef<"ModelAvailability", 'Int'>
+    readonly healthScore: FieldRef<"ModelAvailability", 'Int'>
     readonly createdAt: FieldRef<"ModelAvailability", 'DateTime'>
     readonly updatedAt: FieldRef<"ModelAvailability", 'DateTime'>
   }
@@ -23252,94 +23226,22 @@ export namespace Prisma {
   }
 
   /**
-   * ModelAvailability.modelPricing
+   * ModelAvailability.modelCatalog
    */
-  export type ModelAvailability$modelPricingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelAvailability$modelCatalogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
-    where?: ModelPricingWhereInput
-  }
-
-  /**
-   * ModelAvailability.capabilityTags
-   */
-  export type ModelAvailability$capabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ModelCapabilityTag
-     */
-    select?: ModelCapabilityTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ModelCapabilityTag
-     */
-    omit?: ModelCapabilityTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ModelCapabilityTagInclude<ExtArgs> | null
-    where?: ModelCapabilityTagWhereInput
-    orderBy?: ModelCapabilityTagOrderByWithRelationInput | ModelCapabilityTagOrderByWithRelationInput[]
-    cursor?: ModelCapabilityTagWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ModelCapabilityTagScalarFieldEnum | ModelCapabilityTagScalarFieldEnum[]
-  }
-
-  /**
-   * ModelAvailability.fallbackChainModels
-   */
-  export type ModelAvailability$fallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FallbackChainModel
-     */
-    select?: FallbackChainModelSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FallbackChainModel
-     */
-    omit?: FallbackChainModelOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FallbackChainModelInclude<ExtArgs> | null
-    where?: FallbackChainModelWhereInput
-    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
-    cursor?: FallbackChainModelWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
-  }
-
-  /**
-   * ModelAvailability.complexityRoutingMappings
-   */
-  export type ModelAvailability$complexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ComplexityRoutingModelMapping
-     */
-    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ComplexityRoutingModelMapping
-     */
-    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
-    where?: ComplexityRoutingModelMappingWhereInput
-    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
-    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+    include?: ModelCatalogInclude<ExtArgs> | null
+    where?: ModelCatalogWhereInput
   }
 
   /**
@@ -23383,7 +23285,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMinAggregateOutputType = {
     id: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     capabilityTagId: string | null
     matchSource: string | null
     confidence: number | null
@@ -23392,7 +23294,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMaxAggregateOutputType = {
     id: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     capabilityTagId: string | null
     matchSource: string | null
     confidence: number | null
@@ -23401,7 +23303,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagCountAggregateOutputType = {
     id: number
-    modelAvailabilityId: number
+    modelCatalogId: number
     capabilityTagId: number
     matchSource: number
     confidence: number
@@ -23420,7 +23322,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMinAggregateInputType = {
     id?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     capabilityTagId?: true
     matchSource?: true
     confidence?: true
@@ -23429,7 +23331,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMaxAggregateInputType = {
     id?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     capabilityTagId?: true
     matchSource?: true
     confidence?: true
@@ -23438,7 +23340,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagCountAggregateInputType = {
     id?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     capabilityTagId?: true
     matchSource?: true
     confidence?: true
@@ -23534,7 +23436,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagGroupByOutputType = {
     id: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     capabilityTagId: string
     matchSource: string
     confidence: number
@@ -23562,72 +23464,72 @@ export namespace Prisma {
 
   export type ModelCapabilityTagSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     capabilityTagId?: boolean
     matchSource?: boolean
     confidence?: boolean
     createdAt?: boolean
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modelCapabilityTag"]>
 
   export type ModelCapabilityTagSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     capabilityTagId?: boolean
     matchSource?: boolean
     confidence?: boolean
     createdAt?: boolean
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modelCapabilityTag"]>
 
   export type ModelCapabilityTagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     capabilityTagId?: boolean
     matchSource?: boolean
     confidence?: boolean
     createdAt?: boolean
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modelCapabilityTag"]>
 
   export type ModelCapabilityTagSelectScalar = {
     id?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     capabilityTagId?: boolean
     matchSource?: boolean
     confidence?: boolean
     createdAt?: boolean
   }
 
-  export type ModelCapabilityTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modelAvailabilityId" | "capabilityTagId" | "matchSource" | "confidence" | "createdAt", ExtArgs["result"]["modelCapabilityTag"]>
+  export type ModelCapabilityTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modelCatalogId" | "capabilityTagId" | "matchSource" | "confidence" | "createdAt", ExtArgs["result"]["modelCapabilityTag"]>
   export type ModelCapabilityTagInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }
   export type ModelCapabilityTagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }
   export type ModelCapabilityTagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
     capabilityTag?: boolean | CapabilityTagDefaultArgs<ExtArgs>
   }
 
   export type $ModelCapabilityTagPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ModelCapabilityTag"
     objects: {
-      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>
+      modelCatalog: Prisma.$ModelCatalogPayload<ExtArgs>
       capabilityTag: Prisma.$CapabilityTagPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       /**
-       * 关联的 ModelAvailability ID
+       * 关联的 ModelCatalog ID（模型级别）
        */
-      modelAvailabilityId: string
+      modelCatalogId: string
       /**
        * 关联的 CapabilityTag ID
        */
@@ -24035,7 +23937,7 @@ export namespace Prisma {
    */
   export interface Prisma__ModelCapabilityTagClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    modelAvailability<T extends ModelAvailabilityDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailabilityDefaultArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    modelCatalog<T extends ModelCatalogDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalogDefaultArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     capabilityTag<T extends CapabilityTagDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CapabilityTagDefaultArgs<ExtArgs>>): Prisma__CapabilityTagClient<$Result.GetResult<Prisma.$CapabilityTagPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -24067,7 +23969,7 @@ export namespace Prisma {
    */
   interface ModelCapabilityTagFieldRefs {
     readonly id: FieldRef<"ModelCapabilityTag", 'String'>
-    readonly modelAvailabilityId: FieldRef<"ModelCapabilityTag", 'String'>
+    readonly modelCatalogId: FieldRef<"ModelCapabilityTag", 'String'>
     readonly capabilityTagId: FieldRef<"ModelCapabilityTag", 'String'>
     readonly matchSource: FieldRef<"ModelCapabilityTag", 'String'>
     readonly confidence: FieldRef<"ModelCapabilityTag", 'Int'>
@@ -39039,18 +38941,18 @@ export namespace Prisma {
 
 
   /**
-   * Model ModelPricing
+   * Model ModelCatalog
    */
 
-  export type AggregateModelPricing = {
-    _count: ModelPricingCountAggregateOutputType | null
-    _avg: ModelPricingAvgAggregateOutputType | null
-    _sum: ModelPricingSumAggregateOutputType | null
-    _min: ModelPricingMinAggregateOutputType | null
-    _max: ModelPricingMaxAggregateOutputType | null
+  export type AggregateModelCatalog = {
+    _count: ModelCatalogCountAggregateOutputType | null
+    _avg: ModelCatalogAvgAggregateOutputType | null
+    _sum: ModelCatalogSumAggregateOutputType | null
+    _min: ModelCatalogMinAggregateOutputType | null
+    _max: ModelCatalogMaxAggregateOutputType | null
   }
 
-  export type ModelPricingAvgAggregateOutputType = {
+  export type ModelCatalogAvgAggregateOutputType = {
     inputPrice: Decimal | null
     outputPrice: Decimal | null
     cacheReadPrice: Decimal | null
@@ -39063,7 +38965,7 @@ export namespace Prisma {
     contextLength: number | null
   }
 
-  export type ModelPricingSumAggregateOutputType = {
+  export type ModelCatalogSumAggregateOutputType = {
     inputPrice: Decimal | null
     outputPrice: Decimal | null
     cacheReadPrice: Decimal | null
@@ -39076,7 +38978,7 @@ export namespace Prisma {
     contextLength: number | null
   }
 
-  export type ModelPricingMinAggregateOutputType = {
+  export type ModelCatalogMinAggregateOutputType = {
     id: string | null
     model: string | null
     vendor: string | null
@@ -39110,7 +39012,7 @@ export namespace Prisma {
     deletedAt: Date | null
   }
 
-  export type ModelPricingMaxAggregateOutputType = {
+  export type ModelCatalogMaxAggregateOutputType = {
     id: string | null
     model: string | null
     vendor: string | null
@@ -39144,7 +39046,7 @@ export namespace Prisma {
     deletedAt: Date | null
   }
 
-  export type ModelPricingCountAggregateOutputType = {
+  export type ModelCatalogCountAggregateOutputType = {
     id: number
     model: number
     vendor: number
@@ -39182,7 +39084,7 @@ export namespace Prisma {
   }
 
 
-  export type ModelPricingAvgAggregateInputType = {
+  export type ModelCatalogAvgAggregateInputType = {
     inputPrice?: true
     outputPrice?: true
     cacheReadPrice?: true
@@ -39195,7 +39097,7 @@ export namespace Prisma {
     contextLength?: true
   }
 
-  export type ModelPricingSumAggregateInputType = {
+  export type ModelCatalogSumAggregateInputType = {
     inputPrice?: true
     outputPrice?: true
     cacheReadPrice?: true
@@ -39208,7 +39110,7 @@ export namespace Prisma {
     contextLength?: true
   }
 
-  export type ModelPricingMinAggregateInputType = {
+  export type ModelCatalogMinAggregateInputType = {
     id?: true
     model?: true
     vendor?: true
@@ -39242,7 +39144,7 @@ export namespace Prisma {
     deletedAt?: true
   }
 
-  export type ModelPricingMaxAggregateInputType = {
+  export type ModelCatalogMaxAggregateInputType = {
     id?: true
     model?: true
     vendor?: true
@@ -39276,7 +39178,7 @@ export namespace Prisma {
     deletedAt?: true
   }
 
-  export type ModelPricingCountAggregateInputType = {
+  export type ModelCatalogCountAggregateInputType = {
     id?: true
     model?: true
     vendor?: true
@@ -39313,93 +39215,93 @@ export namespace Prisma {
     _all?: true
   }
 
-  export type ModelPricingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ModelPricing to aggregate.
+     * Filter which ModelCatalog to aggregate.
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ModelPricings to fetch.
+     * Determine the order of ModelCatalogs to fetch.
      */
-    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    orderBy?: ModelCatalogOrderByWithRelationInput | ModelCatalogOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ModelPricingWhereUniqueInput
+    cursor?: ModelCatalogWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ModelPricings from the position of the cursor.
+     * Take `±n` ModelCatalogs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ModelPricings.
+     * Skip the first `n` ModelCatalogs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ModelPricings
+     * Count returned ModelCatalogs
     **/
-    _count?: true | ModelPricingCountAggregateInputType
+    _count?: true | ModelCatalogCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: ModelPricingAvgAggregateInputType
+    _avg?: ModelCatalogAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: ModelPricingSumAggregateInputType
+    _sum?: ModelCatalogSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ModelPricingMinAggregateInputType
+    _min?: ModelCatalogMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ModelPricingMaxAggregateInputType
+    _max?: ModelCatalogMaxAggregateInputType
   }
 
-  export type GetModelPricingAggregateType<T extends ModelPricingAggregateArgs> = {
-        [P in keyof T & keyof AggregateModelPricing]: P extends '_count' | 'count'
+  export type GetModelCatalogAggregateType<T extends ModelCatalogAggregateArgs> = {
+        [P in keyof T & keyof AggregateModelCatalog]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateModelPricing[P]>
-      : GetScalarType<T[P], AggregateModelPricing[P]>
+        : GetScalarType<T[P], AggregateModelCatalog[P]>
+      : GetScalarType<T[P], AggregateModelCatalog[P]>
   }
 
 
 
 
-  export type ModelPricingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ModelPricingWhereInput
-    orderBy?: ModelPricingOrderByWithAggregationInput | ModelPricingOrderByWithAggregationInput[]
-    by: ModelPricingScalarFieldEnum[] | ModelPricingScalarFieldEnum
-    having?: ModelPricingScalarWhereWithAggregatesInput
+  export type ModelCatalogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModelCatalogWhereInput
+    orderBy?: ModelCatalogOrderByWithAggregationInput | ModelCatalogOrderByWithAggregationInput[]
+    by: ModelCatalogScalarFieldEnum[] | ModelCatalogScalarFieldEnum
+    having?: ModelCatalogScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ModelPricingCountAggregateInputType | true
-    _avg?: ModelPricingAvgAggregateInputType
-    _sum?: ModelPricingSumAggregateInputType
-    _min?: ModelPricingMinAggregateInputType
-    _max?: ModelPricingMaxAggregateInputType
+    _count?: ModelCatalogCountAggregateInputType | true
+    _avg?: ModelCatalogAvgAggregateInputType
+    _sum?: ModelCatalogSumAggregateInputType
+    _min?: ModelCatalogMinAggregateInputType
+    _max?: ModelCatalogMaxAggregateInputType
   }
 
-  export type ModelPricingGroupByOutputType = {
+  export type ModelCatalogGroupByOutputType = {
     id: string
     model: string
     vendor: string
@@ -39433,28 +39335,28 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null
-    _count: ModelPricingCountAggregateOutputType | null
-    _avg: ModelPricingAvgAggregateOutputType | null
-    _sum: ModelPricingSumAggregateOutputType | null
-    _min: ModelPricingMinAggregateOutputType | null
-    _max: ModelPricingMaxAggregateOutputType | null
+    _count: ModelCatalogCountAggregateOutputType | null
+    _avg: ModelCatalogAvgAggregateOutputType | null
+    _sum: ModelCatalogSumAggregateOutputType | null
+    _min: ModelCatalogMinAggregateOutputType | null
+    _max: ModelCatalogMaxAggregateOutputType | null
   }
 
-  type GetModelPricingGroupByPayload<T extends ModelPricingGroupByArgs> = Prisma.PrismaPromise<
+  type GetModelCatalogGroupByPayload<T extends ModelCatalogGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ModelPricingGroupByOutputType, T['by']> &
+      PickEnumerable<ModelCatalogGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ModelPricingGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof ModelCatalogGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ModelPricingGroupByOutputType[P]>
-            : GetScalarType<T[P], ModelPricingGroupByOutputType[P]>
+              : GetScalarType<T[P], ModelCatalogGroupByOutputType[P]>
+            : GetScalarType<T[P], ModelCatalogGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ModelPricingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ModelCatalogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     model?: boolean
     vendor?: boolean
@@ -39488,11 +39390,14 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
-    modelAvailabilities?: boolean | ModelPricing$modelAvailabilitiesArgs<ExtArgs>
-    _count?: boolean | ModelPricingCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["modelPricing"]>
+    availabilities?: boolean | ModelCatalog$availabilitiesArgs<ExtArgs>
+    capabilityTags?: boolean | ModelCatalog$capabilityTagsArgs<ExtArgs>
+    fallbackChainModels?: boolean | ModelCatalog$fallbackChainModelsArgs<ExtArgs>
+    complexityRoutingMappings?: boolean | ModelCatalog$complexityRoutingMappingsArgs<ExtArgs>
+    _count?: boolean | ModelCatalogCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modelCatalog"]>
 
-  export type ModelPricingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ModelCatalogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     model?: boolean
     vendor?: boolean
@@ -39526,9 +39431,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
-  }, ExtArgs["result"]["modelPricing"]>
+  }, ExtArgs["result"]["modelCatalog"]>
 
-  export type ModelPricingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ModelCatalogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     model?: boolean
     vendor?: boolean
@@ -39562,9 +39467,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
-  }, ExtArgs["result"]["modelPricing"]>
+  }, ExtArgs["result"]["modelCatalog"]>
 
-  export type ModelPricingSelectScalar = {
+  export type ModelCatalogSelectScalar = {
     id?: boolean
     model?: boolean
     vendor?: boolean
@@ -39600,27 +39505,45 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type ModelPricingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "vendor" | "displayName" | "description" | "inputPrice" | "outputPrice" | "cacheReadPrice" | "cacheWritePrice" | "thinkingPrice" | "reasoningScore" | "codingScore" | "creativityScore" | "speedScore" | "contextLength" | "supportsExtendedThinking" | "supportsCacheControl" | "supportsVision" | "supportsFunctionCalling" | "supportsStreaming" | "recommendedScenarios" | "dataSource" | "sourceUrl" | "isEnabled" | "isDeprecated" | "deprecationDate" | "priceUpdatedAt" | "notes" | "metadata" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["modelPricing"]>
-  export type ModelPricingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    modelAvailabilities?: boolean | ModelPricing$modelAvailabilitiesArgs<ExtArgs>
-    _count?: boolean | ModelPricingCountOutputTypeDefaultArgs<ExtArgs>
+  export type ModelCatalogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "vendor" | "displayName" | "description" | "inputPrice" | "outputPrice" | "cacheReadPrice" | "cacheWritePrice" | "thinkingPrice" | "reasoningScore" | "codingScore" | "creativityScore" | "speedScore" | "contextLength" | "supportsExtendedThinking" | "supportsCacheControl" | "supportsVision" | "supportsFunctionCalling" | "supportsStreaming" | "recommendedScenarios" | "dataSource" | "sourceUrl" | "isEnabled" | "isDeprecated" | "deprecationDate" | "priceUpdatedAt" | "notes" | "metadata" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["modelCatalog"]>
+  export type ModelCatalogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    availabilities?: boolean | ModelCatalog$availabilitiesArgs<ExtArgs>
+    capabilityTags?: boolean | ModelCatalog$capabilityTagsArgs<ExtArgs>
+    fallbackChainModels?: boolean | ModelCatalog$fallbackChainModelsArgs<ExtArgs>
+    complexityRoutingMappings?: boolean | ModelCatalog$complexityRoutingMappingsArgs<ExtArgs>
+    _count?: boolean | ModelCatalogCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ModelPricingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type ModelPricingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ModelCatalogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ModelCatalogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $ModelPricingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ModelPricing"
+  export type $ModelCatalogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ModelCatalog"
     objects: {
-      modelAvailabilities: Prisma.$ModelAvailabilityPayload<ExtArgs>[]
+      /**
+       * 该模型在各 vendor 的可用性记录
+       */
+      availabilities: Prisma.$ModelAvailabilityPayload<ExtArgs>[]
+      /**
+       * 模型能力标签（模型级）
+       */
+      capabilityTags: Prisma.$ModelCapabilityTagPayload<ExtArgs>[]
+      /**
+       * Fallback 链引用
+       */
+      fallbackChainModels: Prisma.$FallbackChainModelPayload<ExtArgs>[]
+      /**
+       * 复杂度路由引用
+       */
+      complexityRoutingMappings: Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       /**
-       * 模型名称（如 gpt-4o, claude-sonnet-4-20250514）
+       * 模型标识符（全局唯一），如 "gpt-4o", "claude-sonnet-4-20250514"
        */
       model: string
       /**
-       * 服务商标识（openai, anthropic, google, deepseek 等）
+       * 原始供应商标识（openai, anthropic, google, deepseek 等）
        */
       vendor: string
       /**
@@ -39732,136 +39655,136 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       deletedAt: Date | null
-    }, ExtArgs["result"]["modelPricing"]>
+    }, ExtArgs["result"]["modelCatalog"]>
     composites: {}
   }
 
-  type ModelPricingGetPayload<S extends boolean | null | undefined | ModelPricingDefaultArgs> = $Result.GetResult<Prisma.$ModelPricingPayload, S>
+  type ModelCatalogGetPayload<S extends boolean | null | undefined | ModelCatalogDefaultArgs> = $Result.GetResult<Prisma.$ModelCatalogPayload, S>
 
-  type ModelPricingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ModelPricingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ModelPricingCountAggregateInputType | true
+  type ModelCatalogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ModelCatalogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ModelCatalogCountAggregateInputType | true
     }
 
-  export interface ModelPricingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ModelPricing'], meta: { name: 'ModelPricing' } }
+  export interface ModelCatalogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ModelCatalog'], meta: { name: 'ModelCatalog' } }
     /**
-     * Find zero or one ModelPricing that matches the filter.
-     * @param {ModelPricingFindUniqueArgs} args - Arguments to find a ModelPricing
+     * Find zero or one ModelCatalog that matches the filter.
+     * @param {ModelCatalogFindUniqueArgs} args - Arguments to find a ModelCatalog
      * @example
-     * // Get one ModelPricing
-     * const modelPricing = await prisma.modelPricing.findUnique({
+     * // Get one ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ModelPricingFindUniqueArgs>(args: SelectSubset<T, ModelPricingFindUniqueArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends ModelCatalogFindUniqueArgs>(args: SelectSubset<T, ModelCatalogFindUniqueArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one ModelPricing that matches the filter or throw an error with `error.code='P2025'`
+     * Find one ModelCatalog that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {ModelPricingFindUniqueOrThrowArgs} args - Arguments to find a ModelPricing
+     * @param {ModelCatalogFindUniqueOrThrowArgs} args - Arguments to find a ModelCatalog
      * @example
-     * // Get one ModelPricing
-     * const modelPricing = await prisma.modelPricing.findUniqueOrThrow({
+     * // Get one ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ModelPricingFindUniqueOrThrowArgs>(args: SelectSubset<T, ModelPricingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends ModelCatalogFindUniqueOrThrowArgs>(args: SelectSubset<T, ModelCatalogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ModelPricing that matches the filter.
+     * Find the first ModelCatalog that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingFindFirstArgs} args - Arguments to find a ModelPricing
+     * @param {ModelCatalogFindFirstArgs} args - Arguments to find a ModelCatalog
      * @example
-     * // Get one ModelPricing
-     * const modelPricing = await prisma.modelPricing.findFirst({
+     * // Get one ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ModelPricingFindFirstArgs>(args?: SelectSubset<T, ModelPricingFindFirstArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends ModelCatalogFindFirstArgs>(args?: SelectSubset<T, ModelCatalogFindFirstArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ModelPricing that matches the filter or
+     * Find the first ModelCatalog that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingFindFirstOrThrowArgs} args - Arguments to find a ModelPricing
+     * @param {ModelCatalogFindFirstOrThrowArgs} args - Arguments to find a ModelCatalog
      * @example
-     * // Get one ModelPricing
-     * const modelPricing = await prisma.modelPricing.findFirstOrThrow({
+     * // Get one ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ModelPricingFindFirstOrThrowArgs>(args?: SelectSubset<T, ModelPricingFindFirstOrThrowArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends ModelCatalogFindFirstOrThrowArgs>(args?: SelectSubset<T, ModelCatalogFindFirstOrThrowArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more ModelPricings that matches the filter.
+     * Find zero or more ModelCatalogs that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {ModelCatalogFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ModelPricings
-     * const modelPricings = await prisma.modelPricing.findMany()
+     * // Get all ModelCatalogs
+     * const modelCatalogs = await prisma.modelCatalog.findMany()
      * 
-     * // Get first 10 ModelPricings
-     * const modelPricings = await prisma.modelPricing.findMany({ take: 10 })
+     * // Get first 10 ModelCatalogs
+     * const modelCatalogs = await prisma.modelCatalog.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const modelPricingWithIdOnly = await prisma.modelPricing.findMany({ select: { id: true } })
+     * const modelCatalogWithIdOnly = await prisma.modelCatalog.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ModelPricingFindManyArgs>(args?: SelectSubset<T, ModelPricingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends ModelCatalogFindManyArgs>(args?: SelectSubset<T, ModelCatalogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a ModelPricing.
-     * @param {ModelPricingCreateArgs} args - Arguments to create a ModelPricing.
+     * Create a ModelCatalog.
+     * @param {ModelCatalogCreateArgs} args - Arguments to create a ModelCatalog.
      * @example
-     * // Create one ModelPricing
-     * const ModelPricing = await prisma.modelPricing.create({
+     * // Create one ModelCatalog
+     * const ModelCatalog = await prisma.modelCatalog.create({
      *   data: {
-     *     // ... data to create a ModelPricing
+     *     // ... data to create a ModelCatalog
      *   }
      * })
      * 
      */
-    create<T extends ModelPricingCreateArgs>(args: SelectSubset<T, ModelPricingCreateArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends ModelCatalogCreateArgs>(args: SelectSubset<T, ModelCatalogCreateArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many ModelPricings.
-     * @param {ModelPricingCreateManyArgs} args - Arguments to create many ModelPricings.
+     * Create many ModelCatalogs.
+     * @param {ModelCatalogCreateManyArgs} args - Arguments to create many ModelCatalogs.
      * @example
-     * // Create many ModelPricings
-     * const modelPricing = await prisma.modelPricing.createMany({
+     * // Create many ModelCatalogs
+     * const modelCatalog = await prisma.modelCatalog.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ModelPricingCreateManyArgs>(args?: SelectSubset<T, ModelPricingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends ModelCatalogCreateManyArgs>(args?: SelectSubset<T, ModelCatalogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ModelPricings and returns the data saved in the database.
-     * @param {ModelPricingCreateManyAndReturnArgs} args - Arguments to create many ModelPricings.
+     * Create many ModelCatalogs and returns the data saved in the database.
+     * @param {ModelCatalogCreateManyAndReturnArgs} args - Arguments to create many ModelCatalogs.
      * @example
-     * // Create many ModelPricings
-     * const modelPricing = await prisma.modelPricing.createManyAndReturn({
+     * // Create many ModelCatalogs
+     * const modelCatalog = await prisma.modelCatalog.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ModelPricings and only return the `id`
-     * const modelPricingWithIdOnly = await prisma.modelPricing.createManyAndReturn({
+     * // Create many ModelCatalogs and only return the `id`
+     * const modelCatalogWithIdOnly = await prisma.modelCatalog.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -39871,28 +39794,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ModelPricingCreateManyAndReturnArgs>(args?: SelectSubset<T, ModelPricingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends ModelCatalogCreateManyAndReturnArgs>(args?: SelectSubset<T, ModelCatalogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a ModelPricing.
-     * @param {ModelPricingDeleteArgs} args - Arguments to delete one ModelPricing.
+     * Delete a ModelCatalog.
+     * @param {ModelCatalogDeleteArgs} args - Arguments to delete one ModelCatalog.
      * @example
-     * // Delete one ModelPricing
-     * const ModelPricing = await prisma.modelPricing.delete({
+     * // Delete one ModelCatalog
+     * const ModelCatalog = await prisma.modelCatalog.delete({
      *   where: {
-     *     // ... filter to delete one ModelPricing
+     *     // ... filter to delete one ModelCatalog
      *   }
      * })
      * 
      */
-    delete<T extends ModelPricingDeleteArgs>(args: SelectSubset<T, ModelPricingDeleteArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends ModelCatalogDeleteArgs>(args: SelectSubset<T, ModelCatalogDeleteArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one ModelPricing.
-     * @param {ModelPricingUpdateArgs} args - Arguments to update one ModelPricing.
+     * Update one ModelCatalog.
+     * @param {ModelCatalogUpdateArgs} args - Arguments to update one ModelCatalog.
      * @example
-     * // Update one ModelPricing
-     * const modelPricing = await prisma.modelPricing.update({
+     * // Update one ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -39902,30 +39825,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ModelPricingUpdateArgs>(args: SelectSubset<T, ModelPricingUpdateArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends ModelCatalogUpdateArgs>(args: SelectSubset<T, ModelCatalogUpdateArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more ModelPricings.
-     * @param {ModelPricingDeleteManyArgs} args - Arguments to filter ModelPricings to delete.
+     * Delete zero or more ModelCatalogs.
+     * @param {ModelCatalogDeleteManyArgs} args - Arguments to filter ModelCatalogs to delete.
      * @example
-     * // Delete a few ModelPricings
-     * const { count } = await prisma.modelPricing.deleteMany({
+     * // Delete a few ModelCatalogs
+     * const { count } = await prisma.modelCatalog.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ModelPricingDeleteManyArgs>(args?: SelectSubset<T, ModelPricingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends ModelCatalogDeleteManyArgs>(args?: SelectSubset<T, ModelCatalogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ModelPricings.
+     * Update zero or more ModelCatalogs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {ModelCatalogUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ModelPricings
-     * const modelPricing = await prisma.modelPricing.updateMany({
+     * // Update many ModelCatalogs
+     * const modelCatalog = await prisma.modelCatalog.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -39935,14 +39858,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ModelPricingUpdateManyArgs>(args: SelectSubset<T, ModelPricingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends ModelCatalogUpdateManyArgs>(args: SelectSubset<T, ModelCatalogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ModelPricings and returns the data updated in the database.
-     * @param {ModelPricingUpdateManyAndReturnArgs} args - Arguments to update many ModelPricings.
+     * Update zero or more ModelCatalogs and returns the data updated in the database.
+     * @param {ModelCatalogUpdateManyAndReturnArgs} args - Arguments to update many ModelCatalogs.
      * @example
-     * // Update many ModelPricings
-     * const modelPricing = await prisma.modelPricing.updateManyAndReturn({
+     * // Update many ModelCatalogs
+     * const modelCatalog = await prisma.modelCatalog.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -39951,8 +39874,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more ModelPricings and only return the `id`
-     * const modelPricingWithIdOnly = await prisma.modelPricing.updateManyAndReturn({
+     * // Update zero or more ModelCatalogs and only return the `id`
+     * const modelCatalogWithIdOnly = await prisma.modelCatalog.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -39965,56 +39888,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ModelPricingUpdateManyAndReturnArgs>(args: SelectSubset<T, ModelPricingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends ModelCatalogUpdateManyAndReturnArgs>(args: SelectSubset<T, ModelCatalogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one ModelPricing.
-     * @param {ModelPricingUpsertArgs} args - Arguments to update or create a ModelPricing.
+     * Create or update one ModelCatalog.
+     * @param {ModelCatalogUpsertArgs} args - Arguments to update or create a ModelCatalog.
      * @example
-     * // Update or create a ModelPricing
-     * const modelPricing = await prisma.modelPricing.upsert({
+     * // Update or create a ModelCatalog
+     * const modelCatalog = await prisma.modelCatalog.upsert({
      *   create: {
-     *     // ... data to create a ModelPricing
+     *     // ... data to create a ModelCatalog
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ModelPricing we want to update
+     *     // ... the filter for the ModelCatalog we want to update
      *   }
      * })
      */
-    upsert<T extends ModelPricingUpsertArgs>(args: SelectSubset<T, ModelPricingUpsertArgs<ExtArgs>>): Prisma__ModelPricingClient<$Result.GetResult<Prisma.$ModelPricingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends ModelCatalogUpsertArgs>(args: SelectSubset<T, ModelCatalogUpsertArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of ModelPricings.
+     * Count the number of ModelCatalogs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingCountArgs} args - Arguments to filter ModelPricings to count.
+     * @param {ModelCatalogCountArgs} args - Arguments to filter ModelCatalogs to count.
      * @example
-     * // Count the number of ModelPricings
-     * const count = await prisma.modelPricing.count({
+     * // Count the number of ModelCatalogs
+     * const count = await prisma.modelCatalog.count({
      *   where: {
-     *     // ... the filter for the ModelPricings we want to count
+     *     // ... the filter for the ModelCatalogs we want to count
      *   }
      * })
     **/
-    count<T extends ModelPricingCountArgs>(
-      args?: Subset<T, ModelPricingCountArgs>,
+    count<T extends ModelCatalogCountArgs>(
+      args?: Subset<T, ModelCatalogCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ModelPricingCountAggregateOutputType>
+          : GetScalarType<T['select'], ModelCatalogCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ModelPricing.
+     * Allows you to perform aggregations operations on a ModelCatalog.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {ModelCatalogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -40034,13 +39957,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ModelPricingAggregateArgs>(args: Subset<T, ModelPricingAggregateArgs>): Prisma.PrismaPromise<GetModelPricingAggregateType<T>>
+    aggregate<T extends ModelCatalogAggregateArgs>(args: Subset<T, ModelCatalogAggregateArgs>): Prisma.PrismaPromise<GetModelCatalogAggregateType<T>>
 
     /**
-     * Group by ModelPricing.
+     * Group by ModelCatalog.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ModelPricingGroupByArgs} args - Group by arguments.
+     * @param {ModelCatalogGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -40055,14 +39978,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ModelPricingGroupByArgs,
+      T extends ModelCatalogGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ModelPricingGroupByArgs['orderBy'] }
-        : { orderBy?: ModelPricingGroupByArgs['orderBy'] },
+        ? { orderBy: ModelCatalogGroupByArgs['orderBy'] }
+        : { orderBy?: ModelCatalogGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -40111,22 +40034,25 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ModelPricingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetModelPricingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, ModelCatalogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetModelCatalogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ModelPricing model
+   * Fields of the ModelCatalog model
    */
-  readonly fields: ModelPricingFieldRefs;
+  readonly fields: ModelCatalogFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ModelPricing.
+   * The delegate class that acts as a "Promise-like" for ModelCatalog.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ModelPricingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__ModelCatalogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    modelAvailabilities<T extends ModelPricing$modelAvailabilitiesArgs<ExtArgs> = {}>(args?: Subset<T, ModelPricing$modelAvailabilitiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    availabilities<T extends ModelCatalog$availabilitiesArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalog$availabilitiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    capabilityTags<T extends ModelCatalog$capabilityTagsArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalog$capabilityTagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModelCapabilityTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    fallbackChainModels<T extends ModelCatalog$fallbackChainModelsArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalog$fallbackChainModelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FallbackChainModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    complexityRoutingMappings<T extends ModelCatalog$complexityRoutingMappingsArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalog$complexityRoutingMappingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplexityRoutingModelMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -40153,433 +40079,433 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ModelPricing model
+   * Fields of the ModelCatalog model
    */
-  interface ModelPricingFieldRefs {
-    readonly id: FieldRef<"ModelPricing", 'String'>
-    readonly model: FieldRef<"ModelPricing", 'String'>
-    readonly vendor: FieldRef<"ModelPricing", 'String'>
-    readonly displayName: FieldRef<"ModelPricing", 'String'>
-    readonly description: FieldRef<"ModelPricing", 'String'>
-    readonly inputPrice: FieldRef<"ModelPricing", 'Decimal'>
-    readonly outputPrice: FieldRef<"ModelPricing", 'Decimal'>
-    readonly cacheReadPrice: FieldRef<"ModelPricing", 'Decimal'>
-    readonly cacheWritePrice: FieldRef<"ModelPricing", 'Decimal'>
-    readonly thinkingPrice: FieldRef<"ModelPricing", 'Decimal'>
-    readonly reasoningScore: FieldRef<"ModelPricing", 'Int'>
-    readonly codingScore: FieldRef<"ModelPricing", 'Int'>
-    readonly creativityScore: FieldRef<"ModelPricing", 'Int'>
-    readonly speedScore: FieldRef<"ModelPricing", 'Int'>
-    readonly contextLength: FieldRef<"ModelPricing", 'Int'>
-    readonly supportsExtendedThinking: FieldRef<"ModelPricing", 'Boolean'>
-    readonly supportsCacheControl: FieldRef<"ModelPricing", 'Boolean'>
-    readonly supportsVision: FieldRef<"ModelPricing", 'Boolean'>
-    readonly supportsFunctionCalling: FieldRef<"ModelPricing", 'Boolean'>
-    readonly supportsStreaming: FieldRef<"ModelPricing", 'Boolean'>
-    readonly recommendedScenarios: FieldRef<"ModelPricing", 'Json'>
-    readonly dataSource: FieldRef<"ModelPricing", 'String'>
-    readonly sourceUrl: FieldRef<"ModelPricing", 'String'>
-    readonly isEnabled: FieldRef<"ModelPricing", 'Boolean'>
-    readonly isDeprecated: FieldRef<"ModelPricing", 'Boolean'>
-    readonly deprecationDate: FieldRef<"ModelPricing", 'DateTime'>
-    readonly priceUpdatedAt: FieldRef<"ModelPricing", 'DateTime'>
-    readonly notes: FieldRef<"ModelPricing", 'String'>
-    readonly metadata: FieldRef<"ModelPricing", 'Json'>
-    readonly isDeleted: FieldRef<"ModelPricing", 'Boolean'>
-    readonly createdAt: FieldRef<"ModelPricing", 'DateTime'>
-    readonly updatedAt: FieldRef<"ModelPricing", 'DateTime'>
-    readonly deletedAt: FieldRef<"ModelPricing", 'DateTime'>
+  interface ModelCatalogFieldRefs {
+    readonly id: FieldRef<"ModelCatalog", 'String'>
+    readonly model: FieldRef<"ModelCatalog", 'String'>
+    readonly vendor: FieldRef<"ModelCatalog", 'String'>
+    readonly displayName: FieldRef<"ModelCatalog", 'String'>
+    readonly description: FieldRef<"ModelCatalog", 'String'>
+    readonly inputPrice: FieldRef<"ModelCatalog", 'Decimal'>
+    readonly outputPrice: FieldRef<"ModelCatalog", 'Decimal'>
+    readonly cacheReadPrice: FieldRef<"ModelCatalog", 'Decimal'>
+    readonly cacheWritePrice: FieldRef<"ModelCatalog", 'Decimal'>
+    readonly thinkingPrice: FieldRef<"ModelCatalog", 'Decimal'>
+    readonly reasoningScore: FieldRef<"ModelCatalog", 'Int'>
+    readonly codingScore: FieldRef<"ModelCatalog", 'Int'>
+    readonly creativityScore: FieldRef<"ModelCatalog", 'Int'>
+    readonly speedScore: FieldRef<"ModelCatalog", 'Int'>
+    readonly contextLength: FieldRef<"ModelCatalog", 'Int'>
+    readonly supportsExtendedThinking: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly supportsCacheControl: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly supportsVision: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly supportsFunctionCalling: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly supportsStreaming: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly recommendedScenarios: FieldRef<"ModelCatalog", 'Json'>
+    readonly dataSource: FieldRef<"ModelCatalog", 'String'>
+    readonly sourceUrl: FieldRef<"ModelCatalog", 'String'>
+    readonly isEnabled: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly isDeprecated: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly deprecationDate: FieldRef<"ModelCatalog", 'DateTime'>
+    readonly priceUpdatedAt: FieldRef<"ModelCatalog", 'DateTime'>
+    readonly notes: FieldRef<"ModelCatalog", 'String'>
+    readonly metadata: FieldRef<"ModelCatalog", 'Json'>
+    readonly isDeleted: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly createdAt: FieldRef<"ModelCatalog", 'DateTime'>
+    readonly updatedAt: FieldRef<"ModelCatalog", 'DateTime'>
+    readonly deletedAt: FieldRef<"ModelCatalog", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * ModelPricing findUnique
+   * ModelCatalog findUnique
    */
-  export type ModelPricingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter, which ModelPricing to fetch.
+     * Filter, which ModelCatalog to fetch.
      */
-    where: ModelPricingWhereUniqueInput
+    where: ModelCatalogWhereUniqueInput
   }
 
   /**
-   * ModelPricing findUniqueOrThrow
+   * ModelCatalog findUniqueOrThrow
    */
-  export type ModelPricingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter, which ModelPricing to fetch.
+     * Filter, which ModelCatalog to fetch.
      */
-    where: ModelPricingWhereUniqueInput
+    where: ModelCatalogWhereUniqueInput
   }
 
   /**
-   * ModelPricing findFirst
+   * ModelCatalog findFirst
    */
-  export type ModelPricingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter, which ModelPricing to fetch.
+     * Filter, which ModelCatalog to fetch.
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ModelPricings to fetch.
+     * Determine the order of ModelCatalogs to fetch.
      */
-    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    orderBy?: ModelCatalogOrderByWithRelationInput | ModelCatalogOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ModelPricings.
+     * Sets the position for searching for ModelCatalogs.
      */
-    cursor?: ModelPricingWhereUniqueInput
+    cursor?: ModelCatalogWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ModelPricings from the position of the cursor.
+     * Take `±n` ModelCatalogs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ModelPricings.
+     * Skip the first `n` ModelCatalogs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ModelPricings.
+     * Filter by unique combinations of ModelCatalogs.
      */
-    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+    distinct?: ModelCatalogScalarFieldEnum | ModelCatalogScalarFieldEnum[]
   }
 
   /**
-   * ModelPricing findFirstOrThrow
+   * ModelCatalog findFirstOrThrow
    */
-  export type ModelPricingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter, which ModelPricing to fetch.
+     * Filter, which ModelCatalog to fetch.
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ModelPricings to fetch.
+     * Determine the order of ModelCatalogs to fetch.
      */
-    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    orderBy?: ModelCatalogOrderByWithRelationInput | ModelCatalogOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ModelPricings.
+     * Sets the position for searching for ModelCatalogs.
      */
-    cursor?: ModelPricingWhereUniqueInput
+    cursor?: ModelCatalogWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ModelPricings from the position of the cursor.
+     * Take `±n` ModelCatalogs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ModelPricings.
+     * Skip the first `n` ModelCatalogs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ModelPricings.
+     * Filter by unique combinations of ModelCatalogs.
      */
-    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+    distinct?: ModelCatalogScalarFieldEnum | ModelCatalogScalarFieldEnum[]
   }
 
   /**
-   * ModelPricing findMany
+   * ModelCatalog findMany
    */
-  export type ModelPricingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter, which ModelPricings to fetch.
+     * Filter, which ModelCatalogs to fetch.
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ModelPricings to fetch.
+     * Determine the order of ModelCatalogs to fetch.
      */
-    orderBy?: ModelPricingOrderByWithRelationInput | ModelPricingOrderByWithRelationInput[]
+    orderBy?: ModelCatalogOrderByWithRelationInput | ModelCatalogOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ModelPricings.
+     * Sets the position for listing ModelCatalogs.
      */
-    cursor?: ModelPricingWhereUniqueInput
+    cursor?: ModelCatalogWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ModelPricings from the position of the cursor.
+     * Take `±n` ModelCatalogs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ModelPricings.
+     * Skip the first `n` ModelCatalogs.
      */
     skip?: number
-    distinct?: ModelPricingScalarFieldEnum | ModelPricingScalarFieldEnum[]
+    distinct?: ModelCatalogScalarFieldEnum | ModelCatalogScalarFieldEnum[]
   }
 
   /**
-   * ModelPricing create
+   * ModelCatalog create
    */
-  export type ModelPricingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * The data needed to create a ModelPricing.
+     * The data needed to create a ModelCatalog.
      */
-    data: XOR<ModelPricingCreateInput, ModelPricingUncheckedCreateInput>
+    data: XOR<ModelCatalogCreateInput, ModelCatalogUncheckedCreateInput>
   }
 
   /**
-   * ModelPricing createMany
+   * ModelCatalog createMany
    */
-  export type ModelPricingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ModelPricings.
+     * The data used to create many ModelCatalogs.
      */
-    data: ModelPricingCreateManyInput | ModelPricingCreateManyInput[]
+    data: ModelCatalogCreateManyInput | ModelCatalogCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * ModelPricing createManyAndReturn
+   * ModelCatalog createManyAndReturn
    */
-  export type ModelPricingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelectCreateManyAndReturn<ExtArgs> | null
+    select?: ModelCatalogSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
-     * The data used to create many ModelPricings.
+     * The data used to create many ModelCatalogs.
      */
-    data: ModelPricingCreateManyInput | ModelPricingCreateManyInput[]
+    data: ModelCatalogCreateManyInput | ModelCatalogCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * ModelPricing update
+   * ModelCatalog update
    */
-  export type ModelPricingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * The data needed to update a ModelPricing.
+     * The data needed to update a ModelCatalog.
      */
-    data: XOR<ModelPricingUpdateInput, ModelPricingUncheckedUpdateInput>
+    data: XOR<ModelCatalogUpdateInput, ModelCatalogUncheckedUpdateInput>
     /**
-     * Choose, which ModelPricing to update.
+     * Choose, which ModelCatalog to update.
      */
-    where: ModelPricingWhereUniqueInput
+    where: ModelCatalogWhereUniqueInput
   }
 
   /**
-   * ModelPricing updateMany
+   * ModelCatalog updateMany
    */
-  export type ModelPricingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ModelPricings.
+     * The data used to update ModelCatalogs.
      */
-    data: XOR<ModelPricingUpdateManyMutationInput, ModelPricingUncheckedUpdateManyInput>
+    data: XOR<ModelCatalogUpdateManyMutationInput, ModelCatalogUncheckedUpdateManyInput>
     /**
-     * Filter which ModelPricings to update
+     * Filter which ModelCatalogs to update
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
-     * Limit how many ModelPricings to update.
+     * Limit how many ModelCatalogs to update.
      */
     limit?: number
   }
 
   /**
-   * ModelPricing updateManyAndReturn
+   * ModelCatalog updateManyAndReturn
    */
-  export type ModelPricingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: ModelCatalogSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
-     * The data used to update ModelPricings.
+     * The data used to update ModelCatalogs.
      */
-    data: XOR<ModelPricingUpdateManyMutationInput, ModelPricingUncheckedUpdateManyInput>
+    data: XOR<ModelCatalogUpdateManyMutationInput, ModelCatalogUncheckedUpdateManyInput>
     /**
-     * Filter which ModelPricings to update
+     * Filter which ModelCatalogs to update
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
-     * Limit how many ModelPricings to update.
+     * Limit how many ModelCatalogs to update.
      */
     limit?: number
   }
 
   /**
-   * ModelPricing upsert
+   * ModelCatalog upsert
    */
-  export type ModelPricingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * The filter to search for the ModelPricing to update in case it exists.
+     * The filter to search for the ModelCatalog to update in case it exists.
      */
-    where: ModelPricingWhereUniqueInput
+    where: ModelCatalogWhereUniqueInput
     /**
-     * In case the ModelPricing found by the `where` argument doesn't exist, create a new ModelPricing with this data.
+     * In case the ModelCatalog found by the `where` argument doesn't exist, create a new ModelCatalog with this data.
      */
-    create: XOR<ModelPricingCreateInput, ModelPricingUncheckedCreateInput>
+    create: XOR<ModelCatalogCreateInput, ModelCatalogUncheckedCreateInput>
     /**
-     * In case the ModelPricing was found with the provided `where` argument, update it with this data.
+     * In case the ModelCatalog was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<ModelPricingUpdateInput, ModelPricingUncheckedUpdateInput>
+    update: XOR<ModelCatalogUpdateInput, ModelCatalogUncheckedUpdateInput>
   }
 
   /**
-   * ModelPricing delete
+   * ModelCatalog delete
    */
-  export type ModelPricingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCatalog
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCatalogSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCatalog
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCatalogOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCatalogInclude<ExtArgs> | null
     /**
-     * Filter which ModelPricing to delete.
+     * Filter which ModelCatalog to delete.
      */
-    where: ModelPricingWhereUniqueInput
+    where: ModelCatalogWhereUniqueInput
   }
 
   /**
-   * ModelPricing deleteMany
+   * ModelCatalog deleteMany
    */
-  export type ModelPricingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ModelPricings to delete
+     * Filter which ModelCatalogs to delete
      */
-    where?: ModelPricingWhereInput
+    where?: ModelCatalogWhereInput
     /**
-     * Limit how many ModelPricings to delete.
+     * Limit how many ModelCatalogs to delete.
      */
     limit?: number
   }
 
   /**
-   * ModelPricing.modelAvailabilities
+   * ModelCatalog.availabilities
    */
-  export type ModelPricing$modelAvailabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalog$availabilitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the ModelAvailability
      */
@@ -40601,21 +40527,93 @@ export namespace Prisma {
   }
 
   /**
-   * ModelPricing without action
+   * ModelCatalog.capabilityTags
    */
-  export type ModelPricingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ModelCatalog$capabilityTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ModelPricing
+     * Select specific fields to fetch from the ModelCapabilityTag
      */
-    select?: ModelPricingSelect<ExtArgs> | null
+    select?: ModelCapabilityTagSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ModelPricing
+     * Omit specific fields from the ModelCapabilityTag
      */
-    omit?: ModelPricingOmit<ExtArgs> | null
+    omit?: ModelCapabilityTagOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ModelPricingInclude<ExtArgs> | null
+    include?: ModelCapabilityTagInclude<ExtArgs> | null
+    where?: ModelCapabilityTagWhereInput
+    orderBy?: ModelCapabilityTagOrderByWithRelationInput | ModelCapabilityTagOrderByWithRelationInput[]
+    cursor?: ModelCapabilityTagWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ModelCapabilityTagScalarFieldEnum | ModelCapabilityTagScalarFieldEnum[]
+  }
+
+  /**
+   * ModelCatalog.fallbackChainModels
+   */
+  export type ModelCatalog$fallbackChainModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FallbackChainModel
+     */
+    select?: FallbackChainModelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FallbackChainModel
+     */
+    omit?: FallbackChainModelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FallbackChainModelInclude<ExtArgs> | null
+    where?: FallbackChainModelWhereInput
+    orderBy?: FallbackChainModelOrderByWithRelationInput | FallbackChainModelOrderByWithRelationInput[]
+    cursor?: FallbackChainModelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FallbackChainModelScalarFieldEnum | FallbackChainModelScalarFieldEnum[]
+  }
+
+  /**
+   * ModelCatalog.complexityRoutingMappings
+   */
+  export type ModelCatalog$complexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComplexityRoutingModelMapping
+     */
+    select?: ComplexityRoutingModelMappingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComplexityRoutingModelMapping
+     */
+    omit?: ComplexityRoutingModelMappingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplexityRoutingModelMappingInclude<ExtArgs> | null
+    where?: ComplexityRoutingModelMappingWhereInput
+    orderBy?: ComplexityRoutingModelMappingOrderByWithRelationInput | ComplexityRoutingModelMappingOrderByWithRelationInput[]
+    cursor?: ComplexityRoutingModelMappingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComplexityRoutingModelMappingScalarFieldEnum | ComplexityRoutingModelMappingScalarFieldEnum[]
+  }
+
+  /**
+   * ModelCatalog without action
+   */
+  export type ModelCatalogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModelCatalog
+     */
+    select?: ModelCatalogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ModelCatalog
+     */
+    omit?: ModelCatalogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModelCatalogInclude<ExtArgs> | null
   }
 
 
@@ -49348,7 +49346,7 @@ export namespace Prisma {
   export type FallbackChainModelMinAggregateOutputType = {
     id: string | null
     fallbackChainId: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     priority: number | null
     protocolOverride: string | null
     createdAt: Date | null
@@ -49357,7 +49355,7 @@ export namespace Prisma {
   export type FallbackChainModelMaxAggregateOutputType = {
     id: string | null
     fallbackChainId: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     priority: number | null
     protocolOverride: string | null
     createdAt: Date | null
@@ -49366,7 +49364,7 @@ export namespace Prisma {
   export type FallbackChainModelCountAggregateOutputType = {
     id: number
     fallbackChainId: number
-    modelAvailabilityId: number
+    modelCatalogId: number
     priority: number
     protocolOverride: number
     featuresOverride: number
@@ -49386,7 +49384,7 @@ export namespace Prisma {
   export type FallbackChainModelMinAggregateInputType = {
     id?: true
     fallbackChainId?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     protocolOverride?: true
     createdAt?: true
@@ -49395,7 +49393,7 @@ export namespace Prisma {
   export type FallbackChainModelMaxAggregateInputType = {
     id?: true
     fallbackChainId?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     protocolOverride?: true
     createdAt?: true
@@ -49404,7 +49402,7 @@ export namespace Prisma {
   export type FallbackChainModelCountAggregateInputType = {
     id?: true
     fallbackChainId?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     protocolOverride?: true
     featuresOverride?: true
@@ -49501,7 +49499,7 @@ export namespace Prisma {
   export type FallbackChainModelGroupByOutputType = {
     id: string
     fallbackChainId: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority: number
     protocolOverride: string | null
     featuresOverride: JsonValue | null
@@ -49530,68 +49528,68 @@ export namespace Prisma {
   export type FallbackChainModelSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     fallbackChainId?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     protocolOverride?: boolean
     featuresOverride?: boolean
     createdAt?: boolean
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["fallbackChainModel"]>
 
   export type FallbackChainModelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     fallbackChainId?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     protocolOverride?: boolean
     featuresOverride?: boolean
     createdAt?: boolean
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["fallbackChainModel"]>
 
   export type FallbackChainModelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     fallbackChainId?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     protocolOverride?: boolean
     featuresOverride?: boolean
     createdAt?: boolean
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["fallbackChainModel"]>
 
   export type FallbackChainModelSelectScalar = {
     id?: boolean
     fallbackChainId?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     protocolOverride?: boolean
     featuresOverride?: boolean
     createdAt?: boolean
   }
 
-  export type FallbackChainModelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fallbackChainId" | "modelAvailabilityId" | "priority" | "protocolOverride" | "featuresOverride" | "createdAt", ExtArgs["result"]["fallbackChainModel"]>
+  export type FallbackChainModelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fallbackChainId" | "modelCatalogId" | "priority" | "protocolOverride" | "featuresOverride" | "createdAt", ExtArgs["result"]["fallbackChainModel"]>
   export type FallbackChainModelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
   export type FallbackChainModelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
   export type FallbackChainModelIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fallbackChain?: boolean | FallbackChainDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
 
   export type $FallbackChainModelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "FallbackChainModel"
     objects: {
       fallbackChain: Prisma.$FallbackChainPayload<ExtArgs>
-      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>
+      modelCatalog: Prisma.$ModelCatalogPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -49600,9 +49598,9 @@ export namespace Prisma {
        */
       fallbackChainId: string
       /**
-       * 关联的 ModelAvailability ID（引用实际可用模型）
+       * 关联的 ModelCatalog ID（模型级别，运行时解析到可用 vendor）
        */
-      modelAvailabilityId: string
+      modelCatalogId: string
       /**
        * 在链中的顺序（0 = 首选模型，数值越小优先级越高）
        */
@@ -50011,7 +50009,7 @@ export namespace Prisma {
   export interface Prisma__FallbackChainModelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     fallbackChain<T extends FallbackChainDefaultArgs<ExtArgs> = {}>(args?: Subset<T, FallbackChainDefaultArgs<ExtArgs>>): Prisma__FallbackChainClient<$Result.GetResult<Prisma.$FallbackChainPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    modelAvailability<T extends ModelAvailabilityDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailabilityDefaultArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    modelCatalog<T extends ModelCatalogDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalogDefaultArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -50043,7 +50041,7 @@ export namespace Prisma {
   interface FallbackChainModelFieldRefs {
     readonly id: FieldRef<"FallbackChainModel", 'String'>
     readonly fallbackChainId: FieldRef<"FallbackChainModel", 'String'>
-    readonly modelAvailabilityId: FieldRef<"FallbackChainModel", 'String'>
+    readonly modelCatalogId: FieldRef<"FallbackChainModel", 'String'>
     readonly priority: FieldRef<"FallbackChainModel", 'Int'>
     readonly protocolOverride: FieldRef<"FallbackChainModel", 'String'>
     readonly featuresOverride: FieldRef<"FallbackChainModel", 'Json'>
@@ -50486,7 +50484,7 @@ export namespace Prisma {
     id: string | null
     complexityConfigId: string | null
     complexityLevel: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     priority: number | null
     createdAt: Date | null
   }
@@ -50495,7 +50493,7 @@ export namespace Prisma {
     id: string | null
     complexityConfigId: string | null
     complexityLevel: string | null
-    modelAvailabilityId: string | null
+    modelCatalogId: string | null
     priority: number | null
     createdAt: Date | null
   }
@@ -50504,7 +50502,7 @@ export namespace Prisma {
     id: number
     complexityConfigId: number
     complexityLevel: number
-    modelAvailabilityId: number
+    modelCatalogId: number
     priority: number
     createdAt: number
     _all: number
@@ -50523,7 +50521,7 @@ export namespace Prisma {
     id?: true
     complexityConfigId?: true
     complexityLevel?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     createdAt?: true
   }
@@ -50532,7 +50530,7 @@ export namespace Prisma {
     id?: true
     complexityConfigId?: true
     complexityLevel?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     createdAt?: true
   }
@@ -50541,7 +50539,7 @@ export namespace Prisma {
     id?: true
     complexityConfigId?: true
     complexityLevel?: true
-    modelAvailabilityId?: true
+    modelCatalogId?: true
     priority?: true
     createdAt?: true
     _all?: true
@@ -50637,7 +50635,7 @@ export namespace Prisma {
     id: string
     complexityConfigId: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority: number
     createdAt: Date
     _count: ComplexityRoutingModelMappingCountAggregateOutputType | null
@@ -50665,63 +50663,63 @@ export namespace Prisma {
     id?: boolean
     complexityConfigId?: boolean
     complexityLevel?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     createdAt?: boolean
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["complexityRoutingModelMapping"]>
 
   export type ComplexityRoutingModelMappingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     complexityConfigId?: boolean
     complexityLevel?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     createdAt?: boolean
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["complexityRoutingModelMapping"]>
 
   export type ComplexityRoutingModelMappingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     complexityConfigId?: boolean
     complexityLevel?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     createdAt?: boolean
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["complexityRoutingModelMapping"]>
 
   export type ComplexityRoutingModelMappingSelectScalar = {
     id?: boolean
     complexityConfigId?: boolean
     complexityLevel?: boolean
-    modelAvailabilityId?: boolean
+    modelCatalogId?: boolean
     priority?: boolean
     createdAt?: boolean
   }
 
-  export type ComplexityRoutingModelMappingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "complexityConfigId" | "complexityLevel" | "modelAvailabilityId" | "priority" | "createdAt", ExtArgs["result"]["complexityRoutingModelMapping"]>
+  export type ComplexityRoutingModelMappingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "complexityConfigId" | "complexityLevel" | "modelCatalogId" | "priority" | "createdAt", ExtArgs["result"]["complexityRoutingModelMapping"]>
   export type ComplexityRoutingModelMappingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
   export type ComplexityRoutingModelMappingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
   export type ComplexityRoutingModelMappingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     complexityConfig?: boolean | ComplexityRoutingConfigDefaultArgs<ExtArgs>
-    modelAvailability?: boolean | ModelAvailabilityDefaultArgs<ExtArgs>
+    modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
   }
 
   export type $ComplexityRoutingModelMappingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ComplexityRoutingModelMapping"
     objects: {
       complexityConfig: Prisma.$ComplexityRoutingConfigPayload<ExtArgs>
-      modelAvailability: Prisma.$ModelAvailabilityPayload<ExtArgs>
+      modelCatalog: Prisma.$ModelCatalogPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -50734,9 +50732,9 @@ export namespace Prisma {
        */
       complexityLevel: string
       /**
-       * 关联的 ModelAvailability ID
+       * 关联的 ModelCatalog ID（模型级别）
        */
-      modelAvailabilityId: string
+      modelCatalogId: string
       /**
        * 在同级别中的优先级（0 = 首选）
        */
@@ -51137,7 +51135,7 @@ export namespace Prisma {
   export interface Prisma__ComplexityRoutingModelMappingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     complexityConfig<T extends ComplexityRoutingConfigDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ComplexityRoutingConfigDefaultArgs<ExtArgs>>): Prisma__ComplexityRoutingConfigClient<$Result.GetResult<Prisma.$ComplexityRoutingConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    modelAvailability<T extends ModelAvailabilityDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelAvailabilityDefaultArgs<ExtArgs>>): Prisma__ModelAvailabilityClient<$Result.GetResult<Prisma.$ModelAvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    modelCatalog<T extends ModelCatalogDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ModelCatalogDefaultArgs<ExtArgs>>): Prisma__ModelCatalogClient<$Result.GetResult<Prisma.$ModelCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -51170,7 +51168,7 @@ export namespace Prisma {
     readonly id: FieldRef<"ComplexityRoutingModelMapping", 'String'>
     readonly complexityConfigId: FieldRef<"ComplexityRoutingModelMapping", 'String'>
     readonly complexityLevel: FieldRef<"ComplexityRoutingModelMapping", 'String'>
-    readonly modelAvailabilityId: FieldRef<"ComplexityRoutingModelMapping", 'String'>
+    readonly modelCatalogId: FieldRef<"ComplexityRoutingModelMapping", 'String'>
     readonly priority: FieldRef<"ComplexityRoutingModelMapping", 'Int'>
     readonly createdAt: FieldRef<"ComplexityRoutingModelMapping", 'DateTime'>
   }
@@ -51862,15 +51860,13 @@ export namespace Prisma {
     id: 'id',
     model: 'model',
     providerKeyId: 'providerKeyId',
+    modelCatalogId: 'modelCatalogId',
     modelType: 'modelType',
-    modelPricingId: 'modelPricingId',
     isAvailable: 'isAvailable',
     lastVerifiedAt: 'lastVerifiedAt',
     errorMessage: 'errorMessage',
-    pricingSynced: 'pricingSynced',
-    pricingSyncedAt: 'pricingSyncedAt',
-    tagsSynced: 'tagsSynced',
-    tagsSyncedAt: 'tagsSyncedAt',
+    vendorPriority: 'vendorPriority',
+    healthScore: 'healthScore',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -51880,7 +51876,7 @@ export namespace Prisma {
 
   export const ModelCapabilityTagScalarFieldEnum: {
     id: 'id',
-    modelAvailabilityId: 'modelAvailabilityId',
+    modelCatalogId: 'modelCatalogId',
     capabilityTagId: 'capabilityTagId',
     matchSource: 'matchSource',
     confidence: 'confidence',
@@ -52125,7 +52121,7 @@ export namespace Prisma {
   export type BotSkillScalarFieldEnum = (typeof BotSkillScalarFieldEnum)[keyof typeof BotSkillScalarFieldEnum]
 
 
-  export const ModelPricingScalarFieldEnum: {
+  export const ModelCatalogScalarFieldEnum: {
     id: 'id',
     model: 'model',
     vendor: 'vendor',
@@ -52161,7 +52157,7 @@ export namespace Prisma {
     deletedAt: 'deletedAt'
   };
 
-  export type ModelPricingScalarFieldEnum = (typeof ModelPricingScalarFieldEnum)[keyof typeof ModelPricingScalarFieldEnum]
+  export type ModelCatalogScalarFieldEnum = (typeof ModelCatalogScalarFieldEnum)[keyof typeof ModelCatalogScalarFieldEnum]
 
 
   export const BotModelRoutingScalarFieldEnum: {
@@ -52317,7 +52313,7 @@ export namespace Prisma {
   export const FallbackChainModelScalarFieldEnum: {
     id: 'id',
     fallbackChainId: 'fallbackChainId',
-    modelAvailabilityId: 'modelAvailabilityId',
+    modelCatalogId: 'modelCatalogId',
     priority: 'priority',
     protocolOverride: 'protocolOverride',
     featuresOverride: 'featuresOverride',
@@ -52331,7 +52327,7 @@ export namespace Prisma {
     id: 'id',
     complexityConfigId: 'complexityConfigId',
     complexityLevel: 'complexityLevel',
-    modelAvailabilityId: 'modelAvailabilityId',
+    modelCatalogId: 'modelCatalogId',
     priority: 'priority',
     createdAt: 'createdAt'
   };
@@ -54062,44 +54058,34 @@ export namespace Prisma {
     id?: UuidFilter<"ModelAvailability"> | string
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    modelCatalogId?: UuidNullableFilter<"ModelAvailability"> | string | null
     modelType?: EnumModelTypeFilter<"ModelAvailability"> | $Enums.ModelType
-    modelPricingId?: UuidNullableFilter<"ModelAvailability"> | string | null
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
     lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
-    pricingSynced?: BoolFilter<"ModelAvailability"> | boolean
-    pricingSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
-    tagsSynced?: BoolFilter<"ModelAvailability"> | boolean
-    tagsSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
+    vendorPriority?: IntFilter<"ModelAvailability"> | number
+    healthScore?: IntFilter<"ModelAvailability"> | number
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
-    modelPricing?: XOR<ModelPricingNullableScalarRelationFilter, ModelPricingWhereInput> | null
-    capabilityTags?: ModelCapabilityTagListRelationFilter
-    fallbackChainModels?: FallbackChainModelListRelationFilter
-    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
+    modelCatalog?: XOR<ModelCatalogNullableScalarRelationFilter, ModelCatalogWhereInput> | null
   }
 
   export type ModelAvailabilityOrderByWithRelationInput = {
     id?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
+    modelCatalogId?: SortOrderInput | SortOrder
     modelType?: SortOrder
-    modelPricingId?: SortOrderInput | SortOrder
     isAvailable?: SortOrder
     lastVerifiedAt?: SortOrder
     errorMessage?: SortOrderInput | SortOrder
-    pricingSynced?: SortOrder
-    pricingSyncedAt?: SortOrderInput | SortOrder
-    tagsSynced?: SortOrder
-    tagsSyncedAt?: SortOrderInput | SortOrder
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     providerKey?: ProviderKeyOrderByWithRelationInput
-    modelPricing?: ModelPricingOrderByWithRelationInput
-    capabilityTags?: ModelCapabilityTagOrderByRelationAggregateInput
-    fallbackChainModels?: FallbackChainModelOrderByRelationAggregateInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingOrderByRelationAggregateInput
+    modelCatalog?: ModelCatalogOrderByWithRelationInput
   }
 
   export type ModelAvailabilityWhereUniqueInput = Prisma.AtLeast<{
@@ -54110,42 +54096,37 @@ export namespace Prisma {
     NOT?: ModelAvailabilityWhereInput | ModelAvailabilityWhereInput[]
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    modelCatalogId?: UuidNullableFilter<"ModelAvailability"> | string | null
     modelType?: EnumModelTypeFilter<"ModelAvailability"> | $Enums.ModelType
-    modelPricingId?: UuidNullableFilter<"ModelAvailability"> | string | null
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
     lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
-    pricingSynced?: BoolFilter<"ModelAvailability"> | boolean
-    pricingSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
-    tagsSynced?: BoolFilter<"ModelAvailability"> | boolean
-    tagsSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
+    vendorPriority?: IntFilter<"ModelAvailability"> | number
+    healthScore?: IntFilter<"ModelAvailability"> | number
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
-    modelPricing?: XOR<ModelPricingNullableScalarRelationFilter, ModelPricingWhereInput> | null
-    capabilityTags?: ModelCapabilityTagListRelationFilter
-    fallbackChainModels?: FallbackChainModelListRelationFilter
-    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
+    modelCatalog?: XOR<ModelCatalogNullableScalarRelationFilter, ModelCatalogWhereInput> | null
   }, "id" | "providerKeyId_model">
 
   export type ModelAvailabilityOrderByWithAggregationInput = {
     id?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
+    modelCatalogId?: SortOrderInput | SortOrder
     modelType?: SortOrder
-    modelPricingId?: SortOrderInput | SortOrder
     isAvailable?: SortOrder
     lastVerifiedAt?: SortOrder
     errorMessage?: SortOrderInput | SortOrder
-    pricingSynced?: SortOrder
-    pricingSyncedAt?: SortOrderInput | SortOrder
-    tagsSynced?: SortOrder
-    tagsSyncedAt?: SortOrderInput | SortOrder
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ModelAvailabilityCountOrderByAggregateInput
+    _avg?: ModelAvailabilityAvgOrderByAggregateInput
     _max?: ModelAvailabilityMaxOrderByAggregateInput
     _min?: ModelAvailabilityMinOrderByAggregateInput
+    _sum?: ModelAvailabilitySumOrderByAggregateInput
   }
 
   export type ModelAvailabilityScalarWhereWithAggregatesInput = {
@@ -54155,15 +54136,13 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"ModelAvailability"> | string
     model?: StringWithAggregatesFilter<"ModelAvailability"> | string
     providerKeyId?: UuidWithAggregatesFilter<"ModelAvailability"> | string
+    modelCatalogId?: UuidNullableWithAggregatesFilter<"ModelAvailability"> | string | null
     modelType?: EnumModelTypeWithAggregatesFilter<"ModelAvailability"> | $Enums.ModelType
-    modelPricingId?: UuidNullableWithAggregatesFilter<"ModelAvailability"> | string | null
     isAvailable?: BoolWithAggregatesFilter<"ModelAvailability"> | boolean
     lastVerifiedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
     errorMessage?: StringNullableWithAggregatesFilter<"ModelAvailability"> | string | null
-    pricingSynced?: BoolWithAggregatesFilter<"ModelAvailability"> | boolean
-    pricingSyncedAt?: DateTimeNullableWithAggregatesFilter<"ModelAvailability"> | Date | string | null
-    tagsSynced?: BoolWithAggregatesFilter<"ModelAvailability"> | boolean
-    tagsSyncedAt?: DateTimeNullableWithAggregatesFilter<"ModelAvailability"> | Date | string | null
+    vendorPriority?: IntWithAggregatesFilter<"ModelAvailability"> | number
+    healthScore?: IntWithAggregatesFilter<"ModelAvailability"> | number
     createdAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
   }
@@ -54173,44 +54152,44 @@ export namespace Prisma {
     OR?: ModelCapabilityTagWhereInput[]
     NOT?: ModelCapabilityTagWhereInput | ModelCapabilityTagWhereInput[]
     id?: UuidFilter<"ModelCapabilityTag"> | string
-    modelAvailabilityId?: UuidFilter<"ModelCapabilityTag"> | string
+    modelCatalogId?: UuidFilter<"ModelCapabilityTag"> | string
     capabilityTagId?: UuidFilter<"ModelCapabilityTag"> | string
     matchSource?: StringFilter<"ModelCapabilityTag"> | string
     confidence?: IntFilter<"ModelCapabilityTag"> | number
     createdAt?: DateTimeFilter<"ModelCapabilityTag"> | Date | string
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
     capabilityTag?: XOR<CapabilityTagScalarRelationFilter, CapabilityTagWhereInput>
   }
 
   export type ModelCapabilityTagOrderByWithRelationInput = {
     id?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     capabilityTagId?: SortOrder
     matchSource?: SortOrder
     confidence?: SortOrder
     createdAt?: SortOrder
-    modelAvailability?: ModelAvailabilityOrderByWithRelationInput
+    modelCatalog?: ModelCatalogOrderByWithRelationInput
     capabilityTag?: CapabilityTagOrderByWithRelationInput
   }
 
   export type ModelCapabilityTagWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    modelAvailabilityId_capabilityTagId?: ModelCapabilityTagModelAvailabilityIdCapabilityTagIdCompoundUniqueInput
+    modelCatalogId_capabilityTagId?: ModelCapabilityTagModelCatalogIdCapabilityTagIdCompoundUniqueInput
     AND?: ModelCapabilityTagWhereInput | ModelCapabilityTagWhereInput[]
     OR?: ModelCapabilityTagWhereInput[]
     NOT?: ModelCapabilityTagWhereInput | ModelCapabilityTagWhereInput[]
-    modelAvailabilityId?: UuidFilter<"ModelCapabilityTag"> | string
+    modelCatalogId?: UuidFilter<"ModelCapabilityTag"> | string
     capabilityTagId?: UuidFilter<"ModelCapabilityTag"> | string
     matchSource?: StringFilter<"ModelCapabilityTag"> | string
     confidence?: IntFilter<"ModelCapabilityTag"> | number
     createdAt?: DateTimeFilter<"ModelCapabilityTag"> | Date | string
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
     capabilityTag?: XOR<CapabilityTagScalarRelationFilter, CapabilityTagWhereInput>
-  }, "id" | "modelAvailabilityId_capabilityTagId">
+  }, "id" | "modelCatalogId_capabilityTagId">
 
   export type ModelCapabilityTagOrderByWithAggregationInput = {
     id?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     capabilityTagId?: SortOrder
     matchSource?: SortOrder
     confidence?: SortOrder
@@ -54227,7 +54206,7 @@ export namespace Prisma {
     OR?: ModelCapabilityTagScalarWhereWithAggregatesInput[]
     NOT?: ModelCapabilityTagScalarWhereWithAggregatesInput | ModelCapabilityTagScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ModelCapabilityTag"> | string
-    modelAvailabilityId?: UuidWithAggregatesFilter<"ModelCapabilityTag"> | string
+    modelCatalogId?: UuidWithAggregatesFilter<"ModelCapabilityTag"> | string
     capabilityTagId?: UuidWithAggregatesFilter<"ModelCapabilityTag"> | string
     matchSource?: StringWithAggregatesFilter<"ModelCapabilityTag"> | string
     confidence?: IntWithAggregatesFilter<"ModelCapabilityTag"> | number
@@ -55448,47 +55427,50 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
   }
 
-  export type ModelPricingWhereInput = {
-    AND?: ModelPricingWhereInput | ModelPricingWhereInput[]
-    OR?: ModelPricingWhereInput[]
-    NOT?: ModelPricingWhereInput | ModelPricingWhereInput[]
-    id?: UuidFilter<"ModelPricing"> | string
-    model?: StringFilter<"ModelPricing"> | string
-    vendor?: StringFilter<"ModelPricing"> | string
-    displayName?: StringNullableFilter<"ModelPricing"> | string | null
-    description?: StringNullableFilter<"ModelPricing"> | string | null
-    inputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    outputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    cacheReadPrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    cacheWritePrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    thinkingPrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    reasoningScore?: IntFilter<"ModelPricing"> | number
-    codingScore?: IntFilter<"ModelPricing"> | number
-    creativityScore?: IntFilter<"ModelPricing"> | number
-    speedScore?: IntFilter<"ModelPricing"> | number
-    contextLength?: IntFilter<"ModelPricing"> | number
-    supportsExtendedThinking?: BoolFilter<"ModelPricing"> | boolean
-    supportsCacheControl?: BoolFilter<"ModelPricing"> | boolean
-    supportsVision?: BoolFilter<"ModelPricing"> | boolean
-    supportsFunctionCalling?: BoolFilter<"ModelPricing"> | boolean
-    supportsStreaming?: BoolFilter<"ModelPricing"> | boolean
-    recommendedScenarios?: JsonNullableFilter<"ModelPricing">
-    dataSource?: StringFilter<"ModelPricing"> | string
-    sourceUrl?: StringNullableFilter<"ModelPricing"> | string | null
-    isEnabled?: BoolFilter<"ModelPricing"> | boolean
-    isDeprecated?: BoolFilter<"ModelPricing"> | boolean
-    deprecationDate?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
-    priceUpdatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    notes?: StringNullableFilter<"ModelPricing"> | string | null
-    metadata?: JsonNullableFilter<"ModelPricing">
-    isDeleted?: BoolFilter<"ModelPricing"> | boolean
-    createdAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    updatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    deletedAt?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
-    modelAvailabilities?: ModelAvailabilityListRelationFilter
+  export type ModelCatalogWhereInput = {
+    AND?: ModelCatalogWhereInput | ModelCatalogWhereInput[]
+    OR?: ModelCatalogWhereInput[]
+    NOT?: ModelCatalogWhereInput | ModelCatalogWhereInput[]
+    id?: UuidFilter<"ModelCatalog"> | string
+    model?: StringFilter<"ModelCatalog"> | string
+    vendor?: StringFilter<"ModelCatalog"> | string
+    displayName?: StringNullableFilter<"ModelCatalog"> | string | null
+    description?: StringNullableFilter<"ModelCatalog"> | string | null
+    inputPrice?: DecimalFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFilter<"ModelCatalog"> | number
+    codingScore?: IntFilter<"ModelCatalog"> | number
+    creativityScore?: IntFilter<"ModelCatalog"> | number
+    speedScore?: IntFilter<"ModelCatalog"> | number
+    contextLength?: IntFilter<"ModelCatalog"> | number
+    supportsExtendedThinking?: BoolFilter<"ModelCatalog"> | boolean
+    supportsCacheControl?: BoolFilter<"ModelCatalog"> | boolean
+    supportsVision?: BoolFilter<"ModelCatalog"> | boolean
+    supportsFunctionCalling?: BoolFilter<"ModelCatalog"> | boolean
+    supportsStreaming?: BoolFilter<"ModelCatalog"> | boolean
+    recommendedScenarios?: JsonNullableFilter<"ModelCatalog">
+    dataSource?: StringFilter<"ModelCatalog"> | string
+    sourceUrl?: StringNullableFilter<"ModelCatalog"> | string | null
+    isEnabled?: BoolFilter<"ModelCatalog"> | boolean
+    isDeprecated?: BoolFilter<"ModelCatalog"> | boolean
+    deprecationDate?: DateTimeNullableFilter<"ModelCatalog"> | Date | string | null
+    priceUpdatedAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    notes?: StringNullableFilter<"ModelCatalog"> | string | null
+    metadata?: JsonNullableFilter<"ModelCatalog">
+    isDeleted?: BoolFilter<"ModelCatalog"> | boolean
+    createdAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ModelCatalog"> | Date | string | null
+    availabilities?: ModelAvailabilityListRelationFilter
+    capabilityTags?: ModelCapabilityTagListRelationFilter
+    fallbackChainModels?: FallbackChainModelListRelationFilter
+    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
   }
 
-  export type ModelPricingOrderByWithRelationInput = {
+  export type ModelCatalogOrderByWithRelationInput = {
     id?: SortOrder
     model?: SortOrder
     vendor?: SortOrder
@@ -55522,50 +55504,56 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
-    modelAvailabilities?: ModelAvailabilityOrderByRelationAggregateInput
+    availabilities?: ModelAvailabilityOrderByRelationAggregateInput
+    capabilityTags?: ModelCapabilityTagOrderByRelationAggregateInput
+    fallbackChainModels?: FallbackChainModelOrderByRelationAggregateInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingOrderByRelationAggregateInput
   }
 
-  export type ModelPricingWhereUniqueInput = Prisma.AtLeast<{
+  export type ModelCatalogWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     model?: string
-    AND?: ModelPricingWhereInput | ModelPricingWhereInput[]
-    OR?: ModelPricingWhereInput[]
-    NOT?: ModelPricingWhereInput | ModelPricingWhereInput[]
-    vendor?: StringFilter<"ModelPricing"> | string
-    displayName?: StringNullableFilter<"ModelPricing"> | string | null
-    description?: StringNullableFilter<"ModelPricing"> | string | null
-    inputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    outputPrice?: DecimalFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    cacheReadPrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    cacheWritePrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    thinkingPrice?: DecimalNullableFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    reasoningScore?: IntFilter<"ModelPricing"> | number
-    codingScore?: IntFilter<"ModelPricing"> | number
-    creativityScore?: IntFilter<"ModelPricing"> | number
-    speedScore?: IntFilter<"ModelPricing"> | number
-    contextLength?: IntFilter<"ModelPricing"> | number
-    supportsExtendedThinking?: BoolFilter<"ModelPricing"> | boolean
-    supportsCacheControl?: BoolFilter<"ModelPricing"> | boolean
-    supportsVision?: BoolFilter<"ModelPricing"> | boolean
-    supportsFunctionCalling?: BoolFilter<"ModelPricing"> | boolean
-    supportsStreaming?: BoolFilter<"ModelPricing"> | boolean
-    recommendedScenarios?: JsonNullableFilter<"ModelPricing">
-    dataSource?: StringFilter<"ModelPricing"> | string
-    sourceUrl?: StringNullableFilter<"ModelPricing"> | string | null
-    isEnabled?: BoolFilter<"ModelPricing"> | boolean
-    isDeprecated?: BoolFilter<"ModelPricing"> | boolean
-    deprecationDate?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
-    priceUpdatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    notes?: StringNullableFilter<"ModelPricing"> | string | null
-    metadata?: JsonNullableFilter<"ModelPricing">
-    isDeleted?: BoolFilter<"ModelPricing"> | boolean
-    createdAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    updatedAt?: DateTimeFilter<"ModelPricing"> | Date | string
-    deletedAt?: DateTimeNullableFilter<"ModelPricing"> | Date | string | null
-    modelAvailabilities?: ModelAvailabilityListRelationFilter
+    AND?: ModelCatalogWhereInput | ModelCatalogWhereInput[]
+    OR?: ModelCatalogWhereInput[]
+    NOT?: ModelCatalogWhereInput | ModelCatalogWhereInput[]
+    vendor?: StringFilter<"ModelCatalog"> | string
+    displayName?: StringNullableFilter<"ModelCatalog"> | string | null
+    description?: StringNullableFilter<"ModelCatalog"> | string | null
+    inputPrice?: DecimalFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: DecimalNullableFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFilter<"ModelCatalog"> | number
+    codingScore?: IntFilter<"ModelCatalog"> | number
+    creativityScore?: IntFilter<"ModelCatalog"> | number
+    speedScore?: IntFilter<"ModelCatalog"> | number
+    contextLength?: IntFilter<"ModelCatalog"> | number
+    supportsExtendedThinking?: BoolFilter<"ModelCatalog"> | boolean
+    supportsCacheControl?: BoolFilter<"ModelCatalog"> | boolean
+    supportsVision?: BoolFilter<"ModelCatalog"> | boolean
+    supportsFunctionCalling?: BoolFilter<"ModelCatalog"> | boolean
+    supportsStreaming?: BoolFilter<"ModelCatalog"> | boolean
+    recommendedScenarios?: JsonNullableFilter<"ModelCatalog">
+    dataSource?: StringFilter<"ModelCatalog"> | string
+    sourceUrl?: StringNullableFilter<"ModelCatalog"> | string | null
+    isEnabled?: BoolFilter<"ModelCatalog"> | boolean
+    isDeprecated?: BoolFilter<"ModelCatalog"> | boolean
+    deprecationDate?: DateTimeNullableFilter<"ModelCatalog"> | Date | string | null
+    priceUpdatedAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    notes?: StringNullableFilter<"ModelCatalog"> | string | null
+    metadata?: JsonNullableFilter<"ModelCatalog">
+    isDeleted?: BoolFilter<"ModelCatalog"> | boolean
+    createdAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    updatedAt?: DateTimeFilter<"ModelCatalog"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"ModelCatalog"> | Date | string | null
+    availabilities?: ModelAvailabilityListRelationFilter
+    capabilityTags?: ModelCapabilityTagListRelationFilter
+    fallbackChainModels?: FallbackChainModelListRelationFilter
+    complexityRoutingMappings?: ComplexityRoutingModelMappingListRelationFilter
   }, "id" | "model">
 
-  export type ModelPricingOrderByWithAggregationInput = {
+  export type ModelCatalogOrderByWithAggregationInput = {
     id?: SortOrder
     model?: SortOrder
     vendor?: SortOrder
@@ -55599,50 +55587,50 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
-    _count?: ModelPricingCountOrderByAggregateInput
-    _avg?: ModelPricingAvgOrderByAggregateInput
-    _max?: ModelPricingMaxOrderByAggregateInput
-    _min?: ModelPricingMinOrderByAggregateInput
-    _sum?: ModelPricingSumOrderByAggregateInput
+    _count?: ModelCatalogCountOrderByAggregateInput
+    _avg?: ModelCatalogAvgOrderByAggregateInput
+    _max?: ModelCatalogMaxOrderByAggregateInput
+    _min?: ModelCatalogMinOrderByAggregateInput
+    _sum?: ModelCatalogSumOrderByAggregateInput
   }
 
-  export type ModelPricingScalarWhereWithAggregatesInput = {
-    AND?: ModelPricingScalarWhereWithAggregatesInput | ModelPricingScalarWhereWithAggregatesInput[]
-    OR?: ModelPricingScalarWhereWithAggregatesInput[]
-    NOT?: ModelPricingScalarWhereWithAggregatesInput | ModelPricingScalarWhereWithAggregatesInput[]
-    id?: UuidWithAggregatesFilter<"ModelPricing"> | string
-    model?: StringWithAggregatesFilter<"ModelPricing"> | string
-    vendor?: StringWithAggregatesFilter<"ModelPricing"> | string
-    displayName?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
-    description?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
-    inputPrice?: DecimalWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    outputPrice?: DecimalWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string
-    cacheReadPrice?: DecimalNullableWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    cacheWritePrice?: DecimalNullableWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    thinkingPrice?: DecimalNullableWithAggregatesFilter<"ModelPricing"> | Decimal | DecimalJsLike | number | string | null
-    reasoningScore?: IntWithAggregatesFilter<"ModelPricing"> | number
-    codingScore?: IntWithAggregatesFilter<"ModelPricing"> | number
-    creativityScore?: IntWithAggregatesFilter<"ModelPricing"> | number
-    speedScore?: IntWithAggregatesFilter<"ModelPricing"> | number
-    contextLength?: IntWithAggregatesFilter<"ModelPricing"> | number
-    supportsExtendedThinking?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    supportsCacheControl?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    supportsVision?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    supportsFunctionCalling?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    supportsStreaming?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    recommendedScenarios?: JsonNullableWithAggregatesFilter<"ModelPricing">
-    dataSource?: StringWithAggregatesFilter<"ModelPricing"> | string
-    sourceUrl?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
-    isEnabled?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    isDeprecated?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    deprecationDate?: DateTimeNullableWithAggregatesFilter<"ModelPricing"> | Date | string | null
-    priceUpdatedAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
-    notes?: StringNullableWithAggregatesFilter<"ModelPricing"> | string | null
-    metadata?: JsonNullableWithAggregatesFilter<"ModelPricing">
-    isDeleted?: BoolWithAggregatesFilter<"ModelPricing"> | boolean
-    createdAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"ModelPricing"> | Date | string
-    deletedAt?: DateTimeNullableWithAggregatesFilter<"ModelPricing"> | Date | string | null
+  export type ModelCatalogScalarWhereWithAggregatesInput = {
+    AND?: ModelCatalogScalarWhereWithAggregatesInput | ModelCatalogScalarWhereWithAggregatesInput[]
+    OR?: ModelCatalogScalarWhereWithAggregatesInput[]
+    NOT?: ModelCatalogScalarWhereWithAggregatesInput | ModelCatalogScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ModelCatalog"> | string
+    model?: StringWithAggregatesFilter<"ModelCatalog"> | string
+    vendor?: StringWithAggregatesFilter<"ModelCatalog"> | string
+    displayName?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    description?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    inputPrice?: DecimalWithAggregatesFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalWithAggregatesFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: DecimalNullableWithAggregatesFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: DecimalNullableWithAggregatesFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: DecimalNullableWithAggregatesFilter<"ModelCatalog"> | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntWithAggregatesFilter<"ModelCatalog"> | number
+    codingScore?: IntWithAggregatesFilter<"ModelCatalog"> | number
+    creativityScore?: IntWithAggregatesFilter<"ModelCatalog"> | number
+    speedScore?: IntWithAggregatesFilter<"ModelCatalog"> | number
+    contextLength?: IntWithAggregatesFilter<"ModelCatalog"> | number
+    supportsExtendedThinking?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    supportsCacheControl?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    supportsVision?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    supportsFunctionCalling?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    supportsStreaming?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    recommendedScenarios?: JsonNullableWithAggregatesFilter<"ModelCatalog">
+    dataSource?: StringWithAggregatesFilter<"ModelCatalog"> | string
+    sourceUrl?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    isEnabled?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    isDeprecated?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    deprecationDate?: DateTimeNullableWithAggregatesFilter<"ModelCatalog"> | Date | string | null
+    priceUpdatedAt?: DateTimeWithAggregatesFilter<"ModelCatalog"> | Date | string
+    notes?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"ModelCatalog">
+    isDeleted?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"ModelCatalog"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ModelCatalog"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"ModelCatalog"> | Date | string | null
   }
 
   export type BotModelRoutingWhereInput = {
@@ -56409,47 +56397,47 @@ export namespace Prisma {
     NOT?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
     id?: UuidFilter<"FallbackChainModel"> | string
     fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
-    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
+    modelCatalogId?: UuidFilter<"FallbackChainModel"> | string
     priority?: IntFilter<"FallbackChainModel"> | number
     protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
     featuresOverride?: JsonNullableFilter<"FallbackChainModel">
     createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
     fallbackChain?: XOR<FallbackChainScalarRelationFilter, FallbackChainWhereInput>
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
   }
 
   export type FallbackChainModelOrderByWithRelationInput = {
     id?: SortOrder
     fallbackChainId?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     protocolOverride?: SortOrderInput | SortOrder
     featuresOverride?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     fallbackChain?: FallbackChainOrderByWithRelationInput
-    modelAvailability?: ModelAvailabilityOrderByWithRelationInput
+    modelCatalog?: ModelCatalogOrderByWithRelationInput
   }
 
   export type FallbackChainModelWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    fallbackChainId_modelAvailabilityId?: FallbackChainModelFallbackChainIdModelAvailabilityIdCompoundUniqueInput
+    fallbackChainId_modelCatalogId?: FallbackChainModelFallbackChainIdModelCatalogIdCompoundUniqueInput
     AND?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
     OR?: FallbackChainModelWhereInput[]
     NOT?: FallbackChainModelWhereInput | FallbackChainModelWhereInput[]
     fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
-    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
+    modelCatalogId?: UuidFilter<"FallbackChainModel"> | string
     priority?: IntFilter<"FallbackChainModel"> | number
     protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
     featuresOverride?: JsonNullableFilter<"FallbackChainModel">
     createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
     fallbackChain?: XOR<FallbackChainScalarRelationFilter, FallbackChainWhereInput>
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
-  }, "id" | "fallbackChainId_modelAvailabilityId">
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
+  }, "id" | "fallbackChainId_modelCatalogId">
 
   export type FallbackChainModelOrderByWithAggregationInput = {
     id?: SortOrder
     fallbackChainId?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     protocolOverride?: SortOrderInput | SortOrder
     featuresOverride?: SortOrderInput | SortOrder
@@ -56467,7 +56455,7 @@ export namespace Prisma {
     NOT?: FallbackChainModelScalarWhereWithAggregatesInput | FallbackChainModelScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
     fallbackChainId?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
-    modelAvailabilityId?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
+    modelCatalogId?: UuidWithAggregatesFilter<"FallbackChainModel"> | string
     priority?: IntWithAggregatesFilter<"FallbackChainModel"> | number
     protocolOverride?: StringNullableWithAggregatesFilter<"FallbackChainModel"> | string | null
     featuresOverride?: JsonNullableWithAggregatesFilter<"FallbackChainModel">
@@ -56481,44 +56469,44 @@ export namespace Prisma {
     id?: UuidFilter<"ComplexityRoutingModelMapping"> | string
     complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
     complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
-    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    modelCatalogId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
     priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
     createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
     complexityConfig?: XOR<ComplexityRoutingConfigScalarRelationFilter, ComplexityRoutingConfigWhereInput>
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
   }
 
   export type ComplexityRoutingModelMappingOrderByWithRelationInput = {
     id?: SortOrder
     complexityConfigId?: SortOrder
     complexityLevel?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     createdAt?: SortOrder
     complexityConfig?: ComplexityRoutingConfigOrderByWithRelationInput
-    modelAvailability?: ModelAvailabilityOrderByWithRelationInput
+    modelCatalog?: ModelCatalogOrderByWithRelationInput
   }
 
   export type ComplexityRoutingModelMappingWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    complexityConfigId_complexityLevel_modelAvailabilityId?: ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelAvailabilityIdCompoundUniqueInput
+    complexityConfigId_complexityLevel_modelCatalogId?: ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelCatalogIdCompoundUniqueInput
     AND?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
     OR?: ComplexityRoutingModelMappingWhereInput[]
     NOT?: ComplexityRoutingModelMappingWhereInput | ComplexityRoutingModelMappingWhereInput[]
     complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
     complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
-    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    modelCatalogId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
     priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
     createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
     complexityConfig?: XOR<ComplexityRoutingConfigScalarRelationFilter, ComplexityRoutingConfigWhereInput>
-    modelAvailability?: XOR<ModelAvailabilityScalarRelationFilter, ModelAvailabilityWhereInput>
-  }, "id" | "complexityConfigId_complexityLevel_modelAvailabilityId">
+    modelCatalog?: XOR<ModelCatalogScalarRelationFilter, ModelCatalogWhereInput>
+  }, "id" | "complexityConfigId_complexityLevel_modelCatalogId">
 
   export type ComplexityRoutingModelMappingOrderByWithAggregationInput = {
     id?: SortOrder
     complexityConfigId?: SortOrder
     complexityLevel?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     createdAt?: SortOrder
     _count?: ComplexityRoutingModelMappingCountOrderByAggregateInput
@@ -56535,7 +56523,7 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
     complexityConfigId?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
     complexityLevel?: StringWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
-    modelAvailabilityId?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
+    modelCatalogId?: UuidWithAggregatesFilter<"ComplexityRoutingModelMapping"> | string
     priority?: IntWithAggregatesFilter<"ComplexityRoutingModelMapping"> | number
     createdAt?: DateTimeWithAggregatesFilter<"ComplexityRoutingModelMapping"> | Date | string
   }
@@ -58143,37 +58131,27 @@ export namespace Prisma {
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
-    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
-    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
+    modelCatalog?: ModelCatalogCreateNestedOneWithoutAvailabilitiesInput
   }
 
   export type ModelAvailabilityUncheckedCreateInput = {
     id?: string
     model: string
     providerKeyId: string
+    modelCatalogId?: string | null
     modelType?: $Enums.ModelType
-    modelPricingId?: string | null
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityUpdateInput = {
@@ -58183,52 +58161,40 @@ export namespace Prisma {
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
-    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
-    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
+    modelCatalog?: ModelCatalogUpdateOneWithoutAvailabilitiesNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: NullableStringFieldUpdateOperationsInput | string | null
     modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityCreateManyInput = {
     id?: string
     model: string
     providerKeyId: string
+    modelCatalogId?: string | null
     modelType?: $Enums.ModelType
-    modelPricingId?: string | null
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -58240,10 +58206,8 @@ export namespace Prisma {
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58252,15 +58216,13 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: NullableStringFieldUpdateOperationsInput | string | null
     modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58270,13 +58232,13 @@ export namespace Prisma {
     matchSource?: string
     confidence?: number
     createdAt?: Date | string
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutCapabilityTagsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutCapabilityTagsInput
     capabilityTag: CapabilityTagCreateNestedOneWithoutModelCapabilityTagsInput
   }
 
   export type ModelCapabilityTagUncheckedCreateInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     capabilityTagId: string
     matchSource?: string
     confidence?: number
@@ -58288,13 +58250,13 @@ export namespace Prisma {
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutCapabilityTagsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutCapabilityTagsNestedInput
     capabilityTag?: CapabilityTagUpdateOneRequiredWithoutModelCapabilityTagsNestedInput
   }
 
   export type ModelCapabilityTagUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     capabilityTagId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
@@ -58303,7 +58265,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagCreateManyInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     capabilityTagId: string
     matchSource?: string
     confidence?: number
@@ -58319,7 +58281,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     capabilityTagId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
@@ -59725,7 +59687,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ModelPricingCreateInput = {
+  export type ModelCatalogCreateInput = {
     id?: string
     model: string
     vendor: string
@@ -59759,10 +59721,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
-    modelAvailabilities?: ModelAvailabilityCreateNestedManyWithoutModelPricingInput
+    availabilities?: ModelAvailabilityCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelPricingUncheckedCreateInput = {
+  export type ModelCatalogUncheckedCreateInput = {
     id?: string
     model: string
     vendor: string
@@ -59796,10 +59761,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
-    modelAvailabilities?: ModelAvailabilityUncheckedCreateNestedManyWithoutModelPricingInput
+    availabilities?: ModelAvailabilityUncheckedCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelPricingUpdateInput = {
+  export type ModelCatalogUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -59833,10 +59801,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    modelAvailabilities?: ModelAvailabilityUpdateManyWithoutModelPricingNestedInput
+    availabilities?: ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelPricingUncheckedUpdateInput = {
+  export type ModelCatalogUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -59870,10 +59841,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    modelAvailabilities?: ModelAvailabilityUncheckedUpdateManyWithoutModelPricingNestedInput
+    availabilities?: ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelPricingCreateManyInput = {
+  export type ModelCatalogCreateManyInput = {
     id?: string
     model: string
     vendor: string
@@ -59909,7 +59883,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
   }
 
-  export type ModelPricingUpdateManyMutationInput = {
+  export type ModelCatalogUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -59945,7 +59919,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
-  export type ModelPricingUncheckedUpdateManyInput = {
+  export type ModelCatalogUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -60900,13 +60874,13 @@ export namespace Prisma {
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     fallbackChain: FallbackChainCreateNestedOneWithoutChainModelsInput
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutFallbackChainModelsInput
   }
 
   export type FallbackChainModelUncheckedCreateInput = {
     id?: string
     fallbackChainId: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     protocolOverride?: string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -60920,13 +60894,13 @@ export namespace Prisma {
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     fallbackChain?: FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutFallbackChainModelsNestedInput
   }
 
   export type FallbackChainModelUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     fallbackChainId?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -60936,7 +60910,7 @@ export namespace Prisma {
   export type FallbackChainModelCreateManyInput = {
     id?: string
     fallbackChainId: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     protocolOverride?: string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -60954,7 +60928,7 @@ export namespace Prisma {
   export type FallbackChainModelUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     fallbackChainId?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -60967,14 +60941,14 @@ export namespace Prisma {
     priority?: number
     createdAt?: Date | string
     complexityConfig: ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutComplexityRoutingMappingsInput
   }
 
   export type ComplexityRoutingModelMappingUncheckedCreateInput = {
     id?: string
     complexityConfigId: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     createdAt?: Date | string
   }
@@ -60985,14 +60959,14 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     complexityConfig?: ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
   }
 
   export type ComplexityRoutingModelMappingUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     complexityConfigId?: StringFieldUpdateOperationsInput | string
     complexityLevel?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -61001,7 +60975,7 @@ export namespace Prisma {
     id?: string
     complexityConfigId: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     createdAt?: Date | string
   }
@@ -61017,7 +60991,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     complexityConfigId?: StringFieldUpdateOperationsInput | string
     complexityLevel?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -62408,39 +62382,9 @@ export namespace Prisma {
     isNot?: ProviderKeyWhereInput
   }
 
-  export type ModelPricingNullableScalarRelationFilter = {
-    is?: ModelPricingWhereInput | null
-    isNot?: ModelPricingWhereInput | null
-  }
-
-  export type ModelCapabilityTagListRelationFilter = {
-    every?: ModelCapabilityTagWhereInput
-    some?: ModelCapabilityTagWhereInput
-    none?: ModelCapabilityTagWhereInput
-  }
-
-  export type FallbackChainModelListRelationFilter = {
-    every?: FallbackChainModelWhereInput
-    some?: FallbackChainModelWhereInput
-    none?: FallbackChainModelWhereInput
-  }
-
-  export type ComplexityRoutingModelMappingListRelationFilter = {
-    every?: ComplexityRoutingModelMappingWhereInput
-    some?: ComplexityRoutingModelMappingWhereInput
-    none?: ComplexityRoutingModelMappingWhereInput
-  }
-
-  export type ModelCapabilityTagOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type FallbackChainModelOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type ComplexityRoutingModelMappingOrderByRelationAggregateInput = {
-    _count?: SortOrder
+  export type ModelCatalogNullableScalarRelationFilter = {
+    is?: ModelCatalogWhereInput | null
+    isNot?: ModelCatalogWhereInput | null
   }
 
   export type ModelAvailabilityProviderKeyIdModelCompoundUniqueInput = {
@@ -62452,32 +62396,33 @@ export namespace Prisma {
     id?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
+    modelCatalogId?: SortOrder
     modelType?: SortOrder
-    modelPricingId?: SortOrder
     isAvailable?: SortOrder
     lastVerifiedAt?: SortOrder
     errorMessage?: SortOrder
-    pricingSynced?: SortOrder
-    pricingSyncedAt?: SortOrder
-    tagsSynced?: SortOrder
-    tagsSyncedAt?: SortOrder
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ModelAvailabilityAvgOrderByAggregateInput = {
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
   }
 
   export type ModelAvailabilityMaxOrderByAggregateInput = {
     id?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
+    modelCatalogId?: SortOrder
     modelType?: SortOrder
-    modelPricingId?: SortOrder
     isAvailable?: SortOrder
     lastVerifiedAt?: SortOrder
     errorMessage?: SortOrder
-    pricingSynced?: SortOrder
-    pricingSyncedAt?: SortOrder
-    tagsSynced?: SortOrder
-    tagsSyncedAt?: SortOrder
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -62486,17 +62431,20 @@ export namespace Prisma {
     id?: SortOrder
     model?: SortOrder
     providerKeyId?: SortOrder
+    modelCatalogId?: SortOrder
     modelType?: SortOrder
-    modelPricingId?: SortOrder
     isAvailable?: SortOrder
     lastVerifiedAt?: SortOrder
     errorMessage?: SortOrder
-    pricingSynced?: SortOrder
-    pricingSyncedAt?: SortOrder
-    tagsSynced?: SortOrder
-    tagsSyncedAt?: SortOrder
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ModelAvailabilitySumOrderByAggregateInput = {
+    vendorPriority?: SortOrder
+    healthScore?: SortOrder
   }
 
   export type EnumModelTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -62509,9 +62457,9 @@ export namespace Prisma {
     _max?: NestedEnumModelTypeFilter<$PrismaModel>
   }
 
-  export type ModelAvailabilityScalarRelationFilter = {
-    is?: ModelAvailabilityWhereInput
-    isNot?: ModelAvailabilityWhereInput
+  export type ModelCatalogScalarRelationFilter = {
+    is?: ModelCatalogWhereInput
+    isNot?: ModelCatalogWhereInput
   }
 
   export type CapabilityTagScalarRelationFilter = {
@@ -62519,14 +62467,14 @@ export namespace Prisma {
     isNot?: CapabilityTagWhereInput
   }
 
-  export type ModelCapabilityTagModelAvailabilityIdCapabilityTagIdCompoundUniqueInput = {
-    modelAvailabilityId: string
+  export type ModelCapabilityTagModelCatalogIdCapabilityTagIdCompoundUniqueInput = {
+    modelCatalogId: string
     capabilityTagId: string
   }
 
   export type ModelCapabilityTagCountOrderByAggregateInput = {
     id?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     capabilityTagId?: SortOrder
     matchSource?: SortOrder
     confidence?: SortOrder
@@ -62539,7 +62487,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMaxOrderByAggregateInput = {
     id?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     capabilityTagId?: SortOrder
     matchSource?: SortOrder
     confidence?: SortOrder
@@ -62548,7 +62496,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagMinOrderByAggregateInput = {
     id?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     capabilityTagId?: SortOrder
     matchSource?: SortOrder
     confidence?: SortOrder
@@ -63435,7 +63383,37 @@ export namespace Prisma {
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
   }
 
-  export type ModelPricingCountOrderByAggregateInput = {
+  export type ModelCapabilityTagListRelationFilter = {
+    every?: ModelCapabilityTagWhereInput
+    some?: ModelCapabilityTagWhereInput
+    none?: ModelCapabilityTagWhereInput
+  }
+
+  export type FallbackChainModelListRelationFilter = {
+    every?: FallbackChainModelWhereInput
+    some?: FallbackChainModelWhereInput
+    none?: FallbackChainModelWhereInput
+  }
+
+  export type ComplexityRoutingModelMappingListRelationFilter = {
+    every?: ComplexityRoutingModelMappingWhereInput
+    some?: ComplexityRoutingModelMappingWhereInput
+    none?: ComplexityRoutingModelMappingWhereInput
+  }
+
+  export type ModelCapabilityTagOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FallbackChainModelOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ComplexityRoutingModelMappingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ModelCatalogCountOrderByAggregateInput = {
     id?: SortOrder
     model?: SortOrder
     vendor?: SortOrder
@@ -63471,7 +63449,7 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
-  export type ModelPricingAvgOrderByAggregateInput = {
+  export type ModelCatalogAvgOrderByAggregateInput = {
     inputPrice?: SortOrder
     outputPrice?: SortOrder
     cacheReadPrice?: SortOrder
@@ -63484,7 +63462,7 @@ export namespace Prisma {
     contextLength?: SortOrder
   }
 
-  export type ModelPricingMaxOrderByAggregateInput = {
+  export type ModelCatalogMaxOrderByAggregateInput = {
     id?: SortOrder
     model?: SortOrder
     vendor?: SortOrder
@@ -63518,7 +63496,7 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
-  export type ModelPricingMinOrderByAggregateInput = {
+  export type ModelCatalogMinOrderByAggregateInput = {
     id?: SortOrder
     model?: SortOrder
     vendor?: SortOrder
@@ -63552,7 +63530,7 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
-  export type ModelPricingSumOrderByAggregateInput = {
+  export type ModelCatalogSumOrderByAggregateInput = {
     inputPrice?: SortOrder
     outputPrice?: SortOrder
     cacheReadPrice?: SortOrder
@@ -64055,15 +64033,15 @@ export namespace Prisma {
     isNot?: FallbackChainWhereInput
   }
 
-  export type FallbackChainModelFallbackChainIdModelAvailabilityIdCompoundUniqueInput = {
+  export type FallbackChainModelFallbackChainIdModelCatalogIdCompoundUniqueInput = {
     fallbackChainId: string
-    modelAvailabilityId: string
+    modelCatalogId: string
   }
 
   export type FallbackChainModelCountOrderByAggregateInput = {
     id?: SortOrder
     fallbackChainId?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     protocolOverride?: SortOrder
     featuresOverride?: SortOrder
@@ -64077,7 +64055,7 @@ export namespace Prisma {
   export type FallbackChainModelMaxOrderByAggregateInput = {
     id?: SortOrder
     fallbackChainId?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     protocolOverride?: SortOrder
     createdAt?: SortOrder
@@ -64086,7 +64064,7 @@ export namespace Prisma {
   export type FallbackChainModelMinOrderByAggregateInput = {
     id?: SortOrder
     fallbackChainId?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     protocolOverride?: SortOrder
     createdAt?: SortOrder
@@ -64101,17 +64079,17 @@ export namespace Prisma {
     isNot?: ComplexityRoutingConfigWhereInput
   }
 
-  export type ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelAvailabilityIdCompoundUniqueInput = {
+  export type ComplexityRoutingModelMappingComplexityConfigIdComplexityLevelModelCatalogIdCompoundUniqueInput = {
     complexityConfigId: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
   }
 
   export type ComplexityRoutingModelMappingCountOrderByAggregateInput = {
     id?: SortOrder
     complexityConfigId?: SortOrder
     complexityLevel?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     createdAt?: SortOrder
   }
@@ -64124,7 +64102,7 @@ export namespace Prisma {
     id?: SortOrder
     complexityConfigId?: SortOrder
     complexityLevel?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     createdAt?: SortOrder
   }
@@ -64133,7 +64111,7 @@ export namespace Prisma {
     id?: SortOrder
     complexityConfigId?: SortOrder
     complexityLevel?: SortOrder
-    modelAvailabilityId?: SortOrder
+    modelCatalogId?: SortOrder
     priority?: SortOrder
     createdAt?: SortOrder
   }
@@ -65456,52 +65434,10 @@ export namespace Prisma {
     connect?: ProviderKeyWhereUniqueInput
   }
 
-  export type ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput = {
-    create?: XOR<ModelPricingCreateWithoutModelAvailabilitiesInput, ModelPricingUncheckedCreateWithoutModelAvailabilitiesInput>
-    connectOrCreate?: ModelPricingCreateOrConnectWithoutModelAvailabilitiesInput
-    connect?: ModelPricingWhereUniqueInput
-  }
-
-  export type ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope
-    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-  }
-
-  export type FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
-    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-  }
-
-  export type ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
-    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-  }
-
-  export type ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope
-    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-  }
-
-  export type FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
-    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-  }
-
-  export type ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput = {
-    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
-    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
-    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+  export type ModelCatalogCreateNestedOneWithoutAvailabilitiesInput = {
+    create?: XOR<ModelCatalogCreateWithoutAvailabilitiesInput, ModelCatalogUncheckedCreateWithoutAvailabilitiesInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutAvailabilitiesInput
+    connect?: ModelCatalogWhereUniqueInput
   }
 
   export type EnumModelTypeFieldUpdateOperationsInput = {
@@ -65516,104 +65452,20 @@ export namespace Prisma {
     update?: XOR<XOR<ProviderKeyUpdateToOneWithWhereWithoutModelAvailabilityInput, ProviderKeyUpdateWithoutModelAvailabilityInput>, ProviderKeyUncheckedUpdateWithoutModelAvailabilityInput>
   }
 
-  export type ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput = {
-    create?: XOR<ModelPricingCreateWithoutModelAvailabilitiesInput, ModelPricingUncheckedCreateWithoutModelAvailabilitiesInput>
-    connectOrCreate?: ModelPricingCreateOrConnectWithoutModelAvailabilitiesInput
-    upsert?: ModelPricingUpsertWithoutModelAvailabilitiesInput
-    disconnect?: ModelPricingWhereInput | boolean
-    delete?: ModelPricingWhereInput | boolean
-    connect?: ModelPricingWhereUniqueInput
-    update?: XOR<XOR<ModelPricingUpdateToOneWithWhereWithoutModelAvailabilitiesInput, ModelPricingUpdateWithoutModelAvailabilitiesInput>, ModelPricingUncheckedUpdateWithoutModelAvailabilitiesInput>
+  export type ModelCatalogUpdateOneWithoutAvailabilitiesNestedInput = {
+    create?: XOR<ModelCatalogCreateWithoutAvailabilitiesInput, ModelCatalogUncheckedCreateWithoutAvailabilitiesInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutAvailabilitiesInput
+    upsert?: ModelCatalogUpsertWithoutAvailabilitiesInput
+    disconnect?: ModelCatalogWhereInput | boolean
+    delete?: ModelCatalogWhereInput | boolean
+    connect?: ModelCatalogWhereUniqueInput
+    update?: XOR<XOR<ModelCatalogUpdateToOneWithWhereWithoutAvailabilitiesInput, ModelCatalogUpdateWithoutAvailabilitiesInput>, ModelCatalogUncheckedUpdateWithoutAvailabilitiesInput>
   }
 
-  export type ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: ModelCapabilityTagUpsertWithWhereUniqueWithoutModelAvailabilityInput | ModelCapabilityTagUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope
-    set?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    disconnect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    delete?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    update?: ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput | ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput | ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
-  }
-
-  export type FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
-    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput | FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
-  }
-
-  export type ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
-    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
-  }
-
-  export type ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput> | ModelCapabilityTagCreateWithoutModelAvailabilityInput[] | ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput | ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: ModelCapabilityTagUpsertWithWhereUniqueWithoutModelAvailabilityInput | ModelCapabilityTagUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope
-    set?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    disconnect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    delete?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
-    update?: ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput | ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput | ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
-  }
-
-  export type FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput> | FallbackChainModelCreateWithoutModelAvailabilityInput[] | FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput | FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: FallbackChainModelCreateManyModelAvailabilityInputEnvelope
-    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
-    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput | FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
-  }
-
-  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput = {
-    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput> | ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput[]
-    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput[]
-    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput[]
-    createMany?: ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope
-    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
-    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput[]
-    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput[]
-    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
-  }
-
-  export type ModelAvailabilityCreateNestedOneWithoutCapabilityTagsInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutCapabilityTagsInput
-    connect?: ModelAvailabilityWhereUniqueInput
+  export type ModelCatalogCreateNestedOneWithoutCapabilityTagsInput = {
+    create?: XOR<ModelCatalogCreateWithoutCapabilityTagsInput, ModelCatalogUncheckedCreateWithoutCapabilityTagsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutCapabilityTagsInput
+    connect?: ModelCatalogWhereUniqueInput
   }
 
   export type CapabilityTagCreateNestedOneWithoutModelCapabilityTagsInput = {
@@ -65622,12 +65474,12 @@ export namespace Prisma {
     connect?: CapabilityTagWhereUniqueInput
   }
 
-  export type ModelAvailabilityUpdateOneRequiredWithoutCapabilityTagsNestedInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutCapabilityTagsInput
-    upsert?: ModelAvailabilityUpsertWithoutCapabilityTagsInput
-    connect?: ModelAvailabilityWhereUniqueInput
-    update?: XOR<XOR<ModelAvailabilityUpdateToOneWithWhereWithoutCapabilityTagsInput, ModelAvailabilityUpdateWithoutCapabilityTagsInput>, ModelAvailabilityUncheckedUpdateWithoutCapabilityTagsInput>
+  export type ModelCatalogUpdateOneRequiredWithoutCapabilityTagsNestedInput = {
+    create?: XOR<ModelCatalogCreateWithoutCapabilityTagsInput, ModelCatalogUncheckedCreateWithoutCapabilityTagsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutCapabilityTagsInput
+    upsert?: ModelCatalogUpsertWithoutCapabilityTagsInput
+    connect?: ModelCatalogWhereUniqueInput
+    update?: XOR<XOR<ModelCatalogUpdateToOneWithWhereWithoutCapabilityTagsInput, ModelCatalogUpdateWithoutCapabilityTagsInput>, ModelCatalogUncheckedUpdateWithoutCapabilityTagsInput>
   }
 
   export type CapabilityTagUpdateOneRequiredWithoutModelCapabilityTagsNestedInput = {
@@ -66092,18 +65944,60 @@ export namespace Prisma {
     update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutInstallationsInput, SkillUpdateWithoutInstallationsInput>, SkillUncheckedUpdateWithoutInstallationsInput>
   }
 
-  export type ModelAvailabilityCreateNestedManyWithoutModelPricingInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput> | ModelAvailabilityCreateWithoutModelPricingInput[] | ModelAvailabilityUncheckedCreateWithoutModelPricingInput[]
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelPricingInput | ModelAvailabilityCreateOrConnectWithoutModelPricingInput[]
-    createMany?: ModelAvailabilityCreateManyModelPricingInputEnvelope
+  export type ModelAvailabilityCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput> | ModelAvailabilityCreateWithoutModelCatalogInput[] | ModelAvailabilityUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelCatalogInput | ModelAvailabilityCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ModelAvailabilityCreateManyModelCatalogInputEnvelope
     connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
   }
 
-  export type ModelAvailabilityUncheckedCreateNestedManyWithoutModelPricingInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput> | ModelAvailabilityCreateWithoutModelPricingInput[] | ModelAvailabilityUncheckedCreateWithoutModelPricingInput[]
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelPricingInput | ModelAvailabilityCreateOrConnectWithoutModelPricingInput[]
-    createMany?: ModelAvailabilityCreateManyModelPricingInputEnvelope
+  export type ModelCapabilityTagCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput> | ModelCapabilityTagCreateWithoutModelCatalogInput[] | ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput | ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ModelCapabilityTagCreateManyModelCatalogInputEnvelope
+    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+  }
+
+  export type FallbackChainModelCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput> | FallbackChainModelCreateWithoutModelCatalogInput[] | FallbackChainModelUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelCatalogInput | FallbackChainModelCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: FallbackChainModelCreateManyModelCatalogInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput> | ComplexityRoutingModelMappingCreateWithoutModelCatalogInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelCatalogInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+  }
+
+  export type ModelAvailabilityUncheckedCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput> | ModelAvailabilityCreateWithoutModelCatalogInput[] | ModelAvailabilityUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelCatalogInput | ModelAvailabilityCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ModelAvailabilityCreateManyModelCatalogInputEnvelope
     connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
+  }
+
+  export type ModelCapabilityTagUncheckedCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput> | ModelCapabilityTagCreateWithoutModelCatalogInput[] | ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput | ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ModelCapabilityTagCreateManyModelCatalogInputEnvelope
+    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+  }
+
+  export type FallbackChainModelUncheckedCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput> | FallbackChainModelCreateWithoutModelCatalogInput[] | FallbackChainModelUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelCatalogInput | FallbackChainModelCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: FallbackChainModelCreateManyModelCatalogInputEnvelope
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelCatalogInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput> | ComplexityRoutingModelMappingCreateWithoutModelCatalogInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelCatalogInputEnvelope
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
   }
 
   export type DecimalFieldUpdateOperationsInput = {
@@ -66114,32 +66008,116 @@ export namespace Prisma {
     divide?: Decimal | DecimalJsLike | number | string
   }
 
-  export type ModelAvailabilityUpdateManyWithoutModelPricingNestedInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput> | ModelAvailabilityCreateWithoutModelPricingInput[] | ModelAvailabilityUncheckedCreateWithoutModelPricingInput[]
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelPricingInput | ModelAvailabilityCreateOrConnectWithoutModelPricingInput[]
-    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutModelPricingInput | ModelAvailabilityUpsertWithWhereUniqueWithoutModelPricingInput[]
-    createMany?: ModelAvailabilityCreateManyModelPricingInputEnvelope
+  export type ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput> | ModelAvailabilityCreateWithoutModelCatalogInput[] | ModelAvailabilityUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelCatalogInput | ModelAvailabilityCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutModelCatalogInput | ModelAvailabilityUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ModelAvailabilityCreateManyModelCatalogInputEnvelope
     set?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     disconnect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     delete?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
-    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutModelPricingInput | ModelAvailabilityUpdateWithWhereUniqueWithoutModelPricingInput[]
-    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutModelPricingInput | ModelAvailabilityUpdateManyWithWhereWithoutModelPricingInput[]
+    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutModelCatalogInput | ModelAvailabilityUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutModelCatalogInput | ModelAvailabilityUpdateManyWithWhereWithoutModelCatalogInput[]
     deleteMany?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
   }
 
-  export type ModelAvailabilityUncheckedUpdateManyWithoutModelPricingNestedInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput> | ModelAvailabilityCreateWithoutModelPricingInput[] | ModelAvailabilityUncheckedCreateWithoutModelPricingInput[]
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelPricingInput | ModelAvailabilityCreateOrConnectWithoutModelPricingInput[]
-    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutModelPricingInput | ModelAvailabilityUpsertWithWhereUniqueWithoutModelPricingInput[]
-    createMany?: ModelAvailabilityCreateManyModelPricingInputEnvelope
+  export type ModelCapabilityTagUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput> | ModelCapabilityTagCreateWithoutModelCatalogInput[] | ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput | ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ModelCapabilityTagUpsertWithWhereUniqueWithoutModelCatalogInput | ModelCapabilityTagUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ModelCapabilityTagCreateManyModelCatalogInputEnvelope
+    set?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    disconnect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    delete?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    update?: ModelCapabilityTagUpdateWithWhereUniqueWithoutModelCatalogInput | ModelCapabilityTagUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ModelCapabilityTagUpdateManyWithWhereWithoutModelCatalogInput | ModelCapabilityTagUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
+  }
+
+  export type FallbackChainModelUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput> | FallbackChainModelCreateWithoutModelCatalogInput[] | FallbackChainModelUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelCatalogInput | FallbackChainModelCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelCatalogInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: FallbackChainModelCreateManyModelCatalogInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelCatalogInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelCatalogInput | FallbackChainModelUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput> | ComplexityRoutingModelMappingCreateWithoutModelCatalogInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelCatalogInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelCatalogInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelCatalogInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelCatalogInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+  }
+
+  export type ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput> | ModelAvailabilityCreateWithoutModelCatalogInput[] | ModelAvailabilityUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelCatalogInput | ModelAvailabilityCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ModelAvailabilityUpsertWithWhereUniqueWithoutModelCatalogInput | ModelAvailabilityUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ModelAvailabilityCreateManyModelCatalogInputEnvelope
     set?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     disconnect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     delete?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
     connect?: ModelAvailabilityWhereUniqueInput | ModelAvailabilityWhereUniqueInput[]
-    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutModelPricingInput | ModelAvailabilityUpdateWithWhereUniqueWithoutModelPricingInput[]
-    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutModelPricingInput | ModelAvailabilityUpdateManyWithWhereWithoutModelPricingInput[]
+    update?: ModelAvailabilityUpdateWithWhereUniqueWithoutModelCatalogInput | ModelAvailabilityUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ModelAvailabilityUpdateManyWithWhereWithoutModelCatalogInput | ModelAvailabilityUpdateManyWithWhereWithoutModelCatalogInput[]
     deleteMany?: ModelAvailabilityScalarWhereInput | ModelAvailabilityScalarWhereInput[]
+  }
+
+  export type ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput> | ModelCapabilityTagCreateWithoutModelCatalogInput[] | ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput | ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ModelCapabilityTagUpsertWithWhereUniqueWithoutModelCatalogInput | ModelCapabilityTagUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ModelCapabilityTagCreateManyModelCatalogInputEnvelope
+    set?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    disconnect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    delete?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    connect?: ModelCapabilityTagWhereUniqueInput | ModelCapabilityTagWhereUniqueInput[]
+    update?: ModelCapabilityTagUpdateWithWhereUniqueWithoutModelCatalogInput | ModelCapabilityTagUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ModelCapabilityTagUpdateManyWithWhereWithoutModelCatalogInput | ModelCapabilityTagUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput> | FallbackChainModelCreateWithoutModelCatalogInput[] | FallbackChainModelUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: FallbackChainModelCreateOrConnectWithoutModelCatalogInput | FallbackChainModelCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: FallbackChainModelUpsertWithWhereUniqueWithoutModelCatalogInput | FallbackChainModelUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: FallbackChainModelCreateManyModelCatalogInputEnvelope
+    set?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    disconnect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    delete?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    connect?: FallbackChainModelWhereUniqueInput | FallbackChainModelWhereUniqueInput[]
+    update?: FallbackChainModelUpdateWithWhereUniqueWithoutModelCatalogInput | FallbackChainModelUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: FallbackChainModelUpdateManyWithWhereWithoutModelCatalogInput | FallbackChainModelUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogNestedInput = {
+    create?: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput> | ComplexityRoutingModelMappingCreateWithoutModelCatalogInput[] | ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput[]
+    connectOrCreate?: ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput | ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput[]
+    upsert?: ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelCatalogInput | ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelCatalogInput[]
+    createMany?: ComplexityRoutingModelMappingCreateManyModelCatalogInputEnvelope
+    set?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    disconnect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    delete?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    connect?: ComplexityRoutingModelMappingWhereUniqueInput | ComplexityRoutingModelMappingWhereUniqueInput[]
+    update?: ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelCatalogInput | ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelCatalogInput[]
+    updateMany?: ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelCatalogInput | ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelCatalogInput[]
+    deleteMany?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
   }
 
   export type BotCreateNestedOneWithoutModelRoutingsInput = {
@@ -66324,10 +66302,10 @@ export namespace Prisma {
     connect?: FallbackChainWhereUniqueInput
   }
 
-  export type ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput
-    connect?: ModelAvailabilityWhereUniqueInput
+  export type ModelCatalogCreateNestedOneWithoutFallbackChainModelsInput = {
+    create?: XOR<ModelCatalogCreateWithoutFallbackChainModelsInput, ModelCatalogUncheckedCreateWithoutFallbackChainModelsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutFallbackChainModelsInput
+    connect?: ModelCatalogWhereUniqueInput
   }
 
   export type FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput = {
@@ -66338,12 +66316,12 @@ export namespace Prisma {
     update?: XOR<XOR<FallbackChainUpdateToOneWithWhereWithoutChainModelsInput, FallbackChainUpdateWithoutChainModelsInput>, FallbackChainUncheckedUpdateWithoutChainModelsInput>
   }
 
-  export type ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput
-    upsert?: ModelAvailabilityUpsertWithoutFallbackChainModelsInput
-    connect?: ModelAvailabilityWhereUniqueInput
-    update?: XOR<XOR<ModelAvailabilityUpdateToOneWithWhereWithoutFallbackChainModelsInput, ModelAvailabilityUpdateWithoutFallbackChainModelsInput>, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
+  export type ModelCatalogUpdateOneRequiredWithoutFallbackChainModelsNestedInput = {
+    create?: XOR<ModelCatalogCreateWithoutFallbackChainModelsInput, ModelCatalogUncheckedCreateWithoutFallbackChainModelsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutFallbackChainModelsInput
+    upsert?: ModelCatalogUpsertWithoutFallbackChainModelsInput
+    connect?: ModelCatalogWhereUniqueInput
+    update?: XOR<XOR<ModelCatalogUpdateToOneWithWhereWithoutFallbackChainModelsInput, ModelCatalogUpdateWithoutFallbackChainModelsInput>, ModelCatalogUncheckedUpdateWithoutFallbackChainModelsInput>
   }
 
   export type ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput = {
@@ -66352,10 +66330,10 @@ export namespace Prisma {
     connect?: ComplexityRoutingConfigWhereUniqueInput
   }
 
-  export type ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput
-    connect?: ModelAvailabilityWhereUniqueInput
+  export type ModelCatalogCreateNestedOneWithoutComplexityRoutingMappingsInput = {
+    create?: XOR<ModelCatalogCreateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutComplexityRoutingMappingsInput
+    connect?: ModelCatalogWhereUniqueInput
   }
 
   export type ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput = {
@@ -66366,12 +66344,12 @@ export namespace Prisma {
     update?: XOR<XOR<ComplexityRoutingConfigUpdateToOneWithWhereWithoutModelMappingsInput, ComplexityRoutingConfigUpdateWithoutModelMappingsInput>, ComplexityRoutingConfigUncheckedUpdateWithoutModelMappingsInput>
   }
 
-  export type ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput = {
-    create?: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
-    connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput
-    upsert?: ModelAvailabilityUpsertWithoutComplexityRoutingMappingsInput
-    connect?: ModelAvailabilityWhereUniqueInput
-    update?: XOR<XOR<ModelAvailabilityUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput, ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput>, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
+  export type ModelCatalogUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput = {
+    create?: XOR<ModelCatalogCreateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    connectOrCreate?: ModelCatalogCreateOrConnectWithoutComplexityRoutingMappingsInput
+    upsert?: ModelCatalogUpsertWithoutComplexityRoutingMappingsInput
+    connect?: ModelCatalogWhereUniqueInput
+    update?: XOR<XOR<ModelCatalogUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput, ModelCatalogUpdateWithoutComplexityRoutingMappingsInput>, ModelCatalogUncheckedUpdateWithoutComplexityRoutingMappingsInput>
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -70403,35 +70381,25 @@ export namespace Prisma {
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
-    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
+    modelCatalog?: ModelCatalogCreateNestedOneWithoutAvailabilitiesInput
   }
 
   export type ModelAvailabilityUncheckedCreateWithoutProviderKeyInput = {
     id?: string
     model: string
+    modelCatalogId?: string | null
     modelType?: $Enums.ModelType
-    modelPricingId?: string | null
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
   export type ModelAvailabilityCreateOrConnectWithoutProviderKeyInput = {
@@ -70592,15 +70560,13 @@ export namespace Prisma {
     id?: UuidFilter<"ModelAvailability"> | string
     model?: StringFilter<"ModelAvailability"> | string
     providerKeyId?: UuidFilter<"ModelAvailability"> | string
+    modelCatalogId?: UuidNullableFilter<"ModelAvailability"> | string | null
     modelType?: EnumModelTypeFilter<"ModelAvailability"> | $Enums.ModelType
-    modelPricingId?: UuidNullableFilter<"ModelAvailability"> | string | null
     isAvailable?: BoolFilter<"ModelAvailability"> | boolean
     lastVerifiedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
-    pricingSynced?: BoolFilter<"ModelAvailability"> | boolean
-    pricingSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
-    tagsSynced?: BoolFilter<"ModelAvailability"> | boolean
-    tagsSyncedAt?: DateTimeNullableFilter<"ModelAvailability"> | Date | string | null
+    vendorPriority?: IntFilter<"ModelAvailability"> | number
+    healthScore?: IntFilter<"ModelAvailability"> | number
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
   }
@@ -70786,7 +70752,7 @@ export namespace Prisma {
     create: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
   }
 
-  export type ModelPricingCreateWithoutModelAvailabilitiesInput = {
+  export type ModelCatalogCreateWithoutAvailabilitiesInput = {
     id?: string
     model: string
     vendor: string
@@ -70820,9 +70786,12 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelPricingUncheckedCreateWithoutModelAvailabilitiesInput = {
+  export type ModelCatalogUncheckedCreateWithoutAvailabilitiesInput = {
     id?: string
     model: string
     vendor: string
@@ -70856,91 +70825,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelPricingCreateOrConnectWithoutModelAvailabilitiesInput = {
-    where: ModelPricingWhereUniqueInput
-    create: XOR<ModelPricingCreateWithoutModelAvailabilitiesInput, ModelPricingUncheckedCreateWithoutModelAvailabilitiesInput>
-  }
-
-  export type ModelCapabilityTagCreateWithoutModelAvailabilityInput = {
-    id?: string
-    matchSource?: string
-    confidence?: number
-    createdAt?: Date | string
-    capabilityTag: CapabilityTagCreateNestedOneWithoutModelCapabilityTagsInput
-  }
-
-  export type ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput = {
-    id?: string
-    capabilityTagId: string
-    matchSource?: string
-    confidence?: number
-    createdAt?: Date | string
-  }
-
-  export type ModelCapabilityTagCreateOrConnectWithoutModelAvailabilityInput = {
-    where: ModelCapabilityTagWhereUniqueInput
-    create: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type ModelCapabilityTagCreateManyModelAvailabilityInputEnvelope = {
-    data: ModelCapabilityTagCreateManyModelAvailabilityInput | ModelCapabilityTagCreateManyModelAvailabilityInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type FallbackChainModelCreateWithoutModelAvailabilityInput = {
-    id?: string
-    priority?: number
-    protocolOverride?: string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    fallbackChain: FallbackChainCreateNestedOneWithoutChainModelsInput
-  }
-
-  export type FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput = {
-    id?: string
-    fallbackChainId: string
-    priority?: number
-    protocolOverride?: string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-  }
-
-  export type FallbackChainModelCreateOrConnectWithoutModelAvailabilityInput = {
-    where: FallbackChainModelWhereUniqueInput
-    create: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type FallbackChainModelCreateManyModelAvailabilityInputEnvelope = {
-    data: FallbackChainModelCreateManyModelAvailabilityInput | FallbackChainModelCreateManyModelAvailabilityInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput = {
-    id?: string
-    complexityLevel: string
-    priority?: number
-    createdAt?: Date | string
-    complexityConfig: ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput
-  }
-
-  export type ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput = {
-    id?: string
-    complexityConfigId: string
-    complexityLevel: string
-    priority?: number
-    createdAt?: Date | string
-  }
-
-  export type ComplexityRoutingModelMappingCreateOrConnectWithoutModelAvailabilityInput = {
-    where: ComplexityRoutingModelMappingWhereUniqueInput
-    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type ComplexityRoutingModelMappingCreateManyModelAvailabilityInputEnvelope = {
-    data: ComplexityRoutingModelMappingCreateManyModelAvailabilityInput | ComplexityRoutingModelMappingCreateManyModelAvailabilityInput[]
-    skipDuplicates?: boolean
+  export type ModelCatalogCreateOrConnectWithoutAvailabilitiesInput = {
+    where: ModelCatalogWhereUniqueInput
+    create: XOR<ModelCatalogCreateWithoutAvailabilitiesInput, ModelCatalogUncheckedCreateWithoutAvailabilitiesInput>
   }
 
   export type ProviderKeyUpsertWithoutModelAvailabilityInput = {
@@ -70990,18 +70882,18 @@ export namespace Prisma {
     proxyTokens?: ProxyTokenUncheckedUpdateManyWithoutProviderKeyNestedInput
   }
 
-  export type ModelPricingUpsertWithoutModelAvailabilitiesInput = {
-    update: XOR<ModelPricingUpdateWithoutModelAvailabilitiesInput, ModelPricingUncheckedUpdateWithoutModelAvailabilitiesInput>
-    create: XOR<ModelPricingCreateWithoutModelAvailabilitiesInput, ModelPricingUncheckedCreateWithoutModelAvailabilitiesInput>
-    where?: ModelPricingWhereInput
+  export type ModelCatalogUpsertWithoutAvailabilitiesInput = {
+    update: XOR<ModelCatalogUpdateWithoutAvailabilitiesInput, ModelCatalogUncheckedUpdateWithoutAvailabilitiesInput>
+    create: XOR<ModelCatalogCreateWithoutAvailabilitiesInput, ModelCatalogUncheckedCreateWithoutAvailabilitiesInput>
+    where?: ModelCatalogWhereInput
   }
 
-  export type ModelPricingUpdateToOneWithWhereWithoutModelAvailabilitiesInput = {
-    where?: ModelPricingWhereInput
-    data: XOR<ModelPricingUpdateWithoutModelAvailabilitiesInput, ModelPricingUncheckedUpdateWithoutModelAvailabilitiesInput>
+  export type ModelCatalogUpdateToOneWithWhereWithoutAvailabilitiesInput = {
+    where?: ModelCatalogWhereInput
+    data: XOR<ModelCatalogUpdateWithoutAvailabilitiesInput, ModelCatalogUncheckedUpdateWithoutAvailabilitiesInput>
   }
 
-  export type ModelPricingUpdateWithoutModelAvailabilitiesInput = {
+  export type ModelCatalogUpdateWithoutAvailabilitiesInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -71035,9 +70927,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelPricingUncheckedUpdateWithoutModelAvailabilitiesInput = {
+  export type ModelCatalogUncheckedUpdateWithoutAvailabilitiesInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     vendor?: StringFieldUpdateOperationsInput | string
@@ -71071,134 +70966,92 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelCapabilityTagUpsertWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: ModelCapabilityTagWhereUniqueInput
-    update: XOR<ModelCapabilityTagUpdateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedUpdateWithoutModelAvailabilityInput>
-    create: XOR<ModelCapabilityTagCreateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type ModelCapabilityTagUpdateWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: ModelCapabilityTagWhereUniqueInput
-    data: XOR<ModelCapabilityTagUpdateWithoutModelAvailabilityInput, ModelCapabilityTagUncheckedUpdateWithoutModelAvailabilityInput>
-  }
-
-  export type ModelCapabilityTagUpdateManyWithWhereWithoutModelAvailabilityInput = {
-    where: ModelCapabilityTagScalarWhereInput
-    data: XOR<ModelCapabilityTagUpdateManyMutationInput, ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityInput>
-  }
-
-  export type ModelCapabilityTagScalarWhereInput = {
-    AND?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
-    OR?: ModelCapabilityTagScalarWhereInput[]
-    NOT?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
-    id?: UuidFilter<"ModelCapabilityTag"> | string
-    modelAvailabilityId?: UuidFilter<"ModelCapabilityTag"> | string
-    capabilityTagId?: UuidFilter<"ModelCapabilityTag"> | string
-    matchSource?: StringFilter<"ModelCapabilityTag"> | string
-    confidence?: IntFilter<"ModelCapabilityTag"> | number
-    createdAt?: DateTimeFilter<"ModelCapabilityTag"> | Date | string
-  }
-
-  export type FallbackChainModelUpsertWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: FallbackChainModelWhereUniqueInput
-    update: XOR<FallbackChainModelUpdateWithoutModelAvailabilityInput, FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput>
-    create: XOR<FallbackChainModelCreateWithoutModelAvailabilityInput, FallbackChainModelUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type FallbackChainModelUpdateWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: FallbackChainModelWhereUniqueInput
-    data: XOR<FallbackChainModelUpdateWithoutModelAvailabilityInput, FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput>
-  }
-
-  export type FallbackChainModelUpdateManyWithWhereWithoutModelAvailabilityInput = {
-    where: FallbackChainModelScalarWhereInput
-    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityInput>
-  }
-
-  export type FallbackChainModelScalarWhereInput = {
-    AND?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
-    OR?: FallbackChainModelScalarWhereInput[]
-    NOT?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
-    id?: UuidFilter<"FallbackChainModel"> | string
-    fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
-    modelAvailabilityId?: UuidFilter<"FallbackChainModel"> | string
-    priority?: IntFilter<"FallbackChainModel"> | number
-    protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
-    featuresOverride?: JsonNullableFilter<"FallbackChainModel">
-    createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
-  }
-
-  export type ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: ComplexityRoutingModelMappingWhereUniqueInput
-    update: XOR<ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput>
-    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelAvailabilityInput>
-  }
-
-  export type ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelAvailabilityInput = {
-    where: ComplexityRoutingModelMappingWhereUniqueInput
-    data: XOR<ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput>
-  }
-
-  export type ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelAvailabilityInput = {
-    where: ComplexityRoutingModelMappingScalarWhereInput
-    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityInput>
-  }
-
-  export type ComplexityRoutingModelMappingScalarWhereInput = {
-    AND?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
-    OR?: ComplexityRoutingModelMappingScalarWhereInput[]
-    NOT?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
-    id?: UuidFilter<"ComplexityRoutingModelMapping"> | string
-    complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
-    complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
-    modelAvailabilityId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
-    priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
-    createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
-  }
-
-  export type ModelAvailabilityCreateWithoutCapabilityTagsInput = {
+  export type ModelCatalogCreateWithoutCapabilityTagsInput = {
     id?: string
     model: string
-    modelType?: $Enums.ModelType
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
-    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
-    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput = {
+  export type ModelCatalogUncheckedCreateWithoutCapabilityTagsInput = {
     id?: string
     model: string
-    providerKeyId: string
-    modelType?: $Enums.ModelType
-    modelPricingId?: string | null
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityUncheckedCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityCreateOrConnectWithoutCapabilityTagsInput = {
-    where: ModelAvailabilityWhereUniqueInput
-    create: XOR<ModelAvailabilityCreateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput>
+  export type ModelCatalogCreateOrConnectWithoutCapabilityTagsInput = {
+    where: ModelCatalogWhereUniqueInput
+    create: XOR<ModelCatalogCreateWithoutCapabilityTagsInput, ModelCatalogUncheckedCreateWithoutCapabilityTagsInput>
   }
 
   export type CapabilityTagCreateWithoutModelCapabilityTagsInput = {
@@ -71250,53 +71103,93 @@ export namespace Prisma {
     create: XOR<CapabilityTagCreateWithoutModelCapabilityTagsInput, CapabilityTagUncheckedCreateWithoutModelCapabilityTagsInput>
   }
 
-  export type ModelAvailabilityUpsertWithoutCapabilityTagsInput = {
-    update: XOR<ModelAvailabilityUpdateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedUpdateWithoutCapabilityTagsInput>
-    create: XOR<ModelAvailabilityCreateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedCreateWithoutCapabilityTagsInput>
-    where?: ModelAvailabilityWhereInput
+  export type ModelCatalogUpsertWithoutCapabilityTagsInput = {
+    update: XOR<ModelCatalogUpdateWithoutCapabilityTagsInput, ModelCatalogUncheckedUpdateWithoutCapabilityTagsInput>
+    create: XOR<ModelCatalogCreateWithoutCapabilityTagsInput, ModelCatalogUncheckedCreateWithoutCapabilityTagsInput>
+    where?: ModelCatalogWhereInput
   }
 
-  export type ModelAvailabilityUpdateToOneWithWhereWithoutCapabilityTagsInput = {
-    where?: ModelAvailabilityWhereInput
-    data: XOR<ModelAvailabilityUpdateWithoutCapabilityTagsInput, ModelAvailabilityUncheckedUpdateWithoutCapabilityTagsInput>
+  export type ModelCatalogUpdateToOneWithWhereWithoutCapabilityTagsInput = {
+    where?: ModelCatalogWhereInput
+    data: XOR<ModelCatalogUpdateWithoutCapabilityTagsInput, ModelCatalogUncheckedUpdateWithoutCapabilityTagsInput>
   }
 
-  export type ModelAvailabilityUpdateWithoutCapabilityTagsInput = {
+  export type ModelCatalogUpdateWithoutCapabilityTagsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
-    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
-    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelAvailabilityUncheckedUpdateWithoutCapabilityTagsInput = {
+  export type ModelCatalogUncheckedUpdateWithoutCapabilityTagsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    providerKeyId?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogNestedInput
   }
 
   export type CapabilityTagUpsertWithoutModelCapabilityTagsInput = {
@@ -73294,26 +73187,21 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
-  export type ModelAvailabilityCreateWithoutModelPricingInput = {
+  export type ModelAvailabilityCreateWithoutModelCatalogInput = {
     id?: string
     model: string
     modelType?: $Enums.ModelType
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
-    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
   }
 
-  export type ModelAvailabilityUncheckedCreateWithoutModelPricingInput = {
+  export type ModelAvailabilityUncheckedCreateWithoutModelCatalogInput = {
     id?: string
     model: string
     providerKeyId: string
@@ -73321,41 +73209,201 @@ export namespace Prisma {
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
   }
 
-  export type ModelAvailabilityCreateOrConnectWithoutModelPricingInput = {
+  export type ModelAvailabilityCreateOrConnectWithoutModelCatalogInput = {
     where: ModelAvailabilityWhereUniqueInput
-    create: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput>
+    create: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput>
   }
 
-  export type ModelAvailabilityCreateManyModelPricingInputEnvelope = {
-    data: ModelAvailabilityCreateManyModelPricingInput | ModelAvailabilityCreateManyModelPricingInput[]
+  export type ModelAvailabilityCreateManyModelCatalogInputEnvelope = {
+    data: ModelAvailabilityCreateManyModelCatalogInput | ModelAvailabilityCreateManyModelCatalogInput[]
     skipDuplicates?: boolean
   }
 
-  export type ModelAvailabilityUpsertWithWhereUniqueWithoutModelPricingInput = {
-    where: ModelAvailabilityWhereUniqueInput
-    update: XOR<ModelAvailabilityUpdateWithoutModelPricingInput, ModelAvailabilityUncheckedUpdateWithoutModelPricingInput>
-    create: XOR<ModelAvailabilityCreateWithoutModelPricingInput, ModelAvailabilityUncheckedCreateWithoutModelPricingInput>
+  export type ModelCapabilityTagCreateWithoutModelCatalogInput = {
+    id?: string
+    matchSource?: string
+    confidence?: number
+    createdAt?: Date | string
+    capabilityTag: CapabilityTagCreateNestedOneWithoutModelCapabilityTagsInput
   }
 
-  export type ModelAvailabilityUpdateWithWhereUniqueWithoutModelPricingInput = {
-    where: ModelAvailabilityWhereUniqueInput
-    data: XOR<ModelAvailabilityUpdateWithoutModelPricingInput, ModelAvailabilityUncheckedUpdateWithoutModelPricingInput>
+  export type ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput = {
+    id?: string
+    capabilityTagId: string
+    matchSource?: string
+    confidence?: number
+    createdAt?: Date | string
   }
 
-  export type ModelAvailabilityUpdateManyWithWhereWithoutModelPricingInput = {
+  export type ModelCapabilityTagCreateOrConnectWithoutModelCatalogInput = {
+    where: ModelCapabilityTagWhereUniqueInput
+    create: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type ModelCapabilityTagCreateManyModelCatalogInputEnvelope = {
+    data: ModelCapabilityTagCreateManyModelCatalogInput | ModelCapabilityTagCreateManyModelCatalogInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type FallbackChainModelCreateWithoutModelCatalogInput = {
+    id?: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    fallbackChain: FallbackChainCreateNestedOneWithoutChainModelsInput
+  }
+
+  export type FallbackChainModelUncheckedCreateWithoutModelCatalogInput = {
+    id?: string
+    fallbackChainId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelCreateOrConnectWithoutModelCatalogInput = {
+    where: FallbackChainModelWhereUniqueInput
+    create: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type FallbackChainModelCreateManyModelCatalogInputEnvelope = {
+    data: FallbackChainModelCreateManyModelCatalogInput | FallbackChainModelCreateManyModelCatalogInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComplexityRoutingModelMappingCreateWithoutModelCatalogInput = {
+    id?: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+    complexityConfig: ComplexityRoutingConfigCreateNestedOneWithoutModelMappingsInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateOrConnectWithoutModelCatalogInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyModelCatalogInputEnvelope = {
+    data: ComplexityRoutingModelMappingCreateManyModelCatalogInput | ComplexityRoutingModelMappingCreateManyModelCatalogInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ModelAvailabilityUpsertWithWhereUniqueWithoutModelCatalogInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    update: XOR<ModelAvailabilityUpdateWithoutModelCatalogInput, ModelAvailabilityUncheckedUpdateWithoutModelCatalogInput>
+    create: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type ModelAvailabilityUpdateWithWhereUniqueWithoutModelCatalogInput = {
+    where: ModelAvailabilityWhereUniqueInput
+    data: XOR<ModelAvailabilityUpdateWithoutModelCatalogInput, ModelAvailabilityUncheckedUpdateWithoutModelCatalogInput>
+  }
+
+  export type ModelAvailabilityUpdateManyWithWhereWithoutModelCatalogInput = {
     where: ModelAvailabilityScalarWhereInput
-    data: XOR<ModelAvailabilityUpdateManyMutationInput, ModelAvailabilityUncheckedUpdateManyWithoutModelPricingInput>
+    data: XOR<ModelAvailabilityUpdateManyMutationInput, ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogInput>
+  }
+
+  export type ModelCapabilityTagUpsertWithWhereUniqueWithoutModelCatalogInput = {
+    where: ModelCapabilityTagWhereUniqueInput
+    update: XOR<ModelCapabilityTagUpdateWithoutModelCatalogInput, ModelCapabilityTagUncheckedUpdateWithoutModelCatalogInput>
+    create: XOR<ModelCapabilityTagCreateWithoutModelCatalogInput, ModelCapabilityTagUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type ModelCapabilityTagUpdateWithWhereUniqueWithoutModelCatalogInput = {
+    where: ModelCapabilityTagWhereUniqueInput
+    data: XOR<ModelCapabilityTagUpdateWithoutModelCatalogInput, ModelCapabilityTagUncheckedUpdateWithoutModelCatalogInput>
+  }
+
+  export type ModelCapabilityTagUpdateManyWithWhereWithoutModelCatalogInput = {
+    where: ModelCapabilityTagScalarWhereInput
+    data: XOR<ModelCapabilityTagUpdateManyMutationInput, ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogInput>
+  }
+
+  export type ModelCapabilityTagScalarWhereInput = {
+    AND?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
+    OR?: ModelCapabilityTagScalarWhereInput[]
+    NOT?: ModelCapabilityTagScalarWhereInput | ModelCapabilityTagScalarWhereInput[]
+    id?: UuidFilter<"ModelCapabilityTag"> | string
+    modelCatalogId?: UuidFilter<"ModelCapabilityTag"> | string
+    capabilityTagId?: UuidFilter<"ModelCapabilityTag"> | string
+    matchSource?: StringFilter<"ModelCapabilityTag"> | string
+    confidence?: IntFilter<"ModelCapabilityTag"> | number
+    createdAt?: DateTimeFilter<"ModelCapabilityTag"> | Date | string
+  }
+
+  export type FallbackChainModelUpsertWithWhereUniqueWithoutModelCatalogInput = {
+    where: FallbackChainModelWhereUniqueInput
+    update: XOR<FallbackChainModelUpdateWithoutModelCatalogInput, FallbackChainModelUncheckedUpdateWithoutModelCatalogInput>
+    create: XOR<FallbackChainModelCreateWithoutModelCatalogInput, FallbackChainModelUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type FallbackChainModelUpdateWithWhereUniqueWithoutModelCatalogInput = {
+    where: FallbackChainModelWhereUniqueInput
+    data: XOR<FallbackChainModelUpdateWithoutModelCatalogInput, FallbackChainModelUncheckedUpdateWithoutModelCatalogInput>
+  }
+
+  export type FallbackChainModelUpdateManyWithWhereWithoutModelCatalogInput = {
+    where: FallbackChainModelScalarWhereInput
+    data: XOR<FallbackChainModelUpdateManyMutationInput, FallbackChainModelUncheckedUpdateManyWithoutModelCatalogInput>
+  }
+
+  export type FallbackChainModelScalarWhereInput = {
+    AND?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+    OR?: FallbackChainModelScalarWhereInput[]
+    NOT?: FallbackChainModelScalarWhereInput | FallbackChainModelScalarWhereInput[]
+    id?: UuidFilter<"FallbackChainModel"> | string
+    fallbackChainId?: UuidFilter<"FallbackChainModel"> | string
+    modelCatalogId?: UuidFilter<"FallbackChainModel"> | string
+    priority?: IntFilter<"FallbackChainModel"> | number
+    protocolOverride?: StringNullableFilter<"FallbackChainModel"> | string | null
+    featuresOverride?: JsonNullableFilter<"FallbackChainModel">
+    createdAt?: DateTimeFilter<"FallbackChainModel"> | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpsertWithWhereUniqueWithoutModelCatalogInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    update: XOR<ComplexityRoutingModelMappingUpdateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelCatalogInput>
+    create: XOR<ComplexityRoutingModelMappingCreateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedCreateWithoutModelCatalogInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithWhereUniqueWithoutModelCatalogInput = {
+    where: ComplexityRoutingModelMappingWhereUniqueInput
+    data: XOR<ComplexityRoutingModelMappingUpdateWithoutModelCatalogInput, ComplexityRoutingModelMappingUncheckedUpdateWithoutModelCatalogInput>
+  }
+
+  export type ComplexityRoutingModelMappingUpdateManyWithWhereWithoutModelCatalogInput = {
+    where: ComplexityRoutingModelMappingScalarWhereInput
+    data: XOR<ComplexityRoutingModelMappingUpdateManyMutationInput, ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogInput>
+  }
+
+  export type ComplexityRoutingModelMappingScalarWhereInput = {
+    AND?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+    OR?: ComplexityRoutingModelMappingScalarWhereInput[]
+    NOT?: ComplexityRoutingModelMappingScalarWhereInput | ComplexityRoutingModelMappingScalarWhereInput[]
+    id?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityConfigId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    complexityLevel?: StringFilter<"ComplexityRoutingModelMapping"> | string
+    modelCatalogId?: UuidFilter<"ComplexityRoutingModelMapping"> | string
+    priority?: IntFilter<"ComplexityRoutingModelMapping"> | number
+    createdAt?: DateTimeFilter<"ComplexityRoutingModelMapping"> | Date | string
   }
 
   export type BotCreateWithoutModelRoutingsInput = {
@@ -73643,12 +73691,12 @@ export namespace Prisma {
     matchSource?: string
     confidence?: number
     createdAt?: Date | string
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutCapabilityTagsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutCapabilityTagsInput
   }
 
   export type ModelCapabilityTagUncheckedCreateWithoutCapabilityTagInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     matchSource?: string
     confidence?: number
     createdAt?: Date | string
@@ -73686,12 +73734,12 @@ export namespace Prisma {
     protocolOverride?: string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutFallbackChainModelsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutFallbackChainModelsInput
   }
 
   export type FallbackChainModelUncheckedCreateWithoutFallbackChainInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     protocolOverride?: string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -73869,13 +73917,13 @@ export namespace Prisma {
     complexityLevel: string
     priority?: number
     createdAt?: Date | string
-    modelAvailability: ModelAvailabilityCreateNestedOneWithoutComplexityRoutingMappingsInput
+    modelCatalog: ModelCatalogCreateNestedOneWithoutComplexityRoutingMappingsInput
   }
 
   export type ComplexityRoutingModelMappingUncheckedCreateWithoutComplexityConfigInput = {
     id?: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     createdAt?: Date | string
   }
@@ -73951,47 +73999,87 @@ export namespace Prisma {
     create: XOR<FallbackChainCreateWithoutChainModelsInput, FallbackChainUncheckedCreateWithoutChainModelsInput>
   }
 
-  export type ModelAvailabilityCreateWithoutFallbackChainModelsInput = {
+  export type ModelCatalogCreateWithoutFallbackChainModelsInput = {
     id?: string
     model: string
-    modelType?: $Enums.ModelType
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
-    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
-    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput = {
+  export type ModelCatalogUncheckedCreateWithoutFallbackChainModelsInput = {
     id?: string
     model: string
-    providerKeyId: string
-    modelType?: $Enums.ModelType
-    modelPricingId?: string | null
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityUncheckedCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelCatalogInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityCreateOrConnectWithoutFallbackChainModelsInput = {
-    where: ModelAvailabilityWhereUniqueInput
-    create: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
+  export type ModelCatalogCreateOrConnectWithoutFallbackChainModelsInput = {
+    where: ModelCatalogWhereUniqueInput
+    create: XOR<ModelCatalogCreateWithoutFallbackChainModelsInput, ModelCatalogUncheckedCreateWithoutFallbackChainModelsInput>
   }
 
   export type FallbackChainUpsertWithoutChainModelsInput = {
@@ -74045,53 +74133,93 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
-  export type ModelAvailabilityUpsertWithoutFallbackChainModelsInput = {
-    update: XOR<ModelAvailabilityUpdateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
-    create: XOR<ModelAvailabilityCreateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedCreateWithoutFallbackChainModelsInput>
-    where?: ModelAvailabilityWhereInput
+  export type ModelCatalogUpsertWithoutFallbackChainModelsInput = {
+    update: XOR<ModelCatalogUpdateWithoutFallbackChainModelsInput, ModelCatalogUncheckedUpdateWithoutFallbackChainModelsInput>
+    create: XOR<ModelCatalogCreateWithoutFallbackChainModelsInput, ModelCatalogUncheckedCreateWithoutFallbackChainModelsInput>
+    where?: ModelCatalogWhereInput
   }
 
-  export type ModelAvailabilityUpdateToOneWithWhereWithoutFallbackChainModelsInput = {
-    where?: ModelAvailabilityWhereInput
-    data: XOR<ModelAvailabilityUpdateWithoutFallbackChainModelsInput, ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput>
+  export type ModelCatalogUpdateToOneWithWhereWithoutFallbackChainModelsInput = {
+    where?: ModelCatalogWhereInput
+    data: XOR<ModelCatalogUpdateWithoutFallbackChainModelsInput, ModelCatalogUncheckedUpdateWithoutFallbackChainModelsInput>
   }
 
-  export type ModelAvailabilityUpdateWithoutFallbackChainModelsInput = {
+  export type ModelCatalogUpdateWithoutFallbackChainModelsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
-    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
-    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelAvailabilityUncheckedUpdateWithoutFallbackChainModelsInput = {
+  export type ModelCatalogUncheckedUpdateWithoutFallbackChainModelsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    providerKeyId?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogNestedInput
+    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogNestedInput
   }
 
   export type ComplexityRoutingConfigCreateWithoutModelMappingsInput = {
@@ -74131,47 +74259,87 @@ export namespace Prisma {
     create: XOR<ComplexityRoutingConfigCreateWithoutModelMappingsInput, ComplexityRoutingConfigUncheckedCreateWithoutModelMappingsInput>
   }
 
-  export type ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput = {
+  export type ModelCatalogCreateWithoutComplexityRoutingMappingsInput = {
     id?: string
     model: string
-    modelType?: $Enums.ModelType
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
-    modelPricing?: ModelPricingCreateNestedOneWithoutModelAvailabilitiesInput
-    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput = {
+  export type ModelCatalogUncheckedCreateWithoutComplexityRoutingMappingsInput = {
     id?: string
     model: string
-    providerKeyId: string
-    modelType?: $Enums.ModelType
-    modelPricingId?: string | null
-    isAvailable?: boolean
-    lastVerifiedAt: Date | string
-    errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendor: string
+    displayName?: string | null
+    description?: string | null
+    inputPrice: Decimal | DecimalJsLike | number | string
+    outputPrice: Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: number
+    codingScore?: number
+    creativityScore?: number
+    speedScore?: number
+    contextLength?: number
+    supportsExtendedThinking?: boolean
+    supportsCacheControl?: boolean
+    supportsVision?: boolean
+    supportsFunctionCalling?: boolean
+    supportsStreaming?: boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: string
+    sourceUrl?: string | null
+    isEnabled?: boolean
+    isDeprecated?: boolean
+    deprecationDate?: Date | string | null
+    priceUpdatedAt?: Date | string
+    notes?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelAvailabilityInput
-    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelAvailabilityInput
+    deletedAt?: Date | string | null
+    availabilities?: ModelAvailabilityUncheckedCreateNestedManyWithoutModelCatalogInput
+    capabilityTags?: ModelCapabilityTagUncheckedCreateNestedManyWithoutModelCatalogInput
+    fallbackChainModels?: FallbackChainModelUncheckedCreateNestedManyWithoutModelCatalogInput
   }
 
-  export type ModelAvailabilityCreateOrConnectWithoutComplexityRoutingMappingsInput = {
-    where: ModelAvailabilityWhereUniqueInput
-    create: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
+  export type ModelCatalogCreateOrConnectWithoutComplexityRoutingMappingsInput = {
+    where: ModelCatalogWhereUniqueInput
+    create: XOR<ModelCatalogCreateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedCreateWithoutComplexityRoutingMappingsInput>
   }
 
   export type ComplexityRoutingConfigUpsertWithoutModelMappingsInput = {
@@ -74217,53 +74385,93 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ModelAvailabilityUpsertWithoutComplexityRoutingMappingsInput = {
-    update: XOR<ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
-    create: XOR<ModelAvailabilityCreateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedCreateWithoutComplexityRoutingMappingsInput>
-    where?: ModelAvailabilityWhereInput
+  export type ModelCatalogUpsertWithoutComplexityRoutingMappingsInput = {
+    update: XOR<ModelCatalogUpdateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedUpdateWithoutComplexityRoutingMappingsInput>
+    create: XOR<ModelCatalogCreateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedCreateWithoutComplexityRoutingMappingsInput>
+    where?: ModelCatalogWhereInput
   }
 
-  export type ModelAvailabilityUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput = {
-    where?: ModelAvailabilityWhereInput
-    data: XOR<ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput, ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput>
+  export type ModelCatalogUpdateToOneWithWhereWithoutComplexityRoutingMappingsInput = {
+    where?: ModelCatalogWhereInput
+    data: XOR<ModelCatalogUpdateWithoutComplexityRoutingMappingsInput, ModelCatalogUncheckedUpdateWithoutComplexityRoutingMappingsInput>
   }
 
-  export type ModelAvailabilityUpdateWithoutComplexityRoutingMappingsInput = {
+  export type ModelCatalogUpdateWithoutComplexityRoutingMappingsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
-    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
-    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelCatalogNestedInput
   }
 
-  export type ModelAvailabilityUncheckedUpdateWithoutComplexityRoutingMappingsInput = {
+  export type ModelCatalogUncheckedUpdateWithoutComplexityRoutingMappingsInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
-    providerKeyId?: StringFieldUpdateOperationsInput | string
-    modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
-    isAvailable?: BoolFieldUpdateOperationsInput | boolean
-    lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendor?: StringFieldUpdateOperationsInput | string
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    inputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    outputPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cacheReadPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    cacheWritePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    thinkingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reasoningScore?: IntFieldUpdateOperationsInput | number
+    codingScore?: IntFieldUpdateOperationsInput | number
+    creativityScore?: IntFieldUpdateOperationsInput | number
+    speedScore?: IntFieldUpdateOperationsInput | number
+    contextLength?: IntFieldUpdateOperationsInput | number
+    supportsExtendedThinking?: BoolFieldUpdateOperationsInput | boolean
+    supportsCacheControl?: BoolFieldUpdateOperationsInput | boolean
+    supportsVision?: BoolFieldUpdateOperationsInput | boolean
+    supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
+    supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
+    recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    dataSource?: StringFieldUpdateOperationsInput | string
+    sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    isDeprecated?: BoolFieldUpdateOperationsInput | boolean
+    deprecationDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    priceUpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    availabilities?: ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogNestedInput
+    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogNestedInput
+    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelCatalogNestedInput
   }
 
   export type MessageCreateManySenderInput = {
@@ -75419,15 +75627,13 @@ export namespace Prisma {
   export type ModelAvailabilityCreateManyProviderKeyInput = {
     id?: string
     model: string
+    modelCatalogId?: string | null
     modelType?: $Enums.ModelType
-    modelPricingId?: string | null
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -75559,151 +75765,39 @@ export namespace Prisma {
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    modelPricing?: ModelPricingUpdateOneWithoutModelAvailabilitiesNestedInput
-    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
+    modelCatalog?: ModelCatalogUpdateOneWithoutAvailabilitiesNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: NullableStringFieldUpdateOperationsInput | string | null
     modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
   export type ModelAvailabilityUncheckedUpdateManyWithoutProviderKeyInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: NullableStringFieldUpdateOperationsInput | string | null
     modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
-    modelPricingId?: NullableStringFieldUpdateOperationsInput | string | null
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ModelCapabilityTagCreateManyModelAvailabilityInput = {
-    id?: string
-    capabilityTagId: string
-    matchSource?: string
-    confidence?: number
-    createdAt?: Date | string
-  }
-
-  export type FallbackChainModelCreateManyModelAvailabilityInput = {
-    id?: string
-    fallbackChainId: string
-    priority?: number
-    protocolOverride?: string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-  }
-
-  export type ComplexityRoutingModelMappingCreateManyModelAvailabilityInput = {
-    id?: string
-    complexityConfigId: string
-    complexityLevel: string
-    priority?: number
-    createdAt?: Date | string
-  }
-
-  export type ModelCapabilityTagUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    matchSource?: StringFieldUpdateOperationsInput | string
-    confidence?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTag?: CapabilityTagUpdateOneRequiredWithoutModelCapabilityTagsNestedInput
-  }
-
-  export type ModelCapabilityTagUncheckedUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    capabilityTagId?: StringFieldUpdateOperationsInput | string
-    matchSource?: StringFieldUpdateOperationsInput | string
-    confidence?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    capabilityTagId?: StringFieldUpdateOperationsInput | string
-    matchSource?: StringFieldUpdateOperationsInput | string
-    confidence?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FallbackChainModelUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    fallbackChain?: FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput
-  }
-
-  export type FallbackChainModelUncheckedUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    fallbackChainId?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    fallbackChainId?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
-    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ComplexityRoutingModelMappingUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    complexityLevel?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    complexityConfig?: ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput
-  }
-
-  export type ComplexityRoutingModelMappingUncheckedUpdateWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    complexityConfigId?: StringFieldUpdateOperationsInput | string
-    complexityLevel?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    complexityConfigId?: StringFieldUpdateOperationsInput | string
-    complexityLevel?: StringFieldUpdateOperationsInput | string
-    priority?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageRecipientCreateManyMessageInput = {
@@ -75992,7 +76086,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ModelAvailabilityCreateManyModelPricingInput = {
+  export type ModelAvailabilityCreateManyModelCatalogInput = {
     id?: string
     model: string
     providerKeyId: string
@@ -76000,34 +76094,52 @@ export namespace Prisma {
     isAvailable?: boolean
     lastVerifiedAt: Date | string
     errorMessage?: string | null
-    pricingSynced?: boolean
-    pricingSyncedAt?: Date | string | null
-    tagsSynced?: boolean
-    tagsSyncedAt?: Date | string | null
+    vendorPriority?: number
+    healthScore?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type ModelAvailabilityUpdateWithoutModelPricingInput = {
+  export type ModelCapabilityTagCreateManyModelCatalogInput = {
+    id?: string
+    capabilityTagId: string
+    matchSource?: string
+    confidence?: number
+    createdAt?: Date | string
+  }
+
+  export type FallbackChainModelCreateManyModelCatalogInput = {
+    id?: string
+    fallbackChainId: string
+    priority?: number
+    protocolOverride?: string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type ComplexityRoutingModelMappingCreateManyModelCatalogInput = {
+    id?: string
+    complexityConfigId: string
+    complexityLevel: string
+    priority?: number
+    createdAt?: Date | string
+  }
+
+  export type ModelAvailabilityUpdateWithoutModelCatalogInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     modelType?: EnumModelTypeFieldUpdateOperationsInput | $Enums.ModelType
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
-    capabilityTags?: ModelCapabilityTagUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUpdateManyWithoutModelAvailabilityNestedInput
   }
 
-  export type ModelAvailabilityUncheckedUpdateWithoutModelPricingInput = {
+  export type ModelAvailabilityUncheckedUpdateWithoutModelCatalogInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
@@ -76035,18 +76147,13 @@ export namespace Prisma {
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    capabilityTags?: ModelCapabilityTagUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    fallbackChainModels?: FallbackChainModelUncheckedUpdateManyWithoutModelAvailabilityNestedInput
-    complexityRoutingMappings?: ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelAvailabilityNestedInput
   }
 
-  export type ModelAvailabilityUncheckedUpdateManyWithoutModelPricingInput = {
+  export type ModelAvailabilityUncheckedUpdateManyWithoutModelCatalogInput = {
     id?: StringFieldUpdateOperationsInput | string
     model?: StringFieldUpdateOperationsInput | string
     providerKeyId?: StringFieldUpdateOperationsInput | string
@@ -76054,17 +76161,90 @@ export namespace Prisma {
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
     lastVerifiedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
-    pricingSynced?: BoolFieldUpdateOperationsInput | boolean
-    pricingSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    tagsSynced?: BoolFieldUpdateOperationsInput | boolean
-    tagsSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendorPriority?: IntFieldUpdateOperationsInput | number
+    healthScore?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelCapabilityTagUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchSource?: StringFieldUpdateOperationsInput | string
+    confidence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    capabilityTag?: CapabilityTagUpdateOneRequiredWithoutModelCapabilityTagsNestedInput
+  }
+
+  export type ModelCapabilityTagUncheckedUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    capabilityTagId?: StringFieldUpdateOperationsInput | string
+    matchSource?: StringFieldUpdateOperationsInput | string
+    confidence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModelCapabilityTagUncheckedUpdateManyWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    capabilityTagId?: StringFieldUpdateOperationsInput | string
+    matchSource?: StringFieldUpdateOperationsInput | string
+    confidence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fallbackChain?: FallbackChainUpdateOneRequiredWithoutChainModelsNestedInput
+  }
+
+  export type FallbackChainModelUncheckedUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FallbackChainModelUncheckedUpdateManyWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fallbackChainId?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    featuresOverride?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    complexityConfig?: ComplexityRoutingConfigUpdateOneRequiredWithoutModelMappingsNestedInput
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutModelCatalogInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    complexityConfigId?: StringFieldUpdateOperationsInput | string
+    complexityLevel?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ModelCapabilityTagCreateManyCapabilityTagInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     matchSource?: string
     confidence?: number
     createdAt?: Date | string
@@ -76075,12 +76255,12 @@ export namespace Prisma {
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutCapabilityTagsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutCapabilityTagsNestedInput
   }
 
   export type ModelCapabilityTagUncheckedUpdateWithoutCapabilityTagInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -76088,7 +76268,7 @@ export namespace Prisma {
 
   export type ModelCapabilityTagUncheckedUpdateManyWithoutCapabilityTagInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     matchSource?: StringFieldUpdateOperationsInput | string
     confidence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -76096,7 +76276,7 @@ export namespace Prisma {
 
   export type FallbackChainModelCreateManyFallbackChainInput = {
     id?: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     protocolOverride?: string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -76109,12 +76289,12 @@ export namespace Prisma {
     protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutFallbackChainModelsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutFallbackChainModelsNestedInput
   }
 
   export type FallbackChainModelUncheckedUpdateWithoutFallbackChainInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -76123,7 +76303,7 @@ export namespace Prisma {
 
   export type FallbackChainModelUncheckedUpdateManyWithoutFallbackChainInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     protocolOverride?: NullableStringFieldUpdateOperationsInput | string | null
     featuresOverride?: NullableJsonNullValueInput | InputJsonValue
@@ -76133,7 +76313,7 @@ export namespace Prisma {
   export type ComplexityRoutingModelMappingCreateManyComplexityConfigInput = {
     id?: string
     complexityLevel: string
-    modelAvailabilityId: string
+    modelCatalogId: string
     priority?: number
     createdAt?: Date | string
   }
@@ -76143,13 +76323,13 @@ export namespace Prisma {
     complexityLevel?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    modelAvailability?: ModelAvailabilityUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
+    modelCatalog?: ModelCatalogUpdateOneRequiredWithoutComplexityRoutingMappingsNestedInput
   }
 
   export type ComplexityRoutingModelMappingUncheckedUpdateWithoutComplexityConfigInput = {
     id?: StringFieldUpdateOperationsInput | string
     complexityLevel?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -76157,7 +76337,7 @@ export namespace Prisma {
   export type ComplexityRoutingModelMappingUncheckedUpdateManyWithoutComplexityConfigInput = {
     id?: StringFieldUpdateOperationsInput | string
     complexityLevel?: StringFieldUpdateOperationsInput | string
-    modelAvailabilityId?: StringFieldUpdateOperationsInput | string
+    modelCatalogId?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

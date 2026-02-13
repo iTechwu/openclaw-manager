@@ -6,8 +6,8 @@ import { Logger } from 'winston';
  * Fallback 链中的模型配置
  */
 export interface FallbackModel {
-  /** 关联的 ModelAvailability ID（新增，用于引用实际可用模型） */
-  modelAvailabilityId?: string;
+  /** 关联的 ModelCatalog ID（模型级引用） */
+  modelCatalogId?: string;
   vendor: string;
   model: string;
   protocol: 'openai-compatible' | 'anthropic-native';
@@ -15,9 +15,7 @@ export interface FallbackModel {
     extendedThinking?: boolean;
     cacheControl?: boolean;
   };
-  /** 模型当前是否可用（来自 ModelAvailability.isAvailable） */
-  isAvailable?: boolean;
-  /** 模型显示名称（来自 ModelPricing.displayName） */
+  /** 模型显示名称（来自 ModelCatalog.displayName） */
   displayName?: string;
 }
 

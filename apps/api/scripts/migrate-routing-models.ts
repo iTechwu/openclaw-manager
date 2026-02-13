@@ -43,28 +43,29 @@ interface JsonComplexityModels {
 }
 
 interface MigrationStats {
-  fallbackChains: { processed: number; modelsCreated: number; skipped: number; notFound: string[] };
-  complexityRouting: { processed: number; mappingsCreated: number; skipped: number; notFound: string[] };
+  fallbackChains: {
+    processed: number;
+    modelsCreated: number;
+    skipped: number;
+    notFound: string[];
+  };
+  complexityRouting: {
+    processed: number;
+    mappingsCreated: number;
+    skipped: number;
+    notFound: string[];
+  };
   errors: string[];
 }
 
 /**
- * 根据 vendor + model 查找最佳 ModelAvailability 记录
- * 优先选择 isAvailable=true 的记录
+ * 根据 model 查找 ModelCatalog 记录
  */
-async function findModelAvailability(
-  vendor: string,
-  model: string,
-): Promise<{ id: string; isAvailable: boolean } | null> {
-  const results = await prisma.modelAvailability.findMany({
-    where: {
-      model,
-      providerKey: { vendor, isDeleted: false },
-    },
-    select: { id: true, isAvailable: true },
-    orderBy: { isAvailable: 'desc' }, // prefer available ones
+async function findModelCatalog(model: string): Promise<{ id: string } | null> {
+  return prisma.modelCatalog.findUnique({
+    where: { model },
+    select: { id: true },
   });
-  return results[0] ?? null;
 }
 
 /**
@@ -81,28 +82,34 @@ async function migrateFallbackChains(stats: MigrationStats): Promise<void> {
   for (const chain of chains) {
     // Skip if already has relation data
     if (chain.chainModels.length > 0) {
-      console.log(`  ⏭️  Skip "${chain.name}" (${chain.chainId}) - already has ${chain.chainModels.length} chainModels`);
+      console.log(
+        `  ⏭️  Skip "${chain.name}" (${chain.chainId}) - already has ${chain.chainModels.length} chainModels`,
+      );
       stats.fallbackChains.skipped++;
       continue;
     }
 
     const jsonModels = chain.models as unknown as JsonFallbackModel[] | null;
     if (!jsonModels || jsonModels.length === 0) {
-      console.log(`  ⏭️  Skip "${chain.name}" (${chain.chainId}) - no JSON models`);
+      console.log(
+        `  ⏭️  Skip "${chain.name}" (${chain.chainId}) - no JSON models`,
+      );
       stats.fallbackChains.skipped++;
       continue;
     }
 
-    console.log(`  🔄 Processing "${chain.name}" (${chain.chainId}) - ${jsonModels.length} models`);
+    console.log(
+      `  🔄 Processing "${chain.name}" (${chain.chainId}) - ${jsonModels.length} models`,
+    );
     stats.fallbackChains.processed++;
 
     for (let i = 0; i < jsonModels.length; i++) {
       const jm = jsonModels[i]!;
-      const ma = await findModelAvailability(jm.vendor, jm.model);
+      const catalog = await findModelCatalog(jm.model);
 
-      if (!ma) {
+      if (!catalog) {
         const key = `${jm.vendor}:${jm.model}`;
-        console.log(`    ⚠️  ModelAvailability not found: ${key}`);
+        console.log(`    ⚠️  ModelCatalog not found: ${key}`);
         stats.fallbackChains.notFound.push(`${chain.chainId} → ${key}`);
         continue;
       }
@@ -111,7 +118,7 @@ async function migrateFallbackChains(stats: MigrationStats): Promise<void> {
         await prisma.fallbackChainModel.create({
           data: {
             fallbackChainId: chain.id,
-            modelAvailabilityId: ma.id,
+            modelCatalogId: catalog.id,
             priority: i,
             protocolOverride: jm.protocol ?? null,
             featuresOverride: jm.features ? jm.features : undefined,
@@ -121,7 +128,9 @@ async function migrateFallbackChains(stats: MigrationStats): Promise<void> {
       } catch (error) {
         // Unique constraint violation = already exists
         if ((error as { code?: string }).code === 'P2002') {
-          console.log(`    ⏭️  Already exists: ${jm.vendor}:${jm.model} in chain ${chain.chainId}`);
+          console.log(
+            `    ⏭️  Already exists: ${jm.vendor}:${jm.model} in chain ${chain.chainId}`,
+          );
         } else {
           throw error;
         }
@@ -130,7 +139,13 @@ async function migrateFallbackChains(stats: MigrationStats): Promise<void> {
   }
 }
 
-const COMPLEXITY_LEVELS = ['super_easy', 'easy', 'medium', 'hard', 'super_hard'] as const;
+const COMPLEXITY_LEVELS = [
+  'super_easy',
+  'easy',
+  'medium',
+  'hard',
+  'super_hard',
+] as const;
 
 /**
  * 迁移 ComplexityRoutingConfig.models JSON → ComplexityRoutingModelMapping 关联表
@@ -145,14 +160,18 @@ async function migrateComplexityRouting(stats: MigrationStats): Promise<void> {
 
   for (const config of configs) {
     if (config.modelMappings.length > 0) {
-      console.log(`  ⏭️  Skip "${config.name}" (${config.configId}) - already has ${config.modelMappings.length} mappings`);
+      console.log(
+        `  ⏭️  Skip "${config.name}" (${config.configId}) - already has ${config.modelMappings.length} mappings`,
+      );
       stats.complexityRouting.skipped++;
       continue;
     }
 
     const jsonModels = config.models as JsonComplexityModels | null;
     if (!jsonModels || Object.keys(jsonModels).length === 0) {
-      console.log(`  ⏭️  Skip "${config.name}" (${config.configId}) - no JSON models`);
+      console.log(
+        `  ⏭️  Skip "${config.name}" (${config.configId}) - no JSON models`,
+      );
       stats.complexityRouting.skipped++;
       continue;
     }
@@ -164,12 +183,14 @@ async function migrateComplexityRouting(stats: MigrationStats): Promise<void> {
       const entry = jsonModels[level];
       if (!entry?.vendor || !entry?.model) continue;
 
-      const ma = await findModelAvailability(entry.vendor, entry.model);
+      const catalog = await findModelCatalog(entry.model);
 
-      if (!ma) {
+      if (!catalog) {
         const key = `${entry.vendor}:${entry.model}`;
-        console.log(`    ⚠️  ModelAvailability not found: ${key} (level: ${level})`);
-        stats.complexityRouting.notFound.push(`${config.configId}/${level} → ${key}`);
+        console.log(`    ⚠️  ModelCatalog not found: ${key} (level: ${level})`);
+        stats.complexityRouting.notFound.push(
+          `${config.configId}/${level} → ${key}`,
+        );
         continue;
       }
 
@@ -178,14 +199,16 @@ async function migrateComplexityRouting(stats: MigrationStats): Promise<void> {
           data: {
             complexityConfigId: config.id,
             complexityLevel: level,
-            modelAvailabilityId: ma.id,
+            modelCatalogId: catalog.id,
             priority: 0,
           },
         });
         stats.complexityRouting.mappingsCreated++;
       } catch (error) {
         if ((error as { code?: string }).code === 'P2002') {
-          console.log(`    ⏭️  Already exists: ${entry.vendor}:${entry.model} for ${level}`);
+          console.log(
+            `    ⏭️  Already exists: ${entry.vendor}:${entry.model} for ${level}`,
+          );
         } else {
           throw error;
         }
@@ -212,10 +235,14 @@ function printSummary(stats: MigrationStats): void {
 
   console.log('\n🧠 ComplexityRouting:');
   console.log(`   Processed: ${stats.complexityRouting.processed}`);
-  console.log(`   Mappings created: ${stats.complexityRouting.mappingsCreated}`);
+  console.log(
+    `   Mappings created: ${stats.complexityRouting.mappingsCreated}`,
+  );
   console.log(`   Skipped: ${stats.complexityRouting.skipped}`);
   if (stats.complexityRouting.notFound.length > 0) {
-    console.log(`   ⚠️  Not found (${stats.complexityRouting.notFound.length}):`);
+    console.log(
+      `   ⚠️  Not found (${stats.complexityRouting.notFound.length}):`,
+    );
     for (const nf of stats.complexityRouting.notFound) {
       console.log(`      - ${nf}`);
     }
@@ -240,8 +267,18 @@ async function main(): Promise<void> {
   console.log('='.repeat(60));
 
   const stats: MigrationStats = {
-    fallbackChains: { processed: 0, modelsCreated: 0, skipped: 0, notFound: [] },
-    complexityRouting: { processed: 0, mappingsCreated: 0, skipped: 0, notFound: [] },
+    fallbackChains: {
+      processed: 0,
+      modelsCreated: 0,
+      skipped: 0,
+      notFound: [],
+    },
+    complexityRouting: {
+      processed: 0,
+      mappingsCreated: 0,
+      skipped: 0,
+      notFound: [],
+    },
     errors: [],
   };
 

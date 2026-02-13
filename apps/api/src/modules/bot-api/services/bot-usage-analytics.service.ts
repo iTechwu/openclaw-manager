@@ -2,8 +2,8 @@ import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { PrismaService } from '@app/prisma';
-import { BotService, BotUsageLogService, ModelPricingService } from '@app/db';
-import type { Prisma, ModelPricing } from '@prisma/client';
+import { BotService, BotUsageLogService, ModelCatalogService } from '@app/db';
+import type { Prisma, ModelCatalog } from '@prisma/client';
 import type {
   UsageStatsQuery,
   UsageStatsResponse,
@@ -56,7 +56,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly botService: BotService,
     private readonly botUsageLogService: BotUsageLogService,
-    private readonly modelPricingService: ModelPricingService,
+    private readonly modelCatalogService: ModelCatalogService,
   ) {}
 
   async onModuleInit() {
@@ -69,7 +69,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
    */
   async refreshPricingCache(): Promise<void> {
     try {
-      const pricings = await this.modelPricingService.listAll();
+      const pricings = await this.modelCatalogService.listAll();
       this.pricingCache.clear();
 
       for (const pricing of pricings) {

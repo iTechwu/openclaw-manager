@@ -271,8 +271,8 @@ export const ModelAvailabilityItemSchema = z.object({
   lastVerifiedAt: z.coerce.date(),
   /** 错误信息 */
   errorMessage: z.string().nullable(),
-  /** 关联的定价 ID */
-  modelPricingId: z.string().nullable().optional(),
+  /** 关联的 ModelCatalog ID */
+  modelCatalogId: z.string().nullable().optional(),
   /** 能力标签列表 */
   capabilityTags: z
     .array(
@@ -423,8 +423,8 @@ export type CapabilityTagMatchSource = z.infer<
 export const ModelCapabilityTagItemSchema = z.object({
   /** 关联 ID */
   id: z.string(),
-  /** ModelAvailability ID */
-  modelAvailabilityId: z.string(),
+  /** ModelCatalog ID */
+  modelCatalogId: z.string(),
   /** CapabilityTag ID */
   capabilityTagId: z.string(),
   /** 标签 ID（如 vision, tools 等） */
@@ -456,8 +456,8 @@ export type ModelCapabilityTagsResponse = z.infer<
  * 添加模型能力标签请求
  */
 export const AddModelCapabilityTagInputSchema = z.object({
-  /** ModelAvailability ID */
-  modelAvailabilityId: z.string().uuid(),
+  /** ModelCatalog ID */
+  modelCatalogId: z.string().uuid(),
   /** CapabilityTag ID */
   capabilityTagId: z.string().uuid(),
 });
@@ -470,8 +470,8 @@ export type AddModelCapabilityTagInput = z.infer<
  * 移除模型能力标签请求
  */
 export const RemoveModelCapabilityTagInputSchema = z.object({
-  /** ModelAvailability ID */
-  modelAvailabilityId: z.string().uuid(),
+  /** ModelCatalog ID */
+  modelCatalogId: z.string().uuid(),
   /** CapabilityTag ID */
   capabilityTagId: z.string().uuid(),
 });
@@ -597,8 +597,8 @@ export type SyncPricingResponse = z.infer<typeof SyncPricingResponseSchema>;
  */
 export const SyncTagsInputSchema = z
   .object({
-    /** 可选，指定单个模型 */
-    modelAvailabilityId: z.string().uuid().optional(),
+    /** 可选，指定单个模型目录 */
+    modelCatalogId: z.string().uuid().optional(),
   })
   .optional();
 

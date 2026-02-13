@@ -27,7 +27,7 @@ export * from './modules/bot-plugin';
 export * from './modules/skill';
 export * from './modules/bot-skill';
 export * from './modules/bot-channel';
-export * from './modules/model-pricing';
+export * from './modules/model-catalog';
 export * from './modules/bot-model-routing';
 export * from './modules/capability-tag';
 export * from './modules/fallback-chain';

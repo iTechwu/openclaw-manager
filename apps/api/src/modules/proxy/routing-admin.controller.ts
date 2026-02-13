@@ -6,7 +6,12 @@ import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
 import { ComplexityClassifierService } from '@app/clients/internal/complexity-classifier';
-import { ComplexityRoutingConfigService, ModelAvailabilityService, FallbackChainService, FallbackChainModelService } from '@app/db';
+import {
+  ComplexityRoutingConfigService,
+  ModelAvailabilityService,
+  FallbackChainService,
+  FallbackChainModelService,
+} from '@app/db';
 import { success, error, deleted } from '@/common/ts-rest/response.helper';
 import { CommonErrorCode } from '@repo/contracts/errors';
 import { routingAdminContract as c } from '@repo/contracts';
@@ -111,7 +116,9 @@ export class RoutingAdminController {
       );
       const chainModelsMap = new Map<string, any[]>();
       for (const dbChain of dbChains.list) {
-        const chainModels = await this.fallbackChainModelDb.listByChainId(dbChain.id);
+        const chainModels = await this.fallbackChainModelDb.listByChainId(
+          dbChain.id,
+        );
         if (chainModels.length > 0) {
           chainModelsMap.set(dbChain.chainId, chainModels);
         }
@@ -129,22 +136,26 @@ export class RoutingAdminController {
             createdAt: now,
             updatedAt: now,
             // 新增：关联表模型数据（含能力信息）
-            chainModels: dbChainModels?.map((cm: any) => ({
-              id: cm.id,
-              modelAvailabilityId: cm.modelAvailabilityId,
-              priority: cm.priority,
-              protocolOverride: cm.protocolOverride,
-              featuresOverride: cm.featuresOverride,
-              model: cm.modelAvailability.model,
-              vendor: cm.modelAvailability.providerKey?.vendor ?? 'unknown',
-              displayName: cm.modelAvailability.modelPricing?.displayName ?? null,
-              isAvailable: cm.modelAvailability.isAvailable,
-              protocol: cm.protocolOverride || cm.modelAvailability.providerKey?.apiType || 'openai-compatible',
-              supportsExtendedThinking: cm.modelAvailability.modelPricing?.supportsExtendedThinking ?? false,
-              supportsCacheControl: cm.modelAvailability.modelPricing?.supportsCacheControl ?? false,
-              supportsVision: cm.modelAvailability.modelPricing?.supportsVision ?? false,
-              supportsFunctionCalling: cm.modelAvailability.modelPricing?.supportsFunctionCalling ?? true,
-            })) ?? undefined,
+            chainModels:
+              dbChainModels?.map((cm: any) => ({
+                id: cm.id,
+                modelCatalogId: cm.modelCatalogId,
+                priority: cm.priority,
+                protocolOverride: cm.protocolOverride,
+                featuresOverride: cm.featuresOverride,
+                model: cm.modelCatalog.model,
+                vendor: cm.modelCatalog.vendor,
+                displayName: cm.modelCatalog.displayName ?? null,
+                isAvailable: true,
+                protocol: cm.protocolOverride || 'openai-compatible',
+                supportsExtendedThinking:
+                  cm.modelCatalog.supportsExtendedThinking ?? false,
+                supportsCacheControl:
+                  cm.modelCatalog.supportsCacheControl ?? false,
+                supportsVision: cm.modelCatalog.supportsVision ?? false,
+                supportsFunctionCalling:
+                  cm.modelCatalog.supportsFunctionCalling ?? true,
+              })) ?? undefined,
           };
         }),
       }) as any;
@@ -369,12 +380,12 @@ export class RoutingAdminController {
   }
 
   // ============================================================================
-  // 模型定价管理
+  // 模型目录管理
   // ============================================================================
 
-  @TsRestHandler(c.getModelPricingList)
-  async getModelPricingList() {
-    return tsRestHandler(c.getModelPricingList, async () => {
+  @TsRestHandler(c.getModelCatalogList)
+  async getModelCatalogList() {
+    return tsRestHandler(c.getModelCatalogList, async () => {
       const pricingList = this.costTracker.getAllModelPricing();
       return success({
         list: pricingList.map((pricing) => ({
@@ -402,9 +413,9 @@ export class RoutingAdminController {
     });
   }
 
-  @TsRestHandler(c.getModelPricing)
-  async getModelPricing() {
-    return tsRestHandler(c.getModelPricing, async ({ params }) => {
+  @TsRestHandler(c.getModelCatalog)
+  async getModelCatalog() {
+    return tsRestHandler(c.getModelCatalog, async ({ params }) => {
       const pricing = this.costTracker.getModelPricing(params.model);
       if (!pricing) {
         return error(CommonErrorCode.NotFound) as any;
@@ -495,10 +506,7 @@ export class RoutingAdminController {
         {
           include: {
             providerKey: true,
-            modelPricing: true,
-            capabilityTags: {
-              include: { capabilityTag: true },
-            },
+            modelCatalog: true,
           },
         } as any,
       );
@@ -507,32 +515,24 @@ export class RoutingAdminController {
         id: m.id,
         model: m.model,
         vendor: m.providerKey?.vendor ?? 'unknown',
-        displayName: m.modelPricing?.displayName ?? null,
+        displayName: m.modelCatalog?.displayName ?? null,
         apiType: m.providerKey?.apiType ?? null,
         modelType: m.modelType,
         isAvailable: m.isAvailable,
         lastVerifiedAt: m.lastVerifiedAt?.toISOString() ?? null,
-        inputPrice: m.modelPricing
-          ? Number(m.modelPricing.inputPrice)
-          : null,
-        outputPrice: m.modelPricing
-          ? Number(m.modelPricing.outputPrice)
-          : null,
-        reasoningScore: m.modelPricing?.reasoningScore ?? null,
-        codingScore: m.modelPricing?.codingScore ?? null,
-        creativityScore: m.modelPricing?.creativityScore ?? null,
-        speedScore: m.modelPricing?.speedScore ?? null,
+        inputPrice: m.modelCatalog ? Number(m.modelCatalog.inputPrice) : null,
+        outputPrice: m.modelCatalog ? Number(m.modelCatalog.outputPrice) : null,
+        reasoningScore: m.modelCatalog?.reasoningScore ?? null,
+        codingScore: m.modelCatalog?.codingScore ?? null,
+        creativityScore: m.modelCatalog?.creativityScore ?? null,
+        speedScore: m.modelCatalog?.speedScore ?? null,
         supportsExtendedThinking:
-          m.modelPricing?.supportsExtendedThinking ?? false,
-        supportsCacheControl:
-          m.modelPricing?.supportsCacheControl ?? false,
-        supportsVision: m.modelPricing?.supportsVision ?? false,
+          m.modelCatalog?.supportsExtendedThinking ?? false,
+        supportsCacheControl: m.modelCatalog?.supportsCacheControl ?? false,
+        supportsVision: m.modelCatalog?.supportsVision ?? false,
         supportsFunctionCalling:
-          m.modelPricing?.supportsFunctionCalling ?? true,
-        capabilityTags:
-          m.capabilityTags?.map(
-            (ct: any) => ct.capabilityTag?.tagId,
-          ) ?? [],
+          m.modelCatalog?.supportsFunctionCalling ?? true,
+        capabilityTags: [],
       }));
 
       return success({ list: result }) as any;

@@ -162,11 +162,11 @@ export default function RoutingPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ConfigStatusCard
-            title="模型定价"
+            title="模型目录"
             description="管理各模型的定价信息和能力评分"
-            loaded={status?.modelPricing?.loaded ?? false}
-            count={status?.modelPricing?.count ?? 0}
-            lastUpdate={status?.modelPricing?.lastUpdate}
+            loaded={status?.modelCatalog?.loaded ?? false}
+            count={status?.modelCatalog?.count ?? 0}
+            lastUpdate={status?.modelCatalog?.lastUpdate}
             href="/routing/model-pricing"
             icon={DollarSign}
           />

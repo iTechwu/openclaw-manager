@@ -492,7 +492,7 @@ export class BotApiController {
   }
 
   /**
-   * GET /model/:modelAvailabilityId/tags - 获取模型的能力标签
+   * GET /model/:modelCatalogId/tags - 获取模型的能力标签
    * 返回指定模型的所有能力标签关联
    * 仅限管理员访问
    */
@@ -501,12 +501,12 @@ export class BotApiController {
   async getModelTags(): Promise<any> {
     return tsRestHandler(mc.getModelTags, async ({ params }) => {
       const { list } = await this.modelCapabilityTagService.list(
-        { modelAvailabilityId: params.modelAvailabilityId },
+        { modelCatalogId: params.modelCatalogId },
         { limit: 100 },
         {
           select: {
             id: true,
-            modelAvailabilityId: true,
+            modelCatalogId: true,
             capabilityTagId: true,
             matchSource: true,
             confidence: true,
@@ -518,7 +518,7 @@ export class BotApiController {
       return success({
         list: list.map((item) => ({
           id: item.id,
-          modelAvailabilityId: item.modelAvailabilityId,
+          modelCatalogId: item.modelCatalogId,
           capabilityTagId: item.capabilityTagId,
           tagId:
             (item as { capabilityTag?: { tagId: string } }).capabilityTag
@@ -545,7 +545,7 @@ export class BotApiController {
   async addModelTag(): Promise<any> {
     return tsRestHandler(mc.addModelTag, async ({ body }) => {
       await this.capabilityTagMatchingService.addManualTag(
-        body.modelAvailabilityId,
+        body.modelCatalogId,
         body.capabilityTagId,
       );
       return success({ success: true });
@@ -562,7 +562,7 @@ export class BotApiController {
   async removeModelTag(): Promise<any> {
     return tsRestHandler(mc.removeModelTag, async ({ body }) => {
       await this.capabilityTagMatchingService.removeTag(
-        body.modelAvailabilityId,
+        body.modelCatalogId,
         body.capabilityTagId,
       );
       return success({ success: true });
@@ -614,9 +614,9 @@ export class BotApiController {
   @AdminAuth()
   async syncTags(): Promise<any> {
     return tsRestHandler(mc.syncTags, async ({ body }) => {
-      if (body?.modelAvailabilityId) {
+      if (body?.modelCatalogId) {
         await this.modelSyncService.reassignModelCapabilityTags(
-          body.modelAvailabilityId,
+          body.modelCatalogId,
         );
         return success({ processed: 1, tagsAssigned: 1, errors: [] });
       }

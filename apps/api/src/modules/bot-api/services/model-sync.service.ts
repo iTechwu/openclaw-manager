@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import {
   ModelAvailabilityService,
-  ModelPricingService,
+  ModelCatalogService,
   ProviderKeyService,
 } from '@app/db';
 import { CapabilityTagMatchingService } from './capability-tag-matching.service';
@@ -48,7 +48,7 @@ export class ModelSyncService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly modelAvailabilityService: ModelAvailabilityService,
-    private readonly modelPricingService: ModelPricingService,
+    private readonly modelCatalogService: ModelCatalogService,
     private readonly providerKeyService: ProviderKeyService,
     private readonly capabilityTagMatchingService: CapabilityTagMatchingService,
   ) {}
@@ -77,8 +77,8 @@ export class ModelSyncService {
     );
     const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
 
-    // 获取所有 ModelPricing
-    const pricingList = await this.modelPricingService.listAll();
+    // 获取所有 ModelCatalog
+    const pricingList = await this.modelCatalogService.listAll();
     const pricingMap = new Map(
       pricingList.map((p) => [`${p.vendor}:${p.model}`, p]),
     );
@@ -91,32 +91,20 @@ export class ModelSyncService {
           continue;
         }
 
-        // 查找匹配的定价
+        // 查找匹配的 ModelCatalog
         const pricingKey = `${pk.vendor}:${availability.model}`;
-        const pricing = pricingMap.get(pricingKey);
+        const catalog = pricingMap.get(pricingKey);
 
-        if (pricing) {
-          // 更新 ModelAvailability 关联定价
+        if (catalog) {
+          // 更新 ModelAvailability 关联 ModelCatalog
           await this.modelAvailabilityService.update(
             { id: availability.id },
             {
-              modelPricing: { connect: { id: pricing.id } },
-              pricingSynced: true,
-              pricingSyncedAt: new Date(),
+              modelCatalog: { connect: { id: catalog.id } },
             },
           );
           result.synced++;
         } else {
-          // 没有找到定价，标记为未同步
-          if (availability.pricingSynced) {
-            await this.modelAvailabilityService.update(
-              { id: availability.id },
-              {
-                pricingSynced: false,
-                pricingSyncedAt: null,
-              },
-            );
-          }
           result.skipped++;
         }
       } catch (error) {
@@ -149,18 +137,16 @@ export class ModelSyncService {
       throw new Error(`ProviderKey not found: ${availability.providerKeyId}`);
     }
 
-    // 查找匹配的定价
-    const pricing = await this.modelPricingService.get({
+    // 查找匹配的 ModelCatalog
+    const catalog = await this.modelCatalogService.get({
       model: availability.model,
     });
 
-    if (pricing && pricing.vendor === pk.vendor) {
+    if (catalog && catalog.vendor === pk.vendor) {
       await this.modelAvailabilityService.update(
         { id: modelAvailabilityId },
         {
-          modelPricing: { connect: { id: pricing.id } },
-          pricingSynced: true,
-          pricingSyncedAt: new Date(),
+          modelCatalog: { connect: { id: catalog.id } },
         },
       );
       return true;
@@ -179,47 +165,26 @@ export class ModelSyncService {
       errors: [],
     };
 
-    // 获取所有 ModelAvailability
-    const { list: availabilities } = await this.modelAvailabilityService.list(
-      {},
+    // 获取所有 ModelCatalog（标签现在挂在 ModelCatalog 上）
+    const { list: catalogs } = await this.modelCatalogService.list(
+      { isDeleted: false },
       { limit: 10000 },
     );
 
-    // 获取所有 ProviderKey 用于获取 vendor
-    const { list: providerKeys } = await this.providerKeyService.list(
-      {},
-      { limit: 1000 },
-    );
-    const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
-
-    for (const availability of availabilities) {
+    for (const catalog of catalogs) {
       try {
-        const pk = providerKeyMap.get(availability.providerKeyId);
-        if (!pk) {
-          continue;
-        }
-
         // 分配能力标签
-        await this.capabilityTagMatchingService.assignTagsToModelAvailability(
-          availability.id,
-          availability.model,
-          pk.vendor,
-        );
-
-        // 更新同步状态
-        await this.modelAvailabilityService.update(
-          { id: availability.id },
-          {
-            tagsSynced: true,
-            tagsSyncedAt: new Date(),
-          },
+        await this.capabilityTagMatchingService.assignTagsToModelCatalog(
+          catalog.id,
+          catalog.model,
+          catalog.vendor,
         );
 
         result.processed++;
         result.tagsAssigned++; // 简化计数
       } catch (error) {
         result.errors.push({
-          modelId: availability.id,
+          modelId: catalog.id,
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -232,35 +197,18 @@ export class ModelSyncService {
   /**
    * 重新分配单个模型的能力标签
    */
-  async reassignModelCapabilityTags(
-    modelAvailabilityId: string,
-  ): Promise<void> {
-    const availability = await this.modelAvailabilityService.get({
-      id: modelAvailabilityId,
+  async reassignModelCapabilityTags(modelCatalogId: string): Promise<void> {
+    const catalog = await this.modelCatalogService.get({
+      id: modelCatalogId,
     });
-    if (!availability) {
-      throw new Error(`ModelAvailability not found: ${modelAvailabilityId}`);
+    if (!catalog) {
+      throw new Error(`ModelCatalog not found: ${modelCatalogId}`);
     }
 
-    const pk = await this.providerKeyService.get({
-      id: availability.providerKeyId,
-    });
-    if (!pk) {
-      throw new Error(`ProviderKey not found: ${availability.providerKeyId}`);
-    }
-
-    await this.capabilityTagMatchingService.assignTagsToModelAvailability(
-      modelAvailabilityId,
-      availability.model,
-      pk.vendor,
-    );
-
-    await this.modelAvailabilityService.update(
-      { id: modelAvailabilityId },
-      {
-        tagsSynced: true,
-        tagsSyncedAt: new Date(),
-      },
+    await this.capabilityTagMatchingService.assignTagsToModelCatalog(
+      modelCatalogId,
+      catalog.model,
+      catalog.vendor,
     );
   }
 
@@ -275,22 +223,13 @@ export class ModelSyncService {
     );
 
     const totalModels = availabilities.length;
-    const pricingSynced = availabilities.filter((a) => a.pricingSynced).length;
-    const tagsSynced = availabilities.filter((a) => a.tagsSynced).length;
+    const pricingSynced = availabilities.filter(
+      (a: any) => a.modelCatalogId,
+    ).length;
+    const tagsSynced = totalModels; // Tags are now on ModelCatalog level, always considered synced
 
     // 获取最后同步时间
-    let lastSyncAt: Date | null = null;
-    for (const a of availabilities) {
-      if (
-        a.pricingSyncedAt &&
-        (!lastSyncAt || a.pricingSyncedAt > lastSyncAt)
-      ) {
-        lastSyncAt = a.pricingSyncedAt;
-      }
-      if (a.tagsSyncedAt && (!lastSyncAt || a.tagsSyncedAt > lastSyncAt)) {
-        lastSyncAt = a.tagsSyncedAt;
-      }
-    }
+    const lastSyncAt: Date | null = null;
 
     return {
       totalModels,

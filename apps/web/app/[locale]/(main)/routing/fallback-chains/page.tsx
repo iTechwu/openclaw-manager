@@ -46,24 +46,15 @@ function ChainModelNode({
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`rounded-lg px-3 py-2 text-sm ${
-          model.isAvailable
-            ? 'bg-muted'
-            : 'bg-destructive/10 border border-destructive/30'
-        }`}
+        className="rounded-lg px-3 py-2 text-sm bg-muted"
       >
         <div className="font-medium flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">#{index + 1}</span>
           {model.displayName || model.model}
-          {!model.isAvailable && (
-            <Badge variant="destructive" className="text-[10px]">
-              不可用
-            </Badge>
-          )}
         </div>
         <div className="text-xs text-muted-foreground">
           {model.vendor}
-          {model.protocol && ` · ${model.protocol}`}
+          {model.protocolOverride && ` · ${model.protocolOverride}`}
         </div>
         {/* 模型能力标签 */}
         <div className="flex gap-1 mt-1">
@@ -138,9 +129,7 @@ function LegacyModelNode({
 function FallbackChainCard({ chain }: { chain: FallbackChain }) {
   const useNewModels =
     chain.chainModels && chain.chainModels.length > 0;
-  const hasUnavailable =
-    useNewModels &&
-    chain.chainModels!.some((m) => !m.isAvailable);
+  const hasUnavailable = false; // Availability is now checked at runtime
 
   return (
     <Card>

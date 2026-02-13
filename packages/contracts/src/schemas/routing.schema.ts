@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 // ============================================================================
-// Model Pricing Schema - 模型定价
+// Model Catalog Schema - 模型目录（原 Model Pricing）
 // ============================================================================
 
-export const ModelPricingSchema = z.object({
+export const ModelCatalogSchema = z.object({
   id: z.string().uuid(),
   model: z.string(),
   vendor: z.string(),
@@ -41,7 +41,12 @@ export const ModelPricingSchema = z.object({
   updatedAt: z.string(),
 });
 
-export type ModelPricing = z.infer<typeof ModelPricingSchema>;
+export type ModelCatalog = z.infer<typeof ModelCatalogSchema>;
+
+/** @deprecated 使用 ModelCatalogSchema 代替 */
+export const ModelPricingSchema = ModelCatalogSchema;
+/** @deprecated 使用 ModelCatalog 代替 */
+export type ModelPricing = ModelCatalog;
 
 // ============================================================================
 // Capability Tag Schema - 能力标签
@@ -106,11 +111,11 @@ export const FallbackModelSchema = z.object({
 export type FallbackModel = z.infer<typeof FallbackModelSchema>;
 
 /**
- * 新版 Fallback 链模型配置（引用 ModelAvailability）
+ * 新版 Fallback 链模型配置（引用 ModelCatalog）
  */
 export const FallbackChainModelSchema = z.object({
   id: z.string().uuid(),
-  modelAvailabilityId: z.string().uuid(),
+  modelCatalogId: z.string().uuid(),
   priority: z.number().int().min(0),
   protocolOverride: z.string().nullable().optional(),
   featuresOverride: z
@@ -120,13 +125,11 @@ export const FallbackChainModelSchema = z.object({
     })
     .nullable()
     .optional(),
-  // 展示用字段（从 ModelAvailability JOIN 获取）
+  // 展示用字段（从 ModelCatalog 获取）
   model: z.string(),
   vendor: z.string(),
   displayName: z.string().nullable().optional(),
-  isAvailable: z.boolean(),
-  protocol: z.enum(['openai-compatible', 'anthropic-native']).optional(),
-  // 模型能力（从 ModelPricing 获取）
+  // 模型能力（从 ModelCatalog 获取）
   supportsExtendedThinking: z.boolean().optional(),
   supportsCacheControl: z.boolean().optional(),
   supportsVision: z.boolean().optional(),
@@ -234,7 +237,7 @@ export type BotRoutingConfig = z.infer<typeof BotRoutingConfigSchema>;
 // ============================================================================
 
 export const ConfigLoadStatusSchema = z.object({
-  modelPricing: z.object({
+  modelCatalog: z.object({
     loaded: z.boolean(),
     count: z.number(),
     lastUpdate: z.string().optional(),
@@ -430,13 +433,12 @@ export const ComplexityRoutingModelMappingSchema = z.object({
   id: z.string().uuid(),
   complexityConfigId: z.string().uuid(),
   complexityLevel: ComplexityLevelSchema,
-  modelAvailabilityId: z.string().uuid(),
+  modelCatalogId: z.string().uuid(),
   priority: z.number().int().min(0).default(0),
-  // 展示用字段（从 ModelAvailability JOIN 获取）
+  // 展示用字段（从 ModelCatalog 获取）
   model: z.string(),
   vendor: z.string(),
   displayName: z.string().nullable().optional(),
-  isAvailable: z.boolean(),
 });
 
 export type ComplexityRoutingModelMapping = z.infer<
@@ -468,10 +470,10 @@ export const RoutingAvailableModelSchema = z.object({
   isAvailable: z.boolean(),
   /** 最后验证时间 */
   lastVerifiedAt: z.string().nullable().optional(),
-  // 定价信息（来自 ModelPricing）
+  // 定价信息（来自 ModelCatalog）
   inputPrice: z.number().nullable().optional(),
   outputPrice: z.number().nullable().optional(),
-  // 能力评分（来自 ModelPricing）
+  // 能力评分（来自 ModelCatalog）
   reasoningScore: z.number().nullable().optional(),
   codingScore: z.number().nullable().optional(),
   creativityScore: z.number().nullable().optional(),
@@ -485,6 +487,4 @@ export const RoutingAvailableModelSchema = z.object({
   capabilityTags: z.array(z.string()).optional(),
 });
 
-export type RoutingAvailableModel = z.infer<
-  typeof RoutingAvailableModelSchema
->;
+export type RoutingAvailableModel = z.infer<typeof RoutingAvailableModelSchema>;

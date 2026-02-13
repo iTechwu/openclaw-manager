@@ -161,7 +161,7 @@ export function ModelSyncOverview() {
       {/* 快捷链接 */}
       <div className="grid gap-4 md:grid-cols-3">
         <QuickLinkCard
-          title="模型定价"
+          title="模型目录"
           description="管理各模型的定价信息"
           href="/routing/model-pricing"
           icon={DollarSign}

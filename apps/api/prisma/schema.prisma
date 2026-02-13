@@ -519,10 +519,10 @@ model ModelAvailability {
   model          String    @db.VarChar(100)
   /// 关联的 Provider Key（vendor 信息从这里获取）
   providerKeyId  String    @map("provider_key_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（建立正式外键关联）
+  modelCatalogId String?   @map("model_catalog_id") @db.Uuid
   /// 模型类型（llm, image, video, tts, embedding 等）
   modelType      ModelType @default(llm) @map("model_type")
-  /// 关联的 ModelPricing ID（可选，用于快速查询定价）
-  modelPricingId String?   @map("model_pricing_id") @db.Uuid
   /// 模型是否可用（API Key 验证通过）
   isAvailable    Boolean   @default(false) @map("is_available")
   /// 最后验证时间
@@ -530,56 +530,45 @@ model ModelAvailability {
   /// 验证失败时的错误信息
   errorMessage   String?   @map("error_message") @db.Text
 
-  // ============ 同步状态追踪 ============
-  /// 是否已同步定价信息
-  pricingSynced   Boolean   @default(false) @map("pricing_synced")
-  /// 定价同步时间
-  pricingSyncedAt DateTime? @map("pricing_synced_at") @db.Timestamptz(6)
-  /// 是否已同步能力标签
-  tagsSynced      Boolean   @default(false) @map("tags_synced")
-  /// 标签同步时间
-  tagsSyncedAt    DateTime? @map("tags_synced_at") @db.Timestamptz(6)
+  // ============ Vendor 级别特有配置 ============
+  /// 该 vendor 实例的优先级（用于同模型多 vendor 时的选择）
+  vendorPriority Int @default(0) @map("vendor_priority")
+  /// 该 vendor 实例的健康评分（基于历史成功率动态计算）
+  healthScore    Int @default(100) @map("health_score")
 
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  providerKey    ProviderKey          @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
-  modelPricing   ModelPricing?        @relation(fields: [modelPricingId], references: [id], onDelete: SetNull)
-  capabilityTags ModelCapabilityTag[]
-
-  // ============ 路由配置反向关联 ============
-  fallbackChainModels       FallbackChainModel[]
-  complexityRoutingMappings ComplexityRoutingModelMapping[]
+  providerKey    ProviderKey   @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+  modelCatalog   ModelCatalog? @relation(fields: [modelCatalogId], references: [id], onDelete: SetNull)
 
   @@unique([providerKeyId, model])
   @@index([model])
+  @@index([modelCatalogId])
   @@index([modelType])
-  @@index([modelPricingId])
   @@index([isAvailable])
-  @@index([pricingSynced])
-  @@index([tagsSynced])
   @@map("b_model_availability")
 }
 
 /// ModelCapabilityTag - 模型与能力标签的关联表
-/// 存储模型与能力标签的多对多关系，支持匹配来源追踪
+/// 存储模型（非 vendor 实例）与能力标签的多对多关系，支持匹配来源追踪
 model ModelCapabilityTag {
-  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  /// 关联的 ModelAvailability ID
-  modelAvailabilityId String   @map("model_availability_id") @db.Uuid
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 ModelCatalog ID（模型级别）
+  modelCatalogId  String   @map("model_catalog_id") @db.Uuid
   /// 关联的 CapabilityTag ID
-  capabilityTagId     String   @map("capability_tag_id") @db.Uuid
+  capabilityTagId String   @map("capability_tag_id") @db.Uuid
   /// 匹配来源：pattern (模式匹配), feature (特性匹配), scenario (场景匹配), manual (手动)
-  matchSource         String   @default("pattern") @map("match_source") @db.VarChar(20)
+  matchSource     String   @default("pattern") @map("match_source") @db.VarChar(20)
   /// 匹配置信度 (0-100)
-  confidence          Int      @default(100)
-  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  confidence      Int      @default(100)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  modelAvailability ModelAvailability @relation(fields: [modelAvailabilityId], references: [id], onDelete: Cascade)
-  capabilityTag     CapabilityTag     @relation(fields: [capabilityTagId], references: [id], onDelete: Cascade)
+  modelCatalog  ModelCatalog  @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
+  capabilityTag CapabilityTag @relation(fields: [capabilityTagId], references: [id], onDelete: Cascade)
 
-  @@unique([modelAvailabilityId, capabilityTagId])
-  @@index([modelAvailabilityId])
+  @@unique([modelCatalogId, capabilityTagId])
+  @@index([modelCatalogId])
   @@index([capabilityTagId])
   @@index([matchSource])
   @@map("b_model_capability_tag")
@@ -1072,11 +1061,15 @@ enum ChannelConnectionStatus {
 /// ModelPricing - AI 模型定价与能力目录
 /// 存储各 AI 模型的定价信息、能力评分和特性支持，用于成本估算和智能路由
 /// 价格单位：美元/百万 tokens
-model ModelPricing {
+/// ModelCatalog - 模型目录（全局模型注册中心）
+/// 以 model 为唯一标识，存储模型身份、定价、能力评分、特性支持等信息
+/// 所有路由配置（能力标签、Fallback、复杂度路由）均引用此表
+/// 原表名 b_model_pricing，重构后升级为 b_model_catalog
+model ModelCatalog {
   id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  /// 模型名称（如 gpt-4o, claude-sonnet-4-20250514）
+  /// 模型标识符（全局唯一），如 "gpt-4o", "claude-sonnet-4-20250514"
   model       String  @unique @db.VarChar(100)
-  /// 服务商标识（openai, anthropic, google, deepseek 等）
+  /// 原始供应商标识（openai, anthropic, google, deepseek 等）
   vendor      String  @db.VarChar(50)
   /// 模型显示名称
   displayName String? @map("display_name") @db.VarChar(255)
@@ -1149,7 +1142,15 @@ model ModelPricing {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  modelAvailabilities ModelAvailability[]
+  // ============ 关联关系 ============
+  /// 该模型在各 vendor 的可用性记录
+  availabilities            ModelAvailability[]
+  /// 模型能力标签（模型级）
+  capabilityTags            ModelCapabilityTag[]
+  /// Fallback 链引用
+  fallbackChainModels       FallbackChainModel[]
+  /// 复杂度路由引用
+  complexityRoutingMappings ComplexityRoutingModelMapping[]
 
   @@index([vendor])
   @@index([isEnabled])
@@ -1157,7 +1158,7 @@ model ModelPricing {
   @@index([isDeleted])
   @@index([supportsExtendedThinking])
   @@index([supportsCacheControl])
-  @@map("b_model_pricing")
+  @@map("b_model_catalog")
 }
 
 // ============================================================================
@@ -1497,15 +1498,15 @@ model ComplexityRoutingConfig {
 }
 
 /// FallbackChainModel - Fallback 链模型关联表
-/// 替代 FallbackChain.models JSON 字段，通过外键引用实际可用模型
+/// 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
 model FallbackChainModel {
-  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   /// 关联的 FallbackChain ID
-  fallbackChainId     String   @map("fallback_chain_id") @db.Uuid
-  /// 关联的 ModelAvailability ID（引用实际可用模型）
-  modelAvailabilityId String   @map("model_availability_id") @db.Uuid
+  fallbackChainId String   @map("fallback_chain_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（模型级别，运行时解析到可用 vendor）
+  modelCatalogId  String   @map("model_catalog_id") @db.Uuid
   /// 在链中的顺序（0 = 首选模型，数值越小优先级越高）
-  priority            Int      @default(0)
+  priority        Int      @default(0)
   /// 协议覆盖（可选，默认使用 ProviderKey 的 apiType）
   protocolOverride    String?  @map("protocol_override") @db.VarChar(50)
   /// 特性覆盖配置（JSON），如 { extendedThinking: true, cacheControl: true }
@@ -1513,37 +1514,37 @@ model FallbackChainModel {
 
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  fallbackChain     FallbackChain    @relation(fields: [fallbackChainId], references: [id], onDelete: Cascade)
-  modelAvailability ModelAvailability @relation(fields: [modelAvailabilityId], references: [id], onDelete: Cascade)
+  fallbackChain FallbackChain @relation(fields: [fallbackChainId], references: [id], onDelete: Cascade)
+  modelCatalog  ModelCatalog  @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
 
-  @@unique([fallbackChainId, modelAvailabilityId])
+  @@unique([fallbackChainId, modelCatalogId])
   @@index([fallbackChainId])
-  @@index([modelAvailabilityId])
+  @@index([modelCatalogId])
   @@index([priority])
   @@map("b_fallback_chain_model")
 }
 
 /// ComplexityRoutingModelMapping - 复杂度路由模型映射表
-/// 替代 ComplexityRoutingConfig.models JSON 字段，通过外键引用实际可用模型
+/// 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
 model ComplexityRoutingModelMapping {
   id                    String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   /// 关联的 ComplexityRoutingConfig ID
   complexityConfigId    String   @map("complexity_config_id") @db.Uuid
   /// 复杂度级别：super_easy, easy, medium, hard, super_hard
   complexityLevel       String   @map("complexity_level") @db.VarChar(20)
-  /// 关联的 ModelAvailability ID
-  modelAvailabilityId   String   @map("model_availability_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（模型级别）
+  modelCatalogId        String   @map("model_catalog_id") @db.Uuid
   /// 在同级别中的优先级（0 = 首选）
   priority              Int      @default(0)
 
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   complexityConfig  ComplexityRoutingConfig @relation(fields: [complexityConfigId], references: [id], onDelete: Cascade)
-  modelAvailability ModelAvailability       @relation(fields: [modelAvailabilityId], references: [id], onDelete: Cascade)
+  modelCatalog      ModelCatalog            @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
 
-  @@unique([complexityConfigId, complexityLevel, modelAvailabilityId])
+  @@unique([complexityConfigId, complexityLevel, modelCatalogId])
   @@index([complexityConfigId])
-  @@index([modelAvailabilityId])
+  @@index([modelCatalogId])
   @@index([complexityLevel])
   @@map("b_complexity_routing_model_mapping")
 }

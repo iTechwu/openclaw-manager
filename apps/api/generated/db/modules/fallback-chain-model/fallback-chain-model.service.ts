@@ -86,19 +86,14 @@ export class FallbackChainModelService extends TransactionalServiceBase {
   }
 
   /**
-   * 获取指定 FallbackChain 的所有模型，按优先级排序，包含 ModelAvailability 和 ProviderKey 信息
+   * 获取指定 FallbackChain 的所有模型，按优先级排序，包含 ModelCatalog 信息
    */
   @HandlePrismaError(DbOperationType.QUERY)
   async listByChainId(fallbackChainId: string) {
     return this.getReadClient().fallbackChainModel.findMany({
       where: { fallbackChainId },
       include: {
-        modelAvailability: {
-          include: {
-            providerKey: true,
-            modelPricing: true,
-          },
-        },
+        modelCatalog: true,
       },
       orderBy: { priority: 'asc' },
     });
@@ -110,10 +105,7 @@ export class FallbackChainModelService extends TransactionalServiceBase {
   @HandlePrismaError(DbOperationType.CREATE)
   async replaceChainModels(
     fallbackChainId: string,
-    models: Omit<
-      Prisma.FallbackChainModelCreateManyInput,
-      'fallbackChainId'
-    >[],
+    models: Omit<Prisma.FallbackChainModelCreateManyInput, 'fallbackChainId'>[],
   ) {
     // 先删除旧的
     await this.getWriteClient().fallbackChainModel.deleteMany({

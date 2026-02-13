@@ -2,7 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { ApiResponseSchema, SuccessResponseSchema } from '../base';
 import {
-  ModelPricingSchema,
+  ModelCatalogSchema,
   CapabilityTagSchema,
   FallbackChainSchema,
   CostStrategySchema,
@@ -53,7 +53,7 @@ export type BotBudgetQuery = z.infer<typeof BotBudgetQuerySchema>;
 // Create/Update Input Schemas
 // ============================================================================
 
-export const CreateModelPricingInputSchema = z.object({
+export const CreateModelCatalogInputSchema = z.object({
   model: z.string(),
   vendor: z.string(),
   displayName: z.string().optional(),
@@ -78,16 +78,26 @@ export const CreateModelPricingInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type CreateModelPricingInput = z.infer<
-  typeof CreateModelPricingInputSchema
->;
+/** @deprecated Use CreateModelCatalogInputSchema */
+export const CreateModelPricingInputSchema = CreateModelCatalogInputSchema;
 
-export const UpdateModelPricingInputSchema =
-  CreateModelPricingInputSchema.partial();
-
-export type UpdateModelPricingInput = z.infer<
-  typeof UpdateModelPricingInputSchema
+export type CreateModelCatalogInput = z.infer<
+  typeof CreateModelCatalogInputSchema
 >;
+/** @deprecated Use CreateModelCatalogInput */
+export type CreateModelPricingInput = CreateModelCatalogInput;
+
+export const UpdateModelCatalogInputSchema =
+  CreateModelCatalogInputSchema.partial();
+
+/** @deprecated Use UpdateModelCatalogInputSchema */
+export const UpdateModelPricingInputSchema = UpdateModelCatalogInputSchema;
+
+export type UpdateModelCatalogInput = z.infer<
+  typeof UpdateModelCatalogInputSchema
+>;
+/** @deprecated Use UpdateModelCatalogInput */
+export type UpdateModelPricingInput = UpdateModelCatalogInput;
 
 export const CreateCapabilityTagInputSchema = z.object({
   tagId: z.string(),
@@ -136,11 +146,11 @@ export const CreateFallbackChainInputSchema = z.object({
       }),
     )
     .optional(),
-  /** 新版：通过 ModelAvailability ID 引用模型 */
+  /** 新版：通过 ModelCatalog ID 引用模型（模型级） */
   chainModels: z
     .array(
       z.object({
-        modelAvailabilityId: z.string().uuid(),
+        modelCatalogId: z.string().uuid(),
         priority: z.number().int().min(0).default(0),
         protocolOverride: z.string().optional(),
         featuresOverride: z
@@ -250,7 +260,7 @@ export type ClassifyComplexityInput = z.infer<
 
 // 导入/导出 Schema
 export const ExportConfigResponseSchema = z.object({
-  modelPricing: z.array(ModelPricingSchema),
+  modelCatalog: z.array(ModelCatalogSchema),
   capabilityTags: z.array(CapabilityTagSchema),
   fallbackChains: z.array(FallbackChainSchema),
   costStrategies: z.array(CostStrategySchema),
@@ -261,7 +271,7 @@ export const ExportConfigResponseSchema = z.object({
 export type ExportConfigResponse = z.infer<typeof ExportConfigResponseSchema>;
 
 export const ImportConfigInputSchema = z.object({
-  modelPricing: z.array(CreateModelPricingInputSchema).optional(),
+  modelCatalog: z.array(CreateModelCatalogInputSchema).optional(),
   capabilityTags: z.array(CreateCapabilityTagInputSchema).optional(),
   fallbackChains: z.array(CreateFallbackChainInputSchema).optional(),
   costStrategies: z.array(CreateCostStrategyInputSchema).optional(),
@@ -274,9 +284,12 @@ export type ImportConfigInput = z.infer<typeof ImportConfigInputSchema>;
 // Response Schemas
 // ============================================================================
 
-export const ModelPricingListResponseSchema = z.object({
-  list: z.array(ModelPricingSchema),
+export const ModelCatalogListResponseSchema = z.object({
+  list: z.array(ModelCatalogSchema),
 });
+
+/** @deprecated Use ModelCatalogListResponseSchema */
+export const ModelPricingListResponseSchema = ModelCatalogListResponseSchema;
 
 export const CapabilityTagListResponseSchema = z.object({
   list: z.array(CapabilityTagSchema),
@@ -659,77 +672,77 @@ export const routingAdminContract = c.router(
     },
 
     // ========================================================================
-    // 模型定价管理
+    // 模型目录管理
     // ========================================================================
 
     /**
-     * GET /proxy/admin/routing/model-pricing - 获取所有模型定价
+     * GET /proxy/admin/routing/model-catalog - 获取所有模型目录
      */
-    getModelPricingList: {
+    getModelCatalogList: {
       method: 'GET',
-      path: '/model-pricing',
+      path: '/model-catalog',
       responses: {
-        200: ApiResponseSchema(ModelPricingListResponseSchema),
+        200: ApiResponseSchema(ModelCatalogListResponseSchema),
       },
-      summary: '获取所有模型定价',
+      summary: '获取所有模型目录',
     },
 
     /**
-     * GET /proxy/admin/routing/model-pricing/:model - 获取模型定价
+     * GET /proxy/admin/routing/model-catalog/:model - 获取模型目录
      */
-    getModelPricing: {
+    getModelCatalog: {
       method: 'GET',
-      path: '/model-pricing/:model',
+      path: '/model-catalog/:model',
       pathParams: z.object({ model: z.string() }),
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '获取模型定价',
+      summary: '获取模型目录',
     },
 
     /**
-     * POST /proxy/admin/routing/model-pricing - 创建模型定价
+     * POST /proxy/admin/routing/model-catalog - 创建模型目录
      */
-    createModelPricing: {
+    createModelCatalog: {
       method: 'POST',
-      path: '/model-pricing',
-      body: CreateModelPricingInputSchema,
+      path: '/model-catalog',
+      body: CreateModelCatalogInputSchema,
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         400: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '创建模型定价',
+      summary: '创建模型目录',
     },
 
     /**
-     * PUT /proxy/admin/routing/model-pricing/:id - 更新模型定价
+     * PUT /proxy/admin/routing/model-catalog/:id - 更新模型目录
      */
-    updateModelPricing: {
+    updateModelCatalog: {
       method: 'PUT',
-      path: '/model-pricing/:id',
+      path: '/model-catalog/:id',
       pathParams: z.object({ id: z.string().uuid() }),
-      body: UpdateModelPricingInputSchema,
+      body: UpdateModelCatalogInputSchema,
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '更新模型定价',
+      summary: '更新模型目录',
     },
 
     /**
-     * DELETE /proxy/admin/routing/model-pricing/:id - 删除模型定价
+     * DELETE /proxy/admin/routing/model-catalog/:id - 删除模型目录
      */
-    deleteModelPricing: {
+    deleteModelCatalog: {
       method: 'DELETE',
-      path: '/model-pricing/:id',
+      path: '/model-catalog/:id',
       pathParams: z.object({ id: z.string().uuid() }),
       body: z.object({}).optional(),
       responses: {
         200: SuccessResponseSchema,
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '删除模型定价',
+      summary: '删除模型目录',
     },
 
     // ========================================================================
@@ -824,7 +837,7 @@ export const routingAdminContract = c.router(
         200: ApiResponseSchema(
           z.object({
             imported: z.object({
-              modelPricing: z.number(),
+              modelCatalog: z.number(),
               capabilityTags: z.number(),
               fallbackChains: z.number(),
               costStrategies: z.number(),

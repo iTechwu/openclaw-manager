@@ -3,10 +3,10 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import {
   CapabilityTagService,
-  ModelPricingService,
+  ModelCatalogService,
   ModelCapabilityTagService,
 } from '@app/db';
-import type { CapabilityTag, ModelPricing } from '@prisma/client';
+import type { CapabilityTag, ModelCatalog } from '@prisma/client';
 
 /**
  * 能力标签匹配结果
@@ -33,7 +33,7 @@ export class CapabilityTagMatchingService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly capabilityTagService: CapabilityTagService,
-    private readonly modelPricingService: ModelPricingService,
+    private readonly modelCatalogService: ModelCatalogService,
     private readonly modelCapabilityTagService: ModelCapabilityTagService,
   ) {}
 
@@ -53,8 +53,8 @@ export class CapabilityTagMatchingService {
       { limit: 100 },
     );
 
-    // 获取模型定价信息（包含特性标志和推荐场景）
-    const pricing = await this.modelPricingService.get({ model: modelName });
+    // 获取模型目录信息（包含特性标志和推荐场景）
+    const pricing = await this.modelCatalogService.get({ model: modelName });
 
     const matches: TagMatchResult[] = [];
     const matchedTagIds = new Set<string>();
@@ -119,18 +119,18 @@ export class CapabilityTagMatchingService {
   }
 
   /**
-   * 为 ModelAvailability 分配能力标签
-   * @param modelAvailabilityId ModelAvailability ID
+   * 为 ModelCatalog 分配能力标签
+   * @param modelCatalogId ModelCatalog ID
    * @param modelName 模型名称
    * @param vendor 供应商
    */
-  async assignTagsToModelAvailability(
-    modelAvailabilityId: string,
+  async assignTagsToModelCatalog(
+    modelCatalogId: string,
     modelName: string,
     vendor: string,
   ): Promise<void> {
     // 删除现有的自动分配标签（保留手动添加的）
-    await this.deleteAutoAssignedTags(modelAvailabilityId);
+    await this.deleteAutoAssignedTags(modelCatalogId);
 
     // 匹配新标签
     const matches = await this.matchTagsForModel(modelName, vendor);
@@ -139,7 +139,7 @@ export class CapabilityTagMatchingService {
     for (const match of matches) {
       try {
         await this.modelCapabilityTagService.create({
-          modelAvailability: { connect: { id: modelAvailabilityId } },
+          modelCatalog: { connect: { id: modelCatalogId } },
           capabilityTag: { connect: { id: match.capabilityTagId } },
           matchSource: match.matchSource,
           confidence: match.confidence,
@@ -157,21 +157,21 @@ export class CapabilityTagMatchingService {
     }
 
     this.logger.info(
-      `[CapabilityTagMatching] Assigned ${matches.length} tags to model availability ${modelAvailabilityId}`,
+      `[CapabilityTagMatching] Assigned ${matches.length} tags to model catalog ${modelCatalogId}`,
     );
   }
 
   /**
    * 手动为模型添加能力标签
-   * @param modelAvailabilityId ModelAvailability ID
+   * @param modelCatalogId ModelCatalog ID
    * @param capabilityTagId CapabilityTag ID
    */
   async addManualTag(
-    modelAvailabilityId: string,
+    modelCatalogId: string,
     capabilityTagId: string,
   ): Promise<void> {
     await this.modelCapabilityTagService.create({
-      modelAvailability: { connect: { id: modelAvailabilityId } },
+      modelCatalog: { connect: { id: modelCatalogId } },
       capabilityTag: { connect: { id: capabilityTagId } },
       matchSource: 'manual',
       confidence: 100,
@@ -180,15 +180,15 @@ export class CapabilityTagMatchingService {
 
   /**
    * 移除模型的能力标签
-   * @param modelAvailabilityId ModelAvailability ID
+   * @param modelCatalogId ModelCatalog ID
    * @param capabilityTagId CapabilityTag ID
    */
   async removeTag(
-    modelAvailabilityId: string,
+    modelCatalogId: string,
     capabilityTagId: string,
   ): Promise<void> {
     const existing = await this.modelCapabilityTagService.get({
-      modelAvailabilityId,
+      modelCatalogId,
       capabilityTagId,
     });
 
@@ -200,12 +200,10 @@ export class CapabilityTagMatchingService {
   /**
    * 删除自动分配的标签（保留手动添加的）
    */
-  private async deleteAutoAssignedTags(
-    modelAvailabilityId: string,
-  ): Promise<void> {
+  private async deleteAutoAssignedTags(modelCatalogId: string): Promise<void> {
     const { list: existingTags } = await this.modelCapabilityTagService.list(
       {
-        modelAvailabilityId,
+        modelCatalogId,
         matchSource: { not: 'manual' },
       },
       { limit: 100 },
@@ -239,7 +237,7 @@ export class CapabilityTagMatchingService {
   /**
    * 检查模型特性是否匹配标签要求
    */
-  private matchesFeatures(pricing: ModelPricing, tag: CapabilityTag): boolean {
+  private matchesFeatures(pricing: ModelCatalog, tag: CapabilityTag): boolean {
     // 检查是否有任何特性要求
     const hasRequirements =
       tag.requiresExtendedThinking ||

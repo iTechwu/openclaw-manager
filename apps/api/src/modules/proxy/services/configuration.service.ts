@@ -13,7 +13,7 @@ import {
   ModelPricing,
 } from './cost-tracker.service';
 import {
-  ModelPricingService,
+  ModelCatalogService,
   CapabilityTagService,
   FallbackChainService,
   CostStrategyService,
@@ -22,7 +22,7 @@ import {
   ComplexityRoutingModelMappingService,
 } from '@app/db';
 import type {
-  ModelPricing as DbModelPricing,
+  ModelCatalog as DbModelCatalog,
   CapabilityTag as DbCapabilityTag,
   FallbackChain as DbFallbackChain,
   CostStrategy as DbCostStrategy,
@@ -42,7 +42,7 @@ import type { ConfigLoadStatus } from '@repo/contracts';
 @Injectable()
 export class ConfigurationService implements OnModuleInit {
   private loadStatus: ConfigLoadStatus = {
-    modelPricing: { loaded: false, count: 0 },
+    modelCatalog: { loaded: false, count: 0 },
     capabilityTags: { loaded: false, count: 0 },
     fallbackChains: { loaded: false, count: 0 },
     costStrategies: { loaded: false, count: 0 },
@@ -58,7 +58,7 @@ export class ConfigurationService implements OnModuleInit {
     private readonly fallbackEngine: FallbackEngineService,
     private readonly costTracker: CostTrackerService,
     // DB Services for loading configuration from database
-    private readonly modelPricingDb: ModelPricingService,
+    private readonly modelCatalogDb: ModelCatalogService,
     private readonly capabilityTagDb: CapabilityTagService,
     private readonly fallbackChainDb: FallbackChainService,
     private readonly costStrategyDb: CostStrategyService,
@@ -91,7 +91,7 @@ export class ConfigurationService implements OnModuleInit {
     try {
       // 并行加载所有配置
       await Promise.all([
-        this.loadModelPricing(),
+        this.loadModelCatalog(),
         this.loadCapabilityTags(),
         this.loadFallbackChains(),
         this.loadCostStrategies(),
@@ -110,44 +110,44 @@ export class ConfigurationService implements OnModuleInit {
   }
 
   /**
-   * 加载模型定价配置
+   * 加载模型目录配置
    * 优先从数据库加载，如果数据库为空则使用默认配置
    */
-  async loadModelPricing(): Promise<void> {
+  async loadModelCatalog(): Promise<void> {
     try {
       // 从数据库加载
-      const dbPricing = await this.modelPricingDb.listAll();
+      const dbCatalog = await this.modelCatalogDb.listAll();
 
       let pricing: ModelPricing[];
 
-      if (dbPricing && dbPricing.length > 0) {
+      if (dbCatalog && dbCatalog.length > 0) {
         // 转换数据库格式为内部格式
-        pricing = dbPricing.map((p: DbModelPricing) =>
-          this.convertDbModelPricing(p),
+        pricing = dbCatalog.map((p: DbModelCatalog) =>
+          this.convertDbModelCatalog(p),
         );
         this.logger.info(
-          `[ConfigurationService] Loaded ${pricing.length} model pricing entries from database`,
+          `[ConfigurationService] Loaded ${pricing.length} model catalog entries from database`,
         );
       } else {
         // 使用默认配置
         pricing = this.getDefaultModelPricing();
         this.logger.info(
-          `[ConfigurationService] Using ${pricing.length} default model pricing entries (database empty)`,
+          `[ConfigurationService] Using ${pricing.length} default model catalog entries (database empty)`,
         );
       }
 
       await this.costTracker.loadModelPricingFromDb(pricing);
 
-      this.loadStatus.modelPricing = {
+      this.loadStatus.modelCatalog = {
         loaded: true,
         count: pricing.length,
         lastUpdate: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error('[ConfigurationService] Failed to load model pricing', {
+      this.logger.error('[ConfigurationService] Failed to load model catalog', {
         error,
       });
-      this.loadStatus.modelPricing.loaded = false;
+      this.loadStatus.modelCatalog.loaded = false;
     }
   }
 
@@ -216,8 +216,9 @@ export class ConfigurationService implements OnModuleInit {
         // 为每个链加载关联的模型
         chains = await Promise.all(
           dbChains.map(async (c: DbFallbackChain) => {
-            const chainModels =
-              await this.fallbackChainModelDb.listByChainId(c.id);
+            const chainModels = await this.fallbackChainModelDb.listByChainId(
+              c.id,
+            );
 
             if (chainModels.length > 0) {
               // 新架构：从关联表加载模型
@@ -335,8 +336,8 @@ export class ConfigurationService implements OnModuleInit {
           for (const m of mappings) {
             if (!models[m.complexityLevel]) {
               models[m.complexityLevel] = {
-                vendor: m.modelAvailability.providerKey.vendor,
-                model: m.modelAvailability.model,
+                vendor: m.modelCatalog.vendor,
+                model: m.modelCatalog.model,
               };
             }
           }
@@ -456,7 +457,7 @@ export class ConfigurationService implements OnModuleInit {
    */
   isConfigLoaded(): boolean {
     return (
-      this.loadStatus.modelPricing.loaded &&
+      this.loadStatus.modelCatalog.loaded &&
       this.loadStatus.capabilityTags.loaded &&
       this.loadStatus.fallbackChains.loaded &&
       this.loadStatus.costStrategies.loaded &&
@@ -469,9 +470,9 @@ export class ConfigurationService implements OnModuleInit {
   // ============================================================================
 
   /**
-   * 转换数据库 ModelPricing 为内部格式
+   * 转换数据库 ModelCatalog 为内部格式
    */
-  private convertDbModelPricing(db: DbModelPricing): ModelPricing {
+  private convertDbModelCatalog(db: DbModelCatalog): ModelPricing {
     return {
       model: db.model,
       vendor: db.vendor,
@@ -542,15 +543,14 @@ export class ConfigurationService implements OnModuleInit {
       chainId: db.chainId,
       name: db.name,
       models: chainModels.map((cm) => ({
-        modelAvailabilityId: cm.modelAvailabilityId,
-        vendor: cm.modelAvailability.providerKey.vendor,
-        model: cm.modelAvailability.model,
-        protocol: (cm.protocolOverride ||
-          cm.modelAvailability.providerKey.apiType ||
-          'openai-compatible') as 'openai-compatible' | 'anthropic-native',
+        modelCatalogId: cm.modelCatalogId,
+        vendor: cm.modelCatalog.vendor,
+        model: cm.modelCatalog.model,
+        protocol: (cm.protocolOverride || 'openai-compatible') as
+          | 'openai-compatible'
+          | 'anthropic-native',
         features: cm.featuresOverride as FallbackModel['features'],
-        isAvailable: cm.modelAvailability.isAvailable,
-        displayName: cm.modelAvailability.modelPricing?.displayName ?? undefined,
+        displayName: cm.modelCatalog.displayName ?? undefined,
       })),
       triggerStatusCodes: db.triggerStatusCodes as number[],
       triggerErrorTypes: db.triggerErrorTypes as string[],
