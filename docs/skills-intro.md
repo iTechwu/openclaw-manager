@@ -1,225 +1,199 @@
-很好，这个问题本质是在问：
+# OpenClaw Skills 技能体系介绍
 
-OpenClaw 的 skill 到底是“一个 Markdown 文件”，还是“一个完整的插件包”？
+## 概述
 
-答案是：
+OpenClaw 的 Skill（技能）是一种基于 Markdown 的 AI 能力扩展机制。每个 Skill 本质上是一个 `SKILL.md` 文件，包含 YAML frontmatter 元数据和 Markdown 格式的 prompt 指令，用于指导 AI 助手执行特定任务。
 
-✅ 最简单的 skill 可以只有一个 .md 文件
-❗但很多实际 skill 会包含额外配置或运行依赖
+Skill 遵循 Anthropic 提出的 Agent Skill 开放标准，是 AI 编码助手的通用扩展格式。
 
-下面我们按“复杂度层级”拆开讲，这样你能立刻判断某个 skill 需要什么。
+## Skill 文件结构
 
-⸻
+### 最小结构
 
-一、最小 skill：只有 Markdown
+一个 Skill 只需要一个 `SKILL.md` 文件：
 
-这是 OpenClaw 支持的最轻量形式。
+```
+skills/
+└── my-skill/
+    └── SKILL.md
+```
 
-一个基础 skill 本质是：
+### SKILL.md 格式
 
-prompt + metadata + tool 声明
-
-通常写在：
-
-skill-name.md
-
-内容类似：
-
+```markdown
 ---
-
 name: translator
-description: translate text
-tools: []
-
+version: 1.0.0
+description: Translate text between languages
+homepage: https://github.com/author/translator
+repository: https://github.com/author/translator
+user-invocable: true
+tags:
+  - translation
+  - language
+metadata:
+  author: someone
 ---
 
-You are a translator...
+You are a professional translator. When the user provides text...
+```
 
-这种 skill：
+### Frontmatter 字段说明
 
-✅ 不需要额外文件
-✅ 不依赖 MCP
-✅ 不需要安装环境
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | 推荐 | 技能名称 |
+| `version` | string | 推荐 | 版本号，默认 `1.0.0` |
+| `description` | string | 推荐 | 简短描述 |
+| `homepage` | string | 可选 | 主页 URL |
+| `repository` | string | 可选 | 仓库 URL |
+| `user-invocable` | boolean | 可选 | 用户是否可直接调用 |
+| `tags` | string[] | 可选 | 分类标签 |
+| `metadata` | object | 可选 | 扩展元数据 |
 
-OpenClaw 直接读取并执行。
+Frontmatter 是可选的。如果没有 frontmatter，整个文件内容作为 prompt 使用。
 
-适合：
-• 翻译
-• 总结
-• prompt workflow
-• LLM chain
+## Skill 复杂度分级
 
-⸻
+### Level 1：纯 Prompt Skill
 
-二、声明工具的 skill
+最轻量的形式，只包含 prompt 指令，不依赖任何外部工具。
 
-如果 .md 里有：
-
-tools:
-
-- filesystem.read
-
-那意味着：
-
-👉 skill 本身还是只有 md
-👉 但你必须已有 MCP server
-
-否则：
-
-tool unavailable
-
-所以：
-
-skill 文件不增加
-但运行环境需要工具支持。
-
-⸻
-
-三、带配置文件的 skill
-
-一些 skill 会附带：
-
-skill.yaml
-config.json
-manifest.yml
-
-用于：
-• 默认模型
-• 参数
-• 权限
-• MCP endpoint 映射
-
-这种属于：
-
-👉 可选增强
-👉 不一定必须
-
-OpenClaw 能运行 md，但高级行为需要配置文件。
-
-⸻
-
-四、带代码的 skill（高级）
-
-复杂 skill 可能包含：
-
-skill/
-├── skill.md
-├── handler.py
-├── tools/
-└── requirements.txt
-
-用于：
-• 自定义工具逻辑
-• API 调用
-• 数据处理
-
-这种 skill：
-
-❗需要依赖安装
-❗需要运行环境
-
-但这不是 OpenClaw 的基础要求，而是扩展能力。
-
-⸻
-
-五、Docker 化 skill
-
-有些 skill 会提供：
-
-docker-compose.yml
-
-用于：
-• 自动启动 MCP server
-• 运行依赖服务
-
-这属于：
-
-👉 打包便利方案
-👉 非核心 requirement
-
-⸻
-
-判断 skill 是否需要额外文件的方法
-
-看 skill README 或 md 头部：
-
-如果你看到：
-
+```yaml
+---
+name: code-reviewer
+description: Review code for best practices
 tools: []
+---
 
-👉 纯 md skill
+You are a senior code reviewer...
+```
 
-⸻
+适用场景：翻译、总结、代码审查、写作辅助、prompt workflow。
 
-如果看到：
+### Level 2：声明工具依赖的 Skill
 
-requires MCP
+Skill 本身仍然只有 `SKILL.md`，但声明了对 MCP 工具的依赖。
 
-👉 需要工具 server
+```yaml
+---
+name: file-organizer
+description: Organize project files
+tools:
+  - filesystem.read
+  - filesystem.write
+---
+```
 
-⸻
+运行条件：需要对应的 MCP Server 已启动。如果工具不可用，调用时会报 `tool unavailable`。
 
-如果看到：
+### Level 3：带配置的 Skill
 
-pip install
-npm install
+部分 Skill 可能附带额外配置文件：
 
-👉 有运行依赖
+```
+skill/
+├── SKILL.md
+├── config.json      # 默认参数、权限配置
+└── manifest.yml     # MCP endpoint 映射
+```
 
-⸻
+这些配置文件是可选增强，OpenClaw 核心只读取 `SKILL.md`。
 
-实际运行规则
+### Level 4：带代码的 Skill
 
-OpenClaw 加载 skill 时：
+复杂 Skill 可能包含可执行代码：
 
-读取 md → 解析 metadata → 注册能力
+```
+skill/
+├── SKILL.md
+├── handler.py       # 自定义工具逻辑
+├── tools/           # 工具实现
+└── requirements.txt # Python 依赖
+```
 
-它不会强制检查：
-• Python 环境
-• Node 模块
-• MCP server
+这类 Skill 需要安装运行依赖（pip install / npm install），属于高级扩展。
 
-只有在调用时才报错。
+### Level 5：Docker 化 Skill
 
-⸻
+提供 `docker-compose.yml`，用于自动启动 MCP Server 或依赖服务。属于打包便利方案。
 
-总结
+## Skill 来源
 
-可以这样理解：
+### 1. 容器内置技能（Built-in）
 
-✔ 最简单情况
+预装在 OpenClaw Docker 镜像中，位于容器内 `/app/skills/{skillName}/SKILL.md`。
 
-skill = 一个 md 文件
+特点：
+- 随容器版本更新
+- 不可卸载或修改
+- 容器启动即可用
 
-即可运行。
+### 2. 用户安装技能（User-installed）
 
-⸻
+通过 UI 从 OpenClaw 技能市场安装，存储在宿主机并通过 Volume 挂载到容器。
 
-✔ 复杂 skill
+路径映射：
+```
+宿主机: ${BOT_OPENCLAW_DIR}/{isolationKey}/skills/{skillName}/SKILL.md
+容器内: /home/node/.openclaw/skills/{skillName}/SKILL.md
+```
 
-可能需要：
-• MCP server
-• 配置文件
-• 依赖代码
+技能市场来源：[ClawHub](https://www.clawhub.ai/)（OpenClaw 官方技能注册中心），本项目通过 GitHub 仓库 `VoltAgent/awesome-openclaw-skills` 的 README 索引获取技能列表。
 
-但这些是“功能需求”，不是 skill 机制本身。
+### 3. 自定义技能（Custom）
 
-⸻
+用户自行创建的技能，存储在数据库中，不来自 OpenClaw 官方仓库。
 
-一句话总结：
+## 容器内 Skill 加载机制
 
-Markdown 是 skill 的核心载体，但是否需要额外文件，取决于 skill 的功能设计，而不是 OpenClaw 的硬性要求。
+OpenClaw 容器启动后，按以下方式发现和加载技能：
 
-⸻
+```
+1. 扫描 /app/skills/ 目录（内置技能）
+2. 扫描 /home/node/.openclaw/skills/ 目录（用户安装技能）
+3. 读取每个 SKILL.md → 解析 frontmatter → 注册能力
+4. 用户安装技能优先级高于内置技能（同名覆盖）
+```
 
-如果你愿意，我可以继续讲：
+加载优先级：`Workspace > User-installed > Built-in`
 
-✅ 写一个从零开始的最小 skill
-✅ skill metadata 规范
-✅ 如何声明 MCP 工具
-✅ skill 调度流程
-✅ 多 skill 组合
-✅ skill 权限模型
-✅ 自动加载机制
+OpenClaw 不会在加载时检查工具依赖是否满足，只有在实际调用时才会报错。
 
-你想深入哪部分？
+## 当前系统架构
+
+### 数据流
+
+```
+GitHub (openclaw/skills)
+    ↓ fetchSkillDefinition()
+PostgreSQL (Skill 表)
+    ↓ installSkill()
+PostgreSQL (BotSkill 表) + 文件系统 (SKILL.md)
+    ↓ Volume Mount
+Docker 容器 (/home/node/.openclaw/skills/)
+```
+
+### 存储位置
+
+| 位置 | 路径 | 用途 |
+|------|------|------|
+| 数据库 | `Skill` 表 | 技能元数据 + definition.content |
+| 数据库 | `BotSkill` 表 | Bot 与 Skill 的安装关系 |
+| 宿主机 | `data/openclaw/{isolationKey}/skills/{name}/SKILL.md` | 容器可读的技能文件 |
+| 容器 | `/home/node/.openclaw/skills/{name}/SKILL.md` | 运行时加载路径 |
+| 容器 | `/app/skills/{name}/SKILL.md` | 内置技能路径 |
+| 缓存 | `skills/container-skills.json` | 容器技能列表缓存 |
+| GitHub | `openclaw/skills/tree/main/skills/{author}/{slug}/SKILL.md` | 源仓库 |
+
+### 当前安装流程（简化）
+
+```
+用户点击"安装" → API installSkill()
+  → 检查权限和重复
+  → 从 GitHub 拉取 SKILL.md 内容（raw URL → GitHub API fallback）
+  → 更新数据库 definition.content
+  → 创建 BotSkill 记录
+  → 写入 SKILL.md 到文件系统
+  → 容器通过 Volume Mount 自动发现
+```
