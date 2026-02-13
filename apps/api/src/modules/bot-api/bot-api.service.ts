@@ -34,7 +34,7 @@ import type {
   VerifyProviderKeyResponse,
   BotDiagnoseResponse,
 } from '@repo/contracts';
-import { PROVIDER_CONFIGS } from '@repo/contracts';
+import { PROVIDER_CONFIGS, type ProviderVendor } from '@repo/contracts';
 import enviromentUtil from 'libs/infra/utils/enviroment.util';
 
 @Injectable()
@@ -1126,13 +1126,18 @@ export class BotApiService {
       this.encryptionService.encrypt(input.secret),
     );
 
+    // 如果没有提供 baseUrl，使用 vendor 官方默认的 apiHost
+    const providerConfig = PROVIDER_CONFIGS[input.vendor as ProviderVendor];
+    const effectiveBaseUrl = input.baseUrl || providerConfig?.apiHost || null;
+
     const key = await this.providerKeyService.create({
       vendor: input.vendor,
       apiType: input.apiType || null,
       secretEncrypted,
       label: input.label,
       tag: input.tag || null,
-      baseUrl: input.baseUrl || null,
+      baseUrl: effectiveBaseUrl,
+      metadata: (input.metadata as Prisma.InputJsonValue) || undefined,
       createdBy: { connect: { id: userId } },
     });
 
@@ -1714,6 +1719,7 @@ export class BotApiService {
       label: key.label,
       tag: key.tag,
       baseUrl: key.baseUrl,
+      metadata: (key.metadata as Record<string, unknown>) ?? null,
       createdAt: key.createdAt,
     };
   }

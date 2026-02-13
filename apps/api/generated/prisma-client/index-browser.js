@@ -318,6 +318,7 @@ exports.Prisma.ProviderKeyScalarFieldEnum = {
   label: 'label',
   tag: 'tag',
   baseUrl: 'baseUrl',
+  metadata: 'metadata',
   createdById: 'createdById',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
@@ -551,6 +552,9 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   skillId: 'skillId',
   config: 'config',
   installedVersion: 'installedVersion',
+  fileCount: 'fileCount',
+  scriptExecuted: 'scriptExecuted',
+  hasReferences: 'hasReferences',
   isEnabled: 'isEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

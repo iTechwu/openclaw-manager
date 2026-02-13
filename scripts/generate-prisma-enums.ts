@@ -65,10 +65,23 @@ function parsePrismaEnums(schemaContent: string): EnumDefinition[] {
 
     // 收集 enum 值
     if (currentEnum && line && !line.startsWith('//')) {
+      // 跳过 @@map 等 model-level 指令
+      if (line.startsWith('@@')) continue;
+
       // 移除可能的注释
-      const value = line.split('//')[0].trim();
-      if (value) {
-        currentEnum.values.push(value);
+      const withoutComment = line.split('//')[0].trim();
+      if (!withoutComment) continue;
+
+      // 检查 @map("value") 指令 — 使用映射值作为实际 enum 值
+      const mapMatch = withoutComment.match(/@map\("([^"]+)"\)/);
+      if (mapMatch) {
+        currentEnum.values.push(mapMatch[1]);
+      } else {
+        // 无 @map 时取第一个 token（enum 名称）
+        const value = withoutComment.split(/\s+/)[0];
+        if (value) {
+          currentEnum.values.push(value);
+        }
       }
     }
 

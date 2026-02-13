@@ -31,10 +31,10 @@ export class ProviderVerifyClient {
     input: VerifyProviderKeyInput,
   ): Promise<VerifyProviderKeyResponse> {
     const startTime = Date.now();
-    const { vendor, secret, baseUrl, apiType: inputApiType } = input;
+    const { vendor, secret, baseUrl, apiType: inputApiType, metadata } = input;
 
     // Get effective API host
-    const effectiveHost = getEffectiveApiHost(vendor, baseUrl);
+    let effectiveHost = getEffectiveApiHost(vendor, baseUrl);
     if (!effectiveHost) {
       return {
         valid: false,
@@ -46,6 +46,12 @@ export class ProviderVerifyClient {
     // Use input apiType if provided, otherwise fall back to provider config
     const providerConfig = PROVIDER_CONFIGS[vendor];
     const apiType = inputApiType || providerConfig?.apiType || 'openai';
+
+    // MiniMax: append GroupId to host if provided in metadata
+    if (vendor === 'minimax' && metadata?.group_id) {
+      const separator = effectiveHost.includes('?') ? '&' : '?';
+      effectiveHost += `${separator}GroupId=${encodeURIComponent(String(metadata.group_id))}`;
+    }
 
     try {
       let models: ProviderModel[] = [];

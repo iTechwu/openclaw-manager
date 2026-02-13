@@ -144,13 +144,43 @@ export class ModelVerificationService {
   }
 
   /**
-   * 判断是否需要二次验证（volces.com 的模型需要验证）
+   * 判断是否需要二次验证
+   * 国内云平台的 /models 通常会返回全量模型列表，但未开通的模型无法使用，
+   * 因此需要标记为 isAvailable=false，由用户手动验证。
    * @param baseUrl Provider 的 baseUrl
+   * @param vendor  Provider vendor 名称
    * @returns 是否需要验证
    */
-  private requiresVerification(baseUrl?: string | null): boolean {
+  private requiresVerification(
+    baseUrl?: string | null,
+    vendor?: string,
+  ): boolean {
+    // 按 vendor 判断：国内云平台需要开通模型才能使用
+    const vendorsRequiringVerification = [
+      'doubao', // 字节豆包（火山云）
+      'dashscope', // 阿里百炼
+      'hunyuan', // 腾讯混元
+      'tencent-cloud-ti', // 腾讯云 TI
+      'baidu-cloud', // 百度云千帆
+      'modelscope', // 魔搭
+      'xirang', // 天翼云息壤
+    ];
+    if (vendor && vendorsRequiringVerification.includes(vendor)) {
+      return true;
+    }
+
+    // 按 baseUrl 域名兜底判断
     if (!baseUrl) return false;
-    return baseUrl.includes('volces.com');
+    const domainsRequiringVerification = [
+      'volces.com',
+      'dashscope.aliyuncs.com',
+      'hunyuan.cloud.tencent.com',
+      'lkeap.cloud.tencent.com',
+      'qianfan.baidubce.com',
+    ];
+    return domainsRequiringVerification.some((domain) =>
+      baseUrl.includes(domain),
+    );
   }
 
   /**
@@ -346,14 +376,18 @@ export class ModelVerificationService {
     const apiKey = this.encryptionService.decrypt(Buffer.from(secretEncrypted));
     const effectiveApiType = apiType || this.inferApiType(vendor);
 
+    // 如果 ProviderKey 没有设置 baseUrl，回退到 PROVIDER_CONFIGS 中的默认 apiHost
+    const providerConfig = PROVIDER_CONFIGS[vendor as ProviderVendor];
+    const effectiveBaseUrl = baseUrl || providerConfig?.apiHost || null;
+
     this.logger.info(
-      `[ModelVerification] Refreshing models for provider key: vendor=${vendor}, apiType=${effectiveApiType}`,
+      `[ModelVerification] Refreshing models for provider key: vendor=${vendor}, apiType=${effectiveApiType}, baseUrl=${effectiveBaseUrl}`,
     );
 
     // 从端点获取模型列表
     const models = await this.fetchAvailableModels(
       apiKey,
-      baseUrl,
+      effectiveBaseUrl,
       effectiveApiType,
     );
 
@@ -370,8 +404,8 @@ export class ModelVerificationService {
       (r) => !models.includes(r.model),
     );
 
-    // 判断是否需要二次验证（volces.com 的模型需要验证，其他默认可用）
-    const needsVerification = this.requiresVerification(baseUrl);
+    // 判断是否需要二次验证（火山云、阿里云百炼等需要开通的平台）
+    const needsVerification = this.requiresVerification(effectiveBaseUrl, vendor);
 
     // 添加新模型
     const createdModelAvailabilities: Array<{ id: string; model: string }> = [];
@@ -444,6 +478,10 @@ export class ModelVerificationService {
     const apiKey = this.encryptionService.decrypt(Buffer.from(secretEncrypted));
     const effectiveApiType = apiType || this.inferApiType(vendor);
 
+    // 回退到 PROVIDER_CONFIGS 中的默认 apiHost
+    const providerConfig = PROVIDER_CONFIGS[vendor as ProviderVendor];
+    const effectiveBaseUrl = baseUrl || providerConfig?.apiHost || null;
+
     this.logger.info(
       `[ModelVerification] Verifying single model: ${model}, vendor=${vendor}, apiType=${effectiveApiType}`,
     );
@@ -452,7 +490,7 @@ export class ModelVerificationService {
       effectiveApiType,
       model,
       apiKey,
-      baseUrl,
+      effectiveBaseUrl,
     );
 
     // 更新数据库记录
@@ -482,6 +520,10 @@ export class ModelVerificationService {
     const apiKey = this.encryptionService.decrypt(Buffer.from(secretEncrypted));
     const effectiveApiType = apiType || this.inferApiType(vendor);
 
+    // 回退到 PROVIDER_CONFIGS 中的默认 apiHost
+    const providerConfig = PROVIDER_CONFIGS[vendor as ProviderVendor];
+    const effectiveBaseUrl = baseUrl || providerConfig?.apiHost || null;
+
     // 获取所有未验证的模型
     const { list: unverifiedRecords } =
       await this.modelAvailabilityService.list(
@@ -505,7 +547,7 @@ export class ModelVerificationService {
         effectiveApiType,
         record.model,
         apiKey,
-        baseUrl,
+        effectiveBaseUrl,
       );
 
       // 更新数据库记录

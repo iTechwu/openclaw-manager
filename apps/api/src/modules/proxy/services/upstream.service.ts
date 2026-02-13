@@ -20,6 +20,10 @@ export interface UpstreamRequest {
   apiKey: string;
   /** 自定义 URL（如果提供，将覆盖 vendorConfig 的 host 和 basePath） */
   customUrl?: string;
+  /** Provider 特定的元数据（如 MiniMax groupId） */
+  metadata?: Record<string, unknown> | null;
+  /** Provider vendor 标识 */
+  vendor?: string;
 }
 
 /**
@@ -129,7 +133,13 @@ export class UpstreamService {
       }
 
       // 构建上游路径
-      const upstreamPath = targetBasePath + path;
+      let upstreamPath = targetBasePath + path;
+
+      // 注入 provider 特定的 query 参数（如 MiniMax GroupId）
+      if (req.metadata && req.vendor === 'minimax' && req.metadata.group_id) {
+        const separator = upstreamPath.includes('?') ? '&' : '?';
+        upstreamPath += `${separator}GroupId=${encodeURIComponent(String(req.metadata.group_id))}`;
+      }
 
       // 克隆并修改请求头
       const upstreamHeaders: Record<string, string> = { ...headers };
@@ -363,7 +373,13 @@ export class UpstreamService {
         useHttps = true;
       }
 
-      const upstreamPath = targetBasePath + path;
+      let upstreamPath = targetBasePath + path;
+
+      // 注入 provider 特定的 query 参数（如 MiniMax GroupId）
+      if (req.metadata && req.vendor === 'minimax' && req.metadata.group_id) {
+        const separator = upstreamPath.includes('?') ? '&' : '?';
+        upstreamPath += `${separator}GroupId=${encodeURIComponent(String(req.metadata.group_id))}`;
+      }
 
       const upstreamHeaders: Record<string, string> = { ...headers };
       delete upstreamHeaders['host'];

@@ -263,13 +263,14 @@ export class AvailableModelService {
       capabilityTagsByAvailabilityId.set(ct.modelAvailabilityId, tags);
     }
 
-    // 5. 按 vendor:model 聚合模型信息
-    // 同一个模型可能有多个 Provider，需要聚合
+    // 5. 按 model 名称聚合模型信息
+    // 同一个模型可能来自多个 Vendor / Provider，以 model 名为唯一键合并
     const modelAggregation = new Map<
       string,
       {
         model: string;
-        vendor: string;
+        vendor: string; // 首个 vendor（用于兜底显示）
+        vendors: Set<string>; // 所有 vendor（用于 pricing 查找）
         isAvailable: boolean;
         lastVerifiedAt: Date;
         capabilities: string[];
@@ -281,7 +282,7 @@ export class AvailableModelService {
       const pk = providerKeyMap.get(availability.providerKeyId);
       if (!pk) continue;
 
-      const key = `${pk.vendor}:${availability.model}`;
+      const key = availability.model;
       const existing = modelAggregation.get(key);
 
       // 获取该 ModelAvailability 的能力标签
@@ -302,6 +303,8 @@ export class AvailableModelService {
             existing.capabilities.push(tag);
           }
         }
+        // 记录 vendor
+        existing.vendors.add(pk.vendor);
         // 添加 Provider 信息
         if (
           includeProviderInfo &&
@@ -320,6 +323,7 @@ export class AvailableModelService {
         modelAggregation.set(key, {
           model: availability.model,
           vendor: pk.vendor,
+          vendors: new Set([pk.vendor]),
           isAvailable: availability.isAvailable,
           lastVerifiedAt: availability.lastVerifiedAt,
           capabilities: [...tags],
@@ -339,9 +343,13 @@ export class AvailableModelService {
     // 6. 构建最终模型列表
     const models: AvailableModel[] = [];
 
-    for (const [key, aggregated] of modelAggregation) {
-      // 从 ModelPricing 获取补充信息
-      const pricing = pricingMap.get(key);
+    for (const [, aggregated] of modelAggregation) {
+      // 从 ModelPricing 获取补充信息（尝试所有 vendor）
+      let pricing: (typeof pricingList)[number] | undefined;
+      for (const v of aggregated.vendors) {
+        pricing = pricingMap.get(`${v}:${aggregated.model}`);
+        if (pricing) break;
+      }
 
       // 获取能力标签，如果没有则使用 fallback
       const capabilities =

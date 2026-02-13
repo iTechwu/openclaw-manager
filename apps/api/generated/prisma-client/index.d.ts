@@ -19736,6 +19736,7 @@ export namespace Prisma {
     label: number
     tag: number
     baseUrl: number
+    metadata: number
     createdById: number
     isDeleted: number
     createdAt: number
@@ -19783,6 +19784,7 @@ export namespace Prisma {
     label?: true
     tag?: true
     baseUrl?: true
+    metadata?: true
     createdById?: true
     isDeleted?: true
     createdAt?: true
@@ -19871,6 +19873,7 @@ export namespace Prisma {
     label: string
     tag: string | null
     baseUrl: string | null
+    metadata: JsonValue | null
     createdById: string
     isDeleted: boolean
     createdAt: Date
@@ -19903,6 +19906,7 @@ export namespace Prisma {
     label?: boolean
     tag?: boolean
     baseUrl?: boolean
+    metadata?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -19923,6 +19927,7 @@ export namespace Prisma {
     label?: boolean
     tag?: boolean
     baseUrl?: boolean
+    metadata?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -19939,6 +19944,7 @@ export namespace Prisma {
     label?: boolean
     tag?: boolean
     baseUrl?: boolean
+    metadata?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -19955,6 +19961,7 @@ export namespace Prisma {
     label?: boolean
     tag?: boolean
     baseUrl?: boolean
+    metadata?: boolean
     createdById?: boolean
     isDeleted?: boolean
     createdAt?: boolean
@@ -19962,7 +19969,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type ProviderKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendor" | "apiType" | "secretEncrypted" | "label" | "tag" | "baseUrl" | "createdById" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["providerKey"]>
+  export type ProviderKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendor" | "apiType" | "secretEncrypted" | "label" | "tag" | "baseUrl" | "metadata" | "createdById" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["providerKey"]>
   export type ProviderKeyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     createdBy?: boolean | UserInfoDefaultArgs<ExtArgs>
     usageLogs?: boolean | ProviderKey$usageLogsArgs<ExtArgs>
@@ -20015,6 +20022,10 @@ export namespace Prisma {
        * 自定义 API 地址，用于私有部署或代理服务
        */
       baseUrl: string | null
+      /**
+       * 额外配置（JSON），存储 provider 特定的参数，如 MiniMax 的 groupId
+       */
+      metadata: Prisma.JsonValue | null
       /**
        * 创建者用户 ID
        */
@@ -20457,6 +20468,7 @@ export namespace Prisma {
     readonly label: FieldRef<"ProviderKey", 'String'>
     readonly tag: FieldRef<"ProviderKey", 'String'>
     readonly baseUrl: FieldRef<"ProviderKey", 'String'>
+    readonly metadata: FieldRef<"ProviderKey", 'Json'>
     readonly createdById: FieldRef<"ProviderKey", 'String'>
     readonly isDeleted: FieldRef<"ProviderKey", 'Boolean'>
     readonly createdAt: FieldRef<"ProviderKey", 'DateTime'>
@@ -37846,8 +37858,18 @@ export namespace Prisma {
 
   export type AggregateBotSkill = {
     _count: BotSkillCountAggregateOutputType | null
+    _avg: BotSkillAvgAggregateOutputType | null
+    _sum: BotSkillSumAggregateOutputType | null
     _min: BotSkillMinAggregateOutputType | null
     _max: BotSkillMaxAggregateOutputType | null
+  }
+
+  export type BotSkillAvgAggregateOutputType = {
+    fileCount: number | null
+  }
+
+  export type BotSkillSumAggregateOutputType = {
+    fileCount: number | null
   }
 
   export type BotSkillMinAggregateOutputType = {
@@ -37855,6 +37877,9 @@ export namespace Prisma {
     botId: string | null
     skillId: string | null
     installedVersion: string | null
+    fileCount: number | null
+    scriptExecuted: boolean | null
+    hasReferences: boolean | null
     isEnabled: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -37865,6 +37890,9 @@ export namespace Prisma {
     botId: string | null
     skillId: string | null
     installedVersion: string | null
+    fileCount: number | null
+    scriptExecuted: boolean | null
+    hasReferences: boolean | null
     isEnabled: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -37876,6 +37904,9 @@ export namespace Prisma {
     skillId: number
     config: number
     installedVersion: number
+    fileCount: number
+    scriptExecuted: number
+    hasReferences: number
     isEnabled: number
     createdAt: number
     updatedAt: number
@@ -37883,11 +37914,22 @@ export namespace Prisma {
   }
 
 
+  export type BotSkillAvgAggregateInputType = {
+    fileCount?: true
+  }
+
+  export type BotSkillSumAggregateInputType = {
+    fileCount?: true
+  }
+
   export type BotSkillMinAggregateInputType = {
     id?: true
     botId?: true
     skillId?: true
     installedVersion?: true
+    fileCount?: true
+    scriptExecuted?: true
+    hasReferences?: true
     isEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -37898,6 +37940,9 @@ export namespace Prisma {
     botId?: true
     skillId?: true
     installedVersion?: true
+    fileCount?: true
+    scriptExecuted?: true
+    hasReferences?: true
     isEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -37909,6 +37954,9 @@ export namespace Prisma {
     skillId?: true
     config?: true
     installedVersion?: true
+    fileCount?: true
+    scriptExecuted?: true
+    hasReferences?: true
     isEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -37953,6 +38001,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: BotSkillAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotSkillSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: BotSkillMinAggregateInputType
@@ -37983,6 +38043,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: BotSkillCountAggregateInputType | true
+    _avg?: BotSkillAvgAggregateInputType
+    _sum?: BotSkillSumAggregateInputType
     _min?: BotSkillMinAggregateInputType
     _max?: BotSkillMaxAggregateInputType
   }
@@ -37993,10 +38055,15 @@ export namespace Prisma {
     skillId: string
     config: JsonValue | null
     installedVersion: string | null
+    fileCount: number | null
+    scriptExecuted: boolean
+    hasReferences: boolean
     isEnabled: boolean
     createdAt: Date
     updatedAt: Date
     _count: BotSkillCountAggregateOutputType | null
+    _avg: BotSkillAvgAggregateOutputType | null
+    _sum: BotSkillSumAggregateOutputType | null
     _min: BotSkillMinAggregateOutputType | null
     _max: BotSkillMaxAggregateOutputType | null
   }
@@ -38021,6 +38088,9 @@ export namespace Prisma {
     skillId?: boolean
     config?: boolean
     installedVersion?: boolean
+    fileCount?: boolean
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -38034,6 +38104,9 @@ export namespace Prisma {
     skillId?: boolean
     config?: boolean
     installedVersion?: boolean
+    fileCount?: boolean
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -38047,6 +38120,9 @@ export namespace Prisma {
     skillId?: boolean
     config?: boolean
     installedVersion?: boolean
+    fileCount?: boolean
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -38060,12 +38136,15 @@ export namespace Prisma {
     skillId?: boolean
     config?: boolean
     installedVersion?: boolean
+    fileCount?: boolean
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type BotSkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "skillId" | "config" | "installedVersion" | "isEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["botSkill"]>
+  export type BotSkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "skillId" | "config" | "installedVersion" | "fileCount" | "scriptExecuted" | "hasReferences" | "isEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["botSkill"]>
   export type BotSkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bot?: boolean | BotDefaultArgs<ExtArgs>
     skill?: boolean | SkillDefaultArgs<ExtArgs>
@@ -38094,6 +38173,18 @@ export namespace Prisma {
        * 安装时的技能版本
        */
       installedVersion: string | null
+      /**
+       * 安装的文件数量
+       */
+      fileCount: number | null
+      /**
+       * 是否执行了初始化脚本
+       */
+      scriptExecuted: boolean
+      /**
+       * 是否包含参考文档
+       */
+      hasReferences: boolean
       isEnabled: boolean
       createdAt: Date
       updatedAt: Date
@@ -38527,6 +38618,9 @@ export namespace Prisma {
     readonly skillId: FieldRef<"BotSkill", 'String'>
     readonly config: FieldRef<"BotSkill", 'Json'>
     readonly installedVersion: FieldRef<"BotSkill", 'String'>
+    readonly fileCount: FieldRef<"BotSkill", 'Int'>
+    readonly scriptExecuted: FieldRef<"BotSkill", 'Boolean'>
+    readonly hasReferences: FieldRef<"BotSkill", 'Boolean'>
     readonly isEnabled: FieldRef<"BotSkill", 'Boolean'>
     readonly createdAt: FieldRef<"BotSkill", 'DateTime'>
     readonly updatedAt: FieldRef<"BotSkill", 'DateTime'>
@@ -51741,6 +51835,7 @@ export namespace Prisma {
     label: 'label',
     tag: 'tag',
     baseUrl: 'baseUrl',
+    metadata: 'metadata',
     createdById: 'createdById',
     isDeleted: 'isDeleted',
     createdAt: 'createdAt',
@@ -52019,6 +52114,9 @@ export namespace Prisma {
     skillId: 'skillId',
     config: 'config',
     installedVersion: 'installedVersion',
+    fileCount: 'fileCount',
+    scriptExecuted: 'scriptExecuted',
+    hasReferences: 'hasReferences',
     isEnabled: 'isEnabled',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -53802,6 +53900,7 @@ export namespace Prisma {
     label?: StringFilter<"ProviderKey"> | string
     tag?: StringNullableFilter<"ProviderKey"> | string | null
     baseUrl?: StringNullableFilter<"ProviderKey"> | string | null
+    metadata?: JsonNullableFilter<"ProviderKey">
     createdById?: UuidFilter<"ProviderKey"> | string
     isDeleted?: BoolFilter<"ProviderKey"> | boolean
     createdAt?: DateTimeFilter<"ProviderKey"> | Date | string
@@ -53821,6 +53920,7 @@ export namespace Prisma {
     label?: SortOrder
     tag?: SortOrderInput | SortOrder
     baseUrl?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -53844,6 +53944,7 @@ export namespace Prisma {
     label?: StringFilter<"ProviderKey"> | string
     tag?: StringNullableFilter<"ProviderKey"> | string | null
     baseUrl?: StringNullableFilter<"ProviderKey"> | string | null
+    metadata?: JsonNullableFilter<"ProviderKey">
     createdById?: UuidFilter<"ProviderKey"> | string
     isDeleted?: BoolFilter<"ProviderKey"> | boolean
     createdAt?: DateTimeFilter<"ProviderKey"> | Date | string
@@ -53863,6 +53964,7 @@ export namespace Prisma {
     label?: SortOrder
     tag?: SortOrderInput | SortOrder
     baseUrl?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -53884,6 +53986,7 @@ export namespace Prisma {
     label?: StringWithAggregatesFilter<"ProviderKey"> | string
     tag?: StringNullableWithAggregatesFilter<"ProviderKey"> | string | null
     baseUrl?: StringNullableWithAggregatesFilter<"ProviderKey"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"ProviderKey">
     createdById?: UuidWithAggregatesFilter<"ProviderKey"> | string
     isDeleted?: BoolWithAggregatesFilter<"ProviderKey"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ProviderKey"> | Date | string
@@ -55263,6 +55366,9 @@ export namespace Prisma {
     skillId?: UuidFilter<"BotSkill"> | string
     config?: JsonNullableFilter<"BotSkill">
     installedVersion?: StringNullableFilter<"BotSkill"> | string | null
+    fileCount?: IntNullableFilter<"BotSkill"> | number | null
+    scriptExecuted?: BoolFilter<"BotSkill"> | boolean
+    hasReferences?: BoolFilter<"BotSkill"> | boolean
     isEnabled?: BoolFilter<"BotSkill"> | boolean
     createdAt?: DateTimeFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeFilter<"BotSkill"> | Date | string
@@ -55276,6 +55382,9 @@ export namespace Prisma {
     skillId?: SortOrder
     config?: SortOrderInput | SortOrder
     installedVersion?: SortOrderInput | SortOrder
+    fileCount?: SortOrderInput | SortOrder
+    scriptExecuted?: SortOrder
+    hasReferences?: SortOrder
     isEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -55293,6 +55402,9 @@ export namespace Prisma {
     skillId?: UuidFilter<"BotSkill"> | string
     config?: JsonNullableFilter<"BotSkill">
     installedVersion?: StringNullableFilter<"BotSkill"> | string | null
+    fileCount?: IntNullableFilter<"BotSkill"> | number | null
+    scriptExecuted?: BoolFilter<"BotSkill"> | boolean
+    hasReferences?: BoolFilter<"BotSkill"> | boolean
     isEnabled?: BoolFilter<"BotSkill"> | boolean
     createdAt?: DateTimeFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeFilter<"BotSkill"> | Date | string
@@ -55306,12 +55418,17 @@ export namespace Prisma {
     skillId?: SortOrder
     config?: SortOrderInput | SortOrder
     installedVersion?: SortOrderInput | SortOrder
+    fileCount?: SortOrderInput | SortOrder
+    scriptExecuted?: SortOrder
+    hasReferences?: SortOrder
     isEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: BotSkillCountOrderByAggregateInput
+    _avg?: BotSkillAvgOrderByAggregateInput
     _max?: BotSkillMaxOrderByAggregateInput
     _min?: BotSkillMinOrderByAggregateInput
+    _sum?: BotSkillSumOrderByAggregateInput
   }
 
   export type BotSkillScalarWhereWithAggregatesInput = {
@@ -55323,6 +55440,9 @@ export namespace Prisma {
     skillId?: UuidWithAggregatesFilter<"BotSkill"> | string
     config?: JsonNullableWithAggregatesFilter<"BotSkill">
     installedVersion?: StringNullableWithAggregatesFilter<"BotSkill"> | string | null
+    fileCount?: IntNullableWithAggregatesFilter<"BotSkill"> | number | null
+    scriptExecuted?: BoolWithAggregatesFilter<"BotSkill"> | boolean
+    hasReferences?: BoolWithAggregatesFilter<"BotSkill"> | boolean
     isEnabled?: BoolWithAggregatesFilter<"BotSkill"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotSkill"> | Date | string
@@ -57839,6 +57959,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -57857,6 +57978,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById: string
     isDeleted?: boolean
     createdAt?: Date | string
@@ -57875,6 +57997,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57893,6 +58016,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57911,6 +58035,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById: string
     isDeleted?: boolean
     createdAt?: Date | string
@@ -57926,6 +58051,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57940,6 +58066,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59506,6 +59633,9 @@ export namespace Prisma {
     id?: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -59519,6 +59649,9 @@ export namespace Prisma {
     skillId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -59528,6 +59661,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59541,6 +59677,9 @@ export namespace Prisma {
     skillId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59552,6 +59691,9 @@ export namespace Prisma {
     skillId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -59561,6 +59703,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59572,6 +59717,9 @@ export namespace Prisma {
     skillId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62163,6 +62311,7 @@ export namespace Prisma {
     label?: SortOrder
     tag?: SortOrder
     baseUrl?: SortOrder
+    metadata?: SortOrder
     createdById?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -63233,9 +63382,16 @@ export namespace Prisma {
     skillId?: SortOrder
     config?: SortOrder
     installedVersion?: SortOrder
+    fileCount?: SortOrder
+    scriptExecuted?: SortOrder
+    hasReferences?: SortOrder
     isEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type BotSkillAvgOrderByAggregateInput = {
+    fileCount?: SortOrder
   }
 
   export type BotSkillMaxOrderByAggregateInput = {
@@ -63243,6 +63399,9 @@ export namespace Prisma {
     botId?: SortOrder
     skillId?: SortOrder
     installedVersion?: SortOrder
+    fileCount?: SortOrder
+    scriptExecuted?: SortOrder
+    hasReferences?: SortOrder
     isEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -63253,9 +63412,16 @@ export namespace Prisma {
     botId?: SortOrder
     skillId?: SortOrder
     installedVersion?: SortOrder
+    fileCount?: SortOrder
+    scriptExecuted?: SortOrder
+    hasReferences?: SortOrder
     isEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type BotSkillSumOrderByAggregateInput = {
+    fileCount?: SortOrder
   }
 
   export type DecimalFilter<$PrismaModel = never> = {
@@ -67176,6 +67342,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67193,6 +67360,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67661,6 +67829,7 @@ export namespace Prisma {
     label?: StringFilter<"ProviderKey"> | string
     tag?: StringNullableFilter<"ProviderKey"> | string | null
     baseUrl?: StringNullableFilter<"ProviderKey"> | string | null
+    metadata?: JsonNullableFilter<"ProviderKey">
     createdById?: UuidFilter<"ProviderKey"> | string
     isDeleted?: BoolFilter<"ProviderKey"> | boolean
     createdAt?: DateTimeFilter<"ProviderKey"> | Date | string
@@ -69393,6 +69562,9 @@ export namespace Prisma {
     id?: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69404,6 +69576,9 @@ export namespace Prisma {
     skillId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69898,6 +70073,9 @@ export namespace Prisma {
     skillId?: UuidFilter<"BotSkill"> | string
     config?: JsonNullableFilter<"BotSkill">
     installedVersion?: StringNullableFilter<"BotSkill"> | string | null
+    fileCount?: IntNullableFilter<"BotSkill"> | number | null
+    scriptExecuted?: BoolFilter<"BotSkill"> | boolean
+    hasReferences?: BoolFilter<"BotSkill"> | boolean
     isEnabled?: BoolFilter<"BotSkill"> | boolean
     createdAt?: DateTimeFilter<"BotSkill"> | Date | string
     updatedAt?: DateTimeFilter<"BotSkill"> | Date | string
@@ -70575,6 +70753,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70592,6 +70771,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById: string
     isDeleted?: boolean
     createdAt?: Date | string
@@ -70782,6 +70962,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70799,6 +70980,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71247,6 +71429,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71264,6 +71447,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById: string
     isDeleted?: boolean
     createdAt?: Date | string
@@ -71370,6 +71554,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71387,6 +71572,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71471,6 +71657,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71488,6 +71675,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById: string
     isDeleted?: boolean
     createdAt?: Date | string
@@ -71594,6 +71782,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71611,6 +71800,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdById?: StringFieldUpdateOperationsInput | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -72759,6 +72949,9 @@ export namespace Prisma {
     id?: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -72770,6 +72963,9 @@ export namespace Prisma {
     botId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74124,6 +74320,7 @@ export namespace Prisma {
     label: string
     tag?: string | null
     baseUrl?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74322,6 +74519,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74339,6 +74537,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74356,6 +74555,7 @@ export namespace Prisma {
     label?: StringFieldUpdateOperationsInput | string
     tag?: NullableStringFieldUpdateOperationsInput | string | null
     baseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74876,6 +75076,9 @@ export namespace Prisma {
     skillId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75027,6 +75230,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75038,6 +75244,9 @@ export namespace Prisma {
     skillId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75048,6 +75257,9 @@ export namespace Prisma {
     skillId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75733,6 +75945,9 @@ export namespace Prisma {
     botId: string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: string | null
+    fileCount?: number | null
+    scriptExecuted?: boolean
+    hasReferences?: boolean
     isEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75742,6 +75957,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75753,6 +75971,9 @@ export namespace Prisma {
     botId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75763,6 +75984,9 @@ export namespace Prisma {
     botId?: StringFieldUpdateOperationsInput | string
     config?: NullableJsonNullValueInput | InputJsonValue
     installedVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    fileCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scriptExecuted?: BoolFieldUpdateOperationsInput | boolean
+    hasReferences?: BoolFieldUpdateOperationsInput | boolean
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

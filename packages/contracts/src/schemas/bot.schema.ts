@@ -258,6 +258,7 @@ export const ProviderKeySchema = z.object({
   label: z.string(),
   tag: z.string().nullable(),
   baseUrl: z.string().nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   createdAt: z.coerce.date(),
 });
 
@@ -278,6 +279,7 @@ export const AddProviderKeyInputSchema = z.object({
     .url({ message: 'Must be a valid URL' })
     .optional()
     .transform((val) => (val?.trim() === '' ? undefined : val)),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type AddProviderKeyInput = z.infer<typeof AddProviderKeyInputSchema>;
@@ -320,6 +322,8 @@ export const VerifyProviderKeyInputSchema = z.object({
     .transform((val) => (val?.trim() === '' ? undefined : val)),
   /** API protocol type - overrides the default from PROVIDER_CONFIGS */
   apiType: ProviderApiTypeSchema.optional(),
+  /** Provider-specific metadata (e.g. MiniMax groupId) */
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type VerifyProviderKeyInput = z.infer<

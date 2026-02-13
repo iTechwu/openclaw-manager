@@ -14,6 +14,7 @@ import {
   BatchInstallResultSchema,
   ContainerSkillsResponseSchema,
   UpdateBotSkillVersionResponseSchema,
+  CheckSkillUpdatesResponseSchema,
 } from '../schemas/skill.schema';
 
 const c = initContract();
@@ -196,6 +197,21 @@ export const botSkillContract = c.router(
       },
       summary: '更新技能版本',
       description: '从 GitHub 重新拉取技能内容并更新到最新版本',
+    },
+
+    /**
+     * 批量检查已安装技能的更新
+     */
+    checkUpdates: {
+      method: 'POST',
+      path: '/:hostname/skills/check-updates',
+      pathParams: z.object({ hostname: z.string() }),
+      body: z.object({}),
+      responses: {
+        200: createApiResponse(CheckSkillUpdatesResponseSchema),
+      },
+      summary: '批量检查技能更新',
+      description: '检查所有已安装的 OpenClaw 技能是否有新版本',
     },
 
     /**

@@ -14,6 +14,8 @@ export interface KeySelection {
   baseUrl?: string | null;
   /** 提供商 vendor */
   vendor: string;
+  /** Provider 特定的元数据 */
+  metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -44,6 +46,7 @@ export class KeyringService {
       secretEncrypted: Buffer | Uint8Array;
       baseUrl?: string | null;
       vendor: string;
+      metadata?: unknown;
     }>,
     cacheKey: string,
   ): KeySelection | null {
@@ -65,6 +68,7 @@ export class KeyringService {
         secret,
         baseUrl: key.baseUrl,
         vendor: key.vendor,
+        metadata: (key.metadata as Record<string, unknown>) ?? null,
       };
     } catch (error) {
       this.logger.error(`Failed to decrypt key ${key.id}:`, error);
@@ -86,6 +90,7 @@ export class KeyringService {
       secretEncrypted: k.secretEncrypted,
       baseUrl: k.baseUrl,
       vendor: k.vendor,
+      metadata: k.metadata,
     }));
 
     return this.selectFromKeys(keysWithSecret, vendor);
@@ -117,6 +122,7 @@ export class KeyringService {
             secretEncrypted: k.secretEncrypted,
             baseUrl: k.baseUrl,
             vendor: k.vendor,
+            metadata: k.metadata,
           }));
           return this.selectFromKeys(keysWithSecret, `${vendor}:${tag}`);
         }
@@ -135,6 +141,7 @@ export class KeyringService {
         secretEncrypted: k.secretEncrypted,
         baseUrl: k.baseUrl,
         vendor: k.vendor,
+        metadata: k.metadata,
       }));
       return this.selectFromKeys(keysWithSecret, `${vendor}:default`);
     }
@@ -151,6 +158,7 @@ export class KeyringService {
         secretEncrypted: k.secretEncrypted,
         baseUrl: k.baseUrl,
         vendor: k.vendor,
+        metadata: k.metadata,
       }));
       return this.selectFromKeys(keysWithSecret, vendor);
     }

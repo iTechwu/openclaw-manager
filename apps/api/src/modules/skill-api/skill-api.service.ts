@@ -8,6 +8,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import * as semver from 'semver';
+import { SKILL_LIMITS } from '@repo/constants';
 import { SkillService, BotSkillService, BotService } from '@app/db';
 import {
   OpenClawSkillSyncClient,
@@ -27,6 +28,7 @@ import type {
   BatchInstallResult,
   ContainerSkillsResponse,
   UpdateBotSkillVersionResponse,
+  CheckSkillUpdatesResponse,
 } from '@repo/contracts';
 
 const OPENCLAW_SOURCE = 'openclaw';
@@ -310,6 +312,9 @@ export class SkillApiService {
           skillId: true,
           config: true,
           installedVersion: true,
+          fileCount: true,
+          scriptExecuted: true,
+          hasReferences: true,
           isEnabled: true,
           createdAt: true,
           updatedAt: true,
@@ -423,14 +428,14 @@ export class SkillApiService {
       }
     }
 
-    // 重新获取 skill 以拿到可能更新后的 version
-    const latestSkill = await this.skillService.getById(data.skillId);
+    // 重新获取 skill 以拿到可能更新后的 version 和 definition
+    const updatedSkill = await this.skillService.getById(data.skillId);
     const botSkill = await this.botSkillService.create({
       bot: { connect: { id: bot.id } },
       skill: { connect: { id: data.skillId } },
       config: (data.config as Prisma.InputJsonValue) || {},
       isEnabled: true,
-      installedVersion: latestSkill?.version || skill.version,
+      installedVersion: updatedSkill?.version || skill.version,
     });
 
     this.logger.info('Skill installed', {
@@ -439,8 +444,7 @@ export class SkillApiService {
       hostname,
     });
 
-    // 将 SKILL.md 写入 OpenClaw skills 目录，使容器能发现该技能
-    const updatedSkill = await this.skillService.getById(data.skillId);
+    // 将技能文件写入 OpenClaw skills 目录，使容器能发现该技能
     if (updatedSkill) {
       const definition = updatedSkill.definition as Record<
         string,
@@ -449,26 +453,48 @@ export class SkillApiService {
       const mdContent = (definition?.content as string) || null;
       const skillDirName = updatedSkill.slug || updatedSkill.name;
 
-      // 如果没有 SKILL.md 内容，从元数据生成基础版本
-      const content =
-        mdContent ||
-        this.generateSkillMd(updatedSkill.name, updatedSkill.description);
-
-      this.logger.info('Writing SKILL.md to openclaw dir', {
-        skillId: data.skillId,
-        skillDirName,
-        hasOriginalContent: !!mdContent,
-      });
-
       try {
-        await this.workspaceService.writeInstalledSkillMd(
-          userId,
-          hostname,
-          skillDirName,
-          content,
-        );
+        if (updatedSkill.source === OPENCLAW_SOURCE && updatedSkill.sourceUrl) {
+          const { scriptExists, fileCount, hasReferences } =
+            await this.writeSkillToFilesystem(
+              userId,
+              hostname,
+              skillDirName,
+              updatedSkill.sourceUrl,
+              mdContent,
+              updatedSkill.name,
+              updatedSkill.description,
+            );
+
+          const scriptExecuted =
+            scriptExists && bot.containerId
+              ? !!(await this.executeSkillScript(
+                  bot.containerId,
+                  skillDirName,
+                ))
+              : false;
+
+          await this.botSkillService.update(
+            { id: botSkill.id },
+            { fileCount, scriptExecuted, hasReferences },
+          );
+        } else {
+          const content =
+            mdContent ||
+            this.generateSkillMd(updatedSkill.name, updatedSkill.description);
+          await this.workspaceService.writeInstalledSkillMd(
+            userId,
+            hostname,
+            skillDirName,
+            content,
+          );
+          await this.botSkillService.update(
+            { id: botSkill.id },
+            { fileCount: 1 },
+          );
+        }
       } catch (error) {
-        this.logger.warn('Failed to write SKILL.md to openclaw dir', {
+        this.logger.warn('Failed to write skill files', {
           skillId: data.skillId,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
@@ -481,6 +507,10 @@ export class SkillApiService {
         botId: true,
         skillId: true,
         config: true,
+        installedVersion: true,
+        fileCount: true,
+        scriptExecuted: true,
+        hasReferences: true,
         isEnabled: true,
         createdAt: true,
         updatedAt: true,
@@ -534,12 +564,54 @@ export class SkillApiService {
           continue;
         }
 
-        await this.botSkillService.create({
+        const newBotSkill = await this.botSkillService.create({
           bot: { connect: { id: bot.id } },
           skill: { connect: { id: skillId } },
           config: {},
           isEnabled: true,
+          installedVersion: skill.version,
         });
+
+        // 非阻塞写入文件系统
+        const skillDirName = skill.slug || skill.name;
+        const definition = skill.definition as Record<string, unknown> | null;
+        const mdContent = (definition?.content as string) || null;
+
+        if (skill.source === OPENCLAW_SOURCE && skill.sourceUrl) {
+          this.writeSkillToFilesystem(
+            userId,
+            hostname,
+            skillDirName,
+            skill.sourceUrl,
+            mdContent,
+            skill.name,
+            skill.description,
+          )
+            .then(({ fileCount, hasReferences }) =>
+              this.botSkillService.update(
+                { id: newBotSkill.id },
+                { fileCount, hasReferences },
+              ),
+            )
+            .catch((err) => {
+              this.logger.warn('Batch install: failed to write skill files', {
+                skillId,
+                error: err instanceof Error ? err.message : 'Unknown error',
+              });
+            });
+        } else {
+          const content =
+            mdContent || this.generateSkillMd(skill.name, skill.description);
+          this.workspaceService
+            .writeInstalledSkillMd(userId, hostname, skillDirName, content)
+            .catch((err) => {
+              this.logger.warn('Batch install: failed to write SKILL.md', {
+                skillId,
+                error: err instanceof Error ? err.message : 'Unknown error',
+              });
+            });
+        }
+
         installed++;
       } catch {
         failed++;
@@ -596,6 +668,10 @@ export class SkillApiService {
         botId: true,
         skillId: true,
         config: true,
+        installedVersion: true,
+        fileCount: true,
+        scriptExecuted: true,
+        hasReferences: true,
         isEnabled: true,
         createdAt: true,
         updatedAt: true,
@@ -732,20 +808,31 @@ export class SkillApiService {
       { installedVersion: newVersion },
     );
 
-    // 5. 重写文件系统中的 SKILL.md
+    // 5. 重写文件系统中的技能文件（整目录）
     const skillDirName = skill.slug || skill.name;
-    const content =
-      skillDefinition.content ||
-      this.generateSkillMd(skill.name, skill.description);
     try {
-      await this.workspaceService.writeInstalledSkillMd(
-        userId,
-        hostname,
-        skillDirName,
-        content,
+      const { scriptExists, fileCount, hasReferences } =
+        await this.writeSkillToFilesystem(
+          userId,
+          hostname,
+          skillDirName,
+          skill.sourceUrl,
+          skillDefinition.content,
+          skill.name,
+          skill.description,
+        );
+
+      const scriptExecuted =
+        scriptExists && bot.containerId
+          ? !!(await this.executeSkillScript(bot.containerId, skillDirName))
+          : false;
+
+      await this.botSkillService.update(
+        { id: botSkill.id },
+        { fileCount, scriptExecuted, hasReferences },
       );
     } catch (error) {
-      this.logger.warn('Failed to write updated SKILL.md', {
+      this.logger.warn('Failed to write updated skill files', {
         skillId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -766,6 +853,9 @@ export class SkillApiService {
         skillId: true,
         config: true,
         installedVersion: true,
+        fileCount: true,
+        scriptExecuted: true,
+        hasReferences: true,
         isEnabled: true,
         createdAt: true,
         updatedAt: true,
@@ -781,6 +871,107 @@ export class SkillApiService {
       botSkill: this.mapBotSkillToItem(fullBotSkill!),
       previousVersion,
       newVersion,
+    };
+  }
+
+  /**
+   * 批量检查已安装技能的更新
+   * 对所有 OpenClaw 来源的已安装技能，并发获取 _meta.json 检查版本
+   */
+  async checkSkillUpdates(
+    userId: string,
+    hostname: string,
+  ): Promise<CheckSkillUpdatesResponse> {
+    const bot = await this.botService.get({ hostname, createdById: userId });
+    if (!bot) {
+      throw new NotFoundException('Bot 不存在');
+    }
+
+    const botSkills = await this.botSkillService.list(
+      { botId: bot.id },
+      { limit: 100 },
+      {
+        select: {
+          id: true,
+          skillId: true,
+          installedVersion: true,
+          skill: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              version: true,
+              latestVersion: true,
+              source: true,
+              sourceUrl: true,
+            },
+          },
+        },
+      },
+    );
+
+    // 筛选 OpenClaw 技能
+    const openclawSkills = botSkills.list.filter(
+      (bs: any) => bs.skill?.source === OPENCLAW_SOURCE && bs.skill?.sourceUrl,
+    );
+
+    const CONCURRENCY = 5;
+    const updates: CheckSkillUpdatesResponse['updates'] = [];
+
+    for (let i = 0; i < openclawSkills.length; i += CONCURRENCY) {
+      const batch = openclawSkills.slice(i, i + CONCURRENCY);
+      const results = await Promise.allSettled(
+        batch.map(async (bs: any) => {
+          const skill = bs.skill;
+          const meta = await this.openClawSyncClient.fetchSkillMeta(
+            skill.sourceUrl,
+          );
+          const latestVersion = meta?.latest?.version || skill.version;
+          const currentVersion = bs.installedVersion || skill.version;
+
+          // 更新 Skill 表的 latestVersion
+          if (latestVersion !== skill.latestVersion) {
+            await this.skillService.update({ id: skill.id }, { latestVersion });
+          }
+
+          let updateAvailable = false;
+          if (currentVersion && latestVersion) {
+            try {
+              updateAvailable = semver.lt(currentVersion, latestVersion);
+            } catch {
+              // invalid semver
+            }
+          }
+
+          return {
+            skillId: skill.id,
+            skillName: skill.name,
+            currentVersion,
+            latestVersion,
+            updateAvailable,
+          };
+        }),
+      );
+
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          updates.push(result.value);
+        }
+      }
+    }
+
+    const updatesAvailable = updates.filter((u) => u.updateAvailable).length;
+
+    this.logger.info('Skill updates checked', {
+      hostname,
+      checkedCount: updates.length,
+      updatesAvailable,
+    });
+
+    return {
+      updates,
+      checkedCount: updates.length,
+      updatesAvailable,
     };
   }
 
@@ -879,6 +1070,103 @@ export class SkillApiService {
   }
 
   /**
+   * 将技能文件写入文件系统
+   * 优先使用整目录安装，失败时 fallback 到单文件 SKILL.md
+   */
+  private async writeSkillToFilesystem(
+    userId: string,
+    hostname: string,
+    skillDirName: string,
+    sourceUrl: string,
+    mdContent: string | null,
+    skillName: string,
+    skillDescription: string | null,
+  ): Promise<{ scriptExists: boolean; fileCount: number; hasReferences: boolean }> {
+    // 尝试整目录安装
+    try {
+      const files =
+        await this.openClawSyncClient.fetchSkillDirectory(sourceUrl);
+
+      const scriptExists = files.some(
+        (f) => f.relativePath === 'scripts/init.sh',
+      );
+      const hasReferences = files.some((f) =>
+        f.relativePath.startsWith('references/'),
+      );
+
+      await this.workspaceService.writeSkillFiles(
+        userId,
+        hostname,
+        skillDirName,
+        files,
+      );
+
+      this.logger.info('Full directory install succeeded', {
+        skillDirName,
+        fileCount: files.length,
+        scriptExists,
+        hasReferences,
+      });
+
+      return { scriptExists, fileCount: files.length, hasReferences };
+    } catch (error) {
+      this.logger.warn(
+        'Full directory install failed, falling back to SKILL.md only',
+        {
+          skillDirName,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      );
+    }
+
+    // Fallback: 仅写入 SKILL.md
+    const content =
+      mdContent || this.generateSkillMd(skillName, skillDescription);
+    await this.workspaceService.writeInstalledSkillMd(
+      userId,
+      hostname,
+      skillDirName,
+      content,
+    );
+
+    return { scriptExists: false, fileCount: 1, hasReferences: false };
+  }
+
+  /**
+   * 执行技能的初始化脚本
+   */
+  private async executeSkillScript(
+    containerId: string,
+    skillDirName: string,
+  ): Promise<string | null> {
+    for (const scriptName of SKILL_LIMITS.ALLOWED_SCRIPT_NAMES) {
+      try {
+        const result = await this.openClawClient.execSkillScript(
+          containerId,
+          skillDirName,
+          scriptName,
+        );
+        if (result) {
+          this.logger.info('Skill script executed', {
+            skillDirName,
+            scriptName,
+            success: result.success,
+            outputPreview: result.stdout.substring(0, 200),
+          });
+          return result.stdout;
+        }
+      } catch (error) {
+        this.logger.warn('Skill script execution failed', {
+          skillDirName,
+          scriptName,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+    return null;
+  }
+
+  /**
    * 从技能元数据生成基础 SKILL.md 内容
    */
   private generateSkillMd(name: string, description: string | null): string {
@@ -962,13 +1250,26 @@ export class SkillApiService {
         mdContent || this.generateSkillMd(skill.name, skill.description);
 
       try {
-        await this.workspaceService.writeInstalledSkillMd(
-          userId,
-          hostname,
-          skillDirName,
-          content,
-        );
-        this.logger.info('Synced missing SKILL.md', {
+        // OpenClaw 技能使用整目录安装
+        if (skill.source === OPENCLAW_SOURCE && skill.sourceUrl) {
+          await this.writeSkillToFilesystem(
+            userId,
+            hostname,
+            skillDirName,
+            skill.sourceUrl,
+            mdContent,
+            skill.name,
+            skill.description,
+          );
+        } else {
+          await this.workspaceService.writeInstalledSkillMd(
+            userId,
+            hostname,
+            skillDirName,
+            content,
+          );
+        }
+        this.logger.info('Synced missing skill files', {
           skillId: skill.id,
           skillDirName,
           hasGitHubContent: !!mdContent,
@@ -1005,6 +1306,9 @@ export class SkillApiService {
       isEnabled: botSkill.isEnabled,
       installedVersion: installed,
       updateAvailable,
+      fileCount: botSkill.fileCount ?? null,
+      scriptExecuted: botSkill.scriptExecuted ?? false,
+      hasReferences: botSkill.hasReferences ?? false,
       createdAt: botSkill.createdAt,
       updatedAt: botSkill.updatedAt,
       skill: skillItem,

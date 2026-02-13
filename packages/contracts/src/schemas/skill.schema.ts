@@ -179,6 +179,9 @@ export const BotSkillItemSchema = z.object({
   isEnabled: z.boolean(),
   installedVersion: z.string().nullable().optional(),
   updateAvailable: z.boolean().optional(),
+  fileCount: z.number().nullable().optional(),
+  scriptExecuted: z.boolean().optional(),
+  hasReferences: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   skill: SkillItemSchema,
@@ -265,4 +268,30 @@ export const UpdateBotSkillVersionResponseSchema = z.object({
 
 export type UpdateBotSkillVersionResponse = z.infer<
   typeof UpdateBotSkillVersionResponseSchema
+>;
+
+/**
+ * 技能更新检查项 Schema
+ */
+export const SkillUpdateCheckItemSchema = z.object({
+  skillId: z.string().uuid(),
+  skillName: z.string(),
+  currentVersion: z.string().nullable(),
+  latestVersion: z.string(),
+  updateAvailable: z.boolean(),
+});
+
+export type SkillUpdateCheckItem = z.infer<typeof SkillUpdateCheckItemSchema>;
+
+/**
+ * 批量检查更新响应 Schema
+ */
+export const CheckSkillUpdatesResponseSchema = z.object({
+  updates: z.array(SkillUpdateCheckItemSchema),
+  checkedCount: z.number(),
+  updatesAvailable: z.number(),
+});
+
+export type CheckSkillUpdatesResponse = z.infer<
+  typeof CheckSkillUpdatesResponseSchema
 >;

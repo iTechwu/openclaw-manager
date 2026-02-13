@@ -620,6 +620,56 @@ export class WorkspaceService {
   }
 
   /**
+   * 将技能的完整目录文件写入 OpenClaw skills 目录
+   * 路径: ${openclawDir}/{isolationKey}/skills/{skillName}/{relativePath}
+   */
+  async writeSkillFiles(
+    userId: string,
+    hostname: string,
+    skillName: string,
+    files: Array<{ relativePath: string; content: string; size: number }>,
+  ): Promise<void> {
+    const skillsDir = this.getSkillsPath(userId, hostname);
+    const skillDir = path.join(skillsDir, skillName);
+
+    // 清理旧目录，确保干净安装
+    await fs.rm(skillDir, { recursive: true, force: true });
+    await fs.mkdir(skillDir, { recursive: true });
+
+    try {
+      for (const file of files) {
+        // 路径遍历防护
+        const normalized = path.normalize(file.relativePath);
+        if (normalized.startsWith('..') || path.isAbsolute(normalized)) {
+          this.logger.warn('Skipping unsafe file path', {
+            relativePath: file.relativePath,
+            skillName,
+          });
+          continue;
+        }
+
+        const filePath = path.join(skillDir, normalized);
+
+        // 二次验证：确保最终路径在 skillDir 内
+        if (!filePath.startsWith(skillDir)) {
+          this.logger.warn('Path traversal detected, skipping', {
+            relativePath: file.relativePath,
+            skillDir,
+          });
+          continue;
+        }
+
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.writeFile(filePath, file.content, 'utf-8');
+      }
+    } catch (error) {
+      // 回滚：清理半写入的目录
+      await fs.rm(skillDir, { recursive: true, force: true }).catch(() => {});
+      throw error;
+    }
+  }
+
+  /**
    * 删除已安装技能的 SKILL.md 目录
    */
   async removeInstalledSkillMd(

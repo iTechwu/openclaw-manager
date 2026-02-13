@@ -210,6 +210,103 @@ export class OpenClawClient {
   }
 
   /**
+   * 在容器内执行技能脚本
+   * 仅允许执行白名单中的脚本（如 init.sh）
+   */
+  async execSkillScript(
+    containerId: string,
+    skillName: string,
+    scriptName: string = 'init.sh',
+  ): Promise<{ stdout: string; success: boolean } | null> {
+    const safeNamePattern = /^[a-zA-Z0-9_\-.]+$/;
+    if (!safeNamePattern.test(skillName) || !safeNamePattern.test(scriptName)) {
+      this.logger.warn('OpenClawClient: 非法技能名或脚本名', {
+        skillName,
+        scriptName,
+      });
+      return null;
+    }
+
+    const scriptPath = `/home/node/.openclaw/skills/${skillName}/scripts/${scriptName}`;
+    this.logger.info('OpenClawClient: 执行技能脚本', {
+      containerId,
+      skillName,
+      scriptPath,
+    });
+
+    try {
+      const execCreateUrl = `http://localhost/containers/${containerId}/exec`;
+      const execCreateResponse = await firstValueFrom(
+        this.httpService
+          .post(
+            execCreateUrl,
+            {
+              AttachStdout: true,
+              AttachStderr: true,
+              Cmd: ['sh', scriptPath],
+              User: 'node',
+            },
+            {
+              socketPath: '/var/run/docker.sock',
+              timeout: 10000,
+            },
+          )
+          .pipe(
+            timeout(10000),
+            catchError((error) => {
+              this.logger.error('OpenClawClient: 创建脚本 exec 失败', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+              throw error;
+            }),
+          ),
+      );
+
+      const execId = execCreateResponse.data?.Id;
+      if (!execId) return null;
+
+      const execStartUrl = `http://localhost/exec/${execId}/start`;
+      const execStartResponse = await firstValueFrom(
+        this.httpService
+          .post(
+            execStartUrl,
+            { Detach: false, Tty: false },
+            {
+              socketPath: '/var/run/docker.sock',
+              timeout: 30000,
+              responseType: 'arraybuffer',
+            },
+          )
+          .pipe(
+            timeout(30000),
+            catchError((error) => {
+              this.logger.error('OpenClawClient: 脚本执行超时或失败', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+              throw error;
+            }),
+          ),
+      );
+
+      const stdout = this.parseDockerExecOutput(execStartResponse.data);
+      this.logger.info('OpenClawClient: 脚本执行完成', {
+        containerId,
+        skillName,
+        outputLength: stdout.length,
+      });
+
+      return { stdout, success: true };
+    } catch (error) {
+      this.logger.error('OpenClawClient: 脚本执行失败', {
+        containerId,
+        skillName,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return { stdout: '', success: false };
+    }
+  }
+
+  /**
    * 通过 WebSocket 发送消息并获取响应
    * 使用 OpenClaw Gateway 协议：
    * 1. 连接后发送 connect 请求进行认证

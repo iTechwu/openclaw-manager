@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ModelTypeSchema } from './provider.schema';
+import { ModelTypeSchema } from './prisma-enums.generated';
 
 // ============================================================================
 // Available Model Schema (面向用户展示的模型信息)

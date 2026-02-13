@@ -20,6 +20,7 @@ export interface TokenValidation {
   keyId?: string;
   apiKey?: string;
   baseUrl?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -180,6 +181,7 @@ export class KeyringProxyService {
       keyId: proxyToken.keyId,
       apiKey,
       baseUrl: providerKey.baseUrl,
+      metadata: (providerKey.metadata as Record<string, unknown>) ?? null,
     };
   }
 

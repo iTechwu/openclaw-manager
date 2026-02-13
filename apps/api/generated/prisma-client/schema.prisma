@@ -448,6 +448,8 @@ model ProviderKey {
   tag             String? @db.VarChar(100)
   /// 自定义 API 地址，用于私有部署或代理服务
   baseUrl         String? @map("base_url") @db.VarChar(500)
+  /// 额外配置（JSON），存储 provider 特定的参数，如 MiniMax 的 groupId
+  metadata        Json?   @map("metadata") @db.JsonB
   /// 创建者用户 ID
   createdById     String  @map("created_by_id") @db.Uuid
 
@@ -1029,6 +1031,12 @@ model BotSkill {
   config           Json? // Skill instance configuration overrides
   /// 安装时的技能版本
   installedVersion String?  @map("installed_version") @db.VarChar(20)
+  /// 安装的文件数量
+  fileCount        Int?     @map("file_count")
+  /// 是否执行了初始化脚本
+  scriptExecuted   Boolean  @default(false) @map("script_executed")
+  /// 是否包含参考文档
+  hasReferences    Boolean  @default(false) @map("has_references")
   isEnabled        Boolean  @default(true) @map("is_enabled")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
