@@ -56,6 +56,8 @@
   "liveFromContainer": "Live",
   "cachedData": "Cached",
   "noContainerSkills": "No built-in skills detected",
+  "tabInstalled": "Installed Skills",
+  "tabContainer": "Container Built-in",
   "types": {
     "tool": "Tool",
     "prompt": "Prompt",

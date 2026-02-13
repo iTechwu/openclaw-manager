@@ -317,7 +317,19 @@ export class SkillApiService {
       },
     );
 
-    return botSkills.list.map((bs) => this.mapBotSkillToItem(bs));
+    const items = botSkills.list.map((bs) => this.mapBotSkillToItem(bs));
+
+    // 非阻塞：补写缺失的 SKILL.md（已安装但尚未写入文件系统的技能）
+    this.syncInstalledSkillsMd(userId, hostname, botSkills.list).catch(
+      (error) => {
+        this.logger.warn('syncInstalledSkillsMd failed', {
+          hostname,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      },
+    );
+
+    return items;
   }
 
   /**
@@ -418,6 +430,39 @@ export class SkillApiService {
       skillId: data.skillId,
       hostname,
     });
+
+    // 将 SKILL.md 写入 OpenClaw skills 目录，使容器能发现该技能
+    const updatedSkill = await this.skillService.getById(data.skillId);
+    if (updatedSkill) {
+      const definition = updatedSkill.definition as Record<string, unknown> | null;
+      const mdContent = (definition?.content as string) || null;
+      const skillDirName = updatedSkill.slug || updatedSkill.name;
+
+      // 如果没有 SKILL.md 内容，从元数据生成基础版本
+      const content =
+        mdContent ||
+        this.generateSkillMd(updatedSkill.name, updatedSkill.description);
+
+      this.logger.info('Writing SKILL.md to openclaw dir', {
+        skillId: data.skillId,
+        skillDirName,
+        hasOriginalContent: !!mdContent,
+      });
+
+      try {
+        await this.workspaceService.writeInstalledSkillMd(
+          userId,
+          hostname,
+          skillDirName,
+          content,
+        );
+      } catch (error) {
+        this.logger.warn('Failed to write SKILL.md to openclaw dir', {
+          skillId: data.skillId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
 
     const fullBotSkill = await this.botSkillService.getById(botSkill.id, {
       select: {
@@ -581,6 +626,21 @@ export class SkillApiService {
       skillId,
       hostname,
     });
+
+    // 清理 OpenClaw skills 目录中的 SKILL.md
+    const skill = await this.skillService.getById(skillId);
+    if (skill) {
+      const skillDirName = skill.slug || skill.name;
+      this.workspaceService
+        .removeInstalledSkillMd(userId, hostname, skillDirName)
+        .catch((error) => {
+          this.logger.warn('Failed to remove SKILL.md from openclaw dir', {
+            skillId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        });
+    }
+
     return { success: true };
   }
 
@@ -675,6 +735,67 @@ export class SkillApiService {
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
     };
+  }
+
+  /**
+   * 从技能元数据生成基础 SKILL.md 内容
+   */
+  private generateSkillMd(
+    name: string,
+    description: string | null,
+  ): string {
+    const lines = [`# ${name}`];
+    if (description) {
+      lines.push('', description);
+    }
+    return lines.join('\n');
+  }
+
+  /**
+   * 补写缺失的 SKILL.md（已安装但尚未写入文件系统的技能）
+   * 非阻塞调用，不影响列表接口响应速度
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async syncInstalledSkillsMd(
+    userId: string,
+    hostname: string,
+    botSkills: any[],
+  ): Promise<void> {
+    for (const bs of botSkills) {
+      const skill = bs.skill;
+      if (!skill) continue;
+
+      const skillDirName = skill.slug || skill.name;
+      const exists = await this.workspaceService.hasInstalledSkillMd(
+        userId,
+        hostname,
+        skillDirName,
+      );
+      if (exists) continue;
+
+      const definition = skill.definition as Record<string, unknown> | null;
+      const mdContent = (definition?.content as string) || null;
+      const content =
+        mdContent || this.generateSkillMd(skill.name, skill.description);
+
+      try {
+        await this.workspaceService.writeInstalledSkillMd(
+          userId,
+          hostname,
+          skillDirName,
+          content,
+        );
+        this.logger.info('Synced missing SKILL.md', {
+          skillId: skill.id,
+          skillDirName,
+        });
+      } catch (error) {
+        this.logger.warn('Failed to sync SKILL.md', {
+          skillId: skill.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

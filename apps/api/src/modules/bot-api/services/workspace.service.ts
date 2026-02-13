@@ -245,6 +245,15 @@ export class WorkspaceService {
   }
 
   /**
+   * Get skills directory path for a bot: ${openclawDir}/{isolationKey}/skills/
+   * This path is mounted into the container at /home/node/.openclaw/skills/
+   */
+  getSkillsPath(userId: string, hostname: string): string {
+    const openclawPath = this.getOpenclawPath(userId, hostname);
+    return path.join(openclawPath, 'skills');
+  }
+
+  /**
    * Ensure OpenClaw data directory exists for a bot
    * Called before container creation to ensure the mount point exists
    */
@@ -511,8 +520,7 @@ export class WorkspaceService {
     hostname: string,
     skills: ContainerSkillItem[],
   ): Promise<void> {
-    const openclawPath = this.getOpenclawPath(userId, hostname);
-    const skillsDir = path.join(openclawPath, 'skills');
+    const skillsDir = this.getSkillsPath(userId, hostname);
     await fs.mkdir(skillsDir, { recursive: true });
 
     // 清理不再存在的旧 MD 文件（并行删除）
@@ -565,8 +573,7 @@ export class WorkspaceService {
     hostname: string,
     includeContent = false,
   ): Promise<{ skills: ContainerSkillItem[]; fetchedAt: string } | null> {
-    const openclawPath = this.getOpenclawPath(userId, hostname);
-    const skillsDir = path.join(openclawPath, 'skills');
+    const skillsDir = this.getSkillsPath(userId, hostname);
     const filePath = path.join(skillsDir, 'container-skills.json');
     try {
       const raw = await fs.readFile(filePath, 'utf-8');
@@ -592,6 +599,54 @@ export class WorkspaceService {
       return data;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * 将已安装技能的 SKILL.md 写入 OpenClaw skills 目录
+   * 路径: ${openclawDir}/{isolationKey}/skills/{skillName}/SKILL.md
+   * 容器内映射为: /home/node/.openclaw/skills/{skillName}/SKILL.md
+   */
+  async writeInstalledSkillMd(
+    userId: string,
+    hostname: string,
+    skillName: string,
+    content: string,
+  ): Promise<void> {
+    const skillsDir = this.getSkillsPath(userId, hostname);
+    const skillDir = path.join(skillsDir, skillName);
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(path.join(skillDir, 'SKILL.md'), content, 'utf-8');
+  }
+
+  /**
+   * 删除已安装技能的 SKILL.md 目录
+   */
+  async removeInstalledSkillMd(
+    userId: string,
+    hostname: string,
+    skillName: string,
+  ): Promise<void> {
+    const skillsDir = this.getSkillsPath(userId, hostname);
+    const skillDir = path.join(skillsDir, skillName);
+    await fs.rm(skillDir, { recursive: true, force: true });
+  }
+
+  /**
+   * 检查某个技能的 SKILL.md 是否已存在
+   */
+  async hasInstalledSkillMd(
+    userId: string,
+    hostname: string,
+    skillName: string,
+  ): Promise<boolean> {
+    const skillsDir = this.getSkillsPath(userId, hostname);
+    const mdPath = path.join(skillsDir, skillName, 'SKILL.md');
+    try {
+      await fs.access(mdPath);
+      return true;
+    } catch {
+      return false;
     }
   }
 }

@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
 } from '@repo/ui';
@@ -1095,102 +1096,123 @@ export default function BotSkillsPage() {
         </Dialog>
       </div>
 
-      {/* 容器内置技能 */}
-      {containerLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-40" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2].map((i) => (
-              <SkillCardSkeleton key={i} />
-            ))}
-          </div>
-        </div>
-      ) : (
-        containerSkills.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">
-                {t('containerSkillsTitle')}
-              </h2>
-              {containerSource && containerSource !== 'none' && (
-                <Badge
-                  variant={containerSource === 'docker' ? 'default' : 'outline'}
-                  className="text-xs"
-                >
-                  {containerSource === 'docker'
-                    ? t('liveFromContainer')
-                    : t('cachedData')}
-                </Badge>
-              )}
+      {/* 技能 Tabs */}
+      <Tabs defaultValue="installed" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="installed">
+            {t('tabInstalled')}
+            {!installedLoading && installedSkills.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                {installedSkills.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="container">
+            {t('tabContainer')}
+            {!containerLoading && containerSkills.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                {containerSkills.length}
+              </Badge>
+            )}
+            {containerSource && containerSource !== 'none' && (
+              <Badge
+                variant={containerSource === 'docker' ? 'default' : 'outline'}
+                className="ml-1 text-xs"
+              >
+                {containerSource === 'docker'
+                  ? t('liveFromContainer')
+                  : t('cachedData')}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* 已安装技能 */}
+        <TabsContent value="installed" className="space-y-4">
+          {installedLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <SkillCardSkeleton key={i} />
+              ))}
             </div>
+          ) : installedSkills.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Wrench className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
+                <p className="text-muted-foreground mb-4">
+                  {t('noInstalledSkills')}
+                </p>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('addFirstSkill')}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {installedSkills.length > 3 && (
+                <div className="relative max-w-sm">
+                  <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                  <Input
+                    placeholder={t('searchInstalledPlaceholder')}
+                    value={installedSearch}
+                    onChange={(e) => setInstalledSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              )}
+              {filteredInstalledSkills.length === 0 ? (
+                <div className="text-muted-foreground py-8 text-center">
+                  <Search className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                  <p>{t('noSearchResults')}</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredInstalledSkills.map((botSkill) => (
+                    <InstalledSkillCard
+                      key={botSkill.id}
+                      botSkill={botSkill}
+                      onToggle={handleToggle}
+                      onRequestUninstall={(skillId, name) =>
+                        setUninstallTarget({ skillId, name })
+                      }
+                      onConfigure={setConfigTarget}
+                      isContainerBuiltin={containerSkillNames.has(
+                        (
+                          botSkill.skill.slug || botSkill.skill.name
+                        ).toLowerCase(),
+                      )}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        {/* 容器内置技能 */}
+        <TabsContent value="container" className="space-y-4">
+          {containerLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2].map((i) => (
+                <SkillCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : containerSkills.length === 0 ? (
+            <div className="text-muted-foreground py-8 text-center">
+              <Box className="mx-auto mb-4 h-12 w-12 opacity-50" />
+              <p>{t('noContainerSkills')}</p>
+            </div>
+          ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {containerSkills.map((skill) => (
                 <ContainerSkillCard key={skill.name} skill={skill} t={t} />
               ))}
             </div>
-          </div>
-        )
-      )}
-
-      {/* 已安装技能列表 */}
-      {installedLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <SkillCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : installedSkills.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Wrench className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
-            <p className="text-muted-foreground mb-4">
-              {t('noInstalledSkills')}
-            </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('addFirstSkill')}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {installedSkills.length > 3 && (
-            <div className="relative max-w-sm">
-              <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-              <Input
-                placeholder={t('searchInstalledPlaceholder')}
-                value={installedSearch}
-                onChange={(e) => setInstalledSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
           )}
-          {filteredInstalledSkills.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              <Search className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>{t('noSearchResults')}</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredInstalledSkills.map((botSkill) => (
-                <InstalledSkillCard
-                  key={botSkill.id}
-                  botSkill={botSkill}
-                  onToggle={handleToggle}
-                  onRequestUninstall={(skillId, name) =>
-                    setUninstallTarget({ skillId, name })
-                  }
-                  onConfigure={setConfigTarget}
-                  isContainerBuiltin={containerSkillNames.has(
-                    (botSkill.skill.slug || botSkill.skill.name).toLowerCase(),
-                  )}
-                  t={t}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+        </TabsContent>
+      </Tabs>
 
       {/* 卸载确认对话框 */}
       <Dialog
