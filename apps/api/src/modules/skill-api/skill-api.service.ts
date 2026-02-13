@@ -607,21 +607,18 @@ export class SkillApiService {
           bot.containerId,
         );
         if (skills) {
-          // 持久化到文件系统
-          try {
-            await this.workspaceService.writeContainerSkills(
-              userId,
-              hostname,
-              skills,
-            );
-          } catch (error) {
-            this.logger.warn('容器技能持久化失败', {
-              hostname,
-              error: error instanceof Error ? error.message : 'Unknown error',
+          // 非阻塞持久化到文件系统（仅缓存用途，不阻塞 API 响应）
+          this.workspaceService
+            .writeContainerSkills(userId, hostname, skills)
+            .catch((error) => {
+              this.logger.warn('容器技能持久化失败', {
+                hostname,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
             });
-          }
+          // 列表接口不返回 content（MD 内容可能很大），减少传输体积
           return {
-            skills,
+            skills: skills.map(({ content: _, ...rest }) => rest),
             source: 'docker',
             fetchedAt: new Date().toISOString(),
           };
@@ -629,7 +626,7 @@ export class SkillApiService {
       }
     }
 
-    // Fallback: 读取缓存
+    // Fallback: 读取缓存（不加载 content，列表接口不需要）
     const cached = await this.workspaceService.readContainerSkills(
       userId,
       hostname,

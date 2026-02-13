@@ -553,6 +553,7 @@ export class OpenClawClient {
   /**
    * 通过 Docker exec 获取容器内安装的技能列表
    * 优先使用 `openclaw skills list --json`，失败则 fallback 到读取配置文件
+   * 获取技能列表后，还会尝试读取每个技能的 SKILL.md 内容
    * @param containerId Docker 容器 ID
    * @returns 技能列表或 null（exec 失败时）
    */
@@ -570,10 +571,12 @@ export class OpenClawClient {
       '--json',
     ]);
 
+    let skills: ContainerSkillItem[] | null = null;
+
     if (cliOutput) {
       try {
         const parsed = JSON.parse(cliOutput);
-        return this.normalizeSkillsList(parsed);
+        skills = this.normalizeSkillsList(parsed);
       } catch {
         this.logger.warn('OpenClawClient: CLI 输出解析失败，尝试读取配置文件', {
           containerId,
@@ -583,21 +586,28 @@ export class OpenClawClient {
     }
 
     // Fallback: 读取容器内的 openclaw.json 配置
-    const configOutput = await this.execInContainer(containerId, [
-      'cat',
-      '/home/node/.openclaw/openclaw.json',
-    ]);
+    if (!skills) {
+      const configOutput = await this.execInContainer(containerId, [
+        'cat',
+        '/home/node/.openclaw/openclaw.json',
+      ]);
 
-    if (configOutput) {
-      try {
-        const config = JSON.parse(configOutput);
-        return this.parseSkillsFromConfig(config);
-      } catch {
-        this.logger.warn('OpenClawClient: 配置文件解析失败', { containerId });
+      if (configOutput) {
+        try {
+          const config = JSON.parse(configOutput);
+          skills = this.parseSkillsFromConfig(config);
+        } catch {
+          this.logger.warn('OpenClawClient: 配置文件解析失败', { containerId });
+        }
       }
     }
 
-    return null;
+    if (!skills) return null;
+
+    // 批量读取每个技能的 SKILL.md 内容
+    await this.enrichSkillsWithContent(containerId, skills);
+
+    return skills;
   }
 
   /**
@@ -712,6 +722,7 @@ export class OpenClawClient {
         enabled: item.enabled !== false,
         description: item.description || null,
         version: item.version || null,
+        content: null,
       }));
     }
 
@@ -731,6 +742,7 @@ export class OpenClawClient {
             enabled: enabled !== false,
             description: null,
             version: null,
+            content: null,
           }),
         );
       }
@@ -755,6 +767,7 @@ export class OpenClawClient {
           enabled: enabled !== false,
           description: null,
           version: null,
+          content: null,
         }),
       );
     }
@@ -773,6 +786,7 @@ export class OpenClawClient {
           enabled: enabled !== false,
           description: null,
           version: null,
+          content: null,
         }));
       }
     }
@@ -785,10 +799,56 @@ export class OpenClawClient {
           enabled: true,
           description: 'All native skills enabled (auto mode)',
           version: null,
+          content: null,
         },
       ];
     }
 
     return [];
+  }
+
+  /**
+   * 批量读取容器内每个技能的 SKILL.md 内容
+   * 使用单次 exec 调用读取所有技能的 MD 文件，减少 Docker API 调用次数
+   */
+  private async enrichSkillsWithContent(
+    containerId: string,
+    skills: ContainerSkillItem[],
+  ): Promise<void> {
+    if (skills.length === 0) return;
+
+    // 安全校验：只允许合法字符的技能名参与 shell 命令（防止注入）
+    const safeNamePattern = /^[a-zA-Z0-9_\-.]+$/;
+    const safeSkills = skills.filter((s) => safeNamePattern.test(s.name));
+
+    if (safeSkills.length === 0) return;
+
+    // 构建 shell 命令：遍历已知技能名，尝试多个路径读取 SKILL.md
+    const script = safeSkills
+      .map(
+        (s) =>
+          `echo "===SKILL:${s.name}==="; cat "/home/node/.openclaw/skills/${s.name}/SKILL.md" 2>/dev/null || cat "/app/skills/${s.name}/SKILL.md" 2>/dev/null || echo ""`,
+      )
+      .join('; ');
+
+    const output = await this.execInContainer(containerId, [
+      'sh',
+      '-c',
+      script,
+    ]);
+
+    if (!output) return;
+
+    // 解析输出，按 ===SKILL:name=== 分隔符拆分
+    const sections = output.split(/===SKILL:([^=]+)===/);
+    // sections: ['', name1, content1, name2, content2, ...]
+    for (let i = 1; i < sections.length; i += 2) {
+      const name = sections[i].trim();
+      const content = sections[i + 1]?.trim() || null;
+      const skill = skills.find((s) => s.name === name);
+      if (skill && content) {
+        skill.content = content;
+      }
+    }
   }
 }

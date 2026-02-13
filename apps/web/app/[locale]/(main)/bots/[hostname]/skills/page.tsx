@@ -82,12 +82,14 @@ function InstalledSkillCard({
   onToggle,
   onRequestUninstall,
   onConfigure,
+  isContainerBuiltin,
   t,
 }: {
   botSkill: BotSkillItem;
   onToggle: (skillId: string, enabled: boolean) => void;
   onRequestUninstall: (skillId: string, name: string) => void;
   onConfigure: (botSkill: BotSkillItem) => void;
+  isContainerBuiltin: boolean;
   t: (key: string) => string;
 }) {
   const { skill } = botSkill;
@@ -119,6 +121,12 @@ function InstalledSkillCard({
       </CardHeader>
       <CardContent>
         <div className="mb-3 flex gap-1">
+          {isContainerBuiltin && (
+            <Badge variant="secondary" className="text-xs">
+              <Box className="mr-1 h-3 w-3" />
+              {t('containerBuiltin')}
+            </Badge>
+          )}
           {skill.isSystem ? (
             <Badge variant="secondary" className="text-xs">
               <Sparkles className="mr-1 h-3 w-3" />
@@ -173,6 +181,7 @@ function AvailableSkillCard({
   isSelected,
   onSelect,
   batchMode,
+  isContainerBuiltin,
   t,
 }: {
   skill: SkillItem;
@@ -182,6 +191,7 @@ function AvailableSkillCard({
   isSelected: boolean;
   onSelect: (skillId: string, selected: boolean) => void;
   batchMode: boolean;
+  isContainerBuiltin: boolean;
   t: (key: string) => string;
 }) {
   const { getName, getDescription } = useLocalizedFields();
@@ -215,6 +225,12 @@ function AvailableSkillCard({
             </div>
           </div>
           <div className="flex gap-1">
+            {isContainerBuiltin && (
+              <Badge variant="secondary" className="text-xs">
+                <Box className="mr-1 h-3 w-3" />
+                {t('containerBuiltin')}
+              </Badge>
+            )}
             {skill.isSystem ? (
               <Badge variant="secondary" className="text-xs">
                 {t('system')}
@@ -519,7 +535,9 @@ function ContainerSkillCard({
   t: (key: string) => string;
 }) {
   return (
-    <Card className="border-dashed">
+    <Card
+      className={`border-dashed${skill.enabled === false ? ' opacity-60' : ''}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -535,9 +553,19 @@ function ContainerSkillCard({
               )}
             </div>
           </div>
-          <Badge variant="secondary" className="text-xs">
-            {t('containerBuiltin')}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            {skill.enabled === false && (
+              <Badge
+                variant="outline"
+                className="text-muted-foreground text-xs"
+              >
+                {t('disabled')}
+              </Badge>
+            )}
+            <Badge variant="secondary" className="text-xs">
+              {t('containerBuiltin')}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -601,18 +629,39 @@ export default function BotSkillsPage() {
       { enabled: !!hostname, queryKey: ['bot-skills', hostname] },
     );
 
-  const installedSkills = installedResponse?.body?.data || [];
-  const installedSkillIds = new Set(installedSkills.map((s) => s.skillId));
-
-  // 获取容器内置技能
-  const { data: containerResponse } = botSkillApi.containerSkills.useQuery(
-    ['bot-container-skills', hostname],
-    { params: { hostname } },
-    { enabled: !!hostname, queryKey: ['bot-container-skills', hostname] },
+  const installedSkills = useMemo(
+    () => installedResponse?.body?.data || [],
+    [installedResponse],
+  );
+  const installedSkillIds = useMemo(
+    () => new Set(installedSkills.map((s) => s.skillId)),
+    [installedSkills],
   );
 
-  const containerSkills = containerResponse?.body?.data?.skills || [];
+  // 获取容器内置技能（Docker exec 开销大，设置较长 staleTime）
+  const { data: containerResponse, isLoading: containerLoading } =
+    botSkillApi.containerSkills.useQuery(
+      ['bot-container-skills', hostname],
+      { params: { hostname } },
+      {
+        enabled: !!hostname,
+        queryKey: ['bot-container-skills', hostname],
+        staleTime: 5 * 60 * 1000, // 5 分钟内不重新请求
+        refetchOnWindowFocus: false,
+      },
+    );
+
+  const containerSkills = useMemo(
+    () => containerResponse?.body?.data?.skills || [],
+    [containerResponse],
+  );
   const containerSource = containerResponse?.body?.data?.source;
+
+  // 容器技能名称集合，用于去重标识
+  const containerSkillNames = useMemo(
+    () => new Set(containerSkills.map((s) => s.name.toLowerCase())),
+    [containerSkills],
+  );
 
   // 已安装技能客户端搜索过滤
   const filteredInstalledSkills = useMemo(() => {
@@ -1015,6 +1064,9 @@ export default function BotSkillsPage() {
                         isSelected={selectedSkillIds.has(skill.id)}
                         onSelect={handleSelectSkill}
                         batchMode={batchMode}
+                        isContainerBuiltin={containerSkillNames.has(
+                          (skill.slug || skill.name).toLowerCase(),
+                        )}
                         t={t}
                       />
                     ))}
@@ -1044,29 +1096,40 @@ export default function BotSkillsPage() {
       </div>
 
       {/* 容器内置技能 */}
-      {containerSkills.length > 0 && (
+      {containerLoading ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">
-              {t('containerSkillsTitle')}
-            </h2>
-            {containerSource && containerSource !== 'none' && (
-              <Badge
-                variant={containerSource === 'docker' ? 'default' : 'outline'}
-                className="text-xs"
-              >
-                {containerSource === 'docker'
-                  ? t('liveFromContainer')
-                  : t('cachedData')}
-              </Badge>
-            )}
-          </div>
+          <Skeleton className="h-6 w-40" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {containerSkills.map((skill) => (
-              <ContainerSkillCard key={skill.name} skill={skill} t={t} />
+            {[1, 2].map((i) => (
+              <SkillCardSkeleton key={i} />
             ))}
           </div>
         </div>
+      ) : (
+        containerSkills.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">
+                {t('containerSkillsTitle')}
+              </h2>
+              {containerSource && containerSource !== 'none' && (
+                <Badge
+                  variant={containerSource === 'docker' ? 'default' : 'outline'}
+                  className="text-xs"
+                >
+                  {containerSource === 'docker'
+                    ? t('liveFromContainer')
+                    : t('cachedData')}
+                </Badge>
+              )}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {containerSkills.map((skill) => (
+                <ContainerSkillCard key={skill.name} skill={skill} t={t} />
+              ))}
+            </div>
+          </div>
+        )
       )}
 
       {/* 已安装技能列表 */}
@@ -1118,6 +1181,9 @@ export default function BotSkillsPage() {
                     setUninstallTarget({ skillId, name })
                   }
                   onConfigure={setConfigTarget}
+                  isContainerBuiltin={containerSkillNames.has(
+                    (botSkill.skill.slug || botSkill.skill.name).toLowerCase(),
+                  )}
                   t={t}
                 />
               ))}

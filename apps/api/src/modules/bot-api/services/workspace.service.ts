@@ -503,6 +503,8 @@ export class WorkspaceService {
 
   /**
    * 持久化容器内置技能到文件系统
+   * 同时将每个技能的 SKILL.md 内容存为独立文件
+   * 会清理不再存在的旧 MD 文件，避免 Docker rebuild 后残留过期数据
    */
   async writeContainerSkills(
     userId: string,
@@ -512,11 +514,43 @@ export class WorkspaceService {
     const openclawPath = this.getOpenclawPath(userId, hostname);
     const skillsDir = path.join(openclawPath, 'skills');
     await fs.mkdir(skillsDir, { recursive: true });
+
+    // 清理不再存在的旧 MD 文件（并行删除）
+    const currentNames = new Set(skills.map((s) => `${s.name}.md`));
+    try {
+      const entries = await fs.readdir(skillsDir);
+      const staleFiles = entries.filter(
+        (e) => e.endsWith('.md') && !currentNames.has(e),
+      );
+      await Promise.all(
+        staleFiles.map((f) =>
+          fs.unlink(path.join(skillsDir, f)).catch(() => {}),
+        ),
+      );
+    } catch {
+      // 目录不存在或读取失败，忽略
+    }
+
+    // 持久化技能元数据（container-skills.json 中不含 content，避免文件过大）
+    const metaSkills = skills.map(({ content: _, ...rest }) => rest);
     const filePath = path.join(skillsDir, 'container-skills.json');
     await fs.writeFile(
       filePath,
-      JSON.stringify({ skills, fetchedAt: new Date().toISOString() }, null, 2),
+      JSON.stringify(
+        { skills: metaSkills, fetchedAt: new Date().toISOString() },
+        null,
+        2,
+      ),
     );
+
+    // 并行持久化每个技能的 SKILL.md 内容为独立文件
+    const mdWrites = skills
+      .filter((s) => s.content)
+      .map((s) =>
+        fs.writeFile(path.join(skillsDir, `${s.name}.md`), s.content!),
+      );
+    await Promise.all(mdWrites);
+
     this.logger.info(
       `Container skills persisted for: ${this.getIsolationKey(userId, hostname)}`,
     );
@@ -524,16 +558,38 @@ export class WorkspaceService {
 
   /**
    * 从文件系统读取缓存的容器内置技能
+   * @param includeContent 是否从独立 MD 文件恢复 content 字段（默认 false，列表接口不需要）
    */
   async readContainerSkills(
     userId: string,
     hostname: string,
+    includeContent = false,
   ): Promise<{ skills: ContainerSkillItem[]; fetchedAt: string } | null> {
     const openclawPath = this.getOpenclawPath(userId, hostname);
-    const filePath = path.join(openclawPath, 'skills', 'container-skills.json');
+    const skillsDir = path.join(openclawPath, 'skills');
+    const filePath = path.join(skillsDir, 'container-skills.json');
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      return JSON.parse(content);
+      const raw = await fs.readFile(filePath, 'utf-8');
+      const data = JSON.parse(raw) as {
+        skills: ContainerSkillItem[];
+        fetchedAt: string;
+      };
+
+      // 仅在需要时从独立 MD 文件恢复 content（并行读取）
+      if (includeContent) {
+        await Promise.all(
+          data.skills.map(async (skill) => {
+            const mdPath = path.join(skillsDir, `${skill.name}.md`);
+            try {
+              skill.content = await fs.readFile(mdPath, 'utf-8');
+            } catch {
+              // MD 文件不存在，content 保持 undefined
+            }
+          }),
+        );
+      }
+
+      return data;
     } catch {
       return null;
     }
