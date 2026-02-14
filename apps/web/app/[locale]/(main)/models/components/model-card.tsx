@@ -34,6 +34,7 @@ import {
   Box,
   Bot,
   Calculator,
+  Tags,
 } from 'lucide-react';
 
 interface ModelCardProps {
@@ -41,6 +42,7 @@ interface ModelCardProps {
   isAdmin?: boolean;
   onVerify?: (providerKeyId: string, model: string) => void;
   verifying?: boolean;
+  onManageTags?: (modelName: string) => void;
 }
 
 /**
@@ -97,6 +99,7 @@ export function ModelCard({
   isAdmin,
   onVerify,
   verifying,
+  onManageTags,
 }: ModelCardProps) {
   // Get the first provider key ID for verification
   const firstProviderKeyId = model.providers?.[0]?.providerKeyId;
@@ -152,6 +155,16 @@ export function ModelCard({
               </Badge>
             );
           })}
+          {isAdmin && onManageTags && (
+            <Badge
+              variant="outline"
+              className="gap-1 text-xs cursor-pointer hover:bg-accent"
+              onClick={() => onManageTags(model.model)}
+            >
+              <Tags className="size-3" />
+              管理标签
+            </Badge>
+          )}
         </div>
 
         {/* Scores (if available) */}

@@ -335,7 +335,7 @@ export class RoutingAdminController {
         await this.fallbackChainModelDb.replaceChainModels(
           params.id,
           (chainModels ?? []).map((cm) => ({
-            modelCatalogId: cm.modelCatalogId!,
+            modelCatalogId: cm.modelCatalogId,
             priority: cm.priority ?? 0,
             protocolOverride: cm.protocolOverride,
             featuresOverride: cm.featuresOverride as any,

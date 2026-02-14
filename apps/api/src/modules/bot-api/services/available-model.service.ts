@@ -211,27 +211,21 @@ export class AvailableModelService {
   async getAvailableModels(
     includeProviderInfo = false,
   ): Promise<AvailableModel[]> {
-    // 1. 获取所有 Provider Key（用于获取 vendor 信息）
-    const { list: providerKeys } = await this.providerKeyService.list(
-      {},
-      { limit: 1000 },
-    );
-    const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
-
-    // 2. 获取所有模型可用性记录（数据主来源）
-    const { list: allAvailabilityList } =
-      await this.modelAvailabilityService.list({}, { limit: 1000 });
-
-    // 3. 获取所有模型定价信息（用于补充显示名称和评分）
-    const pricingList = await this.modelCatalogService.listAll();
-    const pricingMap = new Map(
-      pricingList.map((p) => [`${p.vendor}:${p.model}`, p]),
-    );
-    const catalogByModel = new Map(pricingList.map((p) => [p.model, p]));
-
-    // 4. 获取所有能力标签关联
-    const { list: allCapabilityTags } =
-      await this.modelCapabilityTagService.list(
+    // 并行获取所有数据源（4 个独立查询同时执行）
+    const [
+      { list: providerKeys },
+      { list: allAvailabilityList },
+      pricingList,
+      { list: allCapabilityTags },
+    ] = await Promise.all([
+      // 1. 获取所有 Provider Key（用于获取 vendor 信息）
+      this.providerKeyService.list({}, { limit: 1000 }),
+      // 2. 获取所有模型可用性记录（数据主来源）
+      this.modelAvailabilityService.list({}, { limit: 1000 }),
+      // 3. 获取所有模型定价信息（用于补充显示名称和评分）
+      this.modelCatalogService.listAll(),
+      // 4. 获取所有能力标签关联
+      this.modelCapabilityTagService.list(
         {},
         { limit: 10000 },
         {
@@ -242,7 +236,14 @@ export class AvailableModelService {
             },
           },
         },
-      );
+      ),
+    ]);
+
+    const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
+    const pricingMap = new Map(
+      pricingList.map((p) => [`${p.vendor}:${p.model}`, p]),
+    );
+    const catalogByModel = new Map(pricingList.map((p) => [p.model, p]));
 
     // 构建 modelCatalogId -> tagIds 映射 和 tagId -> tagInfo 映射
     interface TagInfo {
@@ -273,7 +274,7 @@ export class AvailableModelService {
       capabilityTagsByCatalogId.set(ct.modelCatalogId, tags);
     }
 
-    // 5. 按 model 名称聚合模型信息
+    // 按 model 名称聚合模型信息
     // 同一个模型可能来自多个 Vendor / Provider，以 model 名为唯一键合并
     const modelAggregation = new Map<
       string,
@@ -353,7 +354,7 @@ export class AvailableModelService {
       }
     }
 
-    // 6. 构建最终模型列表
+    // 构建最终模型列表
     const models: AvailableModel[] = [];
 
     for (const [, aggregated] of modelAggregation) {
@@ -414,7 +415,7 @@ export class AvailableModelService {
       models.push(model);
     }
 
-    // 7. 按可用性和分类排序
+    // 按可用性和分类排序
     models.sort((a, b) => {
       // 可用的排在前面
       if (a.isAvailable !== b.isAvailable) {
@@ -629,34 +630,31 @@ export class AvailableModelService {
 
     // 2. 获取关联的 ModelCatalog
     let pricing = null;
-    if (availability.modelCatalogId) {
-      const pricingRecord = await this.modelCatalogService.get({
-        id: availability.modelCatalogId,
-      });
-      if (pricingRecord) {
-        pricing = {
-          id: pricingRecord.id,
-          model: pricingRecord.model,
-          vendor: pricingRecord.vendor,
-          displayName: pricingRecord.displayName,
-          inputPrice: Number(pricingRecord.inputPrice),
-          outputPrice: Number(pricingRecord.outputPrice),
-          reasoningScore: pricingRecord.reasoningScore,
-          codingScore: pricingRecord.codingScore,
-          creativityScore: pricingRecord.creativityScore,
-          speedScore: pricingRecord.speedScore,
-          contextLength: pricingRecord.contextLength,
-          supportsVision: pricingRecord.supportsVision,
-          supportsExtendedThinking: pricingRecord.supportsExtendedThinking,
-          supportsFunctionCalling: pricingRecord.supportsFunctionCalling,
-        };
-      }
+    const pricingRecord = await this.modelCatalogService.get({
+      id: availability.modelCatalogId,
+    });
+    if (pricingRecord) {
+      pricing = {
+        id: pricingRecord.id,
+        model: pricingRecord.model,
+        vendor: pricingRecord.vendor,
+        displayName: pricingRecord.displayName,
+        inputPrice: Number(pricingRecord.inputPrice),
+        outputPrice: Number(pricingRecord.outputPrice),
+        reasoningScore: pricingRecord.reasoningScore,
+        codingScore: pricingRecord.codingScore,
+        creativityScore: pricingRecord.creativityScore,
+        speedScore: pricingRecord.speedScore,
+        contextLength: pricingRecord.contextLength,
+        supportsVision: pricingRecord.supportsVision,
+        supportsExtendedThinking: pricingRecord.supportsExtendedThinking,
+        supportsFunctionCalling: pricingRecord.supportsFunctionCalling,
+      };
     }
 
     // 3. 获取能力标签（通过 ModelCatalog）
-    const modelCatalogId = availability.modelCatalogId;
     const { list: tagRecords } = await this.modelCapabilityTagService.list(
-      modelCatalogId ? { modelCatalogId } : { modelCatalogId: '__none__' },
+      { modelCatalogId: availability.modelCatalogId },
       { limit: 100 },
       {
         select: {

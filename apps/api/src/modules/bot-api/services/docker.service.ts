@@ -191,10 +191,9 @@ export class DockerService implements OnModuleInit {
 
     // Build environment variables
     // Normalize model name to handle aliases like chatgpt-4o-latest -> gpt-4o
-    // For custom providers with apiType, use apiType for normalization
-    // This ensures models like chatgpt-4o-latest are normalized to gpt-4o
+    // Use apiType for normalization when provider differs from apiType
     const normalizationProvider =
-      options.aiProvider === 'custom' && options.apiType
+      options.apiType && options.aiProvider !== options.apiType
         ? options.apiType
         : options.aiProvider;
     const normalizedModel = normalizeModelName(
@@ -205,6 +204,30 @@ export class DockerService implements OnModuleInit {
       this.logger.log(
         `Normalized model name: ${options.model} -> ${normalizedModel} (using provider: ${normalizationProvider})`,
       );
+    }
+
+    // 根据 apiType 确定 Docker 容器内的 provider 标识
+    // OpenClaw 只认识标准 provider（openai、anthropic 等），国产厂商需要映射：
+    //   - apiType=openai, vendor=openai → "openai"
+    //   - apiType=openai, vendor=dashscope/zhipu/... → "openai-compatible"
+    // 同时确保 base URL 和 API key 使用 apiType 对应的环境变量名
+    const originalProvider = options.aiProvider;
+    const originalProviderConfig =
+      PROVIDER_CONFIGS[originalProvider as ProviderVendor];
+    if (
+      options.apiType &&
+      options.aiProvider !== 'custom' &&
+      options.aiProvider !== options.apiType
+    ) {
+      // 保留原始 apiHost 作为 apiBaseUrl 的 fallback
+      if (!options.apiBaseUrl && originalProviderConfig?.apiHost) {
+        options.apiBaseUrl = originalProviderConfig.apiHost;
+      }
+      const dockerProvider = `${options.apiType}-compatible`;
+      this.logger.log(
+        `Mapping provider "${options.aiProvider}" to "${dockerProvider}" for OpenClaw (apiType: ${options.apiType})`,
+      );
+      options.aiProvider = dockerProvider;
     }
 
     const envVars = [
@@ -330,33 +353,25 @@ export class DockerService implements OnModuleInit {
       envVars.push(`PROXY_TOKEN=${options.proxyToken}`);
 
       // Determine the actual vendor for proxy routing
-      // Vendor mapping rule: ${apiType}${vendor === 'custom' ? '-compatible' : ''}
-      // For custom provider: openai-compatible, anthropic-compatible, etc.
-      // For standard provider: openai, anthropic, etc.
-      // The proxy routes requests based on vendor name: {proxyUrl}/v1/{vendor}/*
-      const proxyVendor =
-        options.aiProvider === 'custom' && options.apiType
-          ? `${options.apiType}-compatible`
-          : options.aiProvider;
+      // Use the original provider name for proxy path (proxy routes by vendor)
+      // For converted providers (e.g., dashscope → openai-compatible), use the converted name
+      const proxyVendor = options.aiProvider;
 
       // Build proxy endpoint based on vendor
       const proxyEndpoint = `${dockerProxyUrl}/v1/${proxyVendor}`;
 
-      // Set the base URL to point to the proxy
-      // For custom provider with openai API type, use OPENAI_BASE_URL so OpenClaw can find it
-      const baseUrlEnvName =
-        options.aiProvider === 'custom' && options.apiType
-          ? getBaseUrlEnvName(options.apiType)
-          : getBaseUrlEnvName(options.aiProvider);
+      // Use apiType for env var naming when provider differs from apiType
+      // e.g., openai-compatible → use OPENAI_BASE_URL (not OPENAI_COMPATIBLE_BASE_URL)
+      const useApiType = options.apiType && options.aiProvider !== options.apiType;
+      const baseUrlEnvName = useApiType
+        ? getBaseUrlEnvName(options.apiType!)
+        : getBaseUrlEnvName(options.aiProvider);
       envVars.push(`${baseUrlEnvName}=${proxyEndpoint}`);
 
       // Set the API key environment variable directly for OpenClaw
-      // OpenClaw reads API keys from standard environment variables at startup
-      // Use proxy token as the API key for authentication with the proxy
-      const apiKeyEnvName =
-        options.aiProvider === 'custom' && options.apiType
-          ? getApiKeyEnvName(options.apiType)
-          : getApiKeyEnvName(options.aiProvider);
+      const apiKeyEnvName = useApiType
+        ? getApiKeyEnvName(options.apiType!)
+        : getApiKeyEnvName(options.aiProvider);
       envVars.push(`${apiKeyEnvName}=${options.proxyToken}`);
 
       this.logger.log(
@@ -364,28 +379,27 @@ export class DockerService implements OnModuleInit {
       );
     } else {
       // Direct mode: Pass API key and base URL directly
+      const useApiType = options.apiType && options.aiProvider !== options.apiType;
+
       if (options.apiKey) {
-        // For custom provider with apiType, use the apiType's env var name
-        const envKeyName =
-          options.aiProvider === 'custom' && options.apiType
-            ? getApiKeyEnvName(options.apiType)
-            : getApiKeyEnvName(options.aiProvider);
+        const envKeyName = useApiType
+          ? getApiKeyEnvName(options.apiType!)
+          : getApiKeyEnvName(options.aiProvider);
         envVars.push(`${envKeyName}=${options.apiKey}`);
       }
 
       // Add custom base URL if provided (convert localhost to host.docker.internal)
       if (options.apiBaseUrl) {
-        // For custom provider with apiType, use the apiType's base URL env var
-        // This ensures OpenClaw can find the correct API endpoint
-        const baseUrlEnvName =
-          options.aiProvider === 'custom' && options.apiType
-            ? getBaseUrlEnvName(options.apiType)
-            : getBaseUrlEnvName(options.aiProvider);
+        const baseUrlEnvName = useApiType
+          ? getBaseUrlEnvName(options.apiType!)
+          : getBaseUrlEnvName(options.aiProvider);
         const dockerBaseUrl = convertToDockerHost(options.apiBaseUrl);
         envVars.push(`${baseUrlEnvName}=${dockerBaseUrl}`);
       } else if (providerConfig?.apiHost) {
         // Use default API host from provider config if no custom URL
-        const baseUrlEnvName = getBaseUrlEnvName(options.aiProvider);
+        const baseUrlEnvName = useApiType
+          ? getBaseUrlEnvName(options.apiType!)
+          : getBaseUrlEnvName(options.aiProvider);
         envVars.push(`${baseUrlEnvName}=${providerConfig.apiHost}`);
       }
 
@@ -427,13 +441,14 @@ export class DockerService implements OnModuleInit {
         # Determine the provider for auth configuration and model prefix
         PROVIDER="${options.aiProvider}"
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
-          # For custom provider, use AI_API_TYPE for BOTH auth and model prefix
-          # IMPORTANT: Use the standard provider (e.g., 'openai') NOT 'openai-compatible'
-          # because OpenClaw's -compatible providers have known integration gaps (Issue #9498)
-          # The custom base URL (OPENAI_BASE_URL) already points to the proxy's
-          # openai-compatible endpoint, so the proxy handles routing correctly
+          # For custom provider, use AI_API_TYPE for auth and model prefix
           AUTH_PROVIDER="$AI_API_TYPE"
           MODEL_PROVIDER="$AI_API_TYPE"
+        elif echo "$PROVIDER" | grep -q -- "-compatible$"; then
+          # For *-compatible providers (e.g., openai-compatible), extract base apiType for auth
+          # MODEL_PROVIDER keeps the full name (e.g., openai-compatible) for model prefix
+          AUTH_PROVIDER=$(echo "$PROVIDER" | sed 's/-compatible$//')
+          MODEL_PROVIDER="$PROVIDER"
         else
           AUTH_PROVIDER="$PROVIDER"
           MODEL_PROVIDER="$PROVIDER"

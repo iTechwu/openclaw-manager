@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useModelAvailability, useModelSync } from '@/hooks/useModels';
 import { useProviderKeys } from '@/hooks/useProviderKeys';
+import { TagManagementDialog } from '@/components/routing/tag-management-dialog';
 import type { ModelAvailabilityItem } from '@repo/contracts';
 import {
   Card,
@@ -21,6 +22,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Table,
   TableBody,
@@ -37,6 +39,7 @@ import {
   DollarSign,
   Tag,
   RefreshCw,
+  Tags,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +50,8 @@ export function ModelAvailabilityTable() {
   const [searchQuery, setSearchQuery] = useState('');
   const [vendorFilter, setVendorFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [tagDialogModel, setTagDialogModel] = useState<ModelAvailabilityItem | null>(null);
 
   // Helper to get vendor from providerKeys
   const getVendor = (m: ModelAvailabilityItem) =>
@@ -97,6 +102,11 @@ export function ModelAvailabilityTable() {
       toast.success('标签同步完成');
       refresh();
     }
+  };
+
+  const handleManageTags = (model: ModelAvailabilityItem) => {
+    setTagDialogModel(model);
+    setTagDialogOpen(true);
   };
 
   if (loading) {
@@ -178,6 +188,7 @@ export function ModelAvailabilityTable() {
                     model={model}
                     onSyncPricing={handleSyncModelCatalog}
                     onSyncTags={handleSyncModelTags}
+                    onManageTags={handleManageTags}
                     syncingPricing={syncingPricing}
                     syncingTags={syncingTags}
                   />
@@ -193,6 +204,13 @@ export function ModelAvailabilityTable() {
             ` (总计 ${availability.length} 个)`}
         </div>
       </CardContent>
+
+      <TagManagementDialog
+        catalogId={tagDialogModel?.modelCatalogId ?? null}
+        catalogLabel={`${tagDialogModel?.model ?? ''} (${tagDialogModel?.providerKeys?.[0]?.vendor ?? ''})`}
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+      />
     </Card>
   );
 }
@@ -201,12 +219,14 @@ function ModelRow({
   model,
   onSyncPricing,
   onSyncTags,
+  onManageTags,
   syncingPricing,
   syncingTags,
 }: {
   model: ModelAvailabilityItem;
   onSyncPricing: (id: string) => void;
   onSyncTags: (id: string) => void;
+  onManageTags: (model: ModelAvailabilityItem) => void;
   syncingPricing: boolean;
   syncingTags: boolean;
 }) {
@@ -278,6 +298,14 @@ function ModelRow({
             >
               <Tag className="mr-2 size-4" />
               同步标签
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onManageTags(model)}
+              disabled={!model.modelCatalogId}
+            >
+              <Tags className="mr-2 size-4" />
+              管理标签
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

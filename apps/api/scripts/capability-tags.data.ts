@@ -1,7 +1,7 @@
 /**
  * 能力标签种子数据
  * 定义路由能力标签及其要求，用于智能路由决策
- * 最后更新：2026-02-10
+ * 最后更新：2026-02-14
  */
 
 export interface CapabilityTagData {
@@ -484,6 +484,38 @@ export const CAPABILITY_TAGS_DATA: CapabilityTagData[] = [
       'qwen-math-plus',
       'gemini-2.5-pro',
       'claude-opus-4-5-20251101',
+    ],
+    isBuiltin: true,
+  },
+  {
+    tagId: 'auto-routing',
+    name: '自动路由',
+    description: '支持自动路由的模型，通过 ModelResolver 按健康分数和优先级自动选择最优提供商',
+    category: 'routing',
+    priority: 88,
+    requiredModels: [
+      'gpt-4o',
+      'gpt-4.1',
+      'gpt-5',
+      'gpt-5.2',
+      'claude-sonnet-4-20250514',
+      'claude-sonnet-4-5-20250929',
+      'claude-opus-4-5-20251101',
+      'claude-opus-4-6',
+      'deepseek-v3',
+      'deepseek-v3-2-251201',
+      'deepseek-chat',
+      'deepseek-r1',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash',
+      'gemini-3-pro-preview',
+      'doubao-seed-1-6',
+      'doubao-1.5-pro-32k',
+      'qwen-max-latest',
+      'qwen-3.0',
+      'glm-4.5',
+      'kimi-k2',
+      'moonshot-v1-auto',
     ],
     isBuiltin: true,
   },

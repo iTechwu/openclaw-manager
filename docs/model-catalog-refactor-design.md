@@ -194,8 +194,8 @@ model ModelAvailability {
   model          String    @db.VarChar(100)
   /// 关联的 Provider Key
   providerKeyId  String    @map("provider_key_id") @db.Uuid
-  /// 关联的 ModelCatalog ID（新增：建立正式外键关联）
-  modelCatalogId String?   @map("model_catalog_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（必填，模型发现时自动创建 catalog）
+  modelCatalogId String    @map("model_catalog_id") @db.Uuid
   /// 模型类型
   modelType      ModelType @default(llm) @map("model_type")
   /// 模型是否可用
@@ -214,8 +214,8 @@ model ModelAvailability {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  providerKey  ProviderKey   @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
-  modelCatalog ModelCatalog? @relation(fields: [modelCatalogId], references: [id], onDelete: SetNull)
+  providerKey  ProviderKey  @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+  modelCatalog ModelCatalog @relation(fields: [modelCatalogId], references: [id], onDelete: Restrict)
 
   @@unique([providerKeyId, model])
   @@index([model])
@@ -579,9 +579,20 @@ ALTER TABLE b_model_capability_tag
 
 ModelPricing 已包含模型身份、定价、能力评分、特性支持等完整信息，实质上已经是一个模型目录。创建独立表会导致数据冗余和不必要的 join。重命名更准确地反映了表的实际职责。
 
-### Q2: ModelAvailability 的 modelCatalogId 为什么是可选的？
+### Q2: ModelAvailability 的 modelCatalogId 为什么改为必填？
 
-部分通过 API Key 验证发现的模型可能尚未录入 ModelCatalog（如新发布的模型）。设为可选允许先记录可用性，后续再补充目录信息。
+> **更新（2026-02-14）**：`modelCatalogId` 已从 `String?` 改为 `String`（必填），`onDelete` 从 `SetNull` 改为 `Restrict`。
+
+**原因**：
+1. **统一定价策略**：每个模型统一定价，不需要按 endpoint/vendor 区分价格，因此每个 ModelAvailability 必须关联一个 ModelCatalog
+2. **消除鸡生蛋问题**：模型发现时（`model-verification.service.ts`），如果 ModelCatalog 中不存在该模型，自动创建一条基础记录（`dataSource: 'auto'`，定价默认为 0）
+3. **数据完整性**：`onDelete: Restrict` 防止删除仍有可用性记录的 ModelCatalog
+
+**`ModelAvailability.model` 字段保留为反范式化冗余**：
+- 虽然 `model` 可以通过 `modelCatalogId` 关联获取，但保留它是因为：
+  - `@@unique([providerKeyId, model])` 约束依赖此字段
+  - 全系统 ~50+ 处直接用 `{ model: "gpt-4o", isAvailable: true }` 查询，去掉会增加 join 开销
+  - 该字段始终与关联的 `ModelCatalog.model` 保持一致
 
 ### Q3: 为什么在 ModelAvailability 上新增 vendorPriority 和 healthScore？
 
@@ -594,3 +605,12 @@ ModelPricing 已包含模型身份、定价、能力评分、特性支持等完�
 ### Q5: 能力标签去重如何处理？
 
 迁移时，同一模型在多个 vendor 实例上可能有重复的能力标签。迁移脚本会保留最早创建的记录，去除重复项。迁移后，能力标签只需为每个模型维护一份。
+
+### Q6: syncAllPricing 为什么改为按 model name 匹配而非 vendor:model？
+
+> **更新（2026-02-14）**：`syncAllPricing` 和 `syncModelCatalog` 已改为按 `model` 名称匹配。
+
+**原因**：
+1. **统一定价**：同一模型（如 `gpt-4o`）无论通过哪个 vendor 提供，定价相同。不需要按 vendor 区分
+2. **旧逻辑的问题**：`${pk.vendor}:${availability.model}` 匹配导致同一模型通过不同 vendor（如 OpenAI 直连 vs Azure Gateway）时无法匹配到 ModelCatalog
+3. **自动创建**：对于 ModelCatalog 中不存在的模型，自动创建基础记录（`dataSource: 'auto'`，定价为 0），确保所有 ModelAvailability 都有关联的 ModelCatalog

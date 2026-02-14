@@ -515,12 +515,12 @@ enum ModelType {
 /// vendor 信息从关联的 ProviderKey 中获取，避免数据冗余
 model ModelAvailability {
   id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"（反范式化冗余，与 ModelCatalog.model 一致）
   model          String    @db.VarChar(100)
   /// 关联的 Provider Key（vendor 信息从这里获取）
   providerKeyId  String    @map("provider_key_id") @db.Uuid
-  /// 关联的 ModelCatalog ID（建立正式外键关联）
-  modelCatalogId String?   @map("model_catalog_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（必填，模型发现时自动创建 catalog）
+  modelCatalogId String    @map("model_catalog_id") @db.Uuid
   /// 模型类型（llm, image, video, tts, embedding 等）
   modelType      ModelType @default(llm) @map("model_type")
   /// 模型是否可用（API Key 验证通过）
@@ -539,8 +539,8 @@ model ModelAvailability {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  providerKey  ProviderKey   @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
-  modelCatalog ModelCatalog? @relation(fields: [modelCatalogId], references: [id], onDelete: SetNull)
+  providerKey  ProviderKey  @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+  modelCatalog ModelCatalog @relation(fields: [modelCatalogId], references: [id], onDelete: Restrict)
 
   @@unique([providerKeyId, model])
   @@index([model])

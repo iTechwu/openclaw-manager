@@ -272,7 +272,7 @@ export const ModelAvailabilityItemSchema = z.object({
   /** 错误信息 */
   errorMessage: z.string().nullable(),
   /** 关联的 ModelCatalog ID */
-  modelCatalogId: z.string().nullable().optional(),
+  modelCatalogId: z.string().uuid(),
   /** 能力标签列表 */
   capabilityTags: z
     .array(

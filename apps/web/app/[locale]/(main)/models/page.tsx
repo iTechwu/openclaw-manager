@@ -4,6 +4,8 @@ import { useMemo, useState, useCallback } from 'react';
 import { useAvailableModels, useModelSync } from '@/hooks/useModels';
 import { useProviderKeys } from '@/hooks/useProviderKeys';
 import { useIsAdmin } from '@/lib/permissions';
+import { routingAdminApi } from '@/lib/api/contracts/client';
+import { TagManagementDialog } from '@/components/routing/tag-management-dialog';
 import type { AvailableModel } from '@repo/contracts';
 import {
   Card,
@@ -120,6 +122,26 @@ export default function ModelsPage() {
   const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [tagDialogCatalogId, setTagDialogCatalogId] = useState<string | null>(null);
+  const [tagDialogLabel, setTagDialogLabel] = useState('');
+
+  // Fetch model catalog list for admin tag management
+  const { data: catalogResponse } = routingAdminApi.getModelCatalogList.useQuery(
+    ['model-catalog-list'],
+    {},
+    { enabled: isAdmin, staleTime: 60000 } as any,
+  );
+
+  // Build model name → catalogId mapping
+  const catalogMap = useMemo(() => {
+    const map = new Map<string, { id: string; displayName: string | null }>();
+    const list = catalogResponse?.body?.data?.list ?? [];
+    for (const item of list) {
+      map.set(item.model, { id: item.id, displayName: item.displayName });
+    }
+    return map;
+  }, [catalogResponse]);
   const [batchProgress, setBatchProgress] = useState<{
     current: number;
     total: number;
@@ -304,6 +326,21 @@ export default function ModelsPage() {
       }
     },
     [refreshWithSync, refresh],
+  );
+
+  // Handle manage tags for a model
+  const handleManageTags = useCallback(
+    (modelName: string) => {
+      const catalog = catalogMap.get(modelName);
+      if (catalog) {
+        setTagDialogCatalogId(catalog.id);
+        setTagDialogLabel(`${catalog.displayName || modelName}`);
+        setTagDialogOpen(true);
+      } else {
+        toast.error('该模型尚未关联模型目录，请先同步定价信息');
+      }
+    },
+    [catalogMap],
   );
 
   if (loading) {
@@ -574,6 +611,7 @@ export default function ModelsPage() {
                       isAdmin={isAdmin}
                       onVerify={handleVerifySingleModel}
                       verifying={verifyingModel === model.model}
+                      onManageTags={isAdmin ? handleManageTags : undefined}
                     />
                   ))}
                 </div>
@@ -595,6 +633,7 @@ export default function ModelsPage() {
                       isAdmin={isAdmin}
                       onVerify={handleVerifySingleModel}
                       verifying={verifyingModel === model.model}
+                      onManageTags={isAdmin ? handleManageTags : undefined}
                     />
                   ))}
                 </div>
@@ -603,6 +642,15 @@ export default function ModelsPage() {
           </div>
         )}
       </ScrollArea>
+
+      {isAdmin && (
+        <TagManagementDialog
+          catalogId={tagDialogCatalogId}
+          catalogLabel={tagDialogLabel}
+          open={tagDialogOpen}
+          onOpenChange={setTagDialogOpen}
+        />
+      )}
     </div>
   );
 }

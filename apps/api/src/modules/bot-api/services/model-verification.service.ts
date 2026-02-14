@@ -420,14 +420,31 @@ export class ModelVerificationService {
       vendor,
     );
 
+    // 批量查找已有的 ModelCatalog（1 次查询替代 N 次）
+    const existingCatalogs =
+      await this.modelCatalogService.getByModels(newModels);
+    const catalogMap = new Map(existingCatalogs.map((c) => [c.model, c]));
+
+    // 仅为缺失的模型创建 ModelCatalog（race-safe upsert）
+    const missingModels = newModels.filter((m) => !catalogMap.has(m));
+    if (missingModels.length > 0) {
+      this.logger.info(
+        `[ModelVerification] Auto-creating ${missingModels.length} ModelCatalog records for vendor: ${vendor}`,
+      );
+      for (const model of missingModels) {
+        const catalog = await this.modelCatalogService.ensureExists(model, {
+          vendor,
+        });
+        catalogMap.set(model, catalog);
+      }
+    }
+
     // 添加新模型
     const createdModelCatalogs: Array<{ catalogId: string; model: string }> =
       [];
     for (const model of newModels) {
       const modelType = this.classifyModelType(model);
-
-      // 查找对应的 ModelCatalog 记录
-      const catalog = await this.modelCatalogService.getByModel(model);
+      const catalog = catalogMap.get(model)!;
 
       const created = await this.modelAvailabilityService.create({
         model,
@@ -437,16 +454,13 @@ export class ModelVerificationService {
         isAvailable: !needsVerification,
         lastVerifiedAt: needsVerification ? new Date(0) : new Date(),
         errorMessage: needsVerification ? 'Not verified yet' : null,
-        // 关联 ModelCatalog（如果存在）
-        ...(catalog ? { modelCatalog: { connect: { id: catalog.id } } } : {}),
+        modelCatalog: { connect: { id: catalog.id } },
       });
 
-      if (catalog) {
-        createdModelCatalogs.push({
-          catalogId: catalog.id,
-          model: created.model,
-        });
-      }
+      createdModelCatalogs.push({
+        catalogId: catalog.id,
+        model: created.model,
+      });
     }
 
     // 为新关联的 ModelCatalog 分配能力标签
@@ -514,6 +528,7 @@ export class ModelVerificationService {
     await this.updateModelAvailability(
       providerKeyId,
       model,
+      vendor,
       result.isAvailable,
       result.errorMessage,
     );
@@ -568,6 +583,7 @@ export class ModelVerificationService {
       await this.updateModelAvailability(
         providerKeyId,
         record.model,
+        vendor,
         result.isAvailable,
         result.errorMessage,
       );
@@ -609,7 +625,7 @@ export class ModelVerificationService {
       isAvailable: boolean;
       lastVerifiedAt: Date;
       errorMessage: string | null;
-      modelCatalogId: string | null;
+      modelCatalogId: string;
       capabilityTags: Array<{ id: string; name: string }>;
       providerKeys: Array<{
         id: string;
@@ -626,10 +642,13 @@ export class ModelVerificationService {
       {
         include: {
           providerKey: true,
-          modelCatalog: true,
-          capabilityTags: {
+          modelCatalog: {
             include: {
-              capabilityTag: true,
+              capabilityTags: {
+                include: {
+                  capabilityTag: true,
+                },
+              },
             },
           },
         },
@@ -649,7 +668,7 @@ export class ModelVerificationService {
       errorMessage: item.errorMessage,
       modelCatalogId: item.modelCatalogId,
       capabilityTags:
-        item.capabilityTags?.map((mct: any) => ({
+        item.modelCatalog?.capabilityTags?.map((mct: any) => ({
           id: mct.capabilityTag?.id ?? mct.capabilityTagId,
           name: mct.capabilityTag?.name ?? 'Unknown',
         })) ?? [],
@@ -1084,10 +1103,12 @@ export class ModelVerificationService {
 
   /**
    * 更新或创建 ModelAvailability 记录
+   * 同时确保关联 ModelCatalog（不存在则自动创建）
    */
   private async updateModelAvailability(
     providerKeyId: string,
     model: string,
+    vendor: string,
     isAvailable: boolean,
     errorMessage?: string,
   ): Promise<void> {
@@ -1099,22 +1120,48 @@ export class ModelVerificationService {
     const now = new Date();
 
     if (existing) {
+      // 已有 modelCatalogId 时跳过 catalog 查找，避免冗余查询
+      const needsCatalogLink = !existing.modelCatalogId;
+      const catalogConnect = needsCatalogLink
+        ? {
+            modelCatalog: {
+              connect: {
+                id: (await this.ensureModelCatalog(model, vendor)).id,
+              },
+            },
+          }
+        : {};
+
       await this.modelAvailabilityService.update(
         { id: existing.id },
         {
           isAvailable,
           lastVerifiedAt: now,
           errorMessage: errorMessage || null,
+          ...catalogConnect,
         },
       );
     } else {
+      const catalog = await this.ensureModelCatalog(model, vendor);
       await this.modelAvailabilityService.create({
         model,
         providerKey: { connect: { id: providerKeyId } },
+        modelCatalog: { connect: { id: catalog.id } },
         isAvailable,
         lastVerifiedAt: now,
         errorMessage: errorMessage || null,
       });
     }
+  }
+
+  /**
+   * 确保 ModelCatalog 记录存在（race-safe）
+   * 使用 upsert 避免并发创建时的唯一约束冲突
+   */
+  private async ensureModelCatalog(
+    model: string,
+    vendor: string,
+  ): Promise<{ id: string }> {
+    return this.modelCatalogService.ensureExists(model, { vendor });
   }
 }

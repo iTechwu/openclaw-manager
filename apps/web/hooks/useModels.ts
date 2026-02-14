@@ -36,7 +36,9 @@ export const modelKeys = {
  */
 export function useAvailableModels() {
   const queryClient = useQueryClient();
-  const modelsQuery = modelApi.list.useQuery(modelKeys.list(), {});
+  const modelsQuery = modelApi.list.useQuery(modelKeys.list(), {}, {
+    staleTime: 60000, // 60s 内不重复请求
+  } as any);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [verifyingModel, setVerifyingModel] = useState<string | null>(null);

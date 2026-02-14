@@ -317,9 +317,11 @@ export class BotApiService {
       try {
         // Determine the vendor for proxy registration
         // For custom providers, use apiType (e.g., "openai") to match the proxy URL
+        // For domestic providers (apiType differs from vendor), also use apiType
         // This ensures the vendor in ProxyToken matches the vendor in the proxy URL
         const proxyVendor =
-          primaryProvider.providerId === 'custom' && apiType
+          primaryProvider.providerId === 'custom' ||
+          (apiType && primaryProvider.providerId !== apiType)
             ? apiType
             : primaryProvider.providerId;
 
@@ -866,9 +868,10 @@ export class BotApiService {
                   // Zero-trust mode: Register bot with proxy
                   try {
                     // Determine the vendor for proxy registration
-                    // For custom providers, use apiType (e.g., "openai") to match the proxy URL
+                    // For custom or domestic providers (apiType differs from vendor), use apiType
                     const proxyVendor =
-                      providerKey.vendor === 'custom' && apiType
+                      providerKey.vendor === 'custom' ||
+                      (apiType && providerKey.vendor !== apiType)
                         ? apiType
                         : providerKey.vendor;
 

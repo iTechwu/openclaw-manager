@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { routingAdminApi, routingAdminClient } from '@/lib/api/contracts/client';
+import { routingAdminApi } from '@/lib/api/contracts/client';
+import { TagManagementDialog } from '@/components/routing/tag-management-dialog';
 import {
   Card,
   CardContent,
@@ -12,16 +13,6 @@ import {
   Skeleton,
   Input,
   Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@repo/ui';
 import {
   Search,
@@ -32,12 +23,8 @@ import {
   XCircle,
   ArrowLeft,
   Tag,
-  Plus,
-  X,
-  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 import type { ModelCatalog } from '@repo/contracts';
 
 /**
@@ -222,179 +209,6 @@ function ModelCatalogCardSkeleton() {
 }
 
 /**
- * 标签管理对话框
- */
-interface CatalogTag {
-  id: string;
-  capabilityTagId: string;
-  tagId: string;
-  name: string;
-  matchSource: string;
-  confidence: number;
-}
-
-function TagManagementDialog({
-  catalog,
-  open,
-  onOpenChange,
-}: {
-  catalog: ModelCatalog | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
-  const [selectedTagId, setSelectedTagId] = useState('');
-
-  // 获取该模型的标签
-  const { data: tagsResponse, refetch: refetchTags } =
-    routingAdminApi.getModelCatalogTags.useQuery(
-      ['model-catalog-tags', catalog?.id],
-      { params: { id: catalog?.id ?? '' } },
-      { enabled: !!catalog?.id, staleTime: 0 } as any,
-    );
-
-  // 获取所有可用标签
-  const { data: allTagsResponse } =
-    routingAdminApi.getCapabilityTags.useQuery(
-      ['capability-tags'],
-      {},
-      { staleTime: 60000 } as any,
-    );
-
-  const currentTags: CatalogTag[] = tagsResponse?.body?.data?.list ?? [];
-  const allTags = allTagsResponse?.body?.data?.list ?? [];
-
-  // 过滤出未分配的标签
-  const assignedTagIds = new Set(currentTags.map((t) => t.capabilityTagId));
-  const availableTags = allTags.filter(
-    (t: any) => t.isActive && !assignedTagIds.has(t.id),
-  );
-
-  const handleAddTag = useCallback(async () => {
-    if (!catalog?.id || !selectedTagId) return;
-    setAdding(true);
-    try {
-      await routingAdminClient.addModelCatalogTag({
-        params: { id: catalog.id },
-        body: { capabilityTagId: selectedTagId },
-      });
-      toast.success('标签已添加');
-      setSelectedTagId('');
-      refetchTags();
-    } catch {
-      toast.error('添加标签失败');
-    } finally {
-      setAdding(false);
-    }
-  }, [catalog?.id, selectedTagId, refetchTags]);
-
-  const handleRemoveTag = useCallback(
-    async (capabilityTagId: string) => {
-      if (!catalog?.id) return;
-      setRemoving(capabilityTagId);
-      try {
-        await routingAdminClient.removeModelCatalogTag({
-          params: { id: catalog.id, capabilityTagId },
-          body: {},
-        });
-        toast.success('标签已移除');
-        refetchTags();
-      } catch {
-        toast.error('移除标签失败');
-      } finally {
-        setRemoving(null);
-      }
-    },
-    [catalog?.id, refetchTags],
-  );
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>管理能力标签</DialogTitle>
-          <DialogDescription>
-            {catalog?.displayName || catalog?.model} ({catalog?.vendor})
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* 当前标签 */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium">当前标签</p>
-          {currentTags.length === 0 ? (
-            <p className="text-muted-foreground text-sm">暂无标签</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {currentTags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  variant={tag.matchSource === 'manual' ? 'default' : 'secondary'}
-                  className="gap-1 pr-1"
-                >
-                  {tag.name}
-                  <span className="text-[10px] opacity-60">
-                    ({tag.matchSource})
-                  </span>
-                  <button
-                    type="button"
-                    className="ml-1 rounded-full p-0.5 hover:bg-black/10"
-                    onClick={() => handleRemoveTag(tag.capabilityTagId)}
-                    disabled={removing === tag.capabilityTagId}
-                  >
-                    {removing === tag.capabilityTagId ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <X className="h-3 w-3" />
-                    )}
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 添加标签 */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium">添加标签</p>
-          <div className="flex gap-2">
-            <Select value={selectedTagId} onValueChange={setSelectedTagId}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="选择标签..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTags.length === 0 ? (
-                  <SelectItem value="_none" disabled>
-                    无可用标签
-                  </SelectItem>
-                ) : (
-                  availableTags.map((tag: any) => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              onClick={handleAddTag}
-              disabled={!selectedTagId || adding}
-            >
-              {adding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/**
  * 模型定价管理页面
  */
 export default function ModelCatalogPage() {
@@ -478,7 +292,8 @@ export default function ModelCatalogPage() {
       )}
 
       <TagManagementDialog
-        catalog={selectedCatalog}
+        catalogId={selectedCatalog?.id ?? null}
+        catalogLabel={`${(selectedCatalog?.displayName || selectedCatalog?.model) ?? ''} (${selectedCatalog?.vendor ?? ''})`}
         open={tagDialogOpen}
         onOpenChange={setTagDialogOpen}
       />

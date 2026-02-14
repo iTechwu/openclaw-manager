@@ -471,6 +471,117 @@ pnpm db:seed              # Seed database
 
 ---
 
+## 🔄 Initialization & Startup Flow
+
+### One-time Setup Scripts
+
+For first-time deployment or new environment setup, execute in order:
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Generate encryption master key (BOT_MASTER_KEY)
+./scripts/init-env-secrets.sh
+
+# 3. (Optional) Interactive project initialization wizard
+node scripts/init-project.js
+
+# 4. Generate Prisma Client
+pnpm db:generate
+
+# 5. Run database migrations
+pnpm db:migrate:dev
+
+# 6. Seed database
+pnpm db:seed
+```
+
+### Seed Data Order (`pnpm db:seed`)
+
+Seed data is executed sequentially as defined in `apps/api/prisma/seed.ts`:
+
+| Order | Data | Data File | Description |
+| --- | --- | --- | --- |
+| 1 | Persona Templates | `scripts/persona-templates.data.ts` | System preset persona templates (en/zh) |
+| 2 | Country Codes | `scripts/country-codes.data.ts` | Country/region codes (full replace) |
+| 3 | Channel Definitions | `scripts/channel-definitions.data.ts` | 10 channel definitions + credential fields |
+| 4 | Plugins | `scripts/plugin-definitions.data.ts` | MCP plugin definitions (by region) |
+| 5 | Model Catalog | `scripts/model-catalog.data.ts` | AI model pricing & capability scores |
+| 6 | Capability Tags | `scripts/capability-tags.data.ts` | Routing capability tags (25 tags) |
+| 7 | Fallback Chains | `scripts/fallback-chains.data.ts` | Model fallback strategies (14 chains) |
+| 8 | Cost Strategies | `scripts/cost-strategies.data.ts` | Cost optimization strategies (13 strategies) |
+
+### NestJS Backend Startup Flow
+
+When `pnpm dev:api` starts, the following phases execute:
+
+**Phase 1: Environment & Configuration**
+
+1. `loadEnv()` — Load `.env` files (monorepo root → `apps/api/.env` → `.env.{NODE_ENV}`)
+2. `initConfig()` — Load YAML config files (`config.local.yaml`, etc.)
+3. `initKeysConfig()` — Load encryption key configuration
+
+**Phase 2: Fastify Server Setup**
+
+4. Create Fastify adapter
+5. Register plugins: `helmet` → `compress` → `SSE` → `multipart` → `rate-limit` → `cookie`
+6. CORS configuration
+7. Global prefix `/api`
+8. API versioning (Header mode: `x-api-version`)
+9. WebSocket adapter (Socket.IO)
+10. Swagger docs (non-production)
+11. Global pipes (ValidationPipe), guards (VersionGuard), interceptors (TransformInterceptor, VersionHeaderInterceptor)
+
+**Phase 3: NestJS Module Initialization** (`OnModuleInit` lifecycle hooks)
+
+NestJS initializes modules by dependency order. Each service's `onModuleInit()` fires in this hierarchy:
+
+```
+Infrastructure Layer (infra)
+├── PrismaWriteService      — Connect to write database (PostgreSQL + PrismaPg)
+├── PrismaReadService       — Connect to read database (fallback to write DB)
+├── DbMetricsService        — Load DB metrics config (slow query thresholds)
+├── RabbitmqService         — Connect to RabbitMQ + auto-reconnect
+├── FeatureFlagService      — Initialize feature flags (memory/Redis/Unleash)
+├── RateLimitService        — Load rate limiting config
+├── AppVersionService       — Load version info (package.json + Git hash)
+├── OpenAIClient            — Load OpenAI API config
+├── EmailService            — Initialize email client (SendCloud)
+└── SmsService              — Initialize SMS client (Aliyun/Tencent/Volcengine)
+
+Application Layer
+├── AppModule               — Set up transaction metrics service reference
+├── DockerService           — Connect to Docker (ping verify, simulation fallback)
+├── ConfigurationService    — Load routing configs (model catalog, capability tags,
+│                             fallback chains, cost strategies) + periodic refresh (5min)
+└── BotUsageAnalyticsService — Load model pricing cache for cost calculations
+
+Startup Services
+├── ReconciliationService   — Reconcile DB with Docker container state
+│                             (disable via ENABLE_STARTUP_RECONCILIATION)
+├── DockerEventService      — Start Docker event listener (2s delay)
+└── BotChannelStartupService — Auto-reconnect enabled Feishu channels (max 3 retries)
+```
+
+**Phase 4: HTTP Listen**
+
+12. Start HTTP server (default port 3100, listen on `0.0.0.0`)
+13. Register graceful shutdown signal handlers (SIGTERM, SIGINT, SIGHUP)
+
+### Init Scripts Reference
+
+| Script | Purpose | When to Run |
+| --- | --- | --- |
+| `scripts/init-env-secrets.sh` | Generate `BOT_MASTER_KEY` (OpenSSL 64-char hex) | First deployment |
+| `scripts/init-project.js` | Interactive project setup (name, ports, DB config) | First deployment (optional) |
+| `scripts/start-clawbot.sh` | Docker Compose startup | Production deployment |
+| `scripts/stop-clawbot.sh` | Docker Compose shutdown | Production ops |
+| `scripts/generate-prisma-enums.ts` | Generate Prisma enum type definitions | After schema changes |
+| `scripts/generate-i18n-errors.ts` | Generate i18n error messages | After error code changes |
+
+---
+
 ## 🗺️ Roadmap
 
 ### Near-term

@@ -13,6 +13,7 @@ import { CapabilityTagMatchingService } from './capability-tag-matching.service'
  */
 export interface SyncPricingResult {
   synced: number;
+  autoCreated: number;
   skipped: number;
   errors: Array<{ modelId: string; error: string }>;
 }
@@ -55,11 +56,13 @@ export class ModelSyncService {
 
   /**
    * 同步所有模型的定价信息
-   * 从 ModelCatalog 表查找匹配的定价并关联到 ModelAvailability
+   * 按 model name 匹配 ModelCatalog（统一定价，不区分 vendor）
+   * 对于没有 ModelCatalog 的模型，自动创建基础记录
    */
   async syncAllPricing(): Promise<SyncPricingResult> {
     const result: SyncPricingResult = {
       synced: 0,
+      autoCreated: 0,
       skipped: 0,
       errors: [],
     };
@@ -70,43 +73,57 @@ export class ModelSyncService {
       { limit: 10000 },
     );
 
-    // 获取所有 ProviderKey 用于获取 vendor
+    // 获取所有 ProviderKey 用于获取 vendor（自动创建 catalog 时需要）
     const { list: providerKeys } = await this.providerKeyService.list(
       {},
       { limit: 1000 },
     );
     const providerKeyMap = new Map(providerKeys.map((pk) => [pk.id, pk]));
 
-    // 获取所有 ModelCatalog
-    const pricingList = await this.modelCatalogService.listAll();
-    const pricingMap = new Map(
-      pricingList.map((p) => [`${p.vendor}:${p.model}`, p]),
-    );
+    // 获取所有 ModelCatalog，按 model name 索引
+    const catalogList = await this.modelCatalogService.listAll();
+    const catalogMap = new Map(catalogList.map((c) => [c.model, c]));
 
     for (const availability of availabilities) {
       try {
-        const pk = providerKeyMap.get(availability.providerKeyId);
-        if (!pk) {
+        // 已关联则跳过
+        if (availability.modelCatalogId) {
           result.skipped++;
           continue;
         }
 
-        // 查找匹配的 ModelCatalog
-        const pricingKey = `${pk.vendor}:${availability.model}`;
-        const catalog = pricingMap.get(pricingKey);
+        // 按 model name 查找 ModelCatalog
+        let catalog = catalogMap.get(availability.model);
 
-        if (catalog) {
-          // 更新 ModelAvailability 关联 ModelCatalog
-          await this.modelAvailabilityService.update(
-            { id: availability.id },
-            {
-              modelCatalog: { connect: { id: catalog.id } },
-            },
+        // 不存在则自动创建基础记录
+        if (!catalog) {
+          const pk = providerKeyMap.get(availability.providerKeyId);
+          const vendor = pk?.vendor || 'unknown';
+
+          catalog = await this.modelCatalogService.create({
+            model: availability.model,
+            vendor,
+            displayName: availability.model,
+            inputPrice: 0,
+            outputPrice: 0,
+            dataSource: 'auto',
+          });
+          catalogMap.set(catalog.model, catalog);
+          result.autoCreated++;
+
+          this.logger.info(
+            `[ModelSync] Auto-created ModelCatalog for: ${availability.model}, vendor: ${vendor}`,
           );
-          result.synced++;
-        } else {
-          result.skipped++;
         }
+
+        // 关联 ModelAvailability → ModelCatalog
+        await this.modelAvailabilityService.update(
+          { id: availability.id },
+          {
+            modelCatalog: { connect: { id: catalog.id } },
+          },
+        );
+        result.synced++;
       } catch (error) {
         result.errors.push({
           modelId: availability.id,
@@ -121,6 +138,7 @@ export class ModelSyncService {
 
   /**
    * 同步单个模型的定价信息（关联 ModelCatalog）
+   * 按 model name 匹配，不存在则自动创建
    */
   async syncModelCatalog(modelAvailabilityId: string): Promise<boolean> {
     const availability = await this.modelAvailabilityService.get({
@@ -130,29 +148,44 @@ export class ModelSyncService {
       throw new Error(`ModelAvailability not found: ${modelAvailabilityId}`);
     }
 
-    const pk = await this.providerKeyService.get({
-      id: availability.providerKeyId,
-    });
-    if (!pk) {
-      throw new Error(`ProviderKey not found: ${availability.providerKeyId}`);
-    }
-
-    // 查找匹配的 ModelCatalog
-    const catalog = await this.modelCatalogService.get({
-      model: availability.model,
-    });
-
-    if (catalog && catalog.vendor === pk.vendor) {
-      await this.modelAvailabilityService.update(
-        { id: modelAvailabilityId },
-        {
-          modelCatalog: { connect: { id: catalog.id } },
-        },
-      );
+    // 已关联则直接返回
+    if (availability.modelCatalogId) {
       return true;
     }
 
-    return false;
+    // 按 model name 查找 ModelCatalog
+    let catalog = await this.modelCatalogService.getByModel(
+      availability.model,
+    );
+
+    // 不存在则自动创建
+    if (!catalog) {
+      const pk = await this.providerKeyService.get({
+        id: availability.providerKeyId,
+      });
+      const vendor = pk?.vendor || 'unknown';
+
+      catalog = await this.modelCatalogService.create({
+        model: availability.model,
+        vendor,
+        displayName: availability.model,
+        inputPrice: 0,
+        outputPrice: 0,
+        dataSource: 'auto',
+      });
+
+      this.logger.info(
+        `[ModelSync] Auto-created ModelCatalog for: ${availability.model}, vendor: ${vendor}`,
+      );
+    }
+
+    await this.modelAvailabilityService.update(
+      { id: modelAvailabilityId },
+      {
+        modelCatalog: { connect: { id: catalog.id } },
+      },
+    );
+    return true;
   }
 
   /**

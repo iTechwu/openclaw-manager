@@ -140,6 +140,39 @@ export class ModelCatalogService extends TransactionalServiceBase {
   }
 
   /**
+   * 批量按 model 名称查询（单次查询替代 N 次 getByModel）
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async getByModels(models: string[]): Promise<ModelCatalog[]> {
+    if (models.length === 0) return [];
+    return this.getReadClient().modelCatalog.findMany({
+      where: { model: { in: models }, isDeleted: false },
+    });
+  }
+
+  /**
+   * 确保 ModelCatalog 存在，不存在则创建（race-safe upsert，已存在时不更新）
+   */
+  @HandlePrismaError(DbOperationType.UPDATE)
+  async ensureExists(
+    model: string,
+    defaults: { vendor: string; displayName?: string; dataSource?: string },
+  ): Promise<ModelCatalog> {
+    return this.getWriteClient().modelCatalog.upsert({
+      where: { model },
+      create: {
+        model,
+        vendor: defaults.vendor,
+        displayName: defaults.displayName || model,
+        inputPrice: 0,
+        outputPrice: 0,
+        dataSource: defaults.dataSource || 'auto',
+      },
+      update: {}, // no-op: 已存在时不覆盖任何字段
+    });
+  }
+
+  /**
    * 创建或更新模型目录
    */
   @HandlePrismaError(DbOperationType.UPDATE)

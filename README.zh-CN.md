@@ -471,6 +471,117 @@ pnpm db:seed              # 填充数据库
 
 ---
 
+## 🔄 初始化与启动流程
+
+### 一次性初始化脚本
+
+首次部署或新环境搭建时，按以下顺序执行：
+
+```bash
+# 1. 安装依赖
+pnpm install
+
+# 2. 生成加密主密钥（BOT_MASTER_KEY）
+./scripts/init-env-secrets.sh
+
+# 3.（可选）交互式项目初始化向导
+node scripts/init-project.js
+
+# 4. 生成 Prisma Client
+pnpm db:generate
+
+# 5. 执行数据库迁移
+pnpm db:migrate:dev
+
+# 6. 填充种子数据
+pnpm db:seed
+```
+
+### 种子数据填充顺序（`pnpm db:seed`）
+
+种子数据按以下顺序依次执行，定义在 `apps/api/prisma/seed.ts`：
+
+| 顺序 | 数据 | 数据文件 | 说明 |
+| --- | --- | --- | --- |
+| 1 | Persona 模板 | `scripts/persona-templates.data.ts` | 系统预置人设模板（中/英） |
+| 2 | 国家代码 | `scripts/country-codes.data.ts` | 国家/地区代码（全量替换） |
+| 3 | 渠道定义 | `scripts/channel-definitions.data.ts` | 10 个渠道定义 + 凭证字段 |
+| 4 | 插件 | `scripts/plugin-definitions.data.ts` | MCP 插件定义（按区域） |
+| 5 | 模型目录 | `scripts/model-catalog.data.ts` | AI 模型定价与能力评分 |
+| 6 | 能力标签 | `scripts/capability-tags.data.ts` | 路由能力标签（25 个） |
+| 7 | 降级链 | `scripts/fallback-chains.data.ts` | 模型降级策略（14 条链） |
+| 8 | 成本策略 | `scripts/cost-strategies.data.ts` | 成本优化策略（13 个） |
+
+### NestJS 后端启动流程
+
+`pnpm dev:api` 启动后，按以下阶段执行：
+
+**阶段 1：环境与配置加载**（`main.ts` bootstrap 前）
+
+1. `loadEnv()` — 加载 `.env` 文件（monorepo 根目录 → `apps/api/.env` → `.env.{NODE_ENV}`）
+2. `initConfig()` — 加载 YAML 配置文件（`config.local.yaml` 等）
+3. `initKeysConfig()` — 加载加密密钥配置
+
+**阶段 2：Fastify 服务器初始化**
+
+4. 创建 Fastify 适配器
+5. 注册 Fastify 插件：`helmet`（安全）→ `compress`（压缩）→ `SSE`（流式推送）→ `multipart`（文件上传）→ `rate-limit`（限流）→ `cookie`
+6. CORS 跨域配置
+7. 全局前缀 `/api`
+8. API 版本控制（Header 模式：`x-api-version`）
+9. WebSocket 适配器（Socket.IO）
+10. Swagger 文档（非生产环境）
+11. 全局管道（ValidationPipe）、守卫（VersionGuard）、拦截器（TransformInterceptor、VersionHeaderInterceptor）
+
+**阶段 3：NestJS 模块初始化**（`OnModuleInit` 生命周期钩子）
+
+NestJS 按模块依赖顺序初始化，各服务的 `onModuleInit()` 按以下层次执行：
+
+```
+基础设施层（infra）
+├── PrismaWriteService      — 连接写数据库（PostgreSQL + PrismaPg）
+├── PrismaReadService       — 连接读数据库（或回退到写库）
+├── DbMetricsService        — 加载数据库指标配置（慢查询阈值等）
+├── RabbitmqService         — 连接 RabbitMQ + 自动重连
+├── FeatureFlagService      — 初始化功能开关（memory/Redis/Unleash）
+├── RateLimitService        — 加载限流配置
+├── AppVersionService       — 加载版本信息（package.json + Git hash）
+├── OpenAIClient            — 加载 OpenAI API 配置
+├── EmailService            — 初始化邮件客户端（SendCloud）
+└── SmsService              — 初始化短信客户端（阿里云/腾讯/火山引擎）
+
+应用层（app）
+├── AppModule               — 设置事务指标服务引用
+├── DockerService           — 连接 Docker（ping 验证，不可用时降级为模拟模式）
+├── ConfigurationService    — 加载路由配置（模型目录、能力标签、降级链、成本策略）
+│                             + 启动定时刷新（每 5 分钟）
+└── BotUsageAnalyticsService — 加载模型定价缓存（用于成本计算）
+
+启动服务层
+├── ReconciliationService   — 对账：同步数据库与 Docker 容器状态
+│                             （可通过 ENABLE_STARTUP_RECONCILIATION 禁用）
+├── DockerEventService      — 启动 Docker 事件监听（延迟 2 秒）
+└── BotChannelStartupService — 自动重连已启用的飞书渠道（最多重试 3 次）
+```
+
+**阶段 4：HTTP 监听**
+
+12. 启动 HTTP 服务器（默认端口 3100，监听 `0.0.0.0`）
+13. 注册优雅关闭信号处理（SIGTERM、SIGINT、SIGHUP）
+
+### 初始化脚本说明
+
+| 脚本 | 用途 | 执行时机 |
+| --- | --- | --- |
+| `scripts/init-env-secrets.sh` | 生成 `BOT_MASTER_KEY`（OpenSSL 64 位 hex），写入 `secrets/` 和 `.env` | 首次部署 |
+| `scripts/init-project.js` | 交互式项目初始化（项目名、端口、数据库等配置） | 首次部署（可选） |
+| `scripts/start-clawbot.sh` | Docker Compose 启动 | 生产部署 |
+| `scripts/stop-clawbot.sh` | Docker Compose 停止 | 生产运维 |
+| `scripts/generate-prisma-enums.ts` | 生成 Prisma 枚举类型定义 | Schema 变更后 |
+| `scripts/generate-i18n-errors.ts` | 生成 i18n 错误消息 | 错误码变更后 |
+
+---
+
 ## 🗺️ 路线图
 
 ### 近期目标
