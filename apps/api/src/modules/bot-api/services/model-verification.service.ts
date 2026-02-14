@@ -411,7 +411,8 @@ export class ModelVerificationService {
     );
 
     // 添加新模型
-    const createdModelCatalogs: Array<{ catalogId: string; model: string }> = [];
+    const createdModelCatalogs: Array<{ catalogId: string; model: string }> =
+      [];
     for (const model of newModels) {
       const modelType = this.classifyModelType(model);
 
@@ -431,7 +432,10 @@ export class ModelVerificationService {
       });
 
       if (catalog) {
-        createdModelCatalogs.push({ catalogId: catalog.id, model: created.model });
+        createdModelCatalogs.push({
+          catalogId: catalog.id,
+          model: created.model,
+        });
       }
     }
 
@@ -510,8 +514,8 @@ export class ModelVerificationService {
   }
 
   /**
-   * 批量验证未验证的模型（增量验证）
-   * 只验证 errorMessage 为 'Not verified yet' 的模型
+   * 批量验证模型（强制验证）
+   * 验证该 providerKey 下的所有模型，无论当前状态
    */
   async batchVerifyUnverified(
     providerKeyId: string,
@@ -529,18 +533,17 @@ export class ModelVerificationService {
     const providerConfig = PROVIDER_CONFIGS[vendor as ProviderVendor];
     const effectiveBaseUrl = baseUrl || providerConfig?.apiHost || null;
 
-    // 获取所有未验证的模型
+    // 获取该 providerKey 下的所有模型，强制重新验证
     const { list: unverifiedRecords } =
       await this.modelAvailabilityService.list(
         {
           providerKeyId,
-          errorMessage: 'Not verified yet',
         },
         { limit: 1000 },
       );
 
     this.logger.info(
-      `[ModelVerification] Batch verifying ${unverifiedRecords.length} unverified models for provider key: ${providerKeyId}`,
+      `[ModelVerification] Batch verifying ${unverifiedRecords.length} models for provider key: ${providerKeyId}`,
     );
 
     const results: ModelVerificationResult[] = [];

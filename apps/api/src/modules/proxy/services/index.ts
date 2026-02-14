@@ -8,3 +8,4 @@ export * from './routing-engine.service';
 export * from './fallback-engine.service';
 export * from './cost-tracker.service';
 export * from './configuration.service';
+export * from './model-resolver.service';

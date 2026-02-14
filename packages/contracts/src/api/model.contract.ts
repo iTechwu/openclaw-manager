@@ -251,7 +251,7 @@ export const modelContract = c.router(
 
     /**
      * POST /model/sync-pricing - 同步模型定价信息
-     * 从 ModelPricing 表查找匹配的定价并关联到 ModelAvailability
+     * 从 ModelCatalog 表查找匹配的定价并关联到 ModelAvailability
      * 仅限管理员访问
      */
     syncPricing: {

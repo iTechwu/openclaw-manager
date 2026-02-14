@@ -589,7 +589,7 @@ export class BotApiController {
 
   /**
    * POST /model/sync-pricing - 同步模型定价信息
-   * 从 ModelPricing 表查找匹配的定价并关联到 ModelAvailability
+   * 从 ModelCatalog 表查找匹配的定价并关联到 ModelAvailability
    * 仅限管理员访问
    */
   @TsRestHandler(mc.syncPricing)
@@ -597,7 +597,7 @@ export class BotApiController {
   async syncPricing(): Promise<any> {
     return tsRestHandler(mc.syncPricing, async ({ body }) => {
       if (body?.modelAvailabilityId) {
-        await this.modelSyncService.syncModelPricing(body.modelAvailabilityId);
+        await this.modelSyncService.syncModelCatalog(body.modelAvailabilityId);
         return success({ synced: 1, skipped: 0, errors: [] });
       }
       const result = await this.modelSyncService.syncAllPricing();
@@ -727,11 +727,12 @@ export class BotApiController {
         params.hostname,
         userId,
       );
-      const result = await this.availableModelService.addModelsByAvailabilityIds(
-        bot.id,
-        body.modelAvailabilityIds,
-        body.primaryModelAvailabilityId,
-      );
+      const result =
+        await this.availableModelService.addModelsByAvailabilityIds(
+          bot.id,
+          body.modelAvailabilityIds,
+          body.primaryModelAvailabilityId,
+        );
       // 检查并更新 Bot 状态（从 draft 到 created）
       await this.botApiService.checkAndUpdateBotStatus(bot.id);
       return created(result);

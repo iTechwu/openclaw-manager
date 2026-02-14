@@ -160,7 +160,7 @@ const MODEL_DISPLAY_NAMES_FALLBACK: Record<string, string> = {
  * 负责聚合模型信息，提供面向用户的模型列表
  *
  * 功能：
- * 1. 获取所有可用模型列表（聚合 ModelAvailability 和 ModelPricing）
+ * 1. 获取所有可用模型列表（聚合 ModelAvailability 和 ModelCatalog）
  * 2. 获取 Bot 的模型列表
  * 3. 更新 Bot 的模型配置
  */
@@ -204,7 +204,7 @@ export class AvailableModelService {
   /**
    * 获取所有可用模型列表
    * 数据来源：ModelAvailability 表（从 Provider API 发现的模型）
-   * 补充信息：ModelPricing 表（定价和评分信息）
+   * 补充信息：ModelCatalog 表（定价和评分信息）
    *
    * @param includeProviderInfo 是否包含 Provider 信息（仅管理员）
    */
@@ -357,7 +357,7 @@ export class AvailableModelService {
     const models: AvailableModel[] = [];
 
     for (const [, aggregated] of modelAggregation) {
-      // 从 ModelPricing 获取补充信息（尝试所有 vendor）
+      // 从 ModelCatalog 获取补充信息（尝试所有 vendor）
       let pricing: (typeof pricingList)[number] | undefined;
       for (const v of aggregated.vendors) {
         pricing = pricingMap.get(`${v}:${aggregated.model}`);

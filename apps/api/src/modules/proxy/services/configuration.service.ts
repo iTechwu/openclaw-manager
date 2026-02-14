@@ -10,7 +10,7 @@ import {
 import {
   CostTrackerService,
   CostStrategy,
-  ModelPricing,
+  ModelCatalogPricing,
 } from './cost-tracker.service';
 import {
   ModelCatalogService,
@@ -118,7 +118,7 @@ export class ConfigurationService implements OnModuleInit {
       // 从数据库加载
       const dbCatalog = await this.modelCatalogDb.listAll();
 
-      let pricing: ModelPricing[];
+      let pricing: ModelCatalogPricing[];
 
       if (dbCatalog && dbCatalog.length > 0) {
         // 转换数据库格式为内部格式
@@ -130,13 +130,13 @@ export class ConfigurationService implements OnModuleInit {
         );
       } else {
         // 使用默认配置
-        pricing = this.getDefaultModelPricing();
+        pricing = this.getDefaultModelCatalogPricing();
         this.logger.info(
           `[ConfigurationService] Using ${pricing.length} default model catalog entries (database empty)`,
         );
       }
 
-      await this.costTracker.loadModelPricingFromDb(pricing);
+      await this.costTracker.loadModelCatalogPricingFromDb(pricing);
 
       this.loadStatus.modelCatalog = {
         loaded: true,
@@ -472,7 +472,7 @@ export class ConfigurationService implements OnModuleInit {
   /**
    * 转换数据库 ModelCatalog 为内部格式
    */
-  private convertDbModelCatalog(db: DbModelCatalog): ModelPricing {
+  private convertDbModelCatalog(db: DbModelCatalog): ModelCatalogPricing {
     return {
       model: db.model,
       vendor: db.vendor,
@@ -586,9 +586,9 @@ export class ConfigurationService implements OnModuleInit {
   // ============================================================================
 
   /**
-   * 获取默认模型定价配置
+   * 获取默认模型目录定价配置
    */
-  private getDefaultModelPricing(): ModelPricing[] {
+  private getDefaultModelCatalogPricing(): ModelCatalogPricing[] {
     return [
       // Anthropic 模型
       {

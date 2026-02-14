@@ -25,8 +25,8 @@ export interface TagMatchResult {
  *
  * 匹配策略：
  * 1. 模式匹配 (pattern): 根据 CapabilityTag.requiredModels 中的模式匹配模型名称
- * 2. 特性匹配 (feature): 根据 ModelPricing 的特性标志匹配
- * 3. 场景匹配 (scenario): 根据 ModelPricing.recommendedScenarios 匹配
+ * 2. 特性匹配 (feature): 根据 ModelCatalog 的特性标志匹配
+ * 3. 场景匹配 (scenario): 根据 ModelCatalog.recommendedScenarios 匹配
  */
 @Injectable()
 export class CapabilityTagMatchingService {

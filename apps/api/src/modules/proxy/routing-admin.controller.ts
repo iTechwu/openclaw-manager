@@ -386,7 +386,7 @@ export class RoutingAdminController {
   @TsRestHandler(c.getModelCatalogList)
   async getModelCatalogList() {
     return tsRestHandler(c.getModelCatalogList, async () => {
-      const pricingList = this.costTracker.getAllModelPricing();
+      const pricingList = this.costTracker.getAllModelCatalogPricing();
       return success({
         list: pricingList.map((pricing) => ({
           id: generateUUID(pricing.model),
@@ -416,7 +416,7 @@ export class RoutingAdminController {
   @TsRestHandler(c.getModelCatalog)
   async getModelCatalog() {
     return tsRestHandler(c.getModelCatalog, async ({ params }) => {
-      const pricing = this.costTracker.getModelPricing(params.model);
+      const pricing = this.costTracker.getModelCatalogPricing(params.model);
       if (!pricing) {
         return error(CommonErrorCode.NotFound) as any;
       }

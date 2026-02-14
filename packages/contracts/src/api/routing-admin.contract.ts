@@ -78,26 +78,16 @@ export const CreateModelCatalogInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-/** @deprecated Use CreateModelCatalogInputSchema */
-export const CreateModelPricingInputSchema = CreateModelCatalogInputSchema;
-
 export type CreateModelCatalogInput = z.infer<
   typeof CreateModelCatalogInputSchema
 >;
-/** @deprecated Use CreateModelCatalogInput */
-export type CreateModelPricingInput = CreateModelCatalogInput;
 
 export const UpdateModelCatalogInputSchema =
   CreateModelCatalogInputSchema.partial();
 
-/** @deprecated Use UpdateModelCatalogInputSchema */
-export const UpdateModelPricingInputSchema = UpdateModelCatalogInputSchema;
-
 export type UpdateModelCatalogInput = z.infer<
   typeof UpdateModelCatalogInputSchema
 >;
-/** @deprecated Use UpdateModelCatalogInput */
-export type UpdateModelPricingInput = UpdateModelCatalogInput;
 
 export const CreateCapabilityTagInputSchema = z.object({
   tagId: z.string(),
@@ -287,9 +277,6 @@ export type ImportConfigInput = z.infer<typeof ImportConfigInputSchema>;
 export const ModelCatalogListResponseSchema = z.object({
   list: z.array(ModelCatalogSchema),
 });
-
-/** @deprecated Use ModelCatalogListResponseSchema */
-export const ModelPricingListResponseSchema = ModelCatalogListResponseSchema;
 
 export const CapabilityTagListResponseSchema = z.object({
   list: z.array(CapabilityTagSchema),

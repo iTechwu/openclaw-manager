@@ -23,9 +23,9 @@ export interface CostStrategy {
 }
 
 /**
- * 模型定价信息
+ * 模型目录定价信息（来自 ModelCatalog 表）
  */
-export interface ModelPricing {
+export interface ModelCatalogPricing {
   model: string;
   vendor: string;
   inputPrice: number; // 美元/百万 tokens
@@ -90,8 +90,8 @@ export class CostTrackerService {
   // 成本策略配置（后续从数据库加载）
   private costStrategies: Map<string, CostStrategy> = new Map();
 
-  // 模型定价信息（后续从数据库加载）
-  private modelPricing: Map<string, ModelPricing> = new Map();
+  // 模型目录定价信息（从 ModelCatalog 加载）
+  private modelPricing: Map<string, ModelCatalogPricing> = new Map();
 
   // Bot 使用量追踪（内存缓存，定期持久化）
   private botUsage: Map<
@@ -181,7 +181,7 @@ export class CostTrackerService {
    * 初始化默认模型定价
    */
   private initializeDefaultPricing(): void {
-    const defaultPricing: ModelPricing[] = [
+    const defaultPricing: ModelCatalogPricing[] = [
       // Anthropic
       {
         model: 'claude-opus-4-20250514',
@@ -294,15 +294,17 @@ export class CostTrackerService {
   }
 
   /**
-   * 从数据库加载模型定价
+   * 从数据库加载模型目录定价
    */
-  async loadModelPricingFromDb(pricing: ModelPricing[]): Promise<void> {
+  async loadModelCatalogPricingFromDb(
+    pricing: ModelCatalogPricing[],
+  ): Promise<void> {
     this.modelPricing.clear();
     for (const p of pricing) {
       this.modelPricing.set(p.model, p);
     }
     this.logger.info(
-      `[CostTracker] Loaded ${pricing.length} model pricing from database`,
+      `[CostTracker] Loaded ${pricing.length} model catalog pricing from database`,
     );
   }
 
@@ -550,16 +552,16 @@ export class CostTrackerService {
   }
 
   /**
-   * 获取模型定价
+   * 获取模型目录定价
    */
-  getModelPricing(model: string): ModelPricing | undefined {
+  getModelCatalogPricing(model: string): ModelCatalogPricing | undefined {
     return this.modelPricing.get(model);
   }
 
   /**
-   * 获取所有模型定价
+   * 获取所有模型目录定价
    */
-  getAllModelPricing(): ModelPricing[] {
+  getAllModelCatalogPricing(): ModelCatalogPricing[] {
     return Array.from(this.modelPricing.values());
   }
 

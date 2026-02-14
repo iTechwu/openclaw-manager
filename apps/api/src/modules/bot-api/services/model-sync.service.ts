@@ -55,7 +55,7 @@ export class ModelSyncService {
 
   /**
    * 同步所有模型的定价信息
-   * 从 ModelPricing 表查找匹配的定价并关联到 ModelAvailability
+   * 从 ModelCatalog 表查找匹配的定价并关联到 ModelAvailability
    */
   async syncAllPricing(): Promise<SyncPricingResult> {
     const result: SyncPricingResult = {
@@ -120,9 +120,9 @@ export class ModelSyncService {
   }
 
   /**
-   * 同步单个模型的定价信息
+   * 同步单个模型的定价信息（关联 ModelCatalog）
    */
-  async syncModelPricing(modelAvailabilityId: string): Promise<boolean> {
+  async syncModelCatalog(modelAvailabilityId: string): Promise<boolean> {
     const availability = await this.modelAvailabilityService.get({
       id: modelAvailabilityId,
     });

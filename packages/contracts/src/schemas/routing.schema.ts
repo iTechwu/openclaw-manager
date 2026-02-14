@@ -43,11 +43,6 @@ export const ModelCatalogSchema = z.object({
 
 export type ModelCatalog = z.infer<typeof ModelCatalogSchema>;
 
-/** @deprecated 使用 ModelCatalogSchema 代替 */
-export const ModelPricingSchema = ModelCatalogSchema;
-/** @deprecated 使用 ModelCatalog 代替 */
-export type ModelPricing = ModelCatalog;
-
 // ============================================================================
 // Capability Tag Schema - 能力标签
 // ============================================================================

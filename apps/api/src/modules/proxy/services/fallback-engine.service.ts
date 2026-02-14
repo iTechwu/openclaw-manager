@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { ModelResolverService, ResolvedModel } from './model-resolver.service';
 
 /**
  * Fallback 链中的模型配置
@@ -81,6 +82,7 @@ export class FallbackEngineService {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Optional() private readonly modelResolverService?: ModelResolverService,
   ) {
     this.initializeDefaultChains();
   }
@@ -389,5 +391,61 @@ export class FallbackEngineService {
       totalAttempts: context.retryCount + 1,
       errors: context.errors,
     };
+  }
+
+  /**
+   * 解析 Fallback 模型的最优 vendor 实例
+   *
+   * 使用 ModelResolverService 按 vendorPriority/healthScore 排序选择最优 vendor。
+   * 支持排除已失败的 providerKeyIds（同模型多 vendor 容错）。
+   *
+   * @param model 模型名称
+   * @param excludeProviderKeyIds 排除的 ProviderKey IDs（已失败的）
+   * @returns 解析后的 vendor 实例，或 null
+   */
+  async resolveModelVendor(
+    model: string,
+    excludeProviderKeyIds?: string[],
+  ): Promise<ResolvedModel | null> {
+    if (!this.modelResolverService) {
+      this.logger.debug(
+        '[FallbackEngine] ModelResolverService not available, skipping vendor resolution',
+      );
+      return null;
+    }
+
+    return this.modelResolverService.resolve(model, { excludeProviderKeyIds });
+  }
+
+  /**
+   * 解析 Fallback 模型的所有可用 vendor 实例（按优先级排序）
+   * 用于同模型内多 vendor 容错
+   */
+  async resolveAllModelVendors(
+    model: string,
+    excludeProviderKeyIds?: string[],
+  ): Promise<ResolvedModel[]> {
+    if (!this.modelResolverService) {
+      return [];
+    }
+
+    return this.modelResolverService.resolveAll(model, { excludeProviderKeyIds });
+  }
+
+  /**
+   * 报告模型请求结果，更新健康评分
+   */
+  async reportModelResult(
+    providerKeyId: string,
+    model: string,
+    success: boolean,
+  ): Promise<void> {
+    if (!this.modelResolverService) return;
+
+    await this.modelResolverService.updateHealthScore(
+      providerKeyId,
+      model,
+      success,
+    );
   }
 }

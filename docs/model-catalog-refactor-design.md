@@ -1,6 +1,8 @@
 # 模型目录（ModelCatalog）重构设计方案
 
 > 将模型身份、能力、定价与供应商可用性解耦，建立以 model 为核心的统一数据模型。
+>
+> **实施状态（2026-02-14）**：核心 Schema 变更、外键迁移、Contract/Service 层适配已全部完成。`ModelResolverService`（运行时 Vendor 解析 + 健康评分）已实现并集成到 `ModelRouterService.getDefaultRoute()` 和 `FallbackEngineService`。
 
 ## 1. 问题分析
 
@@ -25,8 +27,8 @@
 
 ### 1.3 已正确的部分
 
-- `ModelPricing`：已使用 `model` 作为唯一键（模型级别），设计正确
-- `ModelAvailability`：作为 vendor + model 的可用性追踪，职责清晰
+- `ModelPricing`（现已重命名为 `ModelCatalog`）：已使用 `model` 作为唯一键（模型级别），设计正确 ✅
+- `ModelAvailability`：作为 vendor + model 的可用性追踪，职责清晰 ✅
 
 ## 2. 设计目标
 
@@ -98,6 +100,8 @@
 ```
 
 ## 4. Schema 变更详细设计
+
+> **✅ 全部已实现** — 以下 Schema 变更已通过 Prisma Migration 执行完成。
 
 ### 4.1 ModelCatalog（重命名自 ModelPricing）
 
@@ -326,6 +330,8 @@ model ComplexityRoutingModelMapping {
 
 ## 5. 运行时 Vendor 解析策略
 
+> **✅ ModelResolverService 已实现** — 位于 `apps/api/src/modules/proxy/services/model-resolver.service.ts`，已注册到 ProxyModule。`ModelHealthService` 的核心功能（`updateHealthScore`）已集成到 ModelResolverService 中。
+
 ### 5.1 ModelResolverService
 
 当路由决策选定一个模型后，需要将其解析为具体的 vendor 实例（ProviderKey）。
@@ -417,6 +423,8 @@ FallbackChain: [claude-sonnet-4 (pri=0), gpt-4o (pri=1), deepseek-v3 (pri=2)]
 
 ## 6. 变更对比总结
 
+> **✅ 全部已实现** — 以下表级变更和外键关系变更已全部完成。
+
 ### 6.1 表级变更
 
 | 表                              | 变更类型                    | 说明                                                                                             |
@@ -449,6 +457,8 @@ FallbackChain: [claude-sonnet-4 (pri=0), gpt-4o (pri=1), deepseek-v3 (pri=2)]
 ```
 
 ## 7. 数据迁移方案
+
+> **✅ Prisma Migration 已执行** — 表重命名、字段新增、外键约束已通过 Prisma Migration 完成。旧字段（`model_availability_id`、`model_pricing_id`、同步追踪字段）已在 Migration 中移除。
 
 ### 7.1 迁移步骤
 
@@ -530,29 +540,38 @@ ALTER TABLE b_model_capability_tag
 
 ## 8. 受影响的代码模块
 
+> **✅ 核心已完成** — Service 层和 Contract/Schema 层已全部适配 ModelCatalog。ModelResolverService 已实现并集成到 ModelRouterService 和 FallbackEngineService。
+
 ### 8.1 需要修改的 Service 层
 
-| 模块               | 文件                            | 变更内容                                                |
-| ------------------ | ------------------------------- | ------------------------------------------------------- |
-| model-verification | `model-verification.service.ts` | 验证后关联 ModelCatalog                                 |
-| available-model    | `available-model.service.ts`    | 查询逻辑改为 join ModelCatalog                          |
-| proxy              | `keyring-proxy.service.ts`      | Fallback 解析改为 ModelCatalog → ModelAvailability 两步 |
-| proxy              | `upstream.service.ts`           | 模型解析逻辑调整                                        |
-| bot-api            | `workspace.service.ts`          | 模型列表查询调整                                        |
+| 模块               | 文件                                 | 变更内容                                                | 状态                       |
+| ------------------ | ------------------------------------ | ------------------------------------------------------- | -------------------------- |
+| model-verification | `model-verification.service.ts`      | 验证后关联 ModelCatalog                                 | ✅                         |
+| available-model    | `available-model.service.ts`         | 查询逻辑改为 join ModelCatalog                          | ✅                         |
+| capability-tag     | `capability-tag-matching.service.ts` | FK → modelCatalogId，标签为模型级                       | ✅                         |
+| model-sync         | `model-sync.service.ts`              | 适配 ModelCatalog 迭代                                  | ✅                         |
+| cost-tracker       | `cost-tracker.service.ts`            | ModelPricing 接口 → ModelCatalogPricing                 | ✅                         |
+| configuration      | `configuration.service.ts`           | 双读逻辑，ModelCatalog 数据源                           | ✅                         |
+| proxy              | `keyring-proxy.service.ts`           | Fallback 解析改为 ModelCatalog → ModelAvailability 两步 | ✅ 通过 ModelRouterService 间接集成 |
+| proxy              | `upstream.service.ts`                | 模型解析逻辑调整                                        | ✅ 纯 HTTP 转发，无需直接集成       |
+| bot-api            | `workspace.service.ts`               | 模型列表查询调整                                        | ✅                         |
 
 ### 8.2 需要修改的 Contract/Schema
 
-| 文件                                                | 变更内容                           |
-| --------------------------------------------------- | ---------------------------------- |
-| `packages/contracts/src/schemas/model.schema.ts`    | ModelPricing 相关 schema 重命名    |
-| `packages/contracts/src/schemas/provider.schema.ts` | ModelAvailability 响应 schema 调整 |
+| 文件                                                   | 变更内容                                                     | 状态 |
+| ------------------------------------------------------ | ------------------------------------------------------------ | ---- |
+| `packages/contracts/src/schemas/model.schema.ts`       | ModelCapabilityTag → modelCatalogId                          | ✅   |
+| `packages/contracts/src/schemas/routing.schema.ts`     | ModelCatalogSchema, FallbackChainModelSchema(modelCatalogId) | ✅   |
+| `packages/contracts/src/api/routing-admin.contract.ts` | getModelCatalogList 等端点                                   | ✅   |
+| `packages/contracts/src/api/model.contract.ts`         | tags 端点 → modelCatalogId                                   | ✅   |
+| `packages/contracts/src/schemas/provider.schema.ts`    | ModelAvailability 响应 schema 调整                           | ✅   |
 
 ### 8.3 新增 Service
 
-| Service                | 职责                                |
-| ---------------------- | ----------------------------------- |
-| `ModelResolverService` | 模型 → 可用 vendor 实例的运行时解析 |
-| `ModelHealthService`   | 基于请求成功率动态更新 healthScore  |
+| Service                | 职责                                | 状态        |
+| ---------------------- | ----------------------------------- | ----------- |
+| `ModelResolverService` | 模型 → 可用 vendor 实例的运行时解析 + 健康评分更新 | ✅ 已实现 |
+| `ModelHealthService`   | 基于请求成功率动态更新 healthScore  | ✅ 已合并到 ModelResolverService.updateHealthScore() |
 
 ## 9. 设计决策记录
 
