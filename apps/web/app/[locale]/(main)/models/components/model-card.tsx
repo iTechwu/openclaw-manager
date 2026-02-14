@@ -149,7 +149,7 @@ export function ModelCard({
           {model.capabilityTags?.map((tag) => {
             const Icon = CAPABILITY_ICONS[tag.tagId] || CAPABILITY_ICONS.default;
             return (
-              <Badge key={tag.tagId} variant="outline" className="gap-1 text-xs">
+              <Badge key={tag.tagId} variant="secondary" className="gap-1 text-xs">
                 {Icon && <Icon className="size-3" />}
                 {tag.name}
               </Badge>
@@ -158,7 +158,7 @@ export function ModelCard({
           {isAdmin && onManageTags && (
             <Badge
               variant="outline"
-              className="gap-1 text-xs cursor-pointer hover:bg-accent"
+              className="gap-1 text-xs cursor-pointer border-dashed text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => onManageTags(model.model)}
             >
               <Tags className="size-3" />
