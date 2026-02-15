@@ -151,7 +151,9 @@ export class OcrService {
         throw new Error(status.error || 'OCR task failed');
       }
 
-      const result: OcrTaskResult = status.result;
+      // AgentX 返回的结果是嵌套结构: status.result.result
+      const taskResult = status.result as any;
+      const result: OcrTaskResult = taskResult.result || taskResult;
 
       // 5. 转换结果格式
       const ocrResult: OcrResult = {
@@ -231,12 +233,16 @@ export class OcrService {
         throw new Error(status.error || 'Batch OCR task failed');
       }
 
+      // AgentX 返回的结果是嵌套结构: status.result.result
+      const taskResult = status.result as any;
+      const rawResults = taskResult.result || taskResult;
+
       // 批量任务结果是一个数组
       const results: Array<OcrTaskResult | { error: string }> = Array.isArray(
-        status.result,
+        rawResults,
       )
-        ? status.result
-        : [status.result];
+        ? rawResults
+        : [rawResults];
 
       this.logger.info('批量 OCR 任务完成', {
         taskId,
@@ -252,7 +258,7 @@ export class OcrService {
           };
         }
         return {
-          text: result.text || '',
+          text: result.raw_text || result.text || '',
           confidence: result.confidence || 0,
           fileType: files[index].fileType,
         } as OcrResult;

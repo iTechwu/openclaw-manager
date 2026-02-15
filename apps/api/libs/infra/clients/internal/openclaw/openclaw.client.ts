@@ -23,14 +23,18 @@ export interface OpenClawMessage {
 
 /**
  * OpenClaw 多模态内容部分
- * 支持文本和图片
+ * 支持文本、图片和文件
  */
 export interface OpenClawContentPart {
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'file';
   text?: string;
   image_url?: {
     url: string;
     detail?: 'low' | 'high' | 'auto';
+  };
+  file_url?: {
+    url: string;
+    name?: string;
   };
 }
 
@@ -265,6 +269,7 @@ export class OpenClawClient {
       visionModel,
       contentParts: content.length,
       imageCount: content.filter((p) => p.type === 'image').length,
+      fileCount: content.filter((p) => p.type === 'file').length,
     });
 
     // 1. 获取 Proxy Token
@@ -273,28 +278,67 @@ export class OpenClawClient {
       throw new Error('无法获取 Proxy Token，无法发送视觉请求');
     }
 
-    // 2. 构建 OpenAI 兼容请求体
+    // 2. 过滤并转换有效的内容部分
+    const validContentParts = content
+      .filter((part) => {
+        // 过滤空文本
+        if (part.type === 'text') {
+          return part.text && part.text.trim().length > 0;
+        }
+        // 过滤无效的图片 URL
+        if (part.type === 'image') {
+          return part.image_url && part.image_url.url;
+        }
+        // 过滤无效的文件 URL
+        if (part.type === 'file') {
+          return part.file_url && part.file_url.url;
+        }
+        return false;
+      })
+      .map((part) => {
+        if (part.type === 'text') {
+          return { type: 'text' as const, text: part.text! };
+        }
+        if (part.type === 'file' && part.file_url) {
+          return {
+            type: 'file_url' as const,
+            file_url: part.file_url,
+          };
+        }
+        // 图片文件
+        return {
+          type: 'image_url' as const,
+          image_url: part.image_url!,
+        };
+      });
+
+    // 验证是否有有效内容
+    if (validContentParts.length === 0) {
+      throw new Error('没有有效的多模态内容可发送');
+    }
+
+    this.logger.info('OpenClawClient: 有效内容部分', {
+      totalParts: content.length,
+      validParts: validContentParts.length,
+      textParts: validContentParts.filter((p) => p.type === 'text').length,
+      imageParts: validContentParts.filter((p) => p.type === 'image_url').length,
+      fileParts: validContentParts.filter((p) => p.type === 'file_url').length,
+    });
+
+    // 3. 构建 OpenAI 兼容请求体
     const requestBody = {
       model: visionModel,
       messages: [
         {
           role: 'user',
-          content: content.map((part) => {
-            if (part.type === 'text') {
-              return { type: 'text', text: part.text || '' };
-            }
-            return {
-              type: 'image_url',
-              image_url: part.image_url,
-            };
-          }),
+          content: validContentParts,
         },
       ],
       stream: false,
       max_tokens: 4096,
     };
 
-    // 3. 调用 Proxy HTTP 端点
+    // 4. 调用 Proxy HTTP 端点
     // 使用 openai-compatible vendor 触发自动路由
     const url = `${proxyBaseUrl}/v1/openai-compatible/chat/completions`;
 
@@ -322,7 +366,7 @@ export class OpenClawClient {
           ),
       );
 
-      // 4. 提取响应文本
+      // 5. 提取响应文本
       const data = response.data;
       const responseText =
         data?.choices?.[0]?.message?.content || '';

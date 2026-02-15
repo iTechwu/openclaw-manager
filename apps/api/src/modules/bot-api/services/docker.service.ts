@@ -242,9 +242,9 @@ export class DockerService implements OnModuleInit {
       // Used to determine API protocol in entrypoint
       `AI_VENDOR=${originalProvider}`,
       // npm registry for China network (optional)
-      ...(process.env.NPM_CONFIG_REGISTRY && [
-        `NPM_CONFIG_REGISTRY=${process.env.NPM_CONFIG_REGISTRY}`,
-      ]),
+      ...(process.env.NPM_CONFIG_REGISTRY
+        ? [`NPM_CONFIG_REGISTRY=${process.env.NPM_CONFIG_REGISTRY}`]
+        : []),
     ];
 
     // When using named volumes, bot needs to know its workspace subdirectory

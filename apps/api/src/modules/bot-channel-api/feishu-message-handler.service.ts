@@ -6,8 +6,7 @@
  * - 消息去重（防止重复回复）
  * - 支持多模态消息（文本、富文本、图片、文件）
  * - 转发消息到 OpenClaw 并回复飞书
- * - 图片消息通过 Proxy 直接发送（绕过 OpenClaw Gateway）
- * - 文件消息通过 OCR 服务提取文本内容（支持 PDF、图片等）
+ * - 图片和文件消息通过视觉模型直接处理
  *
  * 注意：此服务是单例，确保消息去重在所有连接之间共享
  */
@@ -21,7 +20,6 @@ import {
   OpenClawClient,
   OpenClawContentPart,
 } from '@app/clients/internal/openclaw';
-import { OcrService } from '@app/shared-services/ocr';
 import { FileStorageService } from '@app/shared-services/file-storage';
 import { parseFeishuMessage } from '@app/clients/internal/feishu/feishu-message-parser';
 import type { ParsedFeishuMessage } from '@app/clients/internal/feishu/feishu.types';
@@ -32,11 +30,66 @@ import { randomUUID } from 'crypto';
 const SUPPORTED_MESSAGE_TYPES = ['text', 'post', 'image', 'file'];
 
 /**
+ * 单个文件提取文本的最大长度（字符数）
+ * 超过此长度将截断，防止大文档导致 AI 模型超时
+ * 可通过环境变量 MAX_FILE_TEXT_LENGTH 覆盖
+ */
+const MAX_FILE_TEXT_LENGTH = parseInt(
+  process.env.MAX_FILE_TEXT_LENGTH || '15000',
+  10,
+);
+
+/**
  * 默认视觉模型（当 Bot 未配置视觉模型时使用）
  * 可通过环境变量 DEFAULT_VISION_MODEL 覆盖
  */
 const DEFAULT_VISION_MODEL =
   process.env.DEFAULT_VISION_MODEL || 'doubao-seed-1-6-vision-250815';
+
+/**
+ * 支持视觉模型处理的文件类型
+ * 这些文件会上传到 TOS，然后通过视觉模型处理
+ */
+const VISION_SUPPORTED_TYPES = [
+  // 图片类型
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'bmp',
+  'tiff',
+  'webp',
+  // 文档类型
+  'pdf',
+  'docx',
+  'doc',
+  'xlsx',
+  'xls',
+  'pptx',
+  'ppt',
+];
+
+/**
+ * 文本文件类型（直接解码，无需视觉模型）
+ */
+const TEXT_FILE_TYPES = [
+  'txt',
+  'md',
+  'json',
+  'csv',
+  'xml',
+  'html',
+  'css',
+  'js',
+  'ts',
+  'py',
+  'java',
+  'go',
+  'rs',
+  'c',
+  'cpp',
+  'h',
+];
 
 @Injectable()
 export class FeishuMessageHandlerService {
@@ -51,7 +104,6 @@ export class FeishuMessageHandlerService {
     private readonly botDb: BotService,
     private readonly feishuClientService: FeishuClientService,
     private readonly openClawClient: OpenClawClient,
-    private readonly ocrService: OcrService,
     private readonly fileStorageService: FileStorageService,
   ) {}
 
@@ -106,6 +158,8 @@ export class FeishuMessageHandlerService {
       messageText: parsedMessage.text,
       hasImages: parsedMessage.hasImages,
       imageCount: parsedMessage.images.length,
+      hasFiles: parsedMessage.hasFiles,
+      fileCount: parsedMessage.files.length,
     });
 
     // 检查是否为支持的消息类型
@@ -172,24 +226,72 @@ export class FeishuMessageHandlerService {
         parsedMessage,
         channel.id,
         messageId,
+        bot,
       );
 
-      // 根据是否包含图片选择不同的发送路径
+      // 根据消息类型选择不同的发送路径
       let aiResponse: string;
 
       if (typeof message !== 'string' && message.length > 0) {
-        // 多模态消息（含图片）：通过 Proxy 直接发送，绕过 OpenClaw Gateway
-        // 原因：OpenClaw Gateway 的 chat.send WebSocket 协议不支持多模态内容数组
-        this.logger.info('检测到图片消息，通过 Proxy 直接发送视觉请求', {
-          botId: bot.id,
-          containerId: bot.containerId,
-          imageCount: message.filter((p) => p.type === 'image').length,
-        });
+        // 多模态消息（含图片/文件）：通过 Proxy 直接发送，绕过 OpenClaw Gateway
+        const imageCount = message.filter((p) => p.type === 'image').length;
+        const fileCount = message.filter((p) => p.type === 'file').length;
+        const textCount = message.filter((p) => p.type === 'text' && p.text?.trim()).length;
 
-        aiResponse = await this.sendVisionRequest(bot, message);
+        // 验证是否有有效的多模态内容（图片或文件）
+        const hasValidMultimodalContent = imageCount > 0 || fileCount > 0;
+
+        if (!hasValidMultimodalContent && textCount === 0) {
+          // 没有有效内容，跳过发送
+          this.logger.warn('多模态消息无有效内容，跳过发送', {
+            botId: bot.id,
+            imageCount,
+            fileCount,
+            textCount,
+            contentParts: message.length,
+          });
+          return;
+        }
+
+        // 如果没有图片和文件，只有文本，回退到文本模式
+        if (!hasValidMultimodalContent) {
+          const textMessage = message
+            .filter((p) => p.type === 'text' && p.text?.trim())
+            .map((p) => p.text!)
+            .join('\n');
+
+          this.logger.info('多模态消息仅含文本，回退到文本模式', {
+            botId: bot.id,
+            textLength: textMessage.length,
+          });
+
+          aiResponse = await this.openClawClient.chat(
+            bot.port!,
+            bot.gatewayToken!,
+            textMessage,
+          );
+        } else {
+          this.logger.info('检测到多模态消息，通过 Proxy 直接发送视觉请求', {
+            botId: bot.id,
+            containerId: bot.containerId,
+            imageCount,
+            fileCount,
+            textCount,
+          });
+
+          aiResponse = await this.sendVisionRequest(bot, message);
+        }
       } else {
         // 纯文本消息：通过 OpenClaw Gateway 发送
         const textMessage = typeof message === 'string' ? message : '';
+
+        // 验证文本消息不为空
+        if (!textMessage.trim()) {
+          this.logger.warn('文本消息为空，跳过发送', {
+            botId: bot.id,
+          });
+          return;
+        }
 
         this.logger.info('转发文本消息到 OpenClaw', {
           botId: bot.id,
@@ -235,14 +337,14 @@ export class FeishuMessageHandlerService {
 
   /**
    * 构建发送给 OpenClaw 的消息
-   * 如果消息包含图片，构建多模态消息格式
-   * 如果消息包含文件，提取文件内容（PDF 文本）
+   * 如果消息包含图片或文件，构建多模态消息格式
    * 否则返回纯文本
    */
   private async buildMessage(
     parsedMessage: ParsedFeishuMessage,
     channelId: string,
     messageId: string,
+    bot: { id: string; containerId?: string | null },
   ): Promise<string | OpenClawContentPart[]> {
     // 如果有图片，构建多模态消息
     if (parsedMessage.hasImages) {
@@ -251,7 +353,7 @@ export class FeishuMessageHandlerService {
 
     // 如果有文件，处理文件内容
     if (parsedMessage.hasFiles) {
-      return this.buildFileMessage(parsedMessage, channelId, messageId);
+      return this.buildFileMessage(parsedMessage, channelId, messageId, bot);
     }
 
     // 纯文本消息
@@ -338,13 +440,15 @@ export class FeishuMessageHandlerService {
 
   /**
    * 构建包含文件内容的消息
-   * 通过 OCR 服务提取文件文本内容
+   * - 文本文件：直接解码内容
+   * - 图片/文档文件：上传到 TOS，通过视觉模型处理
    */
   private async buildFileMessage(
     parsedMessage: ParsedFeishuMessage,
     channelId: string,
     messageId: string,
-  ): Promise<string> {
+    bot: { id: string; containerId?: string | null },
+  ): Promise<string | OpenClawContentPart[]> {
     const apiClient = this.feishuClientService.getApiClient(channelId);
     if (!apiClient) {
       this.logger.warn('找不到飞书 API 客户端，无法下载文件，仅发送文本', {
@@ -353,11 +457,17 @@ export class FeishuMessageHandlerService {
       return parsedMessage.text;
     }
 
-    const textParts: string[] = [];
+    // 检查是否支持视觉模型
+    const hasVisionSupport = !!bot.containerId;
+
+    const contentParts: OpenClawContentPart[] = [];
 
     // 添加原始文本
     if (parsedMessage.text.trim()) {
-      textParts.push(parsedMessage.text);
+      contentParts.push({
+        type: 'text',
+        text: parsedMessage.text,
+      });
     }
 
     // 处理每个文件
@@ -380,72 +490,89 @@ export class FeishuMessageHandlerService {
         // 根据文件类型处理
         const fileExtension = fileInfo.fileName.toLowerCase().split('.').pop();
 
-        // OCR 服务支持的文件类型
-        const ocrSupportedTypes = [
-          'pdf',
-          'docx',
-          'doc',
-          'png',
-          'jpg',
-          'jpeg',
-          'gif',
-          'bmp',
-          'tiff',
-          'webp',
-          'xlsx',
-          'xls',
-          'pptx',
-          'ppt',
-        ];
-
-        // 文本文件类型（直接解码，无需 OCR）
-        const textFileTypes = [
-          'txt',
-          'md',
-          'json',
-          'csv',
-          'xml',
-          'html',
-          'css',
-          'js',
-          'ts',
-          'py',
-          'java',
-          'go',
-          'rs',
-          'c',
-          'cpp',
-          'h',
-        ];
-
-        if (textFileTypes.includes(fileExtension || '')) {
+        if (TEXT_FILE_TYPES.includes(fileExtension || '')) {
           // 文本文件：直接解码
-          const textContent = Buffer.from(fileData.base64, 'base64').toString(
-            'utf-8',
-          );
-          textParts.push(`\n[文件: ${fileInfo.fileName}]\n${textContent}`);
-        } else if (ocrSupportedTypes.includes(fileExtension || '')) {
-          // OCR 支持的文件类型：通过 OCR 服务提取文本
-          const extractedText = await this.extractFileTextViaOcr(
+          const textContent = Buffer.from(
             fileData.base64,
-            fileExtension || '',
+            'base64',
+          ).toString('utf-8');
+
+          // 截断过长的文本，防止 AI 模型超时
+          const truncatedText =
+            textContent.length > MAX_FILE_TEXT_LENGTH
+              ? textContent.substring(0, MAX_FILE_TEXT_LENGTH) +
+                `\n\n[...文件内容过长，已截断。原始长度: ${textContent.length} 字符]`
+              : textContent;
+
+          contentParts.push({
+            type: 'text',
+            text: `\n[文件: ${fileInfo.fileName}]\n${truncatedText}`,
+          });
+
+          this.logger.info('文本文件处理完成', {
+            fileName: fileInfo.fileName,
+            originalLength: textContent.length,
+            wasTruncated: textContent.length > MAX_FILE_TEXT_LENGTH,
+          });
+        } else if (
+          VISION_SUPPORTED_TYPES.includes(fileExtension || '') &&
+          hasVisionSupport
+        ) {
+          // 支持视觉模型的文件类型：上传到 TOS，通过视觉模型处理
+          const fileUrl = await this.uploadFileToTos(
+            fileData.base64,
             fileInfo.fileName,
           );
-          if (extractedText.trim()) {
-            textParts.push(`\n[文件: ${fileInfo.fileName}]\n${extractedText}`);
-            this.logger.info('文件文本提取成功', {
+
+          if (fileUrl) {
+            // 根据文件类型构建不同的内容
+            if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'].includes(fileExtension || '')) {
+              // 图片文件：使用 image_url 格式
+              contentParts.push({
+                type: 'text',
+                text: `\n[图片文件: ${fileInfo.fileName}]\n请分析这张图片的内容：`,
+              });
+              contentParts.push({
+                type: 'image',
+                image_url: {
+                  url: `data:${fileData.mimeType};base64,${fileData.base64}`,
+                  detail: 'auto',
+                },
+              });
+            } else {
+              // 文档文件（PDF 等）：使用 file_url 格式
+              contentParts.push({
+                type: 'text',
+                text: `\n[文档文件: ${fileInfo.fileName}]\n请分析这个文档的内容并总结要点：`,
+              });
+              contentParts.push({
+                type: 'file',
+                file_url: {
+                  url: fileUrl,
+                  name: fileInfo.fileName,
+                },
+              });
+            }
+
+            this.logger.info('文件已上传，将通过视觉模型处理', {
               fileName: fileInfo.fileName,
               fileExtension,
-              textLength: extractedText.length,
+              fileUrl: fileUrl.substring(0, 100),
             });
           } else {
-            textParts.push(`\n[文件: ${fileInfo.fileName} - 无法提取文本内容]`);
+            contentParts.push({
+              type: 'text',
+              text: `\n[文件: ${fileInfo.fileName} - 上传失败，无法处理]`,
+            });
           }
         } else {
-          // 其他文件：仅记录文件名
-          textParts.push(
-            `\n[文件: ${fileInfo.fileName} - 此文件类型暂不支持内容提取]`,
-          );
+          // 不支持的文件类型或没有视觉模型支持
+          contentParts.push({
+            type: 'text',
+            text: `\n[文件: ${fileInfo.fileName}${
+              !hasVisionSupport ? ' - Bot 不支持文件处理' : ' - 此文件类型暂不支持'
+            }]`,
+          });
         }
 
         this.logger.info('飞书文件下载成功', {
@@ -461,50 +588,44 @@ export class FeishuMessageHandlerService {
           fileName: fileInfo.fileName,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-        textParts.push(`\n[文件: ${fileInfo.fileName} - 下载失败]`);
+        contentParts.push({
+          type: 'text',
+          text: `\n[文件: ${fileInfo.fileName} - 下载失败]`,
+        });
       }
     }
 
-    return textParts.join('\n');
+    // 如果只有文本内容，返回纯文本格式
+    if (contentParts.every((p) => p.type === 'text')) {
+      return contentParts.map((p) => p.text).join('\n');
+    }
+
+    return contentParts;
   }
 
   /**
-   * 通过 OCR 服务提取文件文本内容
-   *
-   * 流程：
-   * 1. 将 Base64 文件数据上传到 TOS
-   * 2. 生成 TOS 预签名 URL
-   * 3. 将 URL 传给 OCR 服务进行文本提取
-   *
-   * @param base64 文件 Base64 数据
-   * @param fileType 文件类型
-   * @param fileName 文件名
-   * @returns 提取的文本内容
+   * 上传文件到 TOS 并返回预签名 URL
    */
-  private async extractFileTextViaOcr(
+  private async uploadFileToTos(
     base64: string,
-    fileType: string,
     fileName: string,
-  ): Promise<string> {
+  ): Promise<string | null> {
     try {
-      // 1. 获取默认存储桶和供应商配置
       const vendor: FileBucketVendor = 'tos';
       const bucket = await this.fileStorageService.getDefaultBucket(false);
 
-      // 2. 生成唯一的文件键
+      // 生成唯一的文件键
       const uniqueId = randomUUID();
       const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const fileKey = `feishu-ocr/${uniqueId}/${sanitizedFileName}`;
+      const fileKey = `feishu-files/${uniqueId}/${sanitizedFileName}`;
 
-      this.logger.info('上传文件到 TOS 用于 OCR 处理', {
+      this.logger.info('上传文件到 TOS', {
         fileName,
-        fileType,
         fileKey,
         bucket,
-        vendor,
       });
 
-      // 3. 上传 Base64 数据到 TOS
+      // 上传 Base64 数据到 TOS
       await this.fileStorageService.fileDataUploader(
         vendor,
         bucket,
@@ -512,7 +633,7 @@ export class FeishuMessageHandlerService {
         base64,
       );
 
-      // 4. 生成预签名 URL（有效期 5 分钟，足够 OCR 服务处理）
+      // 生成预签名 URL（有效期 5 分钟）
       const presignedUrl = await this.fileStorageService.getPrivateDownloadUrl(
         vendor,
         bucket,
@@ -520,70 +641,27 @@ export class FeishuMessageHandlerService {
         { expire: 300 },
       );
 
-      this.logger.info('TOS 预签名 URL 生成成功，开始 OCR 处理', {
+      this.logger.info('TOS 预签名 URL 生成成功', {
         fileName,
         fileKey,
         urlLength: presignedUrl.length,
       });
 
-      // 5. 调用 OCR 服务提取文本
-      const result = await this.ocrService.extractText(presignedUrl, fileType, {
-        mode: 'basic',
-      });
-      this.logger.info('OCR 文本提取结果', {
-        result,
-      });
+      // 注意：不立即清理文件，因为视觉模型可能需要时间处理
+      // 可以通过 TOS 生命周期规则自动清理 feishu-files/ 目录下的旧文件
 
-      // 6. 清理临时文件（异步执行，不等待结果）
-      this.cleanupOcrTempFile(vendor, bucket, fileKey).catch((err) => {
-        this.logger.warn('清理 OCR 临时文件失败', {
-          fileKey,
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
-      });
-
-      if (result.text && result.text.trim()) {
-        this.logger.info('OCR 文本提取成功', {
-          fileName,
-          textLength: result.text.length,
-          confidence: result.confidence,
-        });
-        return result.text;
-      }
-
-      return '';
+      return presignedUrl;
     } catch (error) {
-      this.logger.error('OCR 文本提取失败', {
+      this.logger.error('上传文件到 TOS 失败', {
         fileName,
-        fileType,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      return '';
+      return null;
     }
   }
 
   /**
-   * 清理 OCR 处理后的临时文件
-   */
-  private async cleanupOcrTempFile(
-    vendor: FileBucketVendor,
-    bucket: string,
-    fileKey: string,
-  ): Promise<void> {
-    try {
-      await this.fileStorageService.deleteFile(vendor, bucket, fileKey);
-      this.logger.debug('OCR 临时文件已清理', { fileKey });
-    } catch (error) {
-      // 清理失败不影响主流程，仅记录日志
-      this.logger.warn('清理 OCR 临时文件失败', {
-        fileKey,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-  }
-
-  /**
-   * 发送视觉请求（含图片的多模态消息）
+   * 发送视觉请求（含图片/文件的多模态消息）
    * 通过 Keyring Proxy 直接发送，绕过 OpenClaw Gateway
    * 如果 Proxy 调用失败，回退到 OpenClaw 纯文本模式
    */
@@ -650,7 +728,7 @@ export class FeishuMessageHandlerService {
       .join('\n');
 
     const fallbackText =
-      textParts || '[用户发送了图片，但系统暂时无法处理图片内容]';
+      textParts || '[用户发送了图片或文件，但系统暂时无法处理]';
 
     if (!bot.port || !bot.gatewayToken) {
       return '抱歉，系统暂时无法处理您的请求。';
