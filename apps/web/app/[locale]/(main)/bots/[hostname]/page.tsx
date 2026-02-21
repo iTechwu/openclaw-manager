@@ -11,7 +11,7 @@ import { DraftConfigGuide } from './components/draft-config-guide';
 import { toast } from 'sonner';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@repo/ui';
-import { botModelClient, botChannelClient } from '@/lib/api/contracts';
+import { botModelClient, botChannelClient, botClient } from '@/lib/api/contracts';
 
 export default function BotDashboardPage() {
   const params = useParams<{ hostname: string }>();
@@ -76,7 +76,7 @@ export default function BotDashboardPage() {
       if (response.status === 200 && response.body.data) {
         // 将结构化日志转换为字符串数组用于显示
         const logLines = response.body.data.logs.map(
-          (log) => `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}`
+          (log: { timestamp: string; level: string; message: string }) => `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}`
         );
         setLogs(logLines);
       }
@@ -142,6 +142,10 @@ export default function BotDashboardPage() {
   const isRunning = bot?.status === 'running';
   const isDraft = bot?.status === 'draft';
   const loading = actionLoading || startLoading || stopLoading;
+
+  // Bot 状态类型
+  type BotStatus = 'draft' | 'created' | 'starting' | 'running' | 'stopped' | 'error';
+  const botStatus = (bot?.status || 'draft') as BotStatus;
 
   // 从容器统计中获取当前 Bot 的统计信息
   interface ContainerStat {
@@ -210,7 +214,7 @@ export default function BotDashboardPage() {
 
       {/* 快捷操作 - 移到服务状态前面 */}
       <QuickActions
-        isRunning={isRunning}
+        botStatus={botStatus}
         loading={loading}
         hasProvider={hasProvider}
         hasChannel={hasChannel}
@@ -222,7 +226,7 @@ export default function BotDashboardPage() {
       />
 
       {/* 服务状态卡片 */}
-      <StatusCard status={serviceStatus} loading={botLoading} />
+      <StatusCard status={serviceStatus} botStatus={botStatus} loading={botLoading} />
 
       {/* 实时日志 */}
       <RealtimeLogs logs={logs} loading={logsLoading} onRefresh={fetchLogs} />

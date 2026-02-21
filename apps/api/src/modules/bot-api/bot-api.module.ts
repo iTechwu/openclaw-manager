@@ -23,6 +23,7 @@ import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
 import { RedisModule } from '@app/redis';
 import { ProviderVerifyModule } from '@app/clients/internal/provider-verify';
+import { CryptModule } from '@app/clients/internal/crypt';
 import { ProxyModule } from '../proxy/proxy.module';
 import { BotApiController } from './bot-api.controller';
 import { BotApiService } from './bot-api.service';
@@ -62,6 +63,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     RedisModule,
     PersonaTemplateModule,
     ProviderVerifyModule,
+    CryptModule,
     ProxyModule,
     BotUsageLogModule,
     ModelCatalogModule,

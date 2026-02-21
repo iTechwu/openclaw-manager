@@ -16,6 +16,7 @@ import {
   BotModelService,
 } from '@app/db';
 import { ProviderVerifyClient } from '@app/clients/internal/provider-verify';
+import { CryptClient } from '@app/clients/internal/crypt';
 import { KeyringProxyService } from '../proxy/services/keyring-proxy.service';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
@@ -59,6 +60,7 @@ export class BotApiService {
     private readonly operateLogService: OperateLogService,
     private readonly personaTemplateService: PersonaTemplateService,
     private readonly providerVerifyClient: ProviderVerifyClient,
+    private readonly cryptClient: CryptClient,
     private readonly keyringProxyService: KeyringProxyService,
     private readonly botConfigResolver: BotConfigResolverService,
     private readonly availableModelService: AvailableModelService,
@@ -827,6 +829,10 @@ export class BotApiService {
 
       // Ensure OpenClaw data directory exists before creating container
       await this.workspaceService.ensureOpenclawDir(userId, hostname);
+
+      // Sync feishu channel configs to openclaw.json before container creation
+      // This ensures the latest channel configuration is always applied on restart
+      await this.syncFeishuChannelsOnStart(bot.id, userId, hostname);
 
       // Declare containerId at higher scope so it's accessible after the if-else block
       let containerId: string | null | undefined = bot.containerId;
@@ -1772,6 +1778,73 @@ export class BotApiService {
       metadata: (key.metadata as Record<string, unknown>) ?? null,
       createdAt: key.createdAt,
     };
+  }
+
+  /**
+   * 在 Bot 启动时同步飞书通道配置到 openclaw.json
+   * 确保容器启动时使用最新的通道配置
+   */
+  private async syncFeishuChannelsOnStart(
+    botId: string,
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
+    try {
+      // 获取所有飞书通道
+      const { list: channels } = await this.botChannelService.list({
+        botId,
+        channelType: 'feishu',
+      });
+
+      if (channels.length === 0) {
+        this.logger.debug(`No feishu channels to sync for bot ${hostname}`);
+        return;
+      }
+
+      // 构建通道配置列表（解密凭证）
+      const channelConfigs = channels.map((channel) => {
+        // 解密凭证
+        let credentials: Record<string, string> = {};
+        if (channel.credentialsEncrypted) {
+          try {
+            const encryptedStr = Buffer.from(
+              channel.credentialsEncrypted,
+            ).toString('utf8');
+            const decrypted = this.cryptClient.decrypt(encryptedStr);
+            credentials = JSON.parse(decrypted);
+          } catch (error) {
+            this.logger.warn(
+              `Failed to decrypt credentials for channel ${channel.id}`,
+              error,
+            );
+          }
+        }
+
+        return {
+          channelType: channel.channelType,
+          accountId: channel.id,
+          credentials,
+          config: (channel.config as Record<string, unknown>) || {},
+          isEnabled: channel.isEnabled,
+        };
+      });
+
+      // 同步到 openclaw.json
+      await this.workspaceService.syncFeishuChannelsConfig(
+        userId,
+        hostname,
+        channelConfigs,
+      );
+
+      this.logger.log(
+        `Synced ${channels.length} feishu channel(s) for bot ${hostname}`,
+      );
+    } catch (error) {
+      // 同步失败不应阻止容器启动，只记录警告
+      this.logger.warn(
+        `Failed to sync feishu channels for bot ${hostname}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   /**
