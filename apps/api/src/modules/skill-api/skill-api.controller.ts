@@ -123,9 +123,7 @@ export class SkillApiController {
   }
 
   @TsRestHandler(botSkillC.installFromFiles)
-  async installSkillFromFiles(
-    @Req() req: AuthenticatedRequest,
-  ): Promise<any> {
+  async installSkillFromFiles(@Req() req: AuthenticatedRequest): Promise<any> {
     return tsRestHandler(
       botSkillC.installFromFiles,
       async ({ params, body }) => {

@@ -22,6 +22,7 @@ import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
 import { BotConfigResolverService } from './services/bot-config-resolver.service';
 import { AvailableModelService } from './services/available-model.service';
+import { BotStartupMonitorService } from './services/bot-startup-monitor.service';
 import { ModelVerificationService } from './services/model-verification.service';
 import type { Bot, ProviderKey, BotStatus, Prisma } from '@prisma/client';
 import { PluginApiService } from '../plugin-api/plugin-api.service';
@@ -37,8 +38,9 @@ import type {
   VerifyProviderKeyInput,
   VerifyProviderKeyResponse,
   BotDiagnoseResponse,
+  ProviderVendor,
 } from '@repo/contracts';
-import { PROVIDER_CONFIGS, type ProviderVendor } from '@repo/contracts';
+import { PROVIDER_CONFIGS } from '@repo/contracts';
 import enviromentUtil from 'libs/infra/utils/enviroment.util';
 
 @Injectable()
@@ -61,6 +63,7 @@ export class BotApiService {
     private readonly botConfigResolver: BotConfigResolverService,
     private readonly availableModelService: AvailableModelService,
     private readonly modelVerificationService: ModelVerificationService,
+    private readonly botStartupMonitor: BotStartupMonitorService,
     @Inject(forwardRef(() => PluginApiService))
     private readonly pluginApiService: PluginApiService,
     @Inject(forwardRef(() => SkillApiService))
@@ -118,11 +121,16 @@ export class BotApiService {
           );
 
           // Sync database status with actual Docker container state
+          // Skip syncing if bot is in 'starting' state (managed by BotStartupMonitorService)
           if (containerStatus) {
             const actualStatus: BotStatus = containerStatus.running
               ? 'running'
               : 'stopped';
-            if (bot.status !== actualStatus && bot.status !== 'error') {
+            if (
+              bot.status !== actualStatus &&
+              bot.status !== 'error' &&
+              bot.status !== 'starting' // Don't override starting status
+            ) {
               // Update database status to match Docker state
               await this.botService.update(
                 { id: bot.id },
@@ -820,6 +828,9 @@ export class BotApiService {
       // Ensure OpenClaw data directory exists before creating container
       await this.workspaceService.ensureOpenclawDir(userId, hostname);
 
+      // Declare containerId at higher scope so it's accessible after the if-else block
+      let containerId: string | null | undefined = bot.containerId;
+
       if (!needsRecreate && bot.containerId) {
         // This branch is currently unreachable since needsRecreate is always true
         // Kept for potential future optimization where we might skip recreation
@@ -967,7 +978,7 @@ export class BotApiService {
           useZeroTrust,
         });
 
-        const containerId = await this.dockerService.createContainer({
+        containerId = await this.dockerService.createContainer({
           hostname: bot.hostname,
           isolationKey,
           name: bot.name,
@@ -988,15 +999,29 @@ export class BotApiService {
         await this.botService.update({ id: bot.id }, { containerId });
       }
 
-      await this.botService.update({ id: bot.id }, { status: 'running' });
+      // Safety check: containerId should always be set at this point
+      if (!containerId) {
+        throw new Error('Container ID not set after container creation');
+      }
+
+      // Start monitoring for startup completion
+      // The status will be updated to 'running' when the monitor detects startup completion
+      // or after a timeout
+      this.botStartupMonitor.startMonitoring(
+        bot.id,
+        hostname,
+        userId,
+        containerId,
+      );
 
       // Reconcile bot plugins after container starts
-      await this.pluginApiService.reconcileBotPlugins(bot.id, bot.containerId);
+      // Use the local containerId variable, not bot.containerId (which is stale)
+      await this.pluginApiService.reconcileBotPlugins(bot.id, containerId);
 
       // Reconcile bot skills after container starts
       await this.skillApiService.reconcileBotSkills(
         bot.id,
-        bot.containerId,
+        containerId,
         userId,
         hostname,
       );
@@ -1011,8 +1036,8 @@ export class BotApiService {
         detail: { hostname },
       });
 
-      this.logger.log(`Bot started: ${hostname}`);
-      return { success: true, status: 'running' };
+      this.logger.log(`Bot container started, waiting for initialization: ${hostname}`);
+      return { success: true, status: 'starting' };
     } catch (error) {
       this.logger.error(`Failed to start bot ${hostname}:`, error);
       await this.botService.update({ id: bot.id }, { status: 'error' });

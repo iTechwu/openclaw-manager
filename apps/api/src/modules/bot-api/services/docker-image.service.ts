@@ -26,8 +26,7 @@ export class DockerImageService implements OnModuleInit {
   private readonly imageConfigs: ImageConfig[];
 
   constructor(private readonly configService: ConfigService) {
-    this.openclawSrcPath =
-      process.env.OPENCLAW_SRC_PATH || '../openclaw';
+    this.openclawSrcPath = process.env.OPENCLAW_SRC_PATH || '../openclaw';
 
     // Configure images for each bot type
     this.imageConfigs = [
@@ -140,9 +139,7 @@ export class DockerImageService implements OnModuleInit {
         await this.buildWithScript(config, openclawPath);
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to build image ${config.image}: ${error}`,
-      );
+      this.logger.error(`Failed to build image ${config.image}: ${error}`);
       throw error;
     }
   }
@@ -185,9 +182,7 @@ export class DockerImageService implements OnModuleInit {
       throw new Error(`Build script not found: ${scriptPath}`);
     }
 
-    this.logger.log(
-      `Building ${config.image} using ${config.buildScript}...`,
-    );
+    this.logger.log(`Building ${config.image} using ${config.buildScript}...`);
 
     const { stdout, stderr } = await execAsync(`bash ${config.buildScript}`, {
       cwd: openclawPath,
@@ -272,8 +267,11 @@ export class DockerImageService implements OnModuleInit {
   /**
    * Check and report image status
    */
-  async getImageStatus(): Promise<Record<BotType, { image: string; exists: boolean }>> {
-    const result: Record<BotType, { image: string; exists: boolean }> = {} as Record<BotType, { image: string; exists: boolean }>;
+  async getImageStatus(): Promise<
+    Record<BotType, { image: string; exists: boolean }>
+  > {
+    const result: Record<BotType, { image: string; exists: boolean }> =
+      {} as Record<BotType, { image: string; exists: boolean }>;
 
     for (const config of this.imageConfigs) {
       result[config.type] = {

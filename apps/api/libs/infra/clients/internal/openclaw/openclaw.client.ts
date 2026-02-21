@@ -223,9 +223,7 @@ export class OpenClawClient {
    * @param containerId Docker 容器 ID
    * @returns Proxy Token 字符串，失败返回 null
    */
-  async getContainerProxyToken(
-    containerId: string,
-  ): Promise<string | null> {
+  async getContainerProxyToken(containerId: string): Promise<string | null> {
     // 检查缓存
     const cached = this.proxyTokenCache.get(containerId);
     if (cached) return cached;
@@ -321,7 +319,8 @@ export class OpenClawClient {
       totalParts: content.length,
       validParts: validContentParts.length,
       textParts: validContentParts.filter((p) => p.type === 'text').length,
-      imageParts: validContentParts.filter((p) => p.type === 'image_url').length,
+      imageParts: validContentParts.filter((p) => p.type === 'image_url')
+        .length,
       fileParts: validContentParts.filter((p) => p.type === 'file_url').length,
     });
 
@@ -368,8 +367,7 @@ export class OpenClawClient {
 
       // 5. 提取响应文本
       const data = response.data;
-      const responseText =
-        data?.choices?.[0]?.message?.content || '';
+      const responseText = data?.choices?.[0]?.message?.content || '';
 
       this.logger.info('OpenClawClient: Proxy 视觉请求成功', {
         visionModel,

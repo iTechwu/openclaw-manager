@@ -349,7 +349,14 @@ export class ProxyService {
     rawResponse: ServerResponse,
     urlApiType: string,
   ): Promise<ProxyResult> {
-    const { path, method, headers, body: originalBody, botToken, vendor } = params;
+    const {
+      path,
+      method,
+      headers,
+      body: originalBody,
+      botToken,
+      vendor,
+    } = params;
     let body = originalBody;
 
     // 1. 验证 token（仅做身份认证）
@@ -403,7 +410,8 @@ export class ProxyService {
       }
     } catch (routeError) {
       this.logger.warn('[Proxy] Keyword routing failed, using original model', {
-        error: routeError instanceof Error ? routeError.message : String(routeError),
+        error:
+          routeError instanceof Error ? routeError.message : String(routeError),
       });
     }
 

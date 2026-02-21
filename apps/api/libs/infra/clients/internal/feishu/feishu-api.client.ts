@@ -359,7 +359,8 @@ export class FeishuApiClient {
       };
     } catch (error) {
       // 尝试解析错误响应体（Feishu 返回 JSON 错误信息）
-      let errorDetail = error instanceof Error ? error.message : 'Unknown error';
+      let errorDetail =
+        error instanceof Error ? error.message : 'Unknown error';
       if (error?.response?.data) {
         try {
           const errorData = error.response.data;
@@ -368,7 +369,9 @@ export class FeishuApiClient {
             const errorJson = JSON.parse(errorText);
             errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
           } else if (errorData instanceof ArrayBuffer) {
-            const errorText = Buffer.from(new Uint8Array(errorData)).toString('utf-8');
+            const errorText = Buffer.from(new Uint8Array(errorData)).toString(
+              'utf-8',
+            );
             const errorJson = JSON.parse(errorText);
             errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
           } else if (typeof errorData === 'object') {
@@ -448,7 +451,8 @@ export class FeishuApiClient {
       };
     } catch (error) {
       // 尝试解析错误响应体（Feishu 返回 JSON 错误信息）
-      let errorDetail = error instanceof Error ? error.message : 'Unknown error';
+      let errorDetail =
+        error instanceof Error ? error.message : 'Unknown error';
       if (error?.response?.data) {
         try {
           const errorData = error.response.data;
@@ -457,7 +461,9 @@ export class FeishuApiClient {
             const errorJson = JSON.parse(errorText);
             errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
           } else if (errorData instanceof ArrayBuffer) {
-            const errorText = Buffer.from(new Uint8Array(errorData)).toString('utf-8');
+            const errorText = Buffer.from(new Uint8Array(errorData)).toString(
+              'utf-8',
+            );
             const errorJson = JSON.parse(errorText);
             errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
           } else if (typeof errorData === 'object') {

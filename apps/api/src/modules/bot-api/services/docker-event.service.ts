@@ -177,12 +177,9 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const newStatus = this.mapEventToStatus(event.Action);
-
     this.logger.info('Container event received', {
       hostname,
       action: event.Action,
-      newStatus,
       containerId: containerId.slice(0, 12),
     });
 
@@ -193,6 +190,19 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
       if (!bot) {
         this.logger.debug('Bot not found for container', {
           containerId: containerId.slice(0, 12),
+        });
+        return;
+      }
+
+      // 计算新状态，考虑当前 Bot 状态
+      const newStatus = this.mapEventToStatus(event.Action, bot.status);
+
+      // 如果返回 null，表示不需要更新状态
+      if (newStatus === null) {
+        this.logger.debug('Skipping status update', {
+          hostname: bot.hostname,
+          action: event.Action,
+          currentStatus: bot.status,
         });
         return;
       }
@@ -228,20 +238,56 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * 将 Docker 事件映射到 Bot 状态
+   *
+   * @param action Docker 事件动作
+   * @param currentStatus Bot 当前状态
+   * @returns 新状态，如果返回 null 表示不需要更新
    */
-  private mapEventToStatus(action: string): string {
+  private mapEventToStatus(
+    action: string,
+    currentStatus: BotStatus,
+  ): string | null {
     switch (action) {
       case 'start':
-      case 'restart':
+        // 容器启动，但不立即设置为 running
+        // 由 BotStartupMonitorService 检测到真正启动完成后再更新
+        // 只有当前不是 starting 状态时才更新（避免覆盖正在启动的状态）
+        if (currentStatus === 'starting') {
+          return null; // 保持 starting 状态，让监控服务来更新
+        }
         return 'running';
+
+      case 'restart':
+        return 'starting';
+
       case 'stop':
+        // 如果当前正在启动中，不要因为 stop 事件改变状态
+        // 这可能是重启过程中的正常行为
+        if (currentStatus === 'starting') {
+          return null;
+        }
         return 'stopped';
+
       case 'die':
       case 'kill':
-      case 'oom':
+        // 如果当前正在启动中，说明这是重启过程（旧容器被销毁）
+        // 不应该标记为 error
+        if (currentStatus === 'starting') {
+          return null;
+        }
+        // 只有当 Bot 当前是 running 状态且容器意外退出时，才标记为 error
+        // 如果 Bot 已经是 stopped 状态，保持 stopped
+        if (currentStatus === 'stopped') {
+          return null;
+        }
         return 'error';
+
+      case 'oom':
+        // OOM 是严重错误，始终标记为 error
+        return 'error';
+
       default:
-        return 'stopped';
+        return null;
     }
   }
 }

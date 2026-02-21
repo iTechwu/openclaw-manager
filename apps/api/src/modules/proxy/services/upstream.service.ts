@@ -322,7 +322,10 @@ export class UpstreamService {
                   `[Proxy] Response: status=${statusCode}, time=${responseTimeMs}ms, events=${lines.length}, usage=${JSON.stringify(usageSummary)}`,
                 );
                 // 当事件数量异常少或 usage 为空时，记录详细响应用于调试
-                if (lines.length <= 2 || Object.keys(usageSummary).length === 0) {
+                if (
+                  lines.length <= 2 ||
+                  Object.keys(usageSummary).length === 0
+                ) {
                   this.logger.warn(
                     `[Proxy] Suspicious response detected, raw content: ${responseData.substring(0, 1000)}`,
                   );

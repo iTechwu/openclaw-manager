@@ -113,13 +113,17 @@ export interface FeishuSendMessageResponse {
   };
 }
 
-// WebSocket 长连接消息
+// ==================== 以下类型已弃用（WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展）====================
+
+// WebSocket 长连接消息（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export interface FeishuWsMessage {
   type: 'event' | 'card' | 'pong';
   data?: FeishuMessageEvent;
 }
 
-// 消息处理回调
+// 消息处理回调（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export type FeishuMessageHandler = (event: FeishuMessageEvent) => Promise<void>;
 
 // 卡片交互事件处理回调
@@ -127,7 +131,8 @@ export type FeishuCardActionHandler = (
   event: FeishuCardActionEvent,
 ) => Promise<FeishuCardActionResponse | void>;
 
-// 连接状态回调
+// 连接状态回调（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export interface FeishuConnectionCallbacks {
   onConnect?: () => void;
   onDisconnect?: (reason?: string) => void;

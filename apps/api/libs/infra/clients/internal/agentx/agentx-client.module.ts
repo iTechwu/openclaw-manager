@@ -12,14 +12,14 @@ import { AgentXFileClient } from './agentx-file-client.service';
  * - AgentXFileClient: 文件上传
  */
 @Module({
-    imports: [
-        HttpModule.register({
-            timeout: 30000, // 默认 30 秒超时
-            maxRedirects: 5,
-        }),
-        ConfigModule,
-    ],
-    providers: [AgentXClient, AgentXFileClient],
-    exports: [AgentXClient, AgentXFileClient],
+  imports: [
+    HttpModule.register({
+      timeout: 30000, // 默认 30 秒超时
+      maxRedirects: 5,
+    }),
+    ConfigModule,
+  ],
+  providers: [AgentXClient, AgentXFileClient],
+  exports: [AgentXClient, AgentXFileClient],
 })
 export class AgentXClientModule {}

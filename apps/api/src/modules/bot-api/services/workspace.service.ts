@@ -6,6 +6,26 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import type { ContainerSkillItem } from '@repo/contracts';
 
+export interface FeishuChannelConfig {
+  appId: string;
+  appSecret: string;
+  domain?: 'feishu' | 'lark';
+  dmPolicy?: 'pairing' | 'allowlist' | 'open' | 'disabled';
+  allowFrom?: string[];
+  requireMention?: boolean;
+  replyInThread?: boolean;
+  showTyping?: boolean;
+  enabled?: boolean;
+}
+
+export interface BotChannelConfig {
+  channelType: string;
+  accountId?: string;
+  credentials: Record<string, string>;
+  config?: Record<string, unknown>;
+  isEnabled: boolean;
+}
+
 export interface BotWorkspaceConfig {
   hostname: string;
   userId: string;
@@ -27,6 +47,10 @@ export interface BotWorkspaceConfig {
     sandboxTimeout?: number;
     sessionScope: 'user' | 'channel' | 'global';
   };
+  // 新增：通道配置列表（用于生成 openclaw.json）
+  channels?: BotChannelConfig[];
+  // OpenClaw 网关 token（用于生成 openclaw.json）
+  gatewayToken?: string;
 }
 
 @Injectable()
@@ -61,6 +85,114 @@ export class WorkspaceService {
    */
   private getIsolationKey(userId: string, hostname: string): string {
     return `${userId.slice(0, 8)}-${hostname}`;
+  }
+
+  /**
+   * 构建飞书通道配置（用于 openclaw.json）
+   * 将 BotChannel 数据转换为 OpenClaw feishu 扩展所需的格式
+   *
+   * OpenClaw 期望的格式：
+   * {
+   *   channels: {
+   *     feishu: {
+   *       enabled: true,
+   *       accounts: {
+   *         default: { appId, appSecret, domain, dmPolicy, ... }
+   *       }
+   *     }
+   *   }
+   * }
+   */
+  private buildFeishuChannelConfig(
+    channels: BotChannelConfig[],
+  ): Record<string, FeishuChannelConfig> {
+    const feishuChannels = channels.filter((c) => c.channelType === 'feishu');
+    if (feishuChannels.length === 0) {
+      return {};
+    }
+
+    const config: Record<string, FeishuChannelConfig> = {};
+
+    for (const channel of feishuChannels) {
+      const accountId = channel.accountId || 'default';
+      const credentials = channel.credentials;
+      const channelConfig = channel.config || {};
+
+      config[accountId] = {
+        appId: credentials.appId || '',
+        appSecret: credentials.appSecret || '',
+        domain: (channelConfig.domain as 'feishu' | 'lark') || 'feishu',
+        dmPolicy:
+          (channelConfig.dmPolicy as FeishuChannelConfig['dmPolicy']) ||
+          'pairing',
+        allowFrom: (channelConfig.allowFrom as string[]) || [],
+        requireMention: (channelConfig.requireMention as boolean) ?? true,
+        replyInThread: (channelConfig.replyInThread as boolean) ?? false,
+        showTyping: (channelConfig.showTyping as boolean) ?? true,
+        enabled: channel.isEnabled,
+      };
+    }
+
+    return config;
+  }
+
+  /**
+   * 构建完整的飞书配置（包含 accounts 层级）
+   * 符合 OpenClaw 的 FeishuConfig 类型定义
+   */
+  private buildFeishuFullConfig(
+    channels: BotChannelConfig[],
+  ): Record<string, unknown> {
+    const accounts = this.buildFeishuChannelConfig(channels);
+    if (Object.keys(accounts).length === 0) {
+      return {};
+    }
+
+    return {
+      enabled: true,
+      accounts,
+    };
+  }
+
+  /**
+   * 构建 openclaw.json 配置
+   * 包含 AI 模型配置和通道配置
+   */
+  private buildOpenclawConfig(
+    config: BotWorkspaceConfig,
+  ): Record<string, unknown> {
+    const openclawConfig: Record<string, unknown> = {
+      // AI 模型配置
+      model: {
+        provider: config.aiProvider,
+        model: config.model,
+      },
+    };
+
+    // 网关配置（如果提供了 token）
+    if (config.gatewayToken) {
+      openclawConfig.gateway = {
+        port: 18789,
+        auth: {
+          mode: 'token',
+          token: config.gatewayToken,
+        },
+      };
+    }
+
+    // 通道配置
+    if (config.channels && config.channels.length > 0) {
+      const channelsConfig: Record<string, unknown> = {};
+
+      // 飞书通道配置 - 使用符合 OpenClaw 格式的 accounts 结构
+      const feishuConfig = this.buildFeishuFullConfig(config.channels);
+      if (Object.keys(feishuConfig).length > 0) {
+        channelsConfig.feishu = feishuConfig;
+      }
+      openclawConfig.channels = channelsConfig;
+    }
+
+    return openclawConfig;
   }
 
   /**
@@ -108,6 +240,20 @@ export class WorkspaceService {
 
       // Create OpenClaw data directory for this bot (for persistent memory/sessions)
       await fs.mkdir(openclawPath, { recursive: true });
+
+      // Create openclaw.json configuration (if channels or gatewayToken provided)
+      if (config.channels?.length || config.gatewayToken) {
+        const openclawConfig = this.buildOpenclawConfig(config);
+        const openclawConfigPath = path.join(openclawPath, 'openclaw.json');
+        await fs.writeFile(
+          openclawConfigPath,
+          JSON.stringify(openclawConfig, null, 2),
+        );
+        this.logger.info(
+          `OpenClaw config created for bot: ${isolationKey}`,
+          openclawConfig,
+        );
+      }
 
       this.logger.info(`Workspace created for bot: ${isolationKey}`);
       return workspacePath;
@@ -209,6 +355,201 @@ export class WorkspaceService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * 更新 OpenClaw 配置中的飞书通道
+   * 当通道被创建/更新/删除时调用
+   *
+   * OpenClaw 期望的格式：
+   * {
+   *   channels: {
+   *     feishu: {
+   *       enabled: true,
+   *       accounts: {
+   *         default: { appId, appSecret, domain, dmPolicy, ... }
+   *       }
+   *     }
+   *   }
+   * }
+   */
+  async updateFeishuChannelConfig(
+    userId: string,
+    hostname: string,
+    channel: BotChannelConfig,
+  ): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
+    const configPath = path.join(openclawPath, 'openclaw.json');
+
+    try {
+      // 确保目录存在
+      await fs.mkdir(openclawPath, { recursive: true });
+
+      // 读取现有配置
+      let existingConfig: Record<string, unknown> = {};
+      try {
+        const configContent = await fs.readFile(configPath, 'utf-8');
+        existingConfig = JSON.parse(configContent);
+      } catch {
+        // 配置文件不存在，使用空对象
+      }
+
+      // 确保 channels.feishu.accounts 结构存在
+      const channels =
+        (existingConfig.channels as Record<string, unknown>) || {};
+      const feishuConfig =
+        (channels.feishu as Record<string, unknown>) || {};
+      const feishuAccounts =
+        (feishuConfig.accounts as Record<string, FeishuChannelConfig>) || {};
+
+      // 构建单个账户的飞书配置
+      const accountConfig = this.buildFeishuChannelConfig([channel]);
+      const accountId = channel.accountId || 'default';
+
+      // 更新指定账户的配置
+      feishuAccounts[accountId] = accountConfig[accountId];
+
+      // 更新配置 - 使用正确的 accounts 结构
+      existingConfig.channels = {
+        ...channels,
+        feishu: {
+          ...feishuConfig,
+          enabled: true,
+          accounts: feishuAccounts,
+        },
+      };
+
+      // 写入配置
+      await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2));
+
+      this.logger.info(`Updated feishu channel config for: ${isolationKey}`, {
+        accountId,
+        channelType: channel.channelType,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to update feishu channel config for ${isolationKey}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 从 OpenClaw 配置中删除飞书通道
+   * 使用正确的 accounts 结构
+   */
+  async removeFeishuChannelConfig(
+    userId: string,
+    hostname: string,
+    accountId?: string,
+  ): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
+    const configPath = path.join(openclawPath, 'openclaw.json');
+
+    try {
+      // 读取现有配置
+      const configContent = await fs.readFile(configPath, 'utf-8');
+      const existingConfig = JSON.parse(configContent) as Record<
+        string,
+        unknown
+      >;
+
+      const channels = existingConfig.channels as
+        | Record<string, unknown>
+        | undefined;
+      if (!channels?.feishu) {
+        return; // 没有飞书配置，无需删除
+      }
+
+      const feishuConfig = channels.feishu as Record<string, unknown>;
+      const feishuAccounts = feishuConfig.accounts as
+        | Record<string, unknown>
+        | undefined;
+      if (!feishuAccounts) {
+        return; // 没有 accounts 配置，无需删除
+      }
+
+      const targetAccountId = accountId || 'default';
+
+      if (feishuAccounts[targetAccountId]) {
+        delete feishuAccounts[targetAccountId];
+
+        // 如果没有其他账户，删除整个 feishu 配置
+        if (Object.keys(feishuAccounts).length === 0) {
+          delete channels.feishu;
+        }
+
+        // 写入更新后的配置
+        await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2));
+
+        this.logger.info(`Removed feishu channel config for: ${isolationKey}`, {
+          accountId: targetAccountId,
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to remove feishu channel config for ${isolationKey}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 同步所有飞书通道配置到 openclaw.json
+   * 用于数据迁移或批量更新
+   * 使用正确的 accounts 结构
+   */
+  async syncFeishuChannelsConfig(
+    userId: string,
+    hostname: string,
+    channels: BotChannelConfig[],
+  ): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
+    const configPath = path.join(openclawPath, 'openclaw.json');
+
+    try {
+      // 确保目录存在
+      await fs.mkdir(openclawPath, { recursive: true });
+
+      // 读取现有配置
+      let existingConfig: Record<string, unknown> = {};
+      try {
+        const configContent = await fs.readFile(configPath, 'utf-8');
+        existingConfig = JSON.parse(configContent);
+      } catch {
+        // 配置文件不存在，使用空对象
+      }
+
+      // 构建飞书配置 - 使用符合 OpenClaw 格式的 accounts 结构
+      const feishuFullConfig = this.buildFeishuFullConfig(channels);
+
+      // 更新配置
+      const channelsConfig =
+        (existingConfig.channels as Record<string, unknown>) || {};
+      existingConfig.channels = {
+        ...channelsConfig,
+        feishu: feishuFullConfig,
+      };
+
+      // 写入配置
+      await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2));
+
+      const accounts = feishuFullConfig.accounts as Record<string, unknown>;
+      this.logger.info(`Synced feishu channels config for: ${isolationKey}`, {
+        accountCount: accounts ? Object.keys(accounts).length : 0,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to sync feishu channels config for ${isolationKey}:`,
+        error,
+      );
+      throw error;
     }
   }
 

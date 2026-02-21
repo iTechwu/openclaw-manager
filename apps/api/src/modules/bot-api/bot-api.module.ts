@@ -35,6 +35,7 @@ import { DockerEventService } from './services/docker-event.service';
 import { BotSseService } from './services/bot-sse.service';
 import { BotUsageAnalyticsService } from './services/bot-usage-analytics.service';
 import { HealthCheckService } from './services/health-check.service';
+import { BotStartupMonitorService } from './services/bot-startup-monitor.service';
 import { BotConfigResolverService } from './services/bot-config-resolver.service';
 import { ModelRoutingModule } from './model-routing.module';
 import { ModelRoutingController } from './model-routing.controller';
@@ -85,6 +86,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     ReconciliationService,
     DockerEventService,
     BotSseService,
+    BotStartupMonitorService,
     BotUsageAnalyticsService,
     HealthCheckService,
     BotConfigResolverService,
@@ -102,6 +104,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     ReconciliationService,
     DockerEventService,
     BotSseService,
+    BotStartupMonitorService,
     BotUsageAnalyticsService,
     HealthCheckService,
     BotConfigResolverService,
