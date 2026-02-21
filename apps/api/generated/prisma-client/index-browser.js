@@ -304,6 +304,7 @@ exports.Prisma.BotScalarFieldEnum = {
   pendingConfig: 'pendingConfig',
   healthStatus: 'healthStatus',
   lastHealthCheck: 'lastHealthCheck',
+  botType: 'botType',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -825,6 +826,12 @@ exports.HealthStatus = exports.$Enums.HealthStatus = {
   HEALTHY: 'HEALTHY',
   UNHEALTHY: 'UNHEALTHY',
   UNKNOWN: 'UNKNOWN'
+};
+
+exports.BotType = exports.$Enums.BotType = {
+  GATEWAY: 'GATEWAY',
+  TOOL_SANDBOX: 'TOOL_SANDBOX',
+  BROWSER_SANDBOX: 'BROWSER_SANDBOX'
 };
 
 exports.ModelType = exports.$Enums.ModelType = {

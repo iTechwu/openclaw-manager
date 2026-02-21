@@ -28,6 +28,7 @@ import { BotApiController } from './bot-api.controller';
 import { BotApiService } from './bot-api.service';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
+import { DockerImageService } from './services/docker-image.service';
 import { WorkspaceService } from './services/workspace.service';
 import { ReconciliationService } from './services/reconciliation.service';
 import { DockerEventService } from './services/docker-event.service';
@@ -79,6 +80,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     BotApiService,
     EncryptionService,
     DockerService,
+    DockerImageService,
     WorkspaceService,
     ReconciliationService,
     DockerEventService,
@@ -95,6 +97,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
   exports: [
     BotApiService,
     DockerService,
+    DockerImageService,
     WorkspaceService,
     ReconciliationService,
     DockerEventService,

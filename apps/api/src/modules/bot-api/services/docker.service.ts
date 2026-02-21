@@ -9,6 +9,7 @@ import type {
   OrphanReport,
   CleanupReport,
   ProviderVendor,
+  BotType,
 } from '@repo/contracts';
 import { normalizeModelName } from '@/utils/model-normalizer';
 
@@ -42,13 +43,16 @@ export interface CreateContainerOptions {
   proxyToken?: string;
   /** API type for the provider (openai, anthropic, gemini, etc.) */
   apiType?: string;
+  /** Bot type - determines which Docker image to use (default: GATEWAY) */
+  botType?: BotType;
 }
 
 @Injectable()
 export class DockerService implements OnModuleInit {
   private readonly logger = new Logger(DockerService.name);
   private docker: Docker;
-  private readonly botImage: string;
+  /** Bot images mapped by bot type */
+  private readonly botImages: Record<BotType, string>;
   private readonly portStart: number;
   private readonly dataDir: string;
   private readonly secretsDir: string;
@@ -64,7 +68,25 @@ export class DockerService implements OnModuleInit {
   private readonly openclawVolumeName: string | null;
 
   constructor(private readonly configService: ConfigService) {
-    this.botImage = process.env.BOT_IMAGE || 'openclaw:latest';
+    // Initialize bot images for each type
+    // Fallback order: BOT_IMAGE_<TYPE> -> BOT_IMAGE -> default
+    const defaultImage =
+      process.env.BOT_IMAGE_GATEWAY ||
+      process.env.BOT_IMAGE ||
+      'openclaw:latest';
+    this.botImages = {
+      GATEWAY:
+        process.env.BOT_IMAGE_GATEWAY || process.env.BOT_IMAGE || defaultImage,
+      TOOL_SANDBOX:
+        process.env.BOT_IMAGE_TOOL_SANDBOX || 'openclaw-sandbox:bookworm-slim',
+      BROWSER_SANDBOX:
+        process.env.BOT_IMAGE_BROWSER_SANDBOX ||
+        'openclaw-sandbox-browser:bookworm-slim',
+    };
+    this.logger.log(
+      `Bot images configured: GATEWAY=${this.botImages.GATEWAY}, TOOL_SANDBOX=${this.botImages.TOOL_SANDBOX}, BROWSER_SANDBOX=${this.botImages.BROWSER_SANDBOX}`,
+    );
+
     // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
     const portStartRaw = process.env.BOT_PORT_START || 9200;
     this.portStart =
@@ -89,6 +111,13 @@ export class DockerService implements OnModuleInit {
     this.dataVolumeName = process.env.DATA_VOLUME_NAME || null;
     this.secretsVolumeName = process.env.SECRETS_VOLUME_NAME || null;
     this.openclawVolumeName = process.env.OPENCLAW_VOLUME_NAME || null;
+  }
+
+  /**
+   * Get the Docker image for a bot type
+   */
+  private getBotImage(botType: BotType): string {
+    return this.botImages[botType] || this.botImages.GATEWAY;
   }
 
   async onModuleInit() {
@@ -188,6 +217,13 @@ export class DockerService implements OnModuleInit {
     } catch {
       // Container doesn't exist, which is expected
     }
+
+    // Get bot type with default
+    const botType = options.botType || 'GATEWAY';
+    const botImage = this.getBotImage(botType);
+    this.logger.log(
+      `Creating container for bot type: ${botType}, image: ${botImage}`,
+    );
 
     // Build environment variables
     // Normalize model name to handle aliases like chatgpt-4o-latest -> gpt-4o
@@ -430,9 +466,41 @@ export class DockerService implements OnModuleInit {
       options.workspacePath,
     );
 
+    // Build HostConfig with bot type specific settings
+    const hostConfig: Docker.HostConfig = {
+      PortBindings: {
+        [`${options.port}/tcp`]: [{ HostPort: String(options.port) }],
+      },
+      Binds: binds,
+      RestartPolicy: { Name: 'unless-stopped' },
+      NetworkMode: networkMode,
+    };
+
+    // BROWSER_SANDBOX needs additional ports and shared memory for Chrome
+    if (botType === 'BROWSER_SANDBOX') {
+      // Add extra ports for browser sandbox:
+      // - CDP (Chrome DevTools Protocol) on port+1
+      // - VNC on port+2
+      // - noVNC on port+3
+      hostConfig.PortBindings![`${options.port + 1}/tcp`] = [
+        { HostPort: String(options.port + 1) },
+      ];
+      hostConfig.PortBindings![`${options.port + 2}/tcp`] = [
+        { HostPort: String(options.port + 2) },
+      ];
+      hostConfig.PortBindings![`${options.port + 3}/tcp`] = [
+        { HostPort: String(options.port + 3) },
+      ];
+      // Chrome needs 2GB shared memory
+      hostConfig.ShmSize = 2 * 1024 * 1024 * 1024; // 2GB
+      this.logger.log(
+        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}`,
+      );
+    }
+
     const container = await this.docker.createContainer({
       name: containerName,
-      Image: this.botImage,
+      Image: botImage,
       // Start OpenClaw gateway with proper configuration
       // Use shell to configure OpenClaw before starting the gateway:
       // 1. Set the model if AI_MODEL is provided
@@ -707,23 +775,25 @@ AUTH_EOF
       Env: envVars,
       ExposedPorts: {
         [`${options.port}/tcp`]: {},
+        // BROWSER_SANDBOX needs extra exposed ports
+        ...(botType === 'BROWSER_SANDBOX' && {
+          [`${options.port + 1}/tcp`]: {}, // CDP
+          [`${options.port + 2}/tcp`]: {}, // VNC
+          [`${options.port + 3}/tcp`]: {}, // noVNC
+        }),
       },
-      HostConfig: {
-        PortBindings: {
-          [`${options.port}/tcp`]: [{ HostPort: String(options.port) }],
-        },
-        Binds: binds,
-        RestartPolicy: { Name: 'unless-stopped' },
-        NetworkMode: networkMode,
-      },
+      HostConfig: hostConfig,
       Labels: {
         'clawbot-manager.hostname': options.hostname,
         'clawbot-manager.isolation-key': options.isolationKey,
         'clawbot-manager.managed': 'true',
+        'clawbot-manager.bot-type': botType,
       },
     });
 
-    this.logger.log(`Container created: ${container.id}`);
+    this.logger.log(
+      `Container created: ${container.id} (type: ${botType}, image: ${botImage})`,
+    );
     return container.id;
   }
 

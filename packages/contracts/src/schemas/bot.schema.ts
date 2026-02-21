@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BotStatusSchema } from './prisma-enums.generated';
+import { BotStatusSchema, BotTypeSchema } from './prisma-enums.generated';
 // 从新的 provider schema 导入
 import {
   ProviderVendorSchema,
@@ -53,6 +53,8 @@ export const BotSchema = z.object({
   gatewayToken: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   status: BotStatusSchema,
+  // Bot 类型 - 决定使用哪种 Docker 镜像
+  botType: BotTypeSchema,
   createdById: z.string().uuid(),
   personaTemplateId: z.string().uuid().nullable(),
   emoji: z.string().nullable(),
@@ -131,6 +133,8 @@ export const CreateBotInputSchema = z.object({
   persona: PersonaSchema,
   features: WizardFeaturesSchema,
   tags: z.array(z.string()).optional(),
+  // Bot 类型 - 决定使用哪种 Docker 镜像，默认为 GATEWAY
+  botType: BotTypeSchema.optional().default('GATEWAY'),
 });
 
 export type CreateBotInput = z.infer<typeof CreateBotInputSchema>;
@@ -152,6 +156,8 @@ export const SimpleCreateBotInputSchema = z.object({
   persona: PersonaSchema,
   personaTemplateId: z.string().uuid().optional(),
   tags: z.array(z.string()).optional(),
+  // Bot 类型 - 决定使用哪种 Docker 镜像，默认为 GATEWAY
+  botType: BotTypeSchema.optional().default('GATEWAY'),
 });
 
 export type SimpleCreateBotInput = z.infer<typeof SimpleCreateBotInputSchema>;

@@ -30,7 +30,12 @@
     "generate:i18n-errors": "ts-node scripts/generate-i18n-errors.ts",
     "export-scaffold": "node scripts/export-scaffold-for-create.js",
     "create-scaffold": "node packages/create-pardx-scaffold/cli.js",
-    "prebuild": "pnpm generate:enums"
+    "prebuild": "pnpm generate:enums",
+    "docker:build:all": "pnpm docker:build:gateway && pnpm docker:build:sandbox && pnpm docker:build:browser",
+    "docker:build:gateway": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && docker build -t ${BOT_IMAGE_GATEWAY:-openclaw:local} -f Dockerfile .",
+    "docker:build:sandbox": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && bash scripts/sandbox-setup.sh",
+    "docker:build:browser": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && bash scripts/sandbox-browser-setup.sh",
+    "docker:build:check": "docker images | grep -E 'openclaw|sandbox'"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

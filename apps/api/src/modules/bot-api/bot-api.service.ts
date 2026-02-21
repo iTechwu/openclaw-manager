@@ -307,6 +307,7 @@ export class BotApiService {
       proxyTokenHash: null, // Will be updated after proxy registration
       tags: input.tags || [],
       status: 'created',
+      botType: input.botType || 'GATEWAY',
       emoji: input.persona.emoji || null,
       soulMarkdown: input.persona.soulMarkdown || null,
       personaTemplate: { connect: { id: personaTemplateId } },
@@ -398,6 +399,7 @@ export class BotApiService {
         proxyUrl: proxyToken ? this.getProxyUrl() : undefined,
         proxyToken,
         apiType,
+        botType: input.botType || 'GATEWAY',
       });
 
       // Update bot with container ID
@@ -485,6 +487,7 @@ export class BotApiService {
       proxyTokenHash: null,
       tags: input.tags || [],
       status: 'draft',
+      botType: input.botType || 'GATEWAY',
       emoji: input.persona.emoji || null,
       soulMarkdown: input.persona.soulMarkdown || null,
       personaTemplate: { connect: { id: personaTemplateId } },
@@ -979,6 +982,7 @@ export class BotApiService {
           proxyUrl: proxyToken ? currentProxyUrl : undefined,
           proxyToken,
           apiType,
+          botType: bot.botType || 'GATEWAY',
         });
         await this.dockerService.startContainer(containerId);
         await this.botService.update({ id: bot.id }, { containerId });

@@ -325,6 +325,15 @@ export const HealthStatus: {
 export type HealthStatus = (typeof HealthStatus)[keyof typeof HealthStatus]
 
 
+export const BotType: {
+  GATEWAY: 'GATEWAY',
+  TOOL_SANDBOX: 'TOOL_SANDBOX',
+  BROWSER_SANDBOX: 'BROWSER_SANDBOX'
+};
+
+export type BotType = (typeof BotType)[keyof typeof BotType]
+
+
 export const ModelType: {
   llm: 'llm',
   text_embedding: 'text_embedding',
@@ -425,6 +434,10 @@ export const BotStatus: typeof $Enums.BotStatus
 export type HealthStatus = $Enums.HealthStatus
 
 export const HealthStatus: typeof $Enums.HealthStatus
+
+export type BotType = $Enums.BotType
+
+export const BotType: typeof $Enums.BotType
 
 export type ModelType = $Enums.ModelType
 
@@ -18144,6 +18157,7 @@ export namespace Prisma {
     soulMarkdown: string | null
     healthStatus: $Enums.HealthStatus | null
     lastHealthCheck: Date | null
+    botType: $Enums.BotType | null
     isDeleted: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -18166,6 +18180,7 @@ export namespace Prisma {
     soulMarkdown: string | null
     healthStatus: $Enums.HealthStatus | null
     lastHealthCheck: Date | null
+    botType: $Enums.BotType | null
     isDeleted: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -18190,6 +18205,7 @@ export namespace Prisma {
     pendingConfig: number
     healthStatus: number
     lastHealthCheck: number
+    botType: number
     isDeleted: number
     createdAt: number
     updatedAt: number
@@ -18222,6 +18238,7 @@ export namespace Prisma {
     soulMarkdown?: true
     healthStatus?: true
     lastHealthCheck?: true
+    botType?: true
     isDeleted?: true
     createdAt?: true
     updatedAt?: true
@@ -18244,6 +18261,7 @@ export namespace Prisma {
     soulMarkdown?: true
     healthStatus?: true
     lastHealthCheck?: true
+    botType?: true
     isDeleted?: true
     createdAt?: true
     updatedAt?: true
@@ -18268,6 +18286,7 @@ export namespace Prisma {
     pendingConfig?: true
     healthStatus?: true
     lastHealthCheck?: true
+    botType?: true
     isDeleted?: true
     createdAt?: true
     updatedAt?: true
@@ -18379,6 +18398,7 @@ export namespace Prisma {
     pendingConfig: JsonValue | null
     healthStatus: $Enums.HealthStatus
     lastHealthCheck: Date | null
+    botType: $Enums.BotType
     isDeleted: boolean
     createdAt: Date
     updatedAt: Date
@@ -18422,6 +18442,7 @@ export namespace Prisma {
     pendingConfig?: boolean
     healthStatus?: boolean
     lastHealthCheck?: boolean
+    botType?: boolean
     isDeleted?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -18458,6 +18479,7 @@ export namespace Prisma {
     pendingConfig?: boolean
     healthStatus?: boolean
     lastHealthCheck?: boolean
+    botType?: boolean
     isDeleted?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -18485,6 +18507,7 @@ export namespace Prisma {
     pendingConfig?: boolean
     healthStatus?: boolean
     lastHealthCheck?: boolean
+    botType?: boolean
     isDeleted?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -18512,13 +18535,14 @@ export namespace Prisma {
     pendingConfig?: boolean
     healthStatus?: boolean
     lastHealthCheck?: boolean
+    botType?: boolean
     isDeleted?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
   }
 
-  export type BotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "hostname" | "containerId" | "port" | "gatewayToken" | "proxyTokenHash" | "tags" | "status" | "createdById" | "personaTemplateId" | "emoji" | "avatarFileId" | "soulMarkdown" | "pendingConfig" | "healthStatus" | "lastHealthCheck" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["bot"]>
+  export type BotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "hostname" | "containerId" | "port" | "gatewayToken" | "proxyTokenHash" | "tags" | "status" | "createdById" | "personaTemplateId" | "emoji" | "avatarFileId" | "soulMarkdown" | "pendingConfig" | "healthStatus" | "lastHealthCheck" | "botType" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["bot"]>
   export type BotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     createdBy?: boolean | UserInfoDefaultArgs<ExtArgs>
     personaTemplate?: boolean | Bot$personaTemplateArgs<ExtArgs>
@@ -18577,6 +18601,7 @@ export namespace Prisma {
       pendingConfig: Prisma.JsonValue | null
       healthStatus: $Enums.HealthStatus
       lastHealthCheck: Date | null
+      botType: $Enums.BotType
       isDeleted: boolean
       createdAt: Date
       updatedAt: Date
@@ -19032,6 +19057,7 @@ export namespace Prisma {
     readonly pendingConfig: FieldRef<"Bot", 'Json'>
     readonly healthStatus: FieldRef<"Bot", 'HealthStatus'>
     readonly lastHealthCheck: FieldRef<"Bot", 'DateTime'>
+    readonly botType: FieldRef<"Bot", 'BotType'>
     readonly isDeleted: FieldRef<"Bot", 'Boolean'>
     readonly createdAt: FieldRef<"Bot", 'DateTime'>
     readonly updatedAt: FieldRef<"Bot", 'DateTime'>
@@ -51908,6 +51934,7 @@ export namespace Prisma {
     pendingConfig: 'pendingConfig',
     healthStatus: 'healthStatus',
     lastHealthCheck: 'lastHealthCheck',
+    botType: 'botType',
     isDeleted: 'isDeleted',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -52657,6 +52684,20 @@ export namespace Prisma {
    * Reference to a field of type 'HealthStatus[]'
    */
   export type ListEnumHealthStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'HealthStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'BotType'
+   */
+  export type EnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType'>
+    
+
+
+  /**
+   * Reference to a field of type 'BotType[]'
+   */
+  export type ListEnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType[]'>
     
 
 
@@ -53836,6 +53877,7 @@ export namespace Prisma {
     pendingConfig?: JsonNullableFilter<"Bot">
     healthStatus?: EnumHealthStatusFilter<"Bot"> | $Enums.HealthStatus
     lastHealthCheck?: DateTimeNullableFilter<"Bot"> | Date | string | null
+    botType?: EnumBotTypeFilter<"Bot"> | $Enums.BotType
     isDeleted?: BoolFilter<"Bot"> | boolean
     createdAt?: DateTimeFilter<"Bot"> | Date | string
     updatedAt?: DateTimeFilter<"Bot"> | Date | string
@@ -53871,6 +53913,7 @@ export namespace Prisma {
     pendingConfig?: SortOrderInput | SortOrder
     healthStatus?: SortOrder
     lastHealthCheck?: SortOrderInput | SortOrder
+    botType?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -53909,6 +53952,7 @@ export namespace Prisma {
     pendingConfig?: JsonNullableFilter<"Bot">
     healthStatus?: EnumHealthStatusFilter<"Bot"> | $Enums.HealthStatus
     lastHealthCheck?: DateTimeNullableFilter<"Bot"> | Date | string | null
+    botType?: EnumBotTypeFilter<"Bot"> | $Enums.BotType
     isDeleted?: BoolFilter<"Bot"> | boolean
     createdAt?: DateTimeFilter<"Bot"> | Date | string
     updatedAt?: DateTimeFilter<"Bot"> | Date | string
@@ -53944,6 +53988,7 @@ export namespace Prisma {
     pendingConfig?: SortOrderInput | SortOrder
     healthStatus?: SortOrder
     lastHealthCheck?: SortOrderInput | SortOrder
+    botType?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -53976,6 +54021,7 @@ export namespace Prisma {
     pendingConfig?: JsonNullableWithAggregatesFilter<"Bot">
     healthStatus?: EnumHealthStatusWithAggregatesFilter<"Bot"> | $Enums.HealthStatus
     lastHealthCheck?: DateTimeNullableWithAggregatesFilter<"Bot"> | Date | string | null
+    botType?: EnumBotTypeWithAggregatesFilter<"Bot"> | $Enums.BotType
     isDeleted?: BoolWithAggregatesFilter<"Bot"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Bot"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Bot"> | Date | string
@@ -57881,6 +57927,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -57916,6 +57963,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -57945,6 +57993,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57980,6 +58029,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -58012,6 +58062,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -58033,6 +58084,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -58057,6 +58109,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62217,6 +62270,13 @@ export namespace Prisma {
     not?: NestedEnumHealthStatusFilter<$PrismaModel> | $Enums.HealthStatus
   }
 
+  export type EnumBotTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
+  }
+
   export type PersonaTemplateNullableScalarRelationFilter = {
     is?: PersonaTemplateWhereInput | null
     isNot?: PersonaTemplateWhereInput | null
@@ -62310,6 +62370,7 @@ export namespace Prisma {
     pendingConfig?: SortOrder
     healthStatus?: SortOrder
     lastHealthCheck?: SortOrder
+    botType?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -62336,6 +62397,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     healthStatus?: SortOrder
     lastHealthCheck?: SortOrder
+    botType?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -62358,6 +62420,7 @@ export namespace Prisma {
     soulMarkdown?: SortOrder
     healthStatus?: SortOrder
     lastHealthCheck?: SortOrder
+    botType?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -62402,6 +62465,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumHealthStatusFilter<$PrismaModel>
     _max?: NestedEnumHealthStatusFilter<$PrismaModel>
+  }
+
+  export type EnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotTypeFilter<$PrismaModel>
+    _max?: NestedEnumBotTypeFilter<$PrismaModel>
   }
 
   export type BytesFilter<$PrismaModel = never> = {
@@ -65209,6 +65282,10 @@ export namespace Prisma {
     set?: $Enums.HealthStatus
   }
 
+  export type EnumBotTypeFieldUpdateOperationsInput = {
+    set?: $Enums.BotType
+  }
+
   export type UserInfoUpdateOneRequiredWithoutBotsNestedInput = {
     create?: XOR<UserInfoCreateWithoutBotsInput, UserInfoUncheckedCreateWithoutBotsInput>
     connectOrCreate?: UserInfoCreateOrConnectWithoutBotsInput
@@ -66887,6 +66964,13 @@ export namespace Prisma {
     not?: NestedEnumHealthStatusFilter<$PrismaModel> | $Enums.HealthStatus
   }
 
+  export type NestedEnumBotTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
+  }
+
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -66932,6 +67016,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumHealthStatusFilter<$PrismaModel>
     _max?: NestedEnumHealthStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotTypeFilter<$PrismaModel>
+    _max?: NestedEnumBotTypeFilter<$PrismaModel>
   }
 
   export type NestedBytesFilter<$PrismaModel = never> = {
@@ -67428,6 +67522,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67461,6 +67556,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67947,6 +68043,7 @@ export namespace Prisma {
     pendingConfig?: JsonNullableFilter<"Bot">
     healthStatus?: EnumHealthStatusFilter<"Bot"> | $Enums.HealthStatus
     lastHealthCheck?: DateTimeNullableFilter<"Bot"> | Date | string | null
+    botType?: EnumBotTypeFilter<"Bot"> | $Enums.BotType
     isDeleted?: BoolFilter<"Bot"> | boolean
     createdAt?: DateTimeFilter<"Bot"> | Date | string
     updatedAt?: DateTimeFilter<"Bot"> | Date | string
@@ -68207,6 +68304,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -68240,6 +68338,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69281,6 +69380,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69314,6 +69414,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70759,6 +70860,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70793,6 +70895,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70837,6 +70940,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70871,6 +70975,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71435,6 +71540,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71469,6 +71575,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71554,6 +71661,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71588,6 +71696,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71663,6 +71772,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71697,6 +71807,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -71782,6 +71893,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71816,6 +71928,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -72639,6 +72752,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -72673,6 +72787,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -72768,6 +72883,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -72802,6 +72918,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73134,6 +73251,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73168,6 +73286,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73277,6 +73396,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73311,6 +73431,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73629,6 +73750,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73663,6 +73785,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73707,6 +73830,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73741,6 +73865,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73769,6 +73894,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73803,6 +73929,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73847,6 +73974,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73881,6 +74009,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73995,6 +74124,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74029,6 +74159,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74073,6 +74204,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74107,6 +74239,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74722,6 +74855,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74857,6 +74991,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74890,6 +75025,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74921,6 +75057,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75081,6 +75218,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75102,6 +75240,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75135,6 +75274,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75166,6 +75306,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75226,6 +75367,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: $Enums.HealthStatus
     lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
     isDeleted?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75382,6 +75524,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75415,6 +75558,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75446,6 +75590,7 @@ export namespace Prisma {
     pendingConfig?: NullableJsonNullValueInput | InputJsonValue
     healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
     lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

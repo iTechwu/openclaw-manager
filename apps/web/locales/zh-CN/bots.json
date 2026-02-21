@@ -281,6 +281,22 @@
     "markdown": {
       "hint": "支持 Markdown",
       "placeholder": "# Soul\n\n描述你的 Bot 的个性、指南和行为..."
+    },
+    "botType": {
+      "title": "Bot 类型",
+      "description": "选择 Bot 的运行环境类型",
+      "gateway": {
+        "title": "Gateway",
+        "description": "主 Gateway 类型，包含完整 OpenClaw 运行时，适合一般对话场景"
+      },
+      "toolSandbox": {
+        "title": "工具沙箱",
+        "description": "工具沙箱类型，最小化环境执行代码，适合代码执行和工具调用场景"
+      },
+      "browserSandbox": {
+        "title": "浏览器沙箱",
+        "description": "浏览器沙箱类型，包含 Chromium 浏览器，支持浏览器自动化和 VNC 远程查看"
+      }
     }
   },
   "apiKeyModal": {

@@ -372,6 +372,16 @@ enum HealthStatus {
   @@map("health_status")
 }
 
+/// Bot 类型 - Bot 容器类型
+/// 决定使用哪种 Docker 镜像运行 Bot
+enum BotType {
+  GATEWAY // 主 Gateway bot（默认）- 使用 openclaw:local 镜像
+  TOOL_SANDBOX // 工具沙箱容器 - 使用 openclaw-sandbox 镜像
+  BROWSER_SANDBOX // 浏览器沙箱容器 - 使用 openclaw-sandbox-browser 镜像，支持 VNC
+
+  @@map("bot_type")
+}
+
 /// Bot - 机器人实体
 /// 管理 AI 机器人的生命周期和配置
 /// 注意：aiProvider、model、channelType 字段已移除，这些值从 BotModel 和 BotChannel 动态派生
@@ -399,6 +409,9 @@ model Bot {
   healthStatus    HealthStatus @default(UNKNOWN) @map("health_status")
   lastHealthCheck DateTime?    @map("last_health_check") @db.Timestamptz(6)
 
+  // Bot 类型字段 - 决定使用哪种 Docker 镜像
+  botType BotType @default(GATEWAY) @map("bot_type")
+
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -424,6 +437,7 @@ model Bot {
   @@index([avatarFileId])
   @@index([isDeleted])
   @@index([healthStatus])
+  @@index([botType])
   @@map("b_bot")
 }
 

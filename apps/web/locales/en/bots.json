@@ -278,6 +278,22 @@
     "markdown": {
       "hint": "Markdown supported",
       "placeholder": "# Soul\n\nDescribe your bot's personality, guidelines, and behavior..."
+    },
+    "botType": {
+      "title": "Bot Type",
+      "description": "Select the runtime environment for your bot",
+      "gateway": {
+        "title": "Gateway",
+        "description": "Main Gateway type with full OpenClaw runtime, suitable for general conversation scenarios"
+      },
+      "toolSandbox": {
+        "title": "Tool Sandbox",
+        "description": "Minimal environment for code execution and tool calls"
+      },
+      "browserSandbox": {
+        "title": "Browser Sandbox",
+        "description": "Includes Chromium browser for browser automation with VNC remote viewing support"
+      }
     }
   },
   "apiKeyModal": {
