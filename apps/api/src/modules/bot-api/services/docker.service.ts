@@ -69,14 +69,9 @@ export class DockerService implements OnModuleInit {
 
   constructor(private readonly configService: ConfigService) {
     // Initialize bot images for each type
-    // Fallback order: BOT_IMAGE_<TYPE> -> BOT_IMAGE -> default
-    const defaultImage =
-      process.env.BOT_IMAGE_GATEWAY ||
-      process.env.BOT_IMAGE ||
-      'openclaw:latest';
+    // Image is configured via BOT_IMAGE_<TYPE> environment variable
     this.botImages = {
-      GATEWAY:
-        process.env.BOT_IMAGE_GATEWAY || process.env.BOT_IMAGE || defaultImage,
+      GATEWAY: process.env.BOT_IMAGE_GATEWAY || 'openclaw:latest',
       TOOL_SANDBOX:
         process.env.BOT_IMAGE_TOOL_SANDBOX || 'openclaw-sandbox:bookworm-slim',
       BROWSER_SANDBOX:

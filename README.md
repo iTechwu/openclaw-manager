@@ -323,7 +323,10 @@ pnpm dev:api          # Backend only
 | `RABBITMQ_URL` | ✅ | RabbitMQ connection string |
 | `READ_DATABASE_URL` | — | PostgreSQL read replica (defaults to DATABASE_URL) |
 | `BOT_MASTER_KEY` | — | Master key for API key encryption (auto-generated) |
-| `BOT_IMAGE` | — | Docker image for Bot containers (default: `openclaw:latest`) |
+| `BOT_IMAGE_GATEWAY` | — | Docker image for GATEWAY bot type (default: `openclaw:local`) |
+| `BOT_IMAGE_TOOL_SANDBOX` | — | Docker image for TOOL_SANDBOX bot type (default: `openclaw-sandbox:bookworm-slim`) |
+| `BOT_IMAGE_BROWSER_SANDBOX` | — | Docker image for BROWSER_SANDBOX bot type (default: `openclaw-sandbox-browser:bookworm-slim`) |
+| `OPENCLAW_SRC_PATH` | — | OpenClaw source path for building images (default: `../openclaw`) |
 | `BOT_PORT_START` | — | Starting port for Bot containers (default: `9200`) |
 | `BOT_DATA_DIR` | — | Bot data directory (default: `/data/bots`) |
 | `BOT_SECRETS_DIR` | — | Bot secrets directory (default: `/data/secrets`) |

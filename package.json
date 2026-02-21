@@ -32,10 +32,16 @@
     "create-scaffold": "node packages/create-pardx-scaffold/cli.js",
     "prebuild": "pnpm generate:enums",
     "docker:build:all": "pnpm docker:build:gateway && pnpm docker:build:sandbox && pnpm docker:build:browser",
-    "docker:build:gateway": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && docker build -t ${BOT_IMAGE_GATEWAY:-openclaw:local} -f Dockerfile .",
-    "docker:build:sandbox": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && bash scripts/sandbox-setup.sh",
-    "docker:build:browser": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && bash scripts/sandbox-browser-setup.sh",
-    "docker:build:check": "docker images | grep -E 'openclaw|sandbox'"
+    "docker:build:gateway": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && docker build --platform ${DOCKER_PLATFORM:-linux/arm64} -t ${BOT_IMAGE_GATEWAY:-openclaw:local} -f Dockerfile .",
+    "docker:build:sandbox": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && DOCKER_PLATFORM=${DOCKER_PLATFORM:-linux/arm64} bash scripts/sandbox-setup.sh",
+    "docker:build:browser": "cd ${OPENCLAW_SRC_PATH:-../openclaw} && DOCKER_PLATFORM=${DOCKER_PLATFORM:-linux/arm64} bash scripts/sandbox-browser-setup.sh",
+    "docker:build:check": "docker images | grep -E 'openclaw|sandbox'",
+    "docker:push:all": "pnpm docker:push:gateway && pnpm docker:push:sandbox && pnpm docker:push:browser",
+    "docker:push:gateway": "docker tag ${BOT_IMAGE_GATEWAY:-openclaw:local} ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw:${DOCKER_IMAGE_TAG:-latest} && docker push ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw:${DOCKER_IMAGE_TAG:-latest}",
+    "docker:push:sandbox": "docker tag ${BOT_IMAGE_TOOL_SANDBOX:-openclaw-sandbox:bookworm-slim} ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox:${DOCKER_IMAGE_TAG:-latest} && docker push ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox:${DOCKER_IMAGE_TAG:-latest}",
+    "docker:push:browser": "docker tag ${BOT_IMAGE_BROWSER_SANDBOX:-openclaw-sandbox-browser:bookworm-slim} ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox-browser:${DOCKER_IMAGE_TAG:-latest} && docker push ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox-browser:${DOCKER_IMAGE_TAG:-latest}",
+    "docker:build:push:all": "pnpm docker:build:all && pnpm docker:push:all",
+    "docker:login": "docker login ${DOCKER_REGISTRY:-uhub.service.ucloud.cn}"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

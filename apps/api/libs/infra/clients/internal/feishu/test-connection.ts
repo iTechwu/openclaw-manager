@@ -11,9 +11,8 @@
  */
 import * as lark from '@larksuiteoapi/node-sdk';
 
-const appId = process.env.FEISHU_APP_ID || 'cli_a90efcbf2239dbb6';
-const appSecret =
-  process.env.FEISHU_APP_SECRET || 'oWpyZp0N33Aw34r7pvFtefHkad3HDzn7';
+const appId = process.env.FEISHU_APP_ID;
+const appSecret = process.env.FEISHU_APP_SECRET;
 const domain = process.env.FEISHU_DOMAIN || 'feishu'; // 'feishu' 或 'lark'
 
 if (!appId || !appSecret) {

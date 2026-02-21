@@ -323,7 +323,10 @@ pnpm dev:api          # 仅后端
 | `RABBITMQ_URL` | ✅ | RabbitMQ 连接字符串 |
 | `READ_DATABASE_URL` | — | PostgreSQL 读副本（默认使用 DATABASE_URL）|
 | `BOT_MASTER_KEY` | — | API 密钥加密主密钥（自动生成）|
-| `BOT_IMAGE` | — | Bot 容器 Docker 镜像（默认：`openclaw:latest`）|
+| `BOT_IMAGE_GATEWAY` | — | GATEWAY 类型 Bot 的 Docker 镜像（默认：`openclaw:local`）|
+| `BOT_IMAGE_TOOL_SANDBOX` | — | TOOL_SANDBOX 类型 Bot 的 Docker 镜像（默认：`openclaw-sandbox:bookworm-slim`）|
+| `BOT_IMAGE_BROWSER_SANDBOX` | — | BROWSER_SANDBOX 类型 Bot 的 Docker 镜像（默认：`openclaw-sandbox-browser:bookworm-slim`）|
+| `OPENCLAW_SRC_PATH` | — | OpenClaw 源码路径，用于构建镜像（默认：`../openclaw`）|
 | `BOT_PORT_START` | — | Bot 容器起始端口（默认：`9200`）|
 | `BOT_DATA_DIR` | — | Bot 数据目录（默认：`/data/bots`）|
 | `BOT_SECRETS_DIR` | — | Bot 密钥目录（默认：`/data/secrets`）|

@@ -281,9 +281,10 @@ const openBotChat = (bot: Bot) => {
 ## 相关文件
 
 - [docker.service.ts](../apps/api/src/modules/bot-api/services/docker.service.ts) - Docker 容器管理服务
+- [docker-image.service.ts](../apps/api/src/modules/bot-api/services/docker-image.service.ts) - Docker 镜像自动构建服务
 - [bot-api.service.ts](../apps/api/src/modules/bot-api/bot-api.service.ts) - Bot API 服务
 - [bot.schema.ts](../packages/contracts/src/schemas/bot.schema.ts) - Bot Schema 定义
-- [Dockerfile.botenv](../Dockerfile.botenv) - Bot 环境镜像
+- [nested-chasing-piglet.md](./nested-chasing-piglet.md) - BotType 多类型实施方案
 
 ## 实施记录
 

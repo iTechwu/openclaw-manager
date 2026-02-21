@@ -33,10 +33,7 @@ export class DockerImageService implements OnModuleInit {
     this.imageConfigs = [
       {
         type: 'GATEWAY',
-        image:
-          process.env.BOT_IMAGE_GATEWAY ||
-          process.env.BOT_IMAGE ||
-          'openclaw:local',
+        image: process.env.BOT_IMAGE_GATEWAY || 'openclaw:local',
         dockerfile: 'Dockerfile',
       },
       {
