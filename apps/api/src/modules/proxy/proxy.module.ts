@@ -47,6 +47,8 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
 import { ModelResolverService } from './services/model-resolver.service';
 import { CircuitBreakerService } from './services/circuit-breaker.service';
 import { CapabilityTagMatchingService } from '../bot-api/services/capability-tag-matching.service';
+// GLM response transformer for reasoning_content handling
+import { GlmResponseTransformerService } from './services/glm-response-transformer.service';
 // Event listeners
 import { HealthScoreListener } from './events/health-score.listener';
 
@@ -117,6 +119,8 @@ import { HealthScoreListener } from './events/health-score.listener';
     CircuitBreakerService,
     // Capability tag matching service (auto-sync tags)
     CapabilityTagMatchingService,
+    // GLM response transformer (reasoning_content -> content)
+    GlmResponseTransformerService,
     // Event listeners
     HealthScoreListener,
   ],

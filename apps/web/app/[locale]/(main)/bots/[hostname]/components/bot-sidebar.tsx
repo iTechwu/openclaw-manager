@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@repo/ui/lib/utils';
 import { Badge } from '@repo/ui';
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { botNavItems, botNavExtendedItems } from '@/lib/config/bot-nav';
 
 interface BotSidebarProps {
@@ -16,6 +16,8 @@ interface BotSidebarProps {
   healthStatus?: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
   hasProvider?: boolean;
   hasChannel?: boolean;
+  /** 是否有飞书通道配置 */
+  hasFeishuChannel?: boolean;
   configLoading?: boolean;
 }
 
@@ -59,6 +61,7 @@ export function BotSidebar({
   healthStatus,
   hasProvider,
   hasChannel,
+  hasFeishuChannel,
   configLoading,
 }: BotSidebarProps) {
   const t = useTranslations('bots.detail');
@@ -90,6 +93,17 @@ export function BotSidebar({
     return null;
   };
 
+  // 过滤导航项：根据条件显示
+  const filteredNavItems = useMemo(() => {
+    return botNavItems.filter((item) => {
+      // 如果需要飞书通道但未配置，则不显示
+      if (item.requires === 'feishuChannel' && !hasFeishuChannel) {
+        return false;
+      }
+      return true;
+    });
+  }, [hasFeishuChannel]);
+
   return (
     <aside className="w-64 border-r bg-card flex flex-col">
       {/* Bot 信息头部 */}
@@ -120,7 +134,7 @@ export function BotSidebar({
       {/* 主导航 */}
       <nav className="flex-1 p-3 overflow-y-auto">
         <ul className="space-y-1">
-          {botNavItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             const fullHref = item.href ? `${basePath}${item.href}` : basePath;

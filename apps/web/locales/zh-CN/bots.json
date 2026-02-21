@@ -402,6 +402,7 @@
       "ai": "AI 配置",
       "models": "AI 配置",
       "channels": "消息渠道",
+      "pairing": "飞书配对",
       "diagnostics": "测试诊断",
       "logs": "应用日志",
       "settings": "设置",
@@ -891,6 +892,47 @@
         "vision": "视觉模型",
         "multimodal": "多模态模型",
         "other": "其他模型"
+      }
+    },
+    "pairing": {
+      "title": "飞书配对",
+      "description": "管理飞书用户配对请求，批准后用户即可与机器人对话",
+      "nav": "飞书配对",
+      "config": {
+        "title": "配对策略",
+        "description": "配置用户访问机器人的策略",
+        "dmPolicy": "直接消息策略",
+        "dmPolicyHint": "控制用户如何获得与机器人对话的权限"
+      },
+      "policy": {
+        "pairing": "配对模式（需要管理员批准）",
+        "open": "开放模式（所有用户可访问）",
+        "allowlist": "白名单模式（仅允许列表用户）",
+        "disabled": "禁用直接消息"
+      },
+      "requests": {
+        "title": "配对请求",
+        "empty": "暂无配对请求",
+        "emptyHint": "当用户尝试与机器人对话时，将在此显示配对请求"
+      },
+      "filter": {
+        "all": "全部",
+        "pending": "待处理",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "expired": "已过期"
+      },
+      "table": {
+        "code": "配对码",
+        "userId": "飞书用户 ID",
+        "status": "状态",
+        "createdAt": "创建时间",
+        "expiresIn": "剩余时间",
+        "actions": "操作"
+      },
+      "actions": {
+        "approve": "批准",
+        "reject": "拒绝"
       }
     }
   }

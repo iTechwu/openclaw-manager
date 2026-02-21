@@ -45,6 +45,11 @@ import { ModelVerificationService } from './services/model-verification.service'
 import { CapabilityTagMatchingService } from './services/capability-tag-matching.service';
 import { ModelSyncService } from './services/model-sync.service';
 import { RoutingConfigService } from './services/routing-config.service';
+import { OpenclawConfigService } from './services/openclaw-config.service';
+import { ProviderFallbackService } from './services/provider-fallback.service';
+import { OpenclawGatewayService } from './services/openclaw-gateway.service';
+import { FeishuPairingService } from './services/feishu-pairing.service';
+import { FeishuPairingController } from './feishu-pairing.controller';
 import { PluginApiModule } from '../plugin-api/plugin-api.module';
 import { SkillApiModule } from '../skill-api/skill-api.module';
 
@@ -78,7 +83,7 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     PluginApiModule,
     forwardRef(() => SkillApiModule),
   ],
-  controllers: [BotApiController, ModelRoutingController],
+  controllers: [BotApiController, ModelRoutingController, FeishuPairingController],
   providers: [
     BotApiService,
     EncryptionService,
@@ -97,6 +102,10 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     CapabilityTagMatchingService,
     ModelSyncService,
     RoutingConfigService,
+    OpenclawConfigService,
+    ProviderFallbackService,
+    OpenclawGatewayService,
+    FeishuPairingService,
   ],
   exports: [
     BotApiService,
@@ -115,6 +124,10 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     CapabilityTagMatchingService,
     ModelSyncService,
     RoutingConfigService,
+    OpenclawConfigService,
+    ProviderFallbackService,
+    OpenclawGatewayService,
+    FeishuPairingService,
     ModelRoutingModule,
   ],
 })

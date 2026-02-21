@@ -7,6 +7,7 @@ import type { VendorConfig } from '../config/vendor.config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { TokenExtractorService, TokenUsage } from './token-extractor.service';
+import { GlmResponseTransformerService } from './glm-response-transformer.service';
 
 /**
  * 上游请求参数
@@ -65,12 +66,14 @@ interface ParsedUrl {
  * - 支持 SSE 流式响应
  * - 处理认证头替换
  * - 支持自定义 endpoint URL
+ * - GLM 模型响应转换（reasoning_content -> content）
  */
 @Injectable()
 export class UpstreamService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly tokenExtractor: TokenExtractorService,
+    private readonly glmTransformer: GlmResponseTransformerService,
   ) {}
 
   /**
@@ -186,6 +189,23 @@ export class UpstreamService {
   ): Promise<StreamForwardResult> {
     const startTime = Date.now();
 
+    // 从请求体中提取模型名称，用于判断是否需要 GLM 转换
+    let modelName: string | undefined;
+    if (req.body) {
+      try {
+        const bodyJson = JSON.parse(req.body.toString('utf-8'));
+        modelName = bodyJson.model;
+      } catch {
+        // 忽略解析错误
+      }
+    }
+    const shouldTransformGlm = this.glmTransformer.shouldTransform(modelName);
+    if (shouldTransformGlm) {
+      this.logger.info(
+        `[Proxy] GLM model detected (${modelName}), enabling reasoning_content transformation`,
+      );
+    }
+
     return new Promise((resolve, reject) => {
       const { body } = req;
       const { options, useHttps } = this.buildUpstreamOptions(req);
@@ -198,6 +218,9 @@ export class UpstreamService {
       const responseChunks: Buffer[] = [];
       let totalBufferSize = 0;
       const MAX_BUFFER_SIZE = 64 * 1024; // 64KB limit for usage extraction
+
+      // GLM 转换用的行缓冲
+      let sseLineBuffer = '';
 
       const httpModule = useHttps ? https : http;
       const proxyReq = httpModule.request(
@@ -221,7 +244,8 @@ export class UpstreamService {
 
           // 对于 SSE 响应，确保正确的流式头
           const contentType = proxyRes.headers['content-type'];
-          if (contentType?.includes('text/event-stream')) {
+          const isSse = contentType?.includes('text/event-stream');
+          if (isSse) {
             forwardHeaders['cache-control'] = 'no-cache';
             forwardHeaders['connection'] = 'keep-alive';
           }
@@ -231,27 +255,59 @@ export class UpstreamService {
           rawResponse.writeHead(statusCode, forwardHeaders);
 
           proxyRes.on('data', (chunk) => {
-            rawResponse.write(chunk);
-            // 仅收集最后 64KB 用于 usage 提取（避免长对话内存爆炸）
-            if (totalBufferSize + chunk.length <= MAX_BUFFER_SIZE) {
-              responseChunks.push(chunk);
-              totalBufferSize += chunk.length;
-            } else {
-              // 超过限制时，丢弃旧数据，保留最新的
-              const overflow = totalBufferSize + chunk.length - MAX_BUFFER_SIZE;
-              while (overflow > 0 && responseChunks.length > 0) {
-                const first = responseChunks[0];
-                if (first.length <= overflow) {
-                  totalBufferSize -= first.length;
-                  responseChunks.shift();
+            // 如果需要 GLM 转换且是 SSE 响应，进行逐行转换
+            if (shouldTransformGlm && isSse) {
+              const chunkStr = chunk.toString('utf-8');
+              sseLineBuffer += chunkStr;
+
+              // 按行处理，保留不完整的行
+              const lines = sseLineBuffer.split('\n');
+              sseLineBuffer = lines.pop() || '';
+
+              const transformedLines: string[] = [];
+              for (const line of lines) {
+                if (line.startsWith('data:')) {
+                  const data = line.slice(5).trim();
+                  const transformed = this.glmTransformer.transformSseEventData(data);
+                  transformedLines.push(`data: ${transformed}`);
                 } else {
-                  responseChunks[0] = first.subarray(overflow);
-                  totalBufferSize -= overflow;
-                  break;
+                  transformedLines.push(line);
                 }
               }
-              responseChunks.push(chunk);
-              totalBufferSize += chunk.length;
+
+              const transformedChunk = transformedLines.join('\n') + '\n';
+              const transformedBuffer = Buffer.from(transformedChunk, 'utf-8');
+              rawResponse.write(transformedBuffer);
+
+              // 收集转换后的数据用于 token 提取
+              if (totalBufferSize + transformedBuffer.length <= MAX_BUFFER_SIZE) {
+                responseChunks.push(transformedBuffer);
+                totalBufferSize += transformedBuffer.length;
+              }
+            } else {
+              // 直接转发，不做转换
+              rawResponse.write(chunk);
+              // 仅收集最后 64KB 用于 usage 提取（避免长对话内存爆炸）
+              if (totalBufferSize + chunk.length <= MAX_BUFFER_SIZE) {
+                responseChunks.push(chunk);
+                totalBufferSize += chunk.length;
+              } else {
+                // 超过限制时，丢弃旧数据，保留最新的
+                const overflow = totalBufferSize + chunk.length - MAX_BUFFER_SIZE;
+                while (overflow > 0 && responseChunks.length > 0) {
+                  const first = responseChunks[0];
+                  if (first.length <= overflow) {
+                    totalBufferSize -= first.length;
+                    responseChunks.shift();
+                  } else {
+                    responseChunks[0] = first.subarray(overflow);
+                    totalBufferSize -= overflow;
+                    break;
+                  }
+                }
+                responseChunks.push(chunk);
+                totalBufferSize += chunk.length;
+              }
             }
             // 强制刷新 SSE - 确保事件立即发送
             if (typeof (rawResponse as any).flush === 'function') {

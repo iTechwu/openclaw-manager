@@ -8,6 +8,7 @@ import {
   Sparkles,
   BarChart3,
   Cpu,
+  UserCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -16,6 +17,8 @@ export interface BotNavItem {
   labelKey: string;
   icon: LucideIcon;
   href: string;
+  /** 条件性显示：需要满足的条件 */
+  requires?: 'feishuChannel';
 }
 
 /**
@@ -29,6 +32,13 @@ export const botNavItems: BotNavItem[] = [
     labelKey: 'channels',
     icon: MessageSquare,
     href: '/channels',
+  },
+  {
+    id: 'pairing',
+    labelKey: 'pairing',
+    icon: UserCheck,
+    href: '/pairing',
+    requires: 'feishuChannel',
   },
   { id: 'models', labelKey: 'models', icon: Cpu, href: '/models' },
   { id: 'plugins', labelKey: 'plugins', icon: Puzzle, href: '/plugins' },

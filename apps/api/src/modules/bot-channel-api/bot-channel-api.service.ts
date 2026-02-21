@@ -163,29 +163,9 @@ export class BotChannelApiService {
     // 检查并更新 Bot 状态（从 draft 到 created）
     await this.checkAndUpdateBotStatus(bot.id);
 
-    // 对于飞书渠道，更新 openclaw.json 配置
+    // 对于飞书渠道，同步到 channels.json 配置文件
     if (request.channelType === 'feishu') {
-      try {
-        await this.workspaceService.updateFeishuChannelConfig(
-          userId,
-          hostname,
-          {
-            channelType: 'feishu',
-            credentials: request.credentials,
-            config: request.config || {},
-            isEnabled: request.isEnabled ?? true,
-          },
-        );
-        this.logger.info('Updated openclaw.json with feishu channel config', {
-          channelId: channel.id,
-          hostname,
-        });
-      } catch (error) {
-        this.logger.warn('Failed to update openclaw.json for feishu channel', {
-          channelId: channel.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
     }
 
     return this.mapToItem(channel);
@@ -261,41 +241,9 @@ export class BotChannelApiService {
     // 检查并更新 Bot 状态（从 draft 到 created）
     await this.checkAndUpdateBotStatus(bot.id);
 
-    // 对于飞书渠道，更新 openclaw.json 配置
-    if (
-      existingChannel.channelType === 'feishu' &&
-      (request.credentials !== undefined || request.config !== undefined)
-    ) {
-      try {
-        // 获取更新后的凭证
-        const credentials =
-          request.credentials ||
-          JSON.parse(
-            this.cryptClient.decrypt(
-              Buffer.from(channel.credentialsEncrypted).toString('utf8'),
-            ),
-          );
-
-        await this.workspaceService.updateFeishuChannelConfig(
-          userId,
-          hostname,
-          {
-            channelType: 'feishu',
-            credentials,
-            config: (channel.config as Record<string, unknown>) || {},
-            isEnabled: channel.isEnabled,
-          },
-        );
-        this.logger.info('Updated openclaw.json with feishu channel config', {
-          channelId,
-          hostname,
-        });
-      } catch (error) {
-        this.logger.warn('Failed to update openclaw.json for feishu channel', {
-          channelId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
+    // 对于飞书渠道，同步到 channels.json 配置文件
+    if (existingChannel.channelType === 'feishu') {
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
     }
 
     return this.mapToItem(channel);
@@ -319,28 +267,19 @@ export class BotChannelApiService {
       throw new NotFoundException('Channel not found');
     }
 
-    // 如果是飞书渠道，从 openclaw.json 中移除配置
-    if (channel.channelType === 'feishu') {
-      try {
-        await this.workspaceService.removeFeishuChannelConfig(userId, hostname);
-        this.logger.info('Removed feishu channel from openclaw.json', {
-          channelId,
-          hostname,
-        });
-      } catch (error) {
-        this.logger.warn('Failed to remove feishu channel from openclaw.json', {
-          channelId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
-    }
-
+    // 先删除数据库记录
     await this.botChannelDb.delete({ id: channelId });
 
     this.logger.info('Bot channel deleted', {
       botId: bot.id,
       channelId,
     });
+
+    // 如果是飞书渠道，同步到 channels.json 配置文件
+    // 注意：删除后需要重新同步，如果没有任何飞书通道，会删除 channels.json
+    if (channel.channelType === 'feishu') {
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
+    }
   }
 
   /**
@@ -842,6 +781,86 @@ export class BotChannelApiService {
       // 状态更新失败不应影响主流程
       this.logger.error('Failed to check and update bot status', {
         botId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * 同步所有飞书通道配置到 channels.json
+   * 使用方案 B：独立配置文件 + 启动时合并
+   *
+   * @param botId Bot ID
+   * @param userId 用户 ID
+   * @param hostname Bot 主机名
+   */
+  private async syncFeishuChannelsToConfigFile(
+    botId: string,
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
+    try {
+      // 获取所有飞书通道
+      const { list: channels } = await this.botChannelDb.list({
+        botId,
+        channelType: 'feishu',
+      });
+
+      if (channels.length === 0) {
+        // 如果没有通道配置，删除旧的 channels.json 文件
+        await this.workspaceService.removeChannelsConfigFile(userId, hostname);
+        this.logger.debug('Removed channels.json (no feishu channels)', {
+          botId,
+          hostname,
+        });
+        return;
+      }
+
+      // 构建通道配置列表（解密凭证）
+      const channelConfigs = channels.map((channel) => {
+        // 解密凭证
+        let credentials: Record<string, string> = {};
+        if (channel.credentialsEncrypted) {
+          try {
+            const encryptedStr = Buffer.from(
+              channel.credentialsEncrypted,
+            ).toString('utf8');
+            const decrypted = this.cryptClient.decrypt(encryptedStr);
+            credentials = JSON.parse(decrypted);
+          } catch (error) {
+            this.logger.warn(
+              `Failed to decrypt credentials for channel ${channel.id}`,
+              error,
+            );
+          }
+        }
+
+        return {
+          channelType: channel.channelType,
+          accountId: channel.id,
+          credentials,
+          config: (channel.config as Record<string, unknown>) || {},
+          isEnabled: channel.isEnabled,
+        };
+      });
+
+      // 写入到 channels.json 文件
+      await this.workspaceService.writeChannelsConfigFile(
+        userId,
+        hostname,
+        channelConfigs,
+      );
+
+      this.logger.info('Synced feishu channels to channels.json', {
+        botId,
+        hostname,
+        channelCount: channels.length,
+      });
+    } catch (error) {
+      // 同步失败不应影响主流程
+      this.logger.warn('Failed to sync feishu channels to config file', {
+        botId,
+        hostname,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

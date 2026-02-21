@@ -399,6 +399,7 @@
       "ai": "AI Config",
       "models": "AI Config",
       "channels": "Channels",
+      "pairing": "Feishu Pairing",
       "diagnostics": "Diagnostics",
       "logs": "Logs",
       "settings": "Settings",
@@ -888,6 +889,47 @@
         "vision": "Vision Models",
         "multimodal": "Multimodal Models",
         "other": "Other Models"
+      }
+    },
+    "pairing": {
+      "title": "Feishu Pairing",
+      "description": "Manage Feishu user pairing requests. Approved users can chat with the bot.",
+      "nav": "Feishu Pairing",
+      "config": {
+        "title": "Pairing Policy",
+        "description": "Configure user access policy for direct messages",
+        "dmPolicy": "Direct Message Policy",
+        "dmPolicyHint": "Control how users get permission to chat with the bot"
+      },
+      "policy": {
+        "pairing": "Pairing Mode (requires admin approval)",
+        "open": "Open Mode (all users can access)",
+        "allowlist": "Allowlist Mode (only listed users)",
+        "disabled": "Disable Direct Messages"
+      },
+      "requests": {
+        "title": "Pairing Requests",
+        "empty": "No pairing requests",
+        "emptyHint": "When users try to chat with the bot, pairing requests will appear here"
+      },
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      },
+      "table": {
+        "code": "Pairing Code",
+        "userId": "Feishu User ID",
+        "status": "Status",
+        "createdAt": "Created",
+        "expiresIn": "Expires In",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject"
       }
     }
   }

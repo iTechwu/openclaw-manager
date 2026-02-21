@@ -29,6 +29,7 @@ import {
   skillSyncContract,
   modelContract,
   botModelContract,
+  feishuPairingContract,
 } from '@repo/contracts';
 import { getHeaders } from '@repo/utils/headers';
 import { API_VERSION_HEADER, APP_BUILD_HEADER } from '@repo/constants';
@@ -549,6 +550,22 @@ export const botModelClient = initClient(botModelContract, clientOptions);
  */
 export const botModelApi = initQueryClient(botModelContract, clientOptions);
 
+/**
+ * Feishu Pairing API - Direct client
+ */
+export const feishuPairingClient = initClient(
+  feishuPairingContract,
+  clientOptions,
+);
+
+/**
+ * Feishu Pairing API - React Query hooks
+ */
+export const feishuPairingApi = initQueryClient(
+  feishuPairingContract,
+  clientOptions,
+);
+
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
 // ============================================================================
@@ -587,6 +604,7 @@ export const tsRestClient = {
   skillSync: skillSyncApi,
   model: modelApi,
   botModel: botModelApi,
+  feishuPairing: feishuPairingApi,
   // Direct clients (for imperative calls)
   analyticsClient,
   botClient,
@@ -606,4 +624,5 @@ export const tsRestClient = {
   skillSyncClient,
   modelClient,
   botModelClient,
+  feishuPairingClient,
 };

@@ -26,6 +26,7 @@ export default function BotDetailLayout({
   // 配置状态
   const [hasProvider, setHasProvider] = useState(false);
   const [hasChannel, setHasChannel] = useState(false);
+  const [hasFeishuChannel, setHasFeishuChannel] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
 
   // 检查 Provider 和 Channel 配置状态
@@ -49,6 +50,11 @@ export default function BotDetailLayout({
         });
         if (channelRes.status === 200 && channelRes.body.data) {
           setHasChannel(channelRes.body.data.total > 0);
+          // 检查是否有飞书通道
+          const feishuChannels = channelRes.body.data.list.filter(
+            (ch) => ch.channelType === 'feishu',
+          );
+          setHasFeishuChannel(feishuChannels.length > 0);
         }
       } catch {
         // 忽略错误，保持默认值
@@ -115,6 +121,7 @@ export default function BotDetailLayout({
         }
         hasProvider={hasProvider}
         hasChannel={hasChannel}
+        hasFeishuChannel={hasFeishuChannel}
         configLoading={configLoading}
       />
 

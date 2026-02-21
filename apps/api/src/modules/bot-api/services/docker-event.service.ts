@@ -3,12 +3,14 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Inject,
+  forwardRef,
 } from '@nestjs/common';
 import Docker from 'dockerode';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { BotService } from '@app/db';
 import { BotSseService } from './bot-sse.service';
+import { BotStartupMonitorService } from './bot-startup-monitor.service';
 import type { BotStatus } from '@prisma/client';
 
 /**
@@ -41,6 +43,8 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botService: BotService,
     private readonly sseService: BotSseService,
+    @Inject(forwardRef(() => BotStartupMonitorService))
+    private readonly startupMonitor: BotStartupMonitorService,
   ) {
     this.docker = new Docker();
   }
@@ -194,8 +198,15 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      // 计算新状态，考虑当前 Bot 状态
-      const newStatus = this.mapEventToStatus(event.Action, bot.status);
+      // 检查是否有活跃的启动监控
+      const hasActiveMonitor = this.startupMonitor.hasActiveMonitor(bot.id);
+
+      // 计算新状态，考虑当前 Bot 状态和启动监控状态
+      const newStatus = this.mapEventToStatus(
+        event.Action,
+        bot.status,
+        hasActiveMonitor,
+      );
 
       // 如果返回 null，表示不需要更新状态
       if (newStatus === null) {
@@ -203,6 +214,7 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
           hostname: bot.hostname,
           action: event.Action,
           currentStatus: bot.status,
+          hasActiveMonitor,
         });
         return;
       }
@@ -241,18 +253,20 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
    *
    * @param action Docker 事件动作
    * @param currentStatus Bot 当前状态
+   * @param hasActiveMonitor 是否有活跃的启动监控（表示正在启动/重启中）
    * @returns 新状态，如果返回 null 表示不需要更新
    */
   private mapEventToStatus(
     action: string,
     currentStatus: BotStatus,
+    hasActiveMonitor: boolean,
   ): string | null {
     switch (action) {
       case 'start':
         // 容器启动，但不立即设置为 running
         // 由 BotStartupMonitorService 检测到真正启动完成后再更新
         // 只有当前不是 starting 状态时才更新（避免覆盖正在启动的状态）
-        if (currentStatus === 'starting') {
+        if (currentStatus === 'starting' || hasActiveMonitor) {
           return null; // 保持 starting 状态，让监控服务来更新
         }
         return 'running';
@@ -261,17 +275,21 @@ export class DockerEventService implements OnModuleInit, OnModuleDestroy {
         return 'starting';
 
       case 'stop':
-        // 如果当前正在启动中，不要因为 stop 事件改变状态
+        // 如果当前正在启动中或有活跃监控，不要因为 stop 事件改变状态
         // 这可能是重启过程中的正常行为
-        if (currentStatus === 'starting') {
+        if (currentStatus === 'starting' || hasActiveMonitor) {
           return null;
         }
         return 'stopped';
 
       case 'die':
       case 'kill':
-        // 如果当前正在启动中，说明这是重启过程（旧容器被销毁）
+        // 如果有活跃的启动监控，说明这是重启过程（旧容器被销毁）
         // 不应该标记为 error
+        if (hasActiveMonitor) {
+          return null;
+        }
+        // 如果当前正在启动中，说明这是重启过程
         if (currentStatus === 'starting') {
           return null;
         }

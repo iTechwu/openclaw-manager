@@ -262,6 +262,7 @@ export class BotApiService {
     let apiBaseUrl: string | undefined;
     let proxyToken: string | undefined;
     let proxyTokenHash: string | undefined;
+    let providerKeyRecord: ProviderKey | null = null;
 
     // Check if zero-trust mode is enabled
     const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
@@ -272,6 +273,7 @@ export class BotApiService {
           id: primaryProvider.keyId,
         });
         if (providerKey && providerKey.createdById === userId) {
+          providerKeyRecord = providerKey; // 保存 providerKey 用于后续配置
           apiBaseUrl = providerKey.baseUrl || undefined;
 
           if (!useZeroTrust) {
@@ -389,6 +391,52 @@ export class BotApiService {
           }
         }
       }
+    }
+
+    // Update OpenClaw configuration with full provider information
+    // This enables native provider support when available
+    try {
+      const proxyUrl = this.getProxyUrl() || '';
+
+      // 检查是否启用"统计优先"模式
+      // 当启用时，所有请求通过 Proxy 以便统计 token 使用情况
+      const preferStats = process.env.PROXY_PREFER_STATS === 'true';
+
+      await this.workspaceService.updateOpenclawConfigWithProvider(
+        {
+          botId: bot.id,
+          userId,
+          hostname: input.hostname,
+          gatewayToken,
+          proxyUrl,
+          proxyToken: proxyToken || '',
+          primaryModel: {
+            modelId: primaryProvider.primaryModel || primaryProvider.models[0],
+            vendor: primaryProvider.providerId,
+            providerKeyId: primaryProvider.keyId || '',
+          },
+          providerKey: providerKeyRecord
+            ? {
+                vendor: providerKeyRecord.vendor,
+                apiKey: apiKey || '', // In zero-trust mode, this is empty
+                baseUrl: providerKeyRecord.baseUrl,
+                apiType: apiType,
+              }
+            : null,
+          useZeroTrust, // 启用 Hybrid-Native 模式（原生 API 协议 + Proxy 转发）
+          preferStats, // 统计优先模式：所有请求通过 Proxy 以便统计
+        },
+        [], // Channels will be added separately via channel configuration
+      );
+      this.logger.log(
+        `OpenClaw config updated with provider info for bot ${input.hostname}, useZeroTrust: ${useZeroTrust}, preferStats: ${preferStats}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to update OpenClaw config for ${input.hostname}:`,
+        error,
+      );
+      // Continue - container can still be created
     }
 
     // Create container AFTER proxy registration (so it has the proxy token)
@@ -1781,8 +1829,9 @@ export class BotApiService {
   }
 
   /**
-   * 在 Bot 启动时同步飞书通道配置到 openclaw.json
-   * 确保容器启动时使用最新的通道配置
+   * 在 Bot 启动时同步飞书通道配置到 channels.json
+   * 该文件会在容器启动时合并到 openclaw.json
+   * 使用方案 B：独立配置文件 + 启动时合并
    */
   private async syncFeishuChannelsOnStart(
     botId: string,
@@ -1798,6 +1847,8 @@ export class BotApiService {
 
       if (channels.length === 0) {
         this.logger.debug(`No feishu channels to sync for bot ${hostname}`);
+        // 如果没有通道配置，删除旧的 channels.json 文件
+        await this.workspaceService.removeChannelsConfigFile(userId, hostname);
         return;
       }
 
@@ -1829,15 +1880,15 @@ export class BotApiService {
         };
       });
 
-      // 同步到 openclaw.json
-      await this.workspaceService.syncFeishuChannelsConfig(
+      // 写入到 channels.json 文件（会被挂载到容器并合并）
+      await this.workspaceService.writeChannelsConfigFile(
         userId,
         hostname,
         channelConfigs,
       );
 
       this.logger.log(
-        `Synced ${channels.length} feishu channel(s) for bot ${hostname}`,
+        `Wrote channels.json for ${channels.length} feishu channel(s) for bot ${hostname}`,
       );
     } catch (error) {
       // 同步失败不应阻止容器启动，只记录警告

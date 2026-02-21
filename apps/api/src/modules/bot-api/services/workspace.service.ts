@@ -5,6 +5,11 @@ import * as path from 'path';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import type { ContainerSkillItem } from '@repo/contracts';
+import {
+  OpenclawConfigService,
+  type OpenclawConfigOptions,
+  type OpenclawConfigResult,
+} from './openclaw-config.service';
 
 export interface FeishuChannelConfig {
   appId: string;
@@ -62,6 +67,7 @@ export class WorkspaceService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
+    private readonly openclawConfigService: OpenclawConfigService,
   ) {
     const dataDir = process.env.BOT_DATA_DIR || '/data/bots';
     const secretsDir = process.env.BOT_SECRETS_DIR || '/data/secrets';
@@ -193,6 +199,49 @@ export class WorkspaceService {
     }
 
     return openclawConfig;
+  }
+
+  /**
+   * 更新 OpenClaw 配置（使用完整的 Provider 信息）
+   * 支持 Native 和 Proxy 模式
+   *
+   * @param options OpenClaw 配置选项
+   * @param channels 通道配置（可选）
+   * @returns 配置结果，包含模式和模型引用
+   */
+  async updateOpenclawConfigWithProvider(
+    options: OpenclawConfigOptions,
+    channels?: BotChannelConfig[],
+  ): Promise<OpenclawConfigResult> {
+    const isolationKey = this.getIsolationKey(options.userId, options.hostname);
+    const openclawPath = path.join(this.openclawDir, isolationKey);
+    const configPath = path.join(openclawPath, 'openclaw.json');
+
+    // 使用 OpenclawConfigService 生成配置
+    const result = this.openclawConfigService.buildOpenclawConfig(options);
+
+    // 合并通道配置
+    if (channels && channels.length > 0) {
+      const feishuConfig = this.buildFeishuFullConfig(channels);
+      if (Object.keys(feishuConfig).length > 0) {
+        result.config.channels = {
+          ...((result.config.channels as Record<string, unknown>) || {}),
+          feishu: feishuConfig,
+        };
+      }
+    }
+
+    // 确保目录存在
+    await fs.mkdir(openclawPath, { recursive: true });
+
+    // 写入配置
+    await fs.writeFile(configPath, JSON.stringify(result.config, null, 2));
+
+    this.logger.info(
+      `[Workspace] OpenClaw config updated for ${isolationKey}, mode: ${result.mode}, modelRef: ${result.modelRef}`,
+    );
+
+    return result;
   }
 
   /**
@@ -1035,6 +1084,122 @@ export class WorkspaceService {
     const mdPath = path.join(skillsDir, skillName, 'SKILL.md');
     try {
       await fs.access(mdPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // ==================== Channels 配置文件管理 ====================
+  // 用于方案 B：独立 channels.json 文件，在容器启动时合并到 openclaw.json
+
+  /**
+   * 获取 channels 配置文件路径
+   * 文件位置: ${secretsDir}/{isolationKey}/channels.json
+   * 容器内挂载: /app/secrets/channels.json
+   */
+  getChannelsConfigPath(userId: string, hostname: string): string {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    return path.join(this.secretsDir, isolationKey, 'channels.json');
+  }
+
+  /**
+   * 写入 channels 配置文件
+   * 该文件会被挂载到容器中，在启动时合并到 openclaw.json
+   */
+  async writeChannelsConfigFile(
+    userId: string,
+    hostname: string,
+    channels: BotChannelConfig[],
+  ): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const configPath = this.getChannelsConfigPath(userId, hostname);
+    const botSecretsPath = path.dirname(configPath);
+
+    try {
+      await fs.mkdir(botSecretsPath, { recursive: true });
+
+      // 构建完整的 channels 配置结构
+      const channelsConfig: Record<string, unknown> = {};
+
+      // 飞书通道配置
+      const feishuFullConfig = this.buildFeishuFullConfig(channels);
+      if (Object.keys(feishuFullConfig).length > 0) {
+        channelsConfig.feishu = feishuFullConfig;
+      }
+
+      // 如果没有任何通道配置，写入空对象
+      const configToWrite = {
+        channels: channelsConfig,
+        _meta: {
+          description: 'Channels configuration for OpenClaw - merged at container startup',
+          generatedAt: new Date().toISOString(),
+          isolationKey,
+        },
+      };
+
+      await fs.writeFile(configPath, JSON.stringify(configToWrite, null, 2), {
+        mode: 0o600,
+      });
+
+      const accounts = feishuFullConfig.accounts as Record<string, unknown>;
+      this.logger.info(`Channels config file written for: ${isolationKey}`, {
+        accountCount: accounts ? Object.keys(accounts).length : 0,
+        path: configPath,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to write channels config file for ${isolationKey}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 读取 channels 配置文件
+   */
+  async readChannelsConfigFile(
+    userId: string,
+    hostname: string,
+  ): Promise<Record<string, unknown> | null> {
+    const configPath = this.getChannelsConfigPath(userId, hostname);
+    try {
+      const content = await fs.readFile(configPath, 'utf-8');
+      return JSON.parse(content) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 删除 channels 配置文件
+   * 在删除所有通道时调用
+   */
+  async removeChannelsConfigFile(
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
+    const isolationKey = this.getIsolationKey(userId, hostname);
+    const configPath = this.getChannelsConfigPath(userId, hostname);
+    try {
+      await fs.unlink(configPath);
+      this.logger.info(`Channels config file removed for: ${isolationKey}`);
+    } catch {
+      // 文件不存在，忽略
+    }
+  }
+
+  /**
+   * 检查 channels 配置文件是否存在
+   */
+  async hasChannelsConfigFile(
+    userId: string,
+    hostname: string,
+  ): Promise<boolean> {
+    const configPath = this.getChannelsConfigPath(userId, hostname);
+    try {
+      await fs.access(configPath);
       return true;
     } catch {
       return false;

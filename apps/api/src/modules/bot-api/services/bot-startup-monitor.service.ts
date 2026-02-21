@@ -140,10 +140,9 @@ export class BotStartupMonitorService implements OnModuleDestroy {
    */
   private async checkStartupStatus(task: MonitorTask): Promise<void> {
     try {
-      // 获取容器日志（只获取最近的日志）
+      // 获取容器日志（获取最近的日志，不使用 since 参数以避免时区问题）
       const logs = await this.dockerService.getContainerLogs(task.containerId, {
-        tail: 50,
-        since: Math.floor(task.startTime / 1000), // 只获取启动后的日志
+        tail: 100, // 获取更多日志以确保包含启动完成的消息
       });
 
       // 检查是否包含启动完成的模式
@@ -172,6 +171,14 @@ export class BotStartupMonitorService implements OnModuleDestroy {
 
         // 停止监控
         this.stopMonitoring(task.botId);
+      } else {
+        // 调试日志：显示日志片段以便排查问题
+        this.logger.debug('Startup pattern not found in logs', {
+          botId: task.botId,
+          hostname: task.hostname,
+          logLength: logs?.length || 0,
+          logSnippet: logs?.slice(-500) || '(empty)',
+        });
       }
     } catch (error) {
       this.logger.warn('Failed to check bot startup status', {
@@ -183,11 +190,23 @@ export class BotStartupMonitorService implements OnModuleDestroy {
 
   /**
    * 检查日志是否包含启动完成的模式
+   * 每次创建新的 RegExp 对象以避免 lastIndex 问题
    */
   private checkStartupPatterns(logs: string): boolean {
-    for (const pattern of STARTUP_COMPLETE_PATTERNS) {
+    if (!logs) return false;
+
+    // 每次创建新的正则表达式对象，避免 lastIndex 问题
+    const patterns = [
+      /\[heartbeat\]\s+started/i,
+      /\[gateway\]\s+listening\s+on\s+ws:\/\//i,
+      /\[browser\/service\]\s+Browser\s+control\s+service\s+ready/i,
+    ];
+
+    for (const pattern of patterns) {
       if (pattern.test(logs)) {
-        this.logger.debug('Found startup pattern in logs', { pattern: pattern.source });
+        this.logger.info('Found startup pattern in logs', {
+          pattern: pattern.source,
+        });
         return true;
       }
     }
