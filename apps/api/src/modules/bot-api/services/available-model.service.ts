@@ -880,4 +880,155 @@ export class AvailableModelService {
 
     return { deleted: records.length };
   }
+
+  // ============================================================================
+  // 模型协议配置管理
+  // ============================================================================
+
+  /**
+   * 获取 Provider 的模型协议配置
+   */
+  async getProviderModelProtocolConfig(providerKeyId: string): Promise<{
+    providerKeyId: string;
+    vendor: string;
+    models: Array<{
+      modelId: string;
+      modelName: string;
+      supportedApiTypes: string[];
+      preferredApiType: string | null;
+      layer: string;
+      recommendAnthropic: boolean;
+      recommendReason: string | null;
+      anthropicModelId: string | null;
+    }>;
+  } | null> {
+    // 1. 获取 ProviderKey
+    const providerKey = await this.providerKeyService.get({ id: providerKeyId });
+    if (!providerKey) {
+      return null;
+    }
+
+    // 2. 获取该 ProviderKey 下的所有 ModelAvailability
+    const { list: availabilities } = await this.modelAvailabilityService.list(
+      { providerKeyId },
+      { limit: 1000 },
+    );
+
+    // 3. 获取每个模型的协议配置
+    const models = await Promise.all(
+      availabilities.map(async (availability) => {
+        // 获取 ModelCatalog 信息（如果有）
+        const catalog = availability.modelCatalogId
+          ? await this.modelCatalogService.get({ id: availability.modelCatalogId })
+          : null;
+
+        return {
+          modelId: availability.id,
+          modelName: availability.model,
+          supportedApiTypes: availability.supportedApiTypes ?? ['openai'],
+          preferredApiType: availability.preferredApiType ?? null,
+          layer: catalog?.modelLayer ?? 'production',
+          recommendAnthropic: catalog?.recommendAnthropic ?? false,
+          recommendReason: catalog?.recommendReason ?? null,
+          anthropicModelId: catalog?.anthropicModelId ?? null,
+        };
+      }),
+    );
+
+    return {
+      providerKeyId,
+      vendor: providerKey.vendor,
+      models,
+    };
+  }
+
+  /**
+   * 更新单个模型协议配置
+   */
+  async updateModelProtocolConfig(
+    providerKeyId: string,
+    modelId: string,
+    supportedApiTypes: string[],
+    preferredApiType: string | null,
+    layer?: string,
+    anthropicModelId?: string | null,
+  ): Promise<void> {
+    // 1. 更新 ModelAvailability 的协议配置
+    await this.modelAvailabilityService.update(
+      { id: modelId },
+      {
+        supportedApiTypes,
+        preferredApiType,
+      },
+    );
+
+    // 2. 如果有 ModelCatalog，更新层级和 Anthropic 模型 ID
+    const availability = await this.modelAvailabilityService.get({ id: modelId });
+    if (availability?.modelCatalogId) {
+      const updateData: Record<string, unknown> = {};
+      if (layer) {
+        updateData.modelLayer = layer;
+      }
+      if (anthropicModelId !== undefined) {
+        updateData.anthropicModelId = anthropicModelId;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await this.modelCatalogService.update(
+          { id: availability.modelCatalogId },
+          updateData,
+        );
+      }
+    }
+
+    this.logger.info(
+      '[AvailableModel] Updated model protocol config',
+      { providerKeyId, modelId, supportedApiTypes, preferredApiType, layer },
+    );
+  }
+
+  /**
+   * 批量更新模型协议配置
+   */
+  async batchUpdateModelProtocolConfig(
+    providerKeyId: string,
+    models: Array<{
+      modelId: string;
+      supportedApiTypes: string[];
+      preferredApiType: string | null;
+      layer?: string;
+      anthropicModelId?: string | null;
+    }>,
+  ): Promise<{ updated: number; errors: Array<{ modelId: string; error: string }> }> {
+    let updated = 0;
+    const errors: Array<{ modelId: string; error: string }> = [];
+
+    for (const model of models) {
+      try {
+        await this.updateModelProtocolConfig(
+          providerKeyId,
+          model.modelId,
+          model.supportedApiTypes,
+          model.preferredApiType,
+          model.layer,
+          model.anthropicModelId,
+        );
+        updated++;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push({ modelId: model.modelId, error: errorMessage });
+        this.logger.error(
+          '[AvailableModel] Failed to update model protocol config',
+          { modelId: model.modelId, error: errorMessage },
+        );
+      }
+    }
+
+    this.logger.info(
+      '[AvailableModel] Batch updated model protocol config',
+      { providerKeyId, updated, errorCount: errors.length },
+    );
+
+    return { updated, errors };
+  }
 }

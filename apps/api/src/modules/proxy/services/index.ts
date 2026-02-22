@@ -9,3 +9,5 @@ export * from './fallback-engine.service';
 export * from './cost-tracker.service';
 export * from './configuration.service';
 export * from './model-resolver.service';
+// Protocol routing services
+export * from './protocol-router.service';

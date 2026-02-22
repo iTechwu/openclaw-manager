@@ -8,6 +8,7 @@ export * from './bot-usage.schema';
 export * from './channel.schema';
 export * from './download.schema';
 export * from './message.schema';
+export * from './model-api-type-support.schema';
 export * from './model.schema';
 export * from './model-routing.schema';
 export * from './notification.schema';

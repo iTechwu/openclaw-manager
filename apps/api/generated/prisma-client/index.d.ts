@@ -22256,6 +22256,7 @@ export namespace Prisma {
     errorMessage: string | null
     vendorPriority: number | null
     healthScore: number | null
+    preferredApiType: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -22271,6 +22272,7 @@ export namespace Prisma {
     errorMessage: string | null
     vendorPriority: number | null
     healthScore: number | null
+    preferredApiType: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -22286,6 +22288,8 @@ export namespace Prisma {
     errorMessage: number
     vendorPriority: number
     healthScore: number
+    supportedApiTypes: number
+    preferredApiType: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -22313,6 +22317,7 @@ export namespace Prisma {
     errorMessage?: true
     vendorPriority?: true
     healthScore?: true
+    preferredApiType?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -22328,6 +22333,7 @@ export namespace Prisma {
     errorMessage?: true
     vendorPriority?: true
     healthScore?: true
+    preferredApiType?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -22343,6 +22349,8 @@ export namespace Prisma {
     errorMessage?: true
     vendorPriority?: true
     healthScore?: true
+    supportedApiTypes?: true
+    preferredApiType?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -22445,6 +22453,8 @@ export namespace Prisma {
     errorMessage: string | null
     vendorPriority: number
     healthScore: number
+    supportedApiTypes: string[]
+    preferredApiType: string | null
     createdAt: Date
     updatedAt: Date
     _count: ModelAvailabilityCountAggregateOutputType | null
@@ -22479,6 +22489,8 @@ export namespace Prisma {
     errorMessage?: boolean
     vendorPriority?: boolean
     healthScore?: boolean
+    supportedApiTypes?: boolean
+    preferredApiType?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22496,6 +22508,8 @@ export namespace Prisma {
     errorMessage?: boolean
     vendorPriority?: boolean
     healthScore?: boolean
+    supportedApiTypes?: boolean
+    preferredApiType?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22513,6 +22527,8 @@ export namespace Prisma {
     errorMessage?: boolean
     vendorPriority?: boolean
     healthScore?: boolean
+    supportedApiTypes?: boolean
+    preferredApiType?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22530,11 +22546,13 @@ export namespace Prisma {
     errorMessage?: boolean
     vendorPriority?: boolean
     healthScore?: boolean
+    supportedApiTypes?: boolean
+    preferredApiType?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelCatalogId" | "modelType" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "vendorPriority" | "healthScore" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
+  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelCatalogId" | "modelType" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "vendorPriority" | "healthScore" | "supportedApiTypes" | "preferredApiType" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
   export type ModelAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
     modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
@@ -22592,6 +22610,16 @@ export namespace Prisma {
        * 该 vendor 实例的健康评分（基于历史成功率动态计算）
        */
       healthScore: number
+      /**
+       * 模型支持的协议类型列表（从 ModelCatalog 同步）
+       * 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+       */
+      supportedApiTypes: string[]
+      /**
+       * 用户优先选择的协议类型（可选，默认使用 Provider 默认协议）
+       * 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
+       */
+      preferredApiType: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["modelAvailability"]>
@@ -23029,6 +23057,8 @@ export namespace Prisma {
     readonly errorMessage: FieldRef<"ModelAvailability", 'String'>
     readonly vendorPriority: FieldRef<"ModelAvailability", 'Int'>
     readonly healthScore: FieldRef<"ModelAvailability", 'Int'>
+    readonly supportedApiTypes: FieldRef<"ModelAvailability", 'String[]'>
+    readonly preferredApiType: FieldRef<"ModelAvailability", 'String'>
     readonly createdAt: FieldRef<"ModelAvailability", 'DateTime'>
     readonly updatedAt: FieldRef<"ModelAvailability", 'DateTime'>
   }
@@ -39292,6 +39322,10 @@ export namespace Prisma {
     supportsVision: boolean | null
     supportsFunctionCalling: boolean | null
     supportsStreaming: boolean | null
+    anthropicModelId: string | null
+    recommendAnthropic: boolean | null
+    recommendReason: string | null
+    modelLayer: string | null
     dataSource: string | null
     sourceUrl: string | null
     isEnabled: boolean | null
@@ -39326,6 +39360,10 @@ export namespace Prisma {
     supportsVision: boolean | null
     supportsFunctionCalling: boolean | null
     supportsStreaming: boolean | null
+    anthropicModelId: string | null
+    recommendAnthropic: boolean | null
+    recommendReason: string | null
+    modelLayer: string | null
     dataSource: string | null
     sourceUrl: string | null
     isEnabled: boolean | null
@@ -39361,6 +39399,11 @@ export namespace Prisma {
     supportsFunctionCalling: number
     supportsStreaming: number
     recommendedScenarios: number
+    supportedApiTypes: number
+    anthropicModelId: number
+    recommendAnthropic: number
+    recommendReason: number
+    modelLayer: number
     dataSource: number
     sourceUrl: number
     isEnabled: number
@@ -39424,6 +39467,10 @@ export namespace Prisma {
     supportsVision?: true
     supportsFunctionCalling?: true
     supportsStreaming?: true
+    anthropicModelId?: true
+    recommendAnthropic?: true
+    recommendReason?: true
+    modelLayer?: true
     dataSource?: true
     sourceUrl?: true
     isEnabled?: true
@@ -39458,6 +39505,10 @@ export namespace Prisma {
     supportsVision?: true
     supportsFunctionCalling?: true
     supportsStreaming?: true
+    anthropicModelId?: true
+    recommendAnthropic?: true
+    recommendReason?: true
+    modelLayer?: true
     dataSource?: true
     sourceUrl?: true
     isEnabled?: true
@@ -39493,6 +39544,11 @@ export namespace Prisma {
     supportsFunctionCalling?: true
     supportsStreaming?: true
     recommendedScenarios?: true
+    supportedApiTypes?: true
+    anthropicModelId?: true
+    recommendAnthropic?: true
+    recommendReason?: true
+    modelLayer?: true
     dataSource?: true
     sourceUrl?: true
     isEnabled?: true
@@ -39616,6 +39672,11 @@ export namespace Prisma {
     supportsFunctionCalling: boolean
     supportsStreaming: boolean
     recommendedScenarios: JsonValue | null
+    supportedApiTypes: string[]
+    anthropicModelId: string | null
+    recommendAnthropic: boolean
+    recommendReason: string | null
+    modelLayer: string
     dataSource: string
     sourceUrl: string | null
     isEnabled: boolean
@@ -39671,6 +39732,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: boolean
+    supportedApiTypes?: boolean
+    anthropicModelId?: boolean
+    recommendAnthropic?: boolean
+    recommendReason?: boolean
+    modelLayer?: boolean
     dataSource?: boolean
     sourceUrl?: boolean
     isEnabled?: boolean
@@ -39712,6 +39778,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: boolean
+    supportedApiTypes?: boolean
+    anthropicModelId?: boolean
+    recommendAnthropic?: boolean
+    recommendReason?: boolean
+    modelLayer?: boolean
     dataSource?: boolean
     sourceUrl?: boolean
     isEnabled?: boolean
@@ -39748,6 +39819,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: boolean
+    supportedApiTypes?: boolean
+    anthropicModelId?: boolean
+    recommendAnthropic?: boolean
+    recommendReason?: boolean
+    modelLayer?: boolean
     dataSource?: boolean
     sourceUrl?: boolean
     isEnabled?: boolean
@@ -39784,6 +39860,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: boolean
+    supportedApiTypes?: boolean
+    anthropicModelId?: boolean
+    recommendAnthropic?: boolean
+    recommendReason?: boolean
+    modelLayer?: boolean
     dataSource?: boolean
     sourceUrl?: boolean
     isEnabled?: boolean
@@ -39798,7 +39879,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type ModelCatalogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "vendor" | "displayName" | "description" | "inputPrice" | "outputPrice" | "cacheReadPrice" | "cacheWritePrice" | "thinkingPrice" | "reasoningScore" | "codingScore" | "creativityScore" | "speedScore" | "contextLength" | "supportsExtendedThinking" | "supportsCacheControl" | "supportsVision" | "supportsFunctionCalling" | "supportsStreaming" | "recommendedScenarios" | "dataSource" | "sourceUrl" | "isEnabled" | "isDeprecated" | "deprecationDate" | "priceUpdatedAt" | "notes" | "metadata" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["modelCatalog"]>
+  export type ModelCatalogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "vendor" | "displayName" | "description" | "inputPrice" | "outputPrice" | "cacheReadPrice" | "cacheWritePrice" | "thinkingPrice" | "reasoningScore" | "codingScore" | "creativityScore" | "speedScore" | "contextLength" | "supportsExtendedThinking" | "supportsCacheControl" | "supportsVision" | "supportsFunctionCalling" | "supportsStreaming" | "recommendedScenarios" | "supportedApiTypes" | "anthropicModelId" | "recommendAnthropic" | "recommendReason" | "modelLayer" | "dataSource" | "sourceUrl" | "isEnabled" | "isDeprecated" | "deprecationDate" | "priceUpdatedAt" | "notes" | "metadata" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["modelCatalog"]>
   export type ModelCatalogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     availabilities?: boolean | ModelCatalog$availabilitiesArgs<ExtArgs>
     capabilityTags?: boolean | ModelCatalog$capabilityTagsArgs<ExtArgs>
@@ -39912,6 +39993,31 @@ export namespace Prisma {
        * 如 ["deep-reasoning", "coding", "general-purpose"]
        */
       recommendedScenarios: Prisma.JsonValue | null
+      /**
+       * 该模型支持的 API 协议类型列表
+       * 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+       * 用于前端显示协议选择器和后端验证
+       */
+      supportedApiTypes: string[]
+      /**
+       * Anthropic 协议模型标识符（如果与 openai 不同）
+       * 某些模型在 Anthropic 协议下的名称可能与 OpenAI 不同
+       */
+      anthropicModelId: string | null
+      /**
+       * 是否推荐使用 Anthropic 协议
+       * 用于第二层（研究 Agent）模型，充分利用 Extended Thinking
+       */
+      recommendAnthropic: boolean
+      /**
+       * 推荐使用 Anthropic 协议的原因
+       * 如 "更好的 Extended Thinking 和流式输出支持"
+       */
+      recommendReason: string | null
+      /**
+       * 模型所属层级：production（第一层）、research（第二层）、both（两者皆可）
+       */
+      modelLayer: string
       /**
        * 数据来源：manual (手动), api (API同步), import (导入)
        */
@@ -40396,6 +40502,11 @@ export namespace Prisma {
     readonly supportsFunctionCalling: FieldRef<"ModelCatalog", 'Boolean'>
     readonly supportsStreaming: FieldRef<"ModelCatalog", 'Boolean'>
     readonly recommendedScenarios: FieldRef<"ModelCatalog", 'Json'>
+    readonly supportedApiTypes: FieldRef<"ModelCatalog", 'String[]'>
+    readonly anthropicModelId: FieldRef<"ModelCatalog", 'String'>
+    readonly recommendAnthropic: FieldRef<"ModelCatalog", 'Boolean'>
+    readonly recommendReason: FieldRef<"ModelCatalog", 'String'>
+    readonly modelLayer: FieldRef<"ModelCatalog", 'String'>
     readonly dataSource: FieldRef<"ModelCatalog", 'String'>
     readonly sourceUrl: FieldRef<"ModelCatalog", 'String'>
     readonly isEnabled: FieldRef<"ModelCatalog", 'Boolean'>
@@ -53551,6 +53662,8 @@ export namespace Prisma {
     errorMessage: 'errorMessage',
     vendorPriority: 'vendorPriority',
     healthScore: 'healthScore',
+    supportedApiTypes: 'supportedApiTypes',
+    preferredApiType: 'preferredApiType',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -53832,6 +53945,11 @@ export namespace Prisma {
     supportsFunctionCalling: 'supportsFunctionCalling',
     supportsStreaming: 'supportsStreaming',
     recommendedScenarios: 'recommendedScenarios',
+    supportedApiTypes: 'supportedApiTypes',
+    anthropicModelId: 'anthropicModelId',
+    recommendAnthropic: 'recommendAnthropic',
+    recommendReason: 'recommendReason',
+    modelLayer: 'modelLayer',
     dataSource: 'dataSource',
     sourceUrl: 'sourceUrl',
     isEnabled: 'isEnabled',
@@ -55820,6 +55938,8 @@ export namespace Prisma {
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
     vendorPriority?: IntFilter<"ModelAvailability"> | number
     healthScore?: IntFilter<"ModelAvailability"> | number
+    supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
+    preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -55837,6 +55957,8 @@ export namespace Prisma {
     errorMessage?: SortOrderInput | SortOrder
     vendorPriority?: SortOrder
     healthScore?: SortOrder
+    supportedApiTypes?: SortOrder
+    preferredApiType?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     providerKey?: ProviderKeyOrderByWithRelationInput
@@ -55858,6 +55980,8 @@ export namespace Prisma {
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
     vendorPriority?: IntFilter<"ModelAvailability"> | number
     healthScore?: IntFilter<"ModelAvailability"> | number
+    supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
+    preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -55875,6 +55999,8 @@ export namespace Prisma {
     errorMessage?: SortOrderInput | SortOrder
     vendorPriority?: SortOrder
     healthScore?: SortOrder
+    supportedApiTypes?: SortOrder
+    preferredApiType?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ModelAvailabilityCountOrderByAggregateInput
@@ -55898,6 +56024,8 @@ export namespace Prisma {
     errorMessage?: StringNullableWithAggregatesFilter<"ModelAvailability"> | string | null
     vendorPriority?: IntWithAggregatesFilter<"ModelAvailability"> | number
     healthScore?: IntWithAggregatesFilter<"ModelAvailability"> | number
+    supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
+    preferredApiType?: StringNullableWithAggregatesFilter<"ModelAvailability"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
   }
@@ -57234,6 +57362,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFilter<"ModelCatalog"> | boolean
     supportsStreaming?: BoolFilter<"ModelCatalog"> | boolean
     recommendedScenarios?: JsonNullableFilter<"ModelCatalog">
+    supportedApiTypes?: StringNullableListFilter<"ModelCatalog">
+    anthropicModelId?: StringNullableFilter<"ModelCatalog"> | string | null
+    recommendAnthropic?: BoolFilter<"ModelCatalog"> | boolean
+    recommendReason?: StringNullableFilter<"ModelCatalog"> | string | null
+    modelLayer?: StringFilter<"ModelCatalog"> | string
     dataSource?: StringFilter<"ModelCatalog"> | string
     sourceUrl?: StringNullableFilter<"ModelCatalog"> | string | null
     isEnabled?: BoolFilter<"ModelCatalog"> | boolean
@@ -57274,6 +57407,11 @@ export namespace Prisma {
     supportsFunctionCalling?: SortOrder
     supportsStreaming?: SortOrder
     recommendedScenarios?: SortOrderInput | SortOrder
+    supportedApiTypes?: SortOrder
+    anthropicModelId?: SortOrderInput | SortOrder
+    recommendAnthropic?: SortOrder
+    recommendReason?: SortOrderInput | SortOrder
+    modelLayer?: SortOrder
     dataSource?: SortOrder
     sourceUrl?: SortOrderInput | SortOrder
     isEnabled?: SortOrder
@@ -57317,6 +57455,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFilter<"ModelCatalog"> | boolean
     supportsStreaming?: BoolFilter<"ModelCatalog"> | boolean
     recommendedScenarios?: JsonNullableFilter<"ModelCatalog">
+    supportedApiTypes?: StringNullableListFilter<"ModelCatalog">
+    anthropicModelId?: StringNullableFilter<"ModelCatalog"> | string | null
+    recommendAnthropic?: BoolFilter<"ModelCatalog"> | boolean
+    recommendReason?: StringNullableFilter<"ModelCatalog"> | string | null
+    modelLayer?: StringFilter<"ModelCatalog"> | string
     dataSource?: StringFilter<"ModelCatalog"> | string
     sourceUrl?: StringNullableFilter<"ModelCatalog"> | string | null
     isEnabled?: BoolFilter<"ModelCatalog"> | boolean
@@ -57357,6 +57500,11 @@ export namespace Prisma {
     supportsFunctionCalling?: SortOrder
     supportsStreaming?: SortOrder
     recommendedScenarios?: SortOrderInput | SortOrder
+    supportedApiTypes?: SortOrder
+    anthropicModelId?: SortOrderInput | SortOrder
+    recommendAnthropic?: SortOrder
+    recommendReason?: SortOrderInput | SortOrder
+    modelLayer?: SortOrder
     dataSource?: SortOrder
     sourceUrl?: SortOrderInput | SortOrder
     isEnabled?: SortOrder
@@ -57401,6 +57549,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
     supportsStreaming?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
     recommendedScenarios?: JsonNullableWithAggregatesFilter<"ModelCatalog">
+    supportedApiTypes?: StringNullableListFilter<"ModelCatalog">
+    anthropicModelId?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    recommendAnthropic?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
+    recommendReason?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
+    modelLayer?: StringWithAggregatesFilter<"ModelCatalog"> | string
     dataSource?: StringWithAggregatesFilter<"ModelCatalog"> | string
     sourceUrl?: StringNullableWithAggregatesFilter<"ModelCatalog"> | string | null
     isEnabled?: BoolWithAggregatesFilter<"ModelCatalog"> | boolean
@@ -60084,6 +60237,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
@@ -60101,6 +60256,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -60114,6 +60271,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
@@ -60131,6 +60290,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -60146,6 +60307,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -60159,6 +60322,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -60174,6 +60339,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -61695,6 +61862,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -61735,6 +61907,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -61775,6 +61952,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -61815,6 +61997,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -61855,6 +62042,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -61891,6 +62083,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -61927,6 +62124,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -64610,6 +64812,8 @@ export namespace Prisma {
     errorMessage?: SortOrder
     vendorPriority?: SortOrder
     healthScore?: SortOrder
+    supportedApiTypes?: SortOrder
+    preferredApiType?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -64630,6 +64834,7 @@ export namespace Prisma {
     errorMessage?: SortOrder
     vendorPriority?: SortOrder
     healthScore?: SortOrder
+    preferredApiType?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -64645,6 +64850,7 @@ export namespace Prisma {
     errorMessage?: SortOrder
     vendorPriority?: SortOrder
     healthScore?: SortOrder
+    preferredApiType?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -65658,6 +65864,11 @@ export namespace Prisma {
     supportsFunctionCalling?: SortOrder
     supportsStreaming?: SortOrder
     recommendedScenarios?: SortOrder
+    supportedApiTypes?: SortOrder
+    anthropicModelId?: SortOrder
+    recommendAnthropic?: SortOrder
+    recommendReason?: SortOrder
+    modelLayer?: SortOrder
     dataSource?: SortOrder
     sourceUrl?: SortOrder
     isEnabled?: SortOrder
@@ -65706,6 +65917,10 @@ export namespace Prisma {
     supportsVision?: SortOrder
     supportsFunctionCalling?: SortOrder
     supportsStreaming?: SortOrder
+    anthropicModelId?: SortOrder
+    recommendAnthropic?: SortOrder
+    recommendReason?: SortOrder
+    modelLayer?: SortOrder
     dataSource?: SortOrder
     sourceUrl?: SortOrder
     isEnabled?: SortOrder
@@ -65740,6 +65955,10 @@ export namespace Prisma {
     supportsVision?: SortOrder
     supportsFunctionCalling?: SortOrder
     supportsStreaming?: SortOrder
+    anthropicModelId?: SortOrder
+    recommendAnthropic?: SortOrder
+    recommendReason?: SortOrder
+    modelLayer?: SortOrder
     dataSource?: SortOrder
     sourceUrl?: SortOrder
     isEnabled?: SortOrder
@@ -67808,6 +68027,10 @@ export namespace Prisma {
     update?: XOR<XOR<BotUpdateToOneWithWhereWithoutModelsInput, BotUpdateWithoutModelsInput>, BotUncheckedUpdateWithoutModelsInput>
   }
 
+  export type ModelAvailabilityCreatesupportedApiTypesInput = {
+    set: string[]
+  }
+
   export type ProviderKeyCreateNestedOneWithoutModelAvailabilityInput = {
     create?: XOR<ProviderKeyCreateWithoutModelAvailabilityInput, ProviderKeyUncheckedCreateWithoutModelAvailabilityInput>
     connectOrCreate?: ProviderKeyCreateOrConnectWithoutModelAvailabilityInput
@@ -67822,6 +68045,11 @@ export namespace Prisma {
 
   export type EnumModelTypeFieldUpdateOperationsInput = {
     set?: $Enums.ModelType
+  }
+
+  export type ModelAvailabilityUpdatesupportedApiTypesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput = {
@@ -68322,6 +68550,10 @@ export namespace Prisma {
     update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutInstallationsInput, SkillUpdateWithoutInstallationsInput>, SkillUncheckedUpdateWithoutInstallationsInput>
   }
 
+  export type ModelCatalogCreatesupportedApiTypesInput = {
+    set: string[]
+  }
+
   export type ModelAvailabilityCreateNestedManyWithoutModelCatalogInput = {
     create?: XOR<ModelAvailabilityCreateWithoutModelCatalogInput, ModelAvailabilityUncheckedCreateWithoutModelCatalogInput> | ModelAvailabilityCreateWithoutModelCatalogInput[] | ModelAvailabilityUncheckedCreateWithoutModelCatalogInput[]
     connectOrCreate?: ModelAvailabilityCreateOrConnectWithoutModelCatalogInput | ModelAvailabilityCreateOrConnectWithoutModelCatalogInput[]
@@ -68384,6 +68616,11 @@ export namespace Prisma {
     decrement?: Decimal | DecimalJsLike | number | string
     multiply?: Decimal | DecimalJsLike | number | string
     divide?: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ModelCatalogUpdatesupportedApiTypesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type ModelAvailabilityUpdateManyWithoutModelCatalogNestedInput = {
@@ -72992,6 +73229,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     modelCatalog: ModelCatalogCreateNestedOneWithoutAvailabilitiesInput
@@ -73007,6 +73246,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -73176,6 +73417,8 @@ export namespace Prisma {
     errorMessage?: StringNullableFilter<"ModelAvailability"> | string | null
     vendorPriority?: IntFilter<"ModelAvailability"> | number
     healthScore?: IntFilter<"ModelAvailability"> | number
+    supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
+    preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
   }
@@ -73391,6 +73634,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -73430,6 +73678,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -73532,6 +73785,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -73571,6 +73829,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -73610,6 +73873,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -73649,6 +73917,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -73753,6 +74026,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -73792,6 +74070,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -75880,6 +76163,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
@@ -75895,6 +76180,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -77039,6 +77326,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -77078,6 +77370,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -77184,6 +77481,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -77223,6 +77525,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -77299,6 +77606,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -77338,6 +77650,11 @@ export namespace Prisma {
     supportsFunctionCalling?: boolean
     supportsStreaming?: boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogCreatesupportedApiTypesInput | string[]
+    anthropicModelId?: string | null
+    recommendAnthropic?: boolean
+    recommendReason?: string | null
+    modelLayer?: string
     dataSource?: string
     sourceUrl?: string | null
     isEnabled?: boolean
@@ -77436,6 +77753,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -77475,6 +77797,11 @@ export namespace Prisma {
     supportsFunctionCalling?: BoolFieldUpdateOperationsInput | boolean
     supportsStreaming?: BoolFieldUpdateOperationsInput | boolean
     recommendedScenarios?: NullableJsonNullValueInput | InputJsonValue
+    supportedApiTypes?: ModelCatalogUpdatesupportedApiTypesInput | string[]
+    anthropicModelId?: NullableStringFieldUpdateOperationsInput | string | null
+    recommendAnthropic?: BoolFieldUpdateOperationsInput | boolean
+    recommendReason?: NullableStringFieldUpdateOperationsInput | string | null
+    modelLayer?: StringFieldUpdateOperationsInput | string
     dataSource?: StringFieldUpdateOperationsInput | string
     sourceUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -78776,6 +79103,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -78909,6 +79238,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     modelCatalog?: ModelCatalogUpdateOneRequiredWithoutAvailabilitiesNestedInput
@@ -78924,6 +79255,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -78938,6 +79271,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79258,6 +79593,8 @@ export namespace Prisma {
     errorMessage?: string | null
     vendorPriority?: number
     healthScore?: number
+    supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
+    preferredApiType?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79296,6 +79633,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
@@ -79311,6 +79650,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79325,6 +79666,8 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     vendorPriority?: IntFieldUpdateOperationsInput | number
     healthScore?: IntFieldUpdateOperationsInput | number
+    supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
+    preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

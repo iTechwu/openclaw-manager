@@ -30,6 +30,10 @@ import {
   SyncTagsResponseSchema,
   RefreshWithSyncResponseSchema,
   ModelDetailsSchema,
+  GetProviderModelProtocolConfigResponseSchema,
+  UpdateModelProtocolConfigInputSchema,
+  BatchUpdateModelProtocolConfigInputSchema,
+  BatchUpdateModelProtocolConfigResponseSchema,
 } from '../schemas/model.schema';
 import { AddBotModelsInputSchema } from '../schemas/bot.schema';
 
@@ -309,6 +313,58 @@ export const modelContract = c.router(
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
       summary: '获取模型详情',
+    },
+
+    // ============================================================================
+    // 模型协议配置管理 (管理员)
+    // ============================================================================
+
+    /**
+     * GET /model/protocol-config/:providerKeyId - 获取 Provider 的模型协议配置
+     * 返回指定 Provider 下所有模型的协议支持配置
+     * 仅限管理员访问
+     */
+    getProviderModelProtocolConfig: {
+      method: 'GET',
+      path: '/protocol-config/:providerKeyId',
+      pathParams: z.object({ providerKeyId: z.string().uuid() }),
+      responses: {
+        200: ApiResponseSchema(GetProviderModelProtocolConfigResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取 Provider 的模型协议配置',
+    },
+
+    /**
+     * PUT /model/protocol-config - 更新单个模型协议配置
+     * 更新指定模型的协议支持配置
+     * 仅限管理员访问
+     */
+    updateModelProtocolConfig: {
+      method: 'PUT',
+      path: '/protocol-config',
+      body: UpdateModelProtocolConfigInputSchema,
+      responses: {
+        200: ApiResponseSchema(z.object({ success: z.boolean() })),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '更新单个模型协议配置',
+    },
+
+    /**
+     * POST /model/protocol-config/batch - 批量更新模型协议配置
+     * 批量更新指定 Provider 下多个模型的协议支持配置
+     * 仅限管理员访问
+     */
+    batchUpdateModelProtocolConfig: {
+      method: 'POST',
+      path: '/protocol-config/batch',
+      body: BatchUpdateModelProtocolConfigInputSchema,
+      responses: {
+        200: ApiResponseSchema(BatchUpdateModelProtocolConfigResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '批量更新模型协议配置',
     },
   },
   {

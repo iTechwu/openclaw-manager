@@ -8,7 +8,12 @@ import {
   getOpenclawNativeProvider,
   buildModelRef,
   getFallbackChain,
+  getAnthropicModelId,
+  getModelLayer,
+  shouldRecommendAnthropic,
   type OpenclawNativeProviderConfig,
+  type ModelApiType,
+  type ModelLayer,
 } from '@repo/contracts';
 
 /**
@@ -28,6 +33,17 @@ export interface BotModelInfo {
   modelId: string;
   vendor: string;
   providerKeyId: string;
+  /**
+   * 用户优先选择的协议类型（可选）
+   * 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
+   */
+  preferredApiType?: ModelApiType;
+  /**
+   * 模型所属层级
+   * - production: 第一层（生产 + 路由层）
+   * - research: 第二层（研究 Agent 专用）
+   */
+  layer?: ModelLayer;
 }
 
 /**
@@ -110,12 +126,19 @@ export class OpenclawConfigService {
   /**
    * 生成 OpenClaw 配置
    *
-   * 模式选择优先级：
-   * 1. useZeroTrust=true + 支持 Native → Hybrid-Native 模式（原生 API 协议，通过 Proxy 转发）
-   * 2. forceProxyMode=true → Proxy 模式（完全通过 Proxy，使用 openai-compatible 格式）
-   * 3. preferStats=true → Proxy 模式（所有请求通过 Proxy 以便统计）
-   * 4. 支持 Native 且有 API Key → Native 模式（直接连接 Provider API）
-   * 5. 否则 → Proxy 模式
+   * 双层模型体系模式选择：
+   *
+   * 第一层（生产 + 路由层）- 使用 OpenAI-compatible 协议：
+   * - 用于普通对话、翻译、总结、数据分析、普通工具调用
+   * - 模式选择优先级：
+   *   1. useZeroTrust=true → Hybrid-Native 模式（通过 Proxy 转发）
+   *   2. forceProxyMode=true → Proxy 模式
+   *   3. 支持 Native 且有 API Key → Native 模式
+   *   4. 否则 → Proxy 模式
+   *
+   * 第二层（研究 Agent 专用）- 使用 Anthropic 协议：
+   * - 用于深度规划、复杂推理、Extended Thinking
+   * - 强制使用 Hybrid-Native 模式，通过 Proxy 的 Anthropic 端点
    */
   buildOpenclawConfig(options: OpenclawConfigOptions): OpenclawConfigResult {
     const {
@@ -129,10 +152,26 @@ export class OpenclawConfigService {
       gatewayToken,
     } = options;
 
+    // 获取模型层级（如果未指定，从配置中获取）
+    const modelLayer = primaryModel.layer ?? getModelLayer(primaryModel.vendor, primaryModel.modelId);
+
+    // 第二层（研究 Agent）：优先使用 Anthropic 协议
+    if (modelLayer === 'research' && primaryModel.preferredApiType === 'anthropic') {
+      this.logger.info(
+        `[OpenClaw Config] Using research layer (anthropic protocol) for model ${primaryModel.modelId}`,
+      );
+      return this.buildResearchLayerConfig(
+        primaryModel,
+        proxyUrl,
+        proxyToken,
+        gatewayToken,
+      );
+    }
+
     const nativeConfig = getOpenclawNativeProvider(primaryModel.vendor);
     const supportsNative = nativeConfig !== null;
 
-    // 模式选择逻辑
+    // 第一层（生产 + 路由层）：模式选择逻辑
     if (useZeroTrust && supportsNative && proxyToken) {
       // Hybrid-Native 模式：使用原生 API 协议，通过 Proxy 转发
       // 优点：保持原生协议（如 anthropic-messages），同时 API Key 由 Proxy 管理
@@ -185,6 +224,168 @@ export class OpenclawConfigService {
         gatewayToken,
       );
     }
+  }
+
+  /**
+   * 构建第二层（研究 Agent）配置
+   *
+   * 使用 Anthropic 协议，支持 Extended Thinking 和 Cache Control
+   */
+  private buildResearchLayerConfig(
+    model: BotModelInfo,
+    proxyUrl: string,
+    proxyToken: string,
+    gatewayToken: string,
+  ): OpenclawConfigResult {
+    // 获取 Anthropic 协议下的模型标识符
+    const anthropicModelId = getAnthropicModelId(model.vendor, model.modelId) ?? model.modelId;
+
+    // 构建 Proxy Anthropic 端点
+    const proxyEndpoint = proxyUrl ? proxyUrl.replace(/\/$/, '') : '';
+    const anthropicProxyEndpoint = `${proxyEndpoint}/v1/anthropic`;
+
+    // 构建 Provider ID（用于区分不同的 Anthropic 兼容 provider）
+    const providerId = `anthropic-proxy-${model.vendor}`;
+    const modelRef = `${providerId}/${anthropicModelId}`;
+
+    // 获取 Fallback 链（使用 Anthropic 协议的模型）
+    const fallbacks = this.getResearchLayerFallbacks(model.modelId);
+
+    this.logger.info(
+      `[OpenClaw Config] Building research layer config: provider=${providerId}, model=${anthropicModelId}, endpoint=${anthropicProxyEndpoint}`,
+    );
+
+    const config: Record<string, unknown> = {
+      // 元数据
+      meta: {
+        lastTouchedVersion: '2026.2.3',
+        lastTouchedAt: new Date().toISOString(),
+        layer: 'research',
+        protocol: 'anthropic',
+      },
+
+      // 模型配置 - Anthropic 协议
+      models: {
+        mode: 'merge',
+        providers: {
+          [providerId]: {
+            baseUrl: anthropicProxyEndpoint,
+            apiKey: proxyToken,
+            api: 'anthropic-messages',
+            models: [
+              {
+                id: anthropicModelId,
+                name: anthropicModelId,
+                reasoning: true,
+                input: ['text', 'image'],
+                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+                contextWindow: 200000,
+                maxTokens: 8192,
+              },
+              // 添加 Fallback 模型
+              ...fallbacks.map((f) => ({
+                id: f.modelId,
+                name: f.modelId,
+                reasoning: true,
+                input: ['text', 'image'],
+                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+                contextWindow: 200000,
+                maxTokens: 8192,
+              })),
+            ],
+          },
+        },
+      },
+
+      // Agent 配置 - 启用 Extended Thinking
+      agents: {
+        defaults: {
+          workspace: '/app/workspace',
+          maxConcurrent: 4,
+          subagents: {
+            maxConcurrent: 8,
+          },
+          model: {
+            primary: modelRef,
+            fallbacks: fallbacks.map((f) => `${providerId}/${f.modelId}`),
+          },
+          models: {
+            [modelRef]: {
+              // Extended Thinking 配置
+              thinking: {
+                enabled: true,
+                budget_tokens: 20000,
+              },
+            },
+          },
+        },
+      },
+
+      // 消息配置
+      messages: {
+        ackReactionScope: 'group-mentions',
+      },
+
+      // 命令配置
+      commands: {
+        native: 'auto',
+        nativeSkills: 'auto',
+      },
+
+      // 网关配置
+      gateway: {
+        port: 19000,
+        mode: 'local',
+        bind: 'lan',
+        controlUi: {
+          enabled: true,
+          allowInsecureAuth: true,
+        },
+        auth: {
+          mode: 'token',
+          token: gatewayToken,
+        },
+      },
+    };
+
+    return {
+      config,
+      mode: 'hybrid-native',
+      modelRef,
+      fallbacks: fallbacks.map((f) => `${providerId}/${f.modelId}`),
+      openclawProviderId: providerId,
+    };
+  }
+
+  /**
+   * 获取第二层（研究 Agent）的 Fallback 模型列表
+   */
+  private getResearchLayerFallbacks(modelId: string): Array<{ modelId: string; vendor: string }> {
+    // 定义第二层模型的 Fallback 链
+    const researchFallbackMap: Record<string, Array<{ modelId: string; vendor: string }>> = {
+      // Claude 系列 Fallback
+      'claude-opus-4-20250514': [
+        { modelId: 'claude-sonnet-4-20250514', vendor: 'anthropic' },
+      ],
+      'claude-sonnet-4-20250514': [
+        { modelId: 'claude-opus-4-20250514', vendor: 'anthropic' },
+      ],
+      // GLM-5 系列 Fallback
+      'glm-5': [
+        { modelId: 'glm-5-flash', vendor: 'zhipu' },
+        { modelId: 'claude-sonnet-4-20250514', vendor: 'anthropic' },
+      ],
+      'glm-5-flash': [
+        { modelId: 'glm-5', vendor: 'zhipu' },
+        { modelId: 'claude-sonnet-4-20250514', vendor: 'anthropic' },
+      ],
+      // Kimi 系列 Fallback
+      'kimi-latest': [
+        { modelId: 'claude-sonnet-4-20250514', vendor: 'anthropic' },
+      ],
+    };
+
+    return researchFallbackMap[modelId] ?? [];
   }
 
   /**

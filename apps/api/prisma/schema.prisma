@@ -551,6 +551,14 @@ model ModelAvailability {
   /// 该 vendor 实例的健康评分（基于历史成功率动态计算）
   healthScore    Int @default(100) @map("health_score")
 
+  // ============ 协议适配配置（双层模型体系）============
+  /// 模型支持的协议类型列表（从 ModelCatalog 同步）
+  /// 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+  supportedApiTypes String[] @default(["openai"]) @map("supported_api_types")
+  /// 用户优先选择的协议类型（可选，默认使用 Provider 默认协议）
+  /// 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
+  preferredApiType  String?  @map("preferred_api_type") @db.VarChar(50)
+
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -562,6 +570,7 @@ model ModelAvailability {
   @@index([modelCatalogId])
   @@index([modelType])
   @@index([isAvailable])
+  @@index([preferredApiType])
   @@map("b_model_availability")
 }
 
@@ -1145,6 +1154,23 @@ model ModelCatalog {
   /// 如 ["deep-reasoning", "coding", "general-purpose"]
   recommendedScenarios Json? @map("recommended_scenarios") @db.JsonB
 
+  // ============ 协议适配配置（双层模型体系）============
+  /// 该模型支持的 API 协议类型列表
+  /// 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+  /// 用于前端显示协议选择器和后端验证
+  supportedApiTypes  String[] @default(["openai"]) @map("supported_api_types")
+  /// Anthropic 协议模型标识符（如果与 openai 不同）
+  /// 某些模型在 Anthropic 协议下的名称可能与 OpenAI 不同
+  anthropicModelId   String?  @map("anthropic_model_id") @db.VarChar(100)
+  /// 是否推荐使用 Anthropic 协议
+  /// 用于第二层（研究 Agent）模型，充分利用 Extended Thinking
+  recommendAnthropic Boolean  @default(false) @map("recommend_anthropic")
+  /// 推荐使用 Anthropic 协议的原因
+  /// 如 "更好的 Extended Thinking 和流式输出支持"
+  recommendReason    String?  @map("recommend_reason") @db.VarChar(500)
+  /// 模型所属层级：production（第一层）、research（第二层）、both（两者皆可）
+  modelLayer         String   @default("production") @map("model_layer") @db.VarChar(20)
+
   // ============ 数据来源追踪 ============
   /// 数据来源：manual (手动), api (API同步), import (导入)
   dataSource String  @default("manual") @map("data_source") @db.VarChar(20)
@@ -1186,6 +1212,8 @@ model ModelCatalog {
   @@index([isDeleted])
   @@index([supportsExtendedThinking])
   @@index([supportsCacheControl])
+  @@index([recommendAnthropic])
+  @@index([modelLayer])
   @@map("b_model_catalog")
 }
 

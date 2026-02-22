@@ -49,6 +49,8 @@ import { CircuitBreakerService } from './services/circuit-breaker.service';
 import { CapabilityTagMatchingService } from '../bot-api/services/capability-tag-matching.service';
 // GLM response transformer for reasoning_content handling
 import { GlmResponseTransformerService } from './services/glm-response-transformer.service';
+// Protocol router for dual-layer model system
+import { ProtocolRouterService } from './services/protocol-router.service';
 // Event listeners
 import { HealthScoreListener } from './events/health-score.listener';
 
@@ -121,6 +123,8 @@ import { HealthScoreListener } from './events/health-score.listener';
     CapabilityTagMatchingService,
     // GLM response transformer (reasoning_content -> content)
     GlmResponseTransformerService,
+    // Protocol router for dual-layer model system
+    ProtocolRouterService,
     // Event listeners
     HealthScoreListener,
   ],
@@ -141,6 +145,8 @@ import { HealthScoreListener } from './events/health-score.listener';
     ModelResolverService,
     // Circuit breaker service
     CircuitBreakerService,
+    // Protocol router for dual-layer model system
+    ProtocolRouterService,
   ],
 })
 export class ProxyModule {}

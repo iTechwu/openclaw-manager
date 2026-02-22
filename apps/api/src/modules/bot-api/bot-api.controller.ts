@@ -759,6 +759,68 @@ export class BotApiController {
   }
 
   // ============================================================================
+  // 模型协议配置管理 (管理员)
+  // ============================================================================
+
+  /**
+   * GET /model/protocol-config/:providerKeyId - 获取 Provider 的模型协议配置
+   */
+  @TsRestHandler(mc.getProviderModelProtocolConfig)
+  @AdminAuth()
+  async getProviderModelProtocolConfig(): Promise<any> {
+    return tsRestHandler(mc.getProviderModelProtocolConfig, async ({ params }) => {
+      const config = await this.availableModelService.getProviderModelProtocolConfig(
+        params.providerKeyId,
+      );
+      if (!config) {
+        return {
+          status: 404,
+          body: {
+            code: 404,
+            msg: 'Provider key not found',
+            data: { error: 'Provider key not found' },
+          },
+        };
+      }
+      return success(config);
+    });
+  }
+
+  /**
+   * PUT /model/protocol-config - 更新单个模型协议配置
+   */
+  @TsRestHandler(mc.updateModelProtocolConfig)
+  @AdminAuth()
+  async updateModelProtocolConfig(): Promise<any> {
+    return tsRestHandler(mc.updateModelProtocolConfig, async ({ body }) => {
+      await this.availableModelService.updateModelProtocolConfig(
+        body.providerKeyId,
+        body.modelId,
+        body.supportedApiTypes,
+        body.preferredApiType,
+        body.layer,
+        body.anthropicModelId,
+      );
+      return success({ success: true });
+    });
+  }
+
+  /**
+   * POST /model/protocol-config/batch - 批量更新模型协议配置
+   */
+  @TsRestHandler(mc.batchUpdateModelProtocolConfig)
+  @AdminAuth()
+  async batchUpdateModelProtocolConfig(): Promise<any> {
+    return tsRestHandler(mc.batchUpdateModelProtocolConfig, async ({ body }) => {
+      const result = await this.availableModelService.batchUpdateModelProtocolConfig(
+        body.providerKeyId,
+        body.models,
+      );
+      return success(result);
+    });
+  }
+
+  // ============================================================================
   // Real-time Status Stream (SSE) - 已迁移到 SseApiModule
   // ============================================================================
   // SSE 端点已迁移到 /api/sse/bot/status-stream

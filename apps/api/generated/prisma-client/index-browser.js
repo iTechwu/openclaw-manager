@@ -347,6 +347,8 @@ exports.Prisma.ModelAvailabilityScalarFieldEnum = {
   errorMessage: 'errorMessage',
   vendorPriority: 'vendorPriority',
   healthScore: 'healthScore',
+  supportedApiTypes: 'supportedApiTypes',
+  preferredApiType: 'preferredApiType',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -586,6 +588,11 @@ exports.Prisma.ModelCatalogScalarFieldEnum = {
   supportsFunctionCalling: 'supportsFunctionCalling',
   supportsStreaming: 'supportsStreaming',
   recommendedScenarios: 'recommendedScenarios',
+  supportedApiTypes: 'supportedApiTypes',
+  anthropicModelId: 'anthropicModelId',
+  recommendAnthropic: 'recommendAnthropic',
+  recommendReason: 'recommendReason',
+  modelLayer: 'modelLayer',
   dataSource: 'dataSource',
   sourceUrl: 'sourceUrl',
   isEnabled: 'isEnabled',

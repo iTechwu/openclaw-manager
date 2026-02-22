@@ -780,3 +780,119 @@ export const GenerateFallbackChainInputSchema = z.object({
 export type GenerateFallbackChainInput = z.infer<
   typeof GenerateFallbackChainInputSchema
 >;
+
+// ============================================================================
+// Model API Protocol Configuration Schemas
+// ============================================================================
+
+// Import from model-api-type-support schema
+import {
+  ModelApiTypeSchema,
+  ModelLayerSchema,
+  type ModelApiType,
+  type ModelLayer,
+} from './model-api-type-support.schema';
+
+/**
+ * 单个模型的协议配置
+ */
+export const ModelProtocolConfigItemSchema = z.object({
+  /** 模型 ID */
+  modelId: z.string(),
+  /** 模型名称 */
+  modelName: z.string(),
+  /** 支持的协议类型列表 */
+  supportedApiTypes: z.array(ModelApiTypeSchema),
+  /** 首选协议类型 */
+  preferredApiType: ModelApiTypeSchema.nullable(),
+  /** 模型层级 */
+  layer: ModelLayerSchema,
+  /** 是否推荐使用 Anthropic 协议 */
+  recommendAnthropic: z.boolean(),
+  /** 推荐原因 */
+  recommendReason: z.string().nullable(),
+  /** Anthropic 协议模型 ID */
+  anthropicModelId: z.string().nullable(),
+});
+
+export type ModelProtocolConfigItem = z.infer<typeof ModelProtocolConfigItemSchema>;
+
+/**
+ * 获取 Provider 模型协议配置响应
+ */
+export const GetProviderModelProtocolConfigResponseSchema = z.object({
+  /** Provider ID */
+  providerKeyId: z.string(),
+  /** Provider 供应商 */
+  vendor: z.string(),
+  /** 模型协议配置列表 */
+  models: z.array(ModelProtocolConfigItemSchema),
+});
+
+export type GetProviderModelProtocolConfigResponse = z.infer<
+  typeof GetProviderModelProtocolConfigResponseSchema
+>;
+
+/**
+ * 更新单个模型协议配置请求
+ */
+export const UpdateModelProtocolConfigInputSchema = z.object({
+  /** Provider Key ID */
+  providerKeyId: z.string().uuid(),
+  /** 模型 ID */
+  modelId: z.string(),
+  /** 支持的协议类型列表 */
+  supportedApiTypes: z.array(ModelApiTypeSchema),
+  /** 首选协议类型 */
+  preferredApiType: ModelApiTypeSchema.nullable(),
+  /** 模型层级 */
+  layer: ModelLayerSchema.optional(),
+  /** Anthropic 协议模型 ID */
+  anthropicModelId: z.string().nullable().optional(),
+});
+
+export type UpdateModelProtocolConfigInput = z.infer<
+  typeof UpdateModelProtocolConfigInputSchema
+>;
+
+/**
+ * 批量更新模型协议配置请求
+ */
+export const BatchUpdateModelProtocolConfigInputSchema = z.object({
+  /** Provider Key ID */
+  providerKeyId: z.string().uuid(),
+  /** 模型协议配置列表 */
+  models: z.array(
+    z.object({
+      modelId: z.string(),
+      supportedApiTypes: z.array(ModelApiTypeSchema),
+      preferredApiType: ModelApiTypeSchema.nullable(),
+      layer: ModelLayerSchema.optional(),
+      anthropicModelId: z.string().nullable().optional(),
+    }),
+  ),
+});
+
+export type BatchUpdateModelProtocolConfigInput = z.infer<
+  typeof BatchUpdateModelProtocolConfigInputSchema
+>;
+
+/**
+ * 批量更新模型协议配置响应
+ */
+export const BatchUpdateModelProtocolConfigResponseSchema = z.object({
+  /** 更新的模型数量 */
+  updated: z.number(),
+  /** 错误列表 */
+  errors: z.array(
+    z.object({
+      modelId: z.string(),
+      error: z.string(),
+    }),
+  ),
+});
+
+export type BatchUpdateModelProtocolConfigResponse = z.infer<
+  typeof BatchUpdateModelProtocolConfigResponseSchema
+>;
+
