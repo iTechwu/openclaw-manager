@@ -41,6 +41,7 @@ export class FeishuPairingController {
         req.userId,
         params.hostname,
         body.code,
+        body.feishuOpenId,
       );
       return success(result);
     });
@@ -76,6 +77,18 @@ export class FeishuPairingController {
         req.userId,
         params.hostname,
         body,
+      );
+      return success(result);
+    });
+  }
+
+  @TsRestHandler(c.delete)
+  async delete(@Req() req: AuthenticatedRequest) {
+    return tsRestHandler(c.delete, async ({ params }) => {
+      const result = await this.feishuPairingService.deletePairingRecord(
+        req.userId,
+        params.hostname,
+        params.code,
       );
       return success(result);
     });

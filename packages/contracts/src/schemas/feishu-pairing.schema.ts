@@ -15,6 +15,8 @@ export type FeishuPairingStatus = z.infer<typeof FeishuPairingStatusSchema>;
  * 飞书配对请求项
  */
 export const FeishuPairingRequestItemSchema = z.object({
+  /** 记录 ID */
+  id: z.string().uuid().optional(),
   /** 配对码 */
   code: z.string(),
   /** 飞书用户 Open ID */
@@ -29,6 +31,19 @@ export const FeishuPairingRequestItemSchema = z.object({
   approvedAt: z.string().datetime().nullable(),
   /** 批准者（如果已批准） */
   approvedBy: z.string().nullable(),
+  // 用户信息（从飞书 API 获取）
+  /** 用户名称 */
+  userName: z.string().nullable().optional(),
+  /** 用户英文名 */
+  userNameEn: z.string().nullable().optional(),
+  /** 用户头像 URL */
+  userAvatarUrl: z.string().nullable().optional(),
+  /** 用户邮箱 */
+  userEmail: z.string().nullable().optional(),
+  /** 用户手机号 */
+  userMobile: z.string().nullable().optional(),
+  /** 用户部门名称 */
+  userDepartmentName: z.string().nullable().optional(),
 });
 
 export type FeishuPairingRequestItem = z.infer<typeof FeishuPairingRequestItemSchema>;
@@ -53,6 +68,8 @@ export type FeishuPairingListResponse = z.infer<typeof FeishuPairingListResponse
 export const ApprovePairingRequestSchema = z.object({
   /** 配对码 */
   code: z.string().min(1),
+  /** 飞书用户 Open ID（手动输入时必需，用于直接关联用户） */
+  feishuOpenId: z.string().optional(),
 });
 
 export type ApprovePairingRequest = z.infer<typeof ApprovePairingRequestSchema>;
@@ -85,8 +102,10 @@ export type PairingActionResponse = z.infer<typeof PairingActionResponseSchema>;
 
 /**
  * 飞书配对策略
+ * - pairing: 配对模式（需要管理员批准）
+ * - open: 开放模式（所有用户可访问）
  */
-export const FeishuDmPolicySchema = z.enum(['pairing', 'allowlist', 'open', 'disabled']);
+export const FeishuDmPolicySchema = z.enum(['pairing', 'open']);
 
 export type FeishuDmPolicy = z.infer<typeof FeishuDmPolicySchema>;
 
@@ -96,8 +115,6 @@ export type FeishuDmPolicy = z.infer<typeof FeishuDmPolicySchema>;
 export const FeishuPairingConfigSchema = z.object({
   /** DM 策略 */
   dmPolicy: FeishuDmPolicySchema,
-  /** 允许的用户列表（当 dmPolicy 为 allowlist 时使用） */
-  allowFrom: z.array(z.string()),
 });
 
 export type FeishuPairingConfig = z.infer<typeof FeishuPairingConfigSchema>;
@@ -107,7 +124,6 @@ export type FeishuPairingConfig = z.infer<typeof FeishuPairingConfigSchema>;
  */
 export const UpdateFeishuPairingConfigRequestSchema = z.object({
   dmPolicy: FeishuDmPolicySchema.optional(),
-  allowFrom: z.array(z.string()).optional(),
 });
 
 export type UpdateFeishuPairingConfigRequest = z.infer<

@@ -631,6 +631,33 @@ exports.Prisma.BotChannelScalarFieldEnum = {
   deletedAt: 'deletedAt'
 };
 
+exports.Prisma.FeishuPairingRecordScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  botChannelId: 'botChannelId',
+  code: 'code',
+  feishuOpenId: 'feishuOpenId',
+  status: 'status',
+  userName: 'userName',
+  userNameEn: 'userNameEn',
+  userAvatarUrl: 'userAvatarUrl',
+  userEmail: 'userEmail',
+  userMobile: 'userMobile',
+  userDepartmentId: 'userDepartmentId',
+  userDepartmentName: 'userDepartmentName',
+  userInfoRaw: 'userInfoRaw',
+  expiresAt: 'expiresAt',
+  approvedAt: 'approvedAt',
+  approvedById: 'approvedById',
+  rejectedAt: 'rejectedAt',
+  rejectedById: 'rejectedById',
+  lastSyncedAt: 'lastSyncedAt',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.CapabilityTagScalarFieldEnum = {
   id: 'id',
   tagId: 'tagId',
@@ -888,6 +915,13 @@ exports.ChannelConnectionStatus = exports.$Enums.ChannelConnectionStatus = {
   ERROR: 'ERROR'
 };
 
+exports.PairingStatus = exports.$Enums.PairingStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED'
+};
+
 exports.Prisma.ModelName = {
   UserInfo: 'UserInfo',
   PersonaTemplate: 'PersonaTemplate',
@@ -920,6 +954,7 @@ exports.Prisma.ModelName = {
   ModelCatalog: 'ModelCatalog',
   BotModelRouting: 'BotModelRouting',
   BotChannel: 'BotChannel',
+  FeishuPairingRecord: 'FeishuPairingRecord',
   CapabilityTag: 'CapabilityTag',
   FallbackChain: 'FallbackChain',
   CostStrategy: 'CostStrategy',

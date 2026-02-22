@@ -903,9 +903,7 @@
       },
       "policy": {
         "pairing": "Pairing Mode (requires admin approval)",
-        "open": "Open Mode (all users can access)",
-        "allowlist": "Allowlist Mode (only listed users)",
-        "disabled": "Disable Direct Messages"
+        "open": "Open Mode (all users can access)"
       },
       "requests": {
         "title": "Pairing Requests",
@@ -921,7 +919,7 @@
       },
       "table": {
         "code": "Pairing Code",
-        "userId": "Feishu User ID",
+        "userInfo": "User Info",
         "status": "Status",
         "createdAt": "Created",
         "expiresIn": "Expires In",
@@ -929,7 +927,19 @@
       },
       "actions": {
         "approve": "Approve",
-        "reject": "Reject"
+        "reject": "Reject",
+        "delete": "Clean Up"
+      },
+      "confirmDelete": "Are you sure you want to clean up this pairing record? This will remove it from both the database and OpenClaw configuration file.",
+      "manual": {
+        "title": "Manual Pairing Approval",
+        "description": "Enter the pairing code and Feishu Open ID from the bot message to approve users",
+        "codeLabel": "Pairing Code",
+        "codePlaceholder": "e.g. Y55XTG3P",
+        "feishuOpenIdLabel": "Feishu Open ID",
+        "feishuOpenIdPlaceholder": "e.g. ou_xxxxxxxxxxxxx",
+        "approve": "Approve Pairing",
+        "hint": "Copy the pairing code and Feishu Open ID from the bot's response message, e.g. \"Your Feishu Open ID: ou_xxx\" and \"Pairing code: Y55XTG3P\""
       }
     }
   }

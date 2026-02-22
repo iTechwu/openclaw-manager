@@ -906,9 +906,7 @@
       },
       "policy": {
         "pairing": "配对模式（需要管理员批准）",
-        "open": "开放模式（所有用户可访问）",
-        "allowlist": "白名单模式（仅允许列表用户）",
-        "disabled": "禁用直接消息"
+        "open": "开放模式（所有用户可访问）"
       },
       "requests": {
         "title": "配对请求",
@@ -924,7 +922,7 @@
       },
       "table": {
         "code": "配对码",
-        "userId": "飞书用户 ID",
+        "userInfo": "用户信息",
         "status": "状态",
         "createdAt": "创建时间",
         "expiresIn": "剩余时间",
@@ -932,7 +930,19 @@
       },
       "actions": {
         "approve": "批准",
-        "reject": "拒绝"
+        "reject": "拒绝",
+        "delete": "清理"
+      },
+      "confirmDelete": "确定要清理这条配对记录吗？此操作将从数据库和 OpenClaw 配置文件中删除该记录。",
+      "manual": {
+        "title": "手动批准配对",
+        "description": "输入用户从飞书机器人消息中获得的配对码和飞书用户 ID 进行批准",
+        "codeLabel": "配对码",
+        "codePlaceholder": "如 Y55XTG3P",
+        "feishuOpenIdLabel": "飞书用户 ID",
+        "feishuOpenIdPlaceholder": "如 ou_xxxxxxxxxxxxx",
+        "approve": "批准配对",
+        "hint": "从用户收到的机器人消息中复制配对码和飞书用户 ID，例如：\"Your Feishu Open ID: ou_xxx\" 和 \"Pairing code: Y55XTG3P\""
       }
     }
   }

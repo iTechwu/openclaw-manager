@@ -418,17 +418,18 @@ model Bot {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  createdBy       UserInfo          @relation(fields: [createdById], references: [id])
-  personaTemplate PersonaTemplate?  @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
-  avatarFile      FileSource?       @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
-  usageLogs       BotUsageLog[]
-  proxyToken      ProxyToken?
-  plugins         BotPlugin[]
-  skills          BotSkill[]
-  channels        BotChannel[]
-  modelRoutings   BotModelRouting[]
-  routingConfig   BotRoutingConfig?
-  models          BotModel[]
+  createdBy          UserInfo          @relation(fields: [createdById], references: [id])
+  personaTemplate    PersonaTemplate?  @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
+  avatarFile         FileSource?       @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  usageLogs          BotUsageLog[]
+  proxyToken         ProxyToken?
+  plugins            BotPlugin[]
+  skills             BotSkill[]
+  channels           BotChannel[]
+  modelRoutings      BotModelRouting[]
+  routingConfig      BotRoutingConfig?
+  models             BotModel[]
+  feishuPairingRecords FeishuPairingRecord[]
 
   @@index([status])
   @@index([hostname])
@@ -1255,7 +1256,8 @@ model BotChannel {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  bot    Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
+  feishuPairingRecords FeishuPairingRecord[]
 
   @@unique([botId, channelType, name])
   @@index([botId])
@@ -1264,6 +1266,90 @@ model BotChannel {
   @@index([connectionStatus])
   @@index([isDeleted])
   @@map("b_bot_channel")
+}
+
+// ============================================================================
+// Channel Pairing System - 渠道配对系统
+// ============================================================================
+
+/// PairingStatus - 配对状态
+enum PairingStatus {
+  PENDING   // 待处理
+  APPROVED  // 已批准
+  REJECTED  // 已拒绝
+  EXPIRED   // 已过期
+
+  @@map("pairing_status")
+}
+
+/// FeishuPairingRecord - 飞书配对记录
+/// 持久化存储飞书用户的配对信息和用户基本信息
+/// 启动时与文件系统 pairing.json 同步，数据库为最高优先级
+model FeishuPairingRecord {
+  id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+
+  // ============ 关联 ============
+  botId      String @map("bot_id") @db.Uuid
+  botChannelId String @map("bot_channel_id") @db.Uuid
+
+  // ============ 配对信息 ============
+  /// 配对码（6-8位大写字母数字）
+  code          String @db.VarChar(8)
+  /// 飞书用户 Open ID
+  feishuOpenId  String @map("feishu_open_id") @db.VarChar(100)
+  /// 配对状态
+  status        PairingStatus @default(PENDING)
+
+  // ============ 飞书用户信息 ============
+  /// 用户名称
+  userName      String? @map("user_name") @db.VarChar(255)
+  /// 用户英文名
+  userNameEn    String? @map("user_name_en") @db.VarChar(255)
+  /// 用户头像 URL
+  userAvatarUrl String? @map("user_avatar_url") @db.VarChar(500)
+  /// 用户邮箱
+  userEmail     String? @map("user_email") @db.VarChar(255)
+  /// 用户手机号
+  userMobile    String? @map("user_mobile") @db.VarChar(50)
+  /// 用户部门 ID
+  userDepartmentId   String? @map("user_department_id") @db.VarChar(100)
+  /// 用户部门名称
+  userDepartmentName String? @map("user_department_name") @db.VarChar(255)
+  /// 原始用户信息（JSON，存储完整的飞书用户信息）
+  userInfoRaw   Json?  @map("user_info_raw") @db.JsonB
+
+  // ============ 时间戳 ============
+  /// 配对请求创建时间
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  /// 批准时间
+  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(6)
+  /// 批准人 ID
+  approvedById  String?   @map("approved_by_id") @db.Uuid
+  /// 拒绝时间
+  rejectedAt    DateTime? @map("rejected_at") @db.Timestamptz(6)
+  /// 拒绝人 ID
+  rejectedById  String?   @map("rejected_by_id") @db.Uuid
+  /// 最后从飞书同步用户信息的时间
+  lastSyncedAt  DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  bot        Bot        @relation(fields: [botId], references: [id], onDelete: Cascade)
+  botChannel BotChannel @relation(fields: [botChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, code])
+  @@unique([botId, feishuOpenId])
+  @@index([botId])
+  @@index([botChannelId])
+  @@index([code])
+  @@index([feishuOpenId])
+  @@index([status])
+  @@index([isDeleted])
+  @@map("b_feishu_pairing_record")
 }
 
 // ============================================================================

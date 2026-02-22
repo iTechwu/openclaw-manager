@@ -17,6 +17,7 @@ import {
   CapabilityTagModule,
   ModelCapabilityTagModule,
   FallbackChainModule,
+  FeishuPairingRecordModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { AuthModule } from '@app/auth';
@@ -50,6 +51,7 @@ import { ProviderFallbackService } from './services/provider-fallback.service';
 import { OpenclawGatewayService } from './services/openclaw-gateway.service';
 import { FeishuPairingService } from './services/feishu-pairing.service';
 import { FeishuPairingController } from './feishu-pairing.controller';
+import { FeishuClientModule } from '@app/clients/internal/feishu';
 import { PluginApiModule } from '../plugin-api/plugin-api.module';
 import { SkillApiModule } from '../skill-api/skill-api.module';
 
@@ -82,6 +84,8 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     PrismaModule,
     PluginApiModule,
     forwardRef(() => SkillApiModule),
+    FeishuPairingRecordModule,
+    FeishuClientModule,
   ],
   controllers: [BotApiController, ModelRoutingController, FeishuPairingController],
   providers: [

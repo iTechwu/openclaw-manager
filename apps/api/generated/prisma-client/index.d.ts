@@ -207,6 +207,13 @@ export type BotModelRouting = $Result.DefaultSelection<Prisma.$BotModelRoutingPa
  */
 export type BotChannel = $Result.DefaultSelection<Prisma.$BotChannelPayload>
 /**
+ * Model FeishuPairingRecord
+ * FeishuPairingRecord - 飞书配对记录
+ * 持久化存储飞书用户的配对信息和用户基本信息
+ * 启动时与文件系统 pairing.json 同步，数据库为最高优先级
+ */
+export type FeishuPairingRecord = $Result.DefaultSelection<Prisma.$FeishuPairingRecordPayload>
+/**
  * Model CapabilityTag
  * CapabilityTag - 能力标签
  * 定义路由能力标签及其要求，用于智能路由决策
@@ -405,6 +412,16 @@ export const ModelRoutingType: {
 
 export type ModelRoutingType = (typeof ModelRoutingType)[keyof typeof ModelRoutingType]
 
+
+export const PairingStatus: {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED'
+};
+
+export type PairingStatus = (typeof PairingStatus)[keyof typeof PairingStatus]
+
 }
 
 export type SexType = $Enums.SexType
@@ -462,6 +479,10 @@ export const ChannelConnectionStatus: typeof $Enums.ChannelConnectionStatus
 export type ModelRoutingType = $Enums.ModelRoutingType
 
 export const ModelRoutingType: typeof $Enums.ModelRoutingType
+
+export type PairingStatus = $Enums.PairingStatus
+
+export const PairingStatus: typeof $Enums.PairingStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -889,6 +910,16 @@ export class PrismaClient<
     * ```
     */
   get botChannel(): Prisma.BotChannelDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.feishuPairingRecord`: Exposes CRUD operations for the **FeishuPairingRecord** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FeishuPairingRecords
+    * const feishuPairingRecords = await prisma.feishuPairingRecord.findMany()
+    * ```
+    */
+  get feishuPairingRecord(): Prisma.FeishuPairingRecordDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.capabilityTag`: Exposes CRUD operations for the **CapabilityTag** model.
@@ -1424,6 +1455,7 @@ export namespace Prisma {
     ModelCatalog: 'ModelCatalog',
     BotModelRouting: 'BotModelRouting',
     BotChannel: 'BotChannel',
+    FeishuPairingRecord: 'FeishuPairingRecord',
     CapabilityTag: 'CapabilityTag',
     FallbackChain: 'FallbackChain',
     CostStrategy: 'CostStrategy',
@@ -1446,7 +1478,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelCatalog" | "botModelRouting" | "botChannel" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig" | "fallbackChainModel" | "complexityRoutingModelMapping"
+      modelProps: "userInfo" | "personaTemplate" | "wechatAuth" | "googleAuth" | "discordAuth" | "mobileAuth" | "emailAuth" | "riskDetectionRecord" | "systemTaskQueue" | "fileSource" | "countryCode" | "bot" | "providerKey" | "botModel" | "modelAvailability" | "modelCapabilityTag" | "botUsageLog" | "proxyToken" | "message" | "messageRecipient" | "operateLog" | "channelDefinition" | "channelCredentialField" | "plugin" | "botPlugin" | "skillType" | "skill" | "botSkill" | "modelCatalog" | "botModelRouting" | "botChannel" | "feishuPairingRecord" | "capabilityTag" | "fallbackChain" | "costStrategy" | "botRoutingConfig" | "complexityRoutingConfig" | "fallbackChainModel" | "complexityRoutingModelMapping"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3744,6 +3776,80 @@ export namespace Prisma {
           }
         }
       }
+      FeishuPairingRecord: {
+        payload: Prisma.$FeishuPairingRecordPayload<ExtArgs>
+        fields: Prisma.FeishuPairingRecordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FeishuPairingRecordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FeishuPairingRecordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          findFirst: {
+            args: Prisma.FeishuPairingRecordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FeishuPairingRecordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          findMany: {
+            args: Prisma.FeishuPairingRecordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>[]
+          }
+          create: {
+            args: Prisma.FeishuPairingRecordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          createMany: {
+            args: Prisma.FeishuPairingRecordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FeishuPairingRecordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>[]
+          }
+          delete: {
+            args: Prisma.FeishuPairingRecordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          update: {
+            args: Prisma.FeishuPairingRecordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          deleteMany: {
+            args: Prisma.FeishuPairingRecordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FeishuPairingRecordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.FeishuPairingRecordUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>[]
+          }
+          upsert: {
+            args: Prisma.FeishuPairingRecordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FeishuPairingRecordPayload>
+          }
+          aggregate: {
+            args: Prisma.FeishuPairingRecordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFeishuPairingRecord>
+          }
+          groupBy: {
+            args: Prisma.FeishuPairingRecordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FeishuPairingRecordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FeishuPairingRecordCountArgs<ExtArgs>
+            result: $Utils.Optional<FeishuPairingRecordCountAggregateOutputType> | number
+          }
+        }
+      }
       CapabilityTag: {
         payload: Prisma.$CapabilityTagPayload<ExtArgs>
         fields: Prisma.CapabilityTagFieldRefs
@@ -4401,6 +4507,7 @@ export namespace Prisma {
     modelCatalog?: ModelCatalogOmit
     botModelRouting?: BotModelRoutingOmit
     botChannel?: BotChannelOmit
+    feishuPairingRecord?: FeishuPairingRecordOmit
     capabilityTag?: CapabilityTagOmit
     fallbackChain?: FallbackChainOmit
     costStrategy?: CostStrategyOmit
@@ -4650,6 +4757,7 @@ export namespace Prisma {
     channels: number
     modelRoutings: number
     models: number
+    feishuPairingRecords: number
   }
 
   export type BotCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4659,6 +4767,7 @@ export namespace Prisma {
     channels?: boolean | BotCountOutputTypeCountChannelsArgs
     modelRoutings?: boolean | BotCountOutputTypeCountModelRoutingsArgs
     models?: boolean | BotCountOutputTypeCountModelsArgs
+    feishuPairingRecords?: boolean | BotCountOutputTypeCountFeishuPairingRecordsArgs
   }
 
   // Custom InputTypes
@@ -4712,6 +4821,13 @@ export namespace Prisma {
    */
   export type BotCountOutputTypeCountModelsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BotModelWhereInput
+  }
+
+  /**
+   * BotCountOutputType without action
+   */
+  export type BotCountOutputTypeCountFeishuPairingRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FeishuPairingRecordWhereInput
   }
 
 
@@ -4974,6 +5090,37 @@ export namespace Prisma {
    */
   export type ModelCatalogCountOutputTypeCountComplexityRoutingMappingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ComplexityRoutingModelMappingWhereInput
+  }
+
+
+  /**
+   * Count Type BotChannelCountOutputType
+   */
+
+  export type BotChannelCountOutputType = {
+    feishuPairingRecords: number
+  }
+
+  export type BotChannelCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    feishuPairingRecords?: boolean | BotChannelCountOutputTypeCountFeishuPairingRecordsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * BotChannelCountOutputType without action
+   */
+  export type BotChannelCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotChannelCountOutputType
+     */
+    select?: BotChannelCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * BotChannelCountOutputType without action
+   */
+  export type BotChannelCountOutputTypeCountFeishuPairingRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FeishuPairingRecordWhereInput
   }
 
 
@@ -18458,6 +18605,7 @@ export namespace Prisma {
     modelRoutings?: boolean | Bot$modelRoutingsArgs<ExtArgs>
     routingConfig?: boolean | Bot$routingConfigArgs<ExtArgs>
     models?: boolean | Bot$modelsArgs<ExtArgs>
+    feishuPairingRecords?: boolean | Bot$feishuPairingRecordsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["bot"]>
 
@@ -18555,6 +18703,7 @@ export namespace Prisma {
     modelRoutings?: boolean | Bot$modelRoutingsArgs<ExtArgs>
     routingConfig?: boolean | Bot$routingConfigArgs<ExtArgs>
     models?: boolean | Bot$modelsArgs<ExtArgs>
+    feishuPairingRecords?: boolean | Bot$feishuPairingRecordsArgs<ExtArgs>
     _count?: boolean | BotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18582,6 +18731,7 @@ export namespace Prisma {
       modelRoutings: Prisma.$BotModelRoutingPayload<ExtArgs>[]
       routingConfig: Prisma.$BotRoutingConfigPayload<ExtArgs> | null
       models: Prisma.$BotModelPayload<ExtArgs>[]
+      feishuPairingRecords: Prisma.$FeishuPairingRecordPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -19011,6 +19161,7 @@ export namespace Prisma {
     modelRoutings<T extends Bot$modelRoutingsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$modelRoutingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelRoutingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     routingConfig<T extends Bot$routingConfigArgs<ExtArgs> = {}>(args?: Subset<T, Bot$routingConfigArgs<ExtArgs>>): Prisma__BotRoutingConfigClient<$Result.GetResult<Prisma.$BotRoutingConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     models<T extends Bot$modelsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$modelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotModelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    feishuPairingRecords<T extends Bot$feishuPairingRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Bot$feishuPairingRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -19675,6 +19826,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BotModelScalarFieldEnum | BotModelScalarFieldEnum[]
+  }
+
+  /**
+   * Bot.feishuPairingRecords
+   */
+  export type Bot$feishuPairingRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    where?: FeishuPairingRecordWhereInput
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FeishuPairingRecordScalarFieldEnum | FeishuPairingRecordScalarFieldEnum[]
   }
 
   /**
@@ -42152,6 +42327,8 @@ export namespace Prisma {
     updatedAt?: boolean
     deletedAt?: boolean
     bot?: boolean | BotDefaultArgs<ExtArgs>
+    feishuPairingRecords?: boolean | BotChannel$feishuPairingRecordsArgs<ExtArgs>
+    _count?: boolean | BotChannelCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["botChannel"]>
 
   export type BotChannelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -42210,6 +42387,8 @@ export namespace Prisma {
   export type BotChannelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "channelType" | "name" | "credentialsEncrypted" | "config" | "isEnabled" | "connectionStatus" | "lastConnectedAt" | "lastError" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["botChannel"]>
   export type BotChannelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bot?: boolean | BotDefaultArgs<ExtArgs>
+    feishuPairingRecords?: boolean | BotChannel$feishuPairingRecordsArgs<ExtArgs>
+    _count?: boolean | BotChannelCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BotChannelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bot?: boolean | BotDefaultArgs<ExtArgs>
@@ -42222,6 +42401,7 @@ export namespace Prisma {
     name: "BotChannel"
     objects: {
       bot: Prisma.$BotPayload<ExtArgs>
+      feishuPairingRecords: Prisma.$FeishuPairingRecordPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -42633,6 +42813,7 @@ export namespace Prisma {
   export interface Prisma__BotChannelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     bot<T extends BotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotDefaultArgs<ExtArgs>>): Prisma__BotClient<$Result.GetResult<Prisma.$BotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    feishuPairingRecords<T extends BotChannel$feishuPairingRecordsArgs<ExtArgs> = {}>(args?: Subset<T, BotChannel$feishuPairingRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -43072,6 +43253,30 @@ export namespace Prisma {
   }
 
   /**
+   * BotChannel.feishuPairingRecords
+   */
+  export type BotChannel$feishuPairingRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    where?: FeishuPairingRecordWhereInput
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FeishuPairingRecordScalarFieldEnum | FeishuPairingRecordScalarFieldEnum[]
+  }
+
+  /**
    * BotChannel without action
    */
   export type BotChannelDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -43087,6 +43292,1366 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BotChannelInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model FeishuPairingRecord
+   */
+
+  export type AggregateFeishuPairingRecord = {
+    _count: FeishuPairingRecordCountAggregateOutputType | null
+    _min: FeishuPairingRecordMinAggregateOutputType | null
+    _max: FeishuPairingRecordMaxAggregateOutputType | null
+  }
+
+  export type FeishuPairingRecordMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    botChannelId: string | null
+    code: string | null
+    feishuOpenId: string | null
+    status: $Enums.PairingStatus | null
+    userName: string | null
+    userNameEn: string | null
+    userAvatarUrl: string | null
+    userEmail: string | null
+    userMobile: string | null
+    userDepartmentId: string | null
+    userDepartmentName: string | null
+    expiresAt: Date | null
+    approvedAt: Date | null
+    approvedById: string | null
+    rejectedAt: Date | null
+    rejectedById: string | null
+    lastSyncedAt: Date | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type FeishuPairingRecordMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    botChannelId: string | null
+    code: string | null
+    feishuOpenId: string | null
+    status: $Enums.PairingStatus | null
+    userName: string | null
+    userNameEn: string | null
+    userAvatarUrl: string | null
+    userEmail: string | null
+    userMobile: string | null
+    userDepartmentId: string | null
+    userDepartmentName: string | null
+    expiresAt: Date | null
+    approvedAt: Date | null
+    approvedById: string | null
+    rejectedAt: Date | null
+    rejectedById: string | null
+    lastSyncedAt: Date | null
+    isDeleted: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    deletedAt: Date | null
+  }
+
+  export type FeishuPairingRecordCountAggregateOutputType = {
+    id: number
+    botId: number
+    botChannelId: number
+    code: number
+    feishuOpenId: number
+    status: number
+    userName: number
+    userNameEn: number
+    userAvatarUrl: number
+    userEmail: number
+    userMobile: number
+    userDepartmentId: number
+    userDepartmentName: number
+    userInfoRaw: number
+    expiresAt: number
+    approvedAt: number
+    approvedById: number
+    rejectedAt: number
+    rejectedById: number
+    lastSyncedAt: number
+    isDeleted: number
+    createdAt: number
+    updatedAt: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type FeishuPairingRecordMinAggregateInputType = {
+    id?: true
+    botId?: true
+    botChannelId?: true
+    code?: true
+    feishuOpenId?: true
+    status?: true
+    userName?: true
+    userNameEn?: true
+    userAvatarUrl?: true
+    userEmail?: true
+    userMobile?: true
+    userDepartmentId?: true
+    userDepartmentName?: true
+    expiresAt?: true
+    approvedAt?: true
+    approvedById?: true
+    rejectedAt?: true
+    rejectedById?: true
+    lastSyncedAt?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type FeishuPairingRecordMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    botChannelId?: true
+    code?: true
+    feishuOpenId?: true
+    status?: true
+    userName?: true
+    userNameEn?: true
+    userAvatarUrl?: true
+    userEmail?: true
+    userMobile?: true
+    userDepartmentId?: true
+    userDepartmentName?: true
+    expiresAt?: true
+    approvedAt?: true
+    approvedById?: true
+    rejectedAt?: true
+    rejectedById?: true
+    lastSyncedAt?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+  }
+
+  export type FeishuPairingRecordCountAggregateInputType = {
+    id?: true
+    botId?: true
+    botChannelId?: true
+    code?: true
+    feishuOpenId?: true
+    status?: true
+    userName?: true
+    userNameEn?: true
+    userAvatarUrl?: true
+    userEmail?: true
+    userMobile?: true
+    userDepartmentId?: true
+    userDepartmentName?: true
+    userInfoRaw?: true
+    expiresAt?: true
+    approvedAt?: true
+    approvedById?: true
+    rejectedAt?: true
+    rejectedById?: true
+    lastSyncedAt?: true
+    isDeleted?: true
+    createdAt?: true
+    updatedAt?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type FeishuPairingRecordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FeishuPairingRecord to aggregate.
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FeishuPairingRecords to fetch.
+     */
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FeishuPairingRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FeishuPairingRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FeishuPairingRecords
+    **/
+    _count?: true | FeishuPairingRecordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FeishuPairingRecordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FeishuPairingRecordMaxAggregateInputType
+  }
+
+  export type GetFeishuPairingRecordAggregateType<T extends FeishuPairingRecordAggregateArgs> = {
+        [P in keyof T & keyof AggregateFeishuPairingRecord]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFeishuPairingRecord[P]>
+      : GetScalarType<T[P], AggregateFeishuPairingRecord[P]>
+  }
+
+
+
+
+  export type FeishuPairingRecordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FeishuPairingRecordWhereInput
+    orderBy?: FeishuPairingRecordOrderByWithAggregationInput | FeishuPairingRecordOrderByWithAggregationInput[]
+    by: FeishuPairingRecordScalarFieldEnum[] | FeishuPairingRecordScalarFieldEnum
+    having?: FeishuPairingRecordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FeishuPairingRecordCountAggregateInputType | true
+    _min?: FeishuPairingRecordMinAggregateInputType
+    _max?: FeishuPairingRecordMaxAggregateInputType
+  }
+
+  export type FeishuPairingRecordGroupByOutputType = {
+    id: string
+    botId: string
+    botChannelId: string
+    code: string
+    feishuOpenId: string
+    status: $Enums.PairingStatus
+    userName: string | null
+    userNameEn: string | null
+    userAvatarUrl: string | null
+    userEmail: string | null
+    userMobile: string | null
+    userDepartmentId: string | null
+    userDepartmentName: string | null
+    userInfoRaw: JsonValue | null
+    expiresAt: Date
+    approvedAt: Date | null
+    approvedById: string | null
+    rejectedAt: Date | null
+    rejectedById: string | null
+    lastSyncedAt: Date | null
+    isDeleted: boolean
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    _count: FeishuPairingRecordCountAggregateOutputType | null
+    _min: FeishuPairingRecordMinAggregateOutputType | null
+    _max: FeishuPairingRecordMaxAggregateOutputType | null
+  }
+
+  type GetFeishuPairingRecordGroupByPayload<T extends FeishuPairingRecordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FeishuPairingRecordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FeishuPairingRecordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FeishuPairingRecordGroupByOutputType[P]>
+            : GetScalarType<T[P], FeishuPairingRecordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FeishuPairingRecordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    botChannelId?: boolean
+    code?: boolean
+    feishuOpenId?: boolean
+    status?: boolean
+    userName?: boolean
+    userNameEn?: boolean
+    userAvatarUrl?: boolean
+    userEmail?: boolean
+    userMobile?: boolean
+    userDepartmentId?: boolean
+    userDepartmentName?: boolean
+    userInfoRaw?: boolean
+    expiresAt?: boolean
+    approvedAt?: boolean
+    approvedById?: boolean
+    rejectedAt?: boolean
+    rejectedById?: boolean
+    lastSyncedAt?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["feishuPairingRecord"]>
+
+  export type FeishuPairingRecordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    botChannelId?: boolean
+    code?: boolean
+    feishuOpenId?: boolean
+    status?: boolean
+    userName?: boolean
+    userNameEn?: boolean
+    userAvatarUrl?: boolean
+    userEmail?: boolean
+    userMobile?: boolean
+    userDepartmentId?: boolean
+    userDepartmentName?: boolean
+    userInfoRaw?: boolean
+    expiresAt?: boolean
+    approvedAt?: boolean
+    approvedById?: boolean
+    rejectedAt?: boolean
+    rejectedById?: boolean
+    lastSyncedAt?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["feishuPairingRecord"]>
+
+  export type FeishuPairingRecordSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    botChannelId?: boolean
+    code?: boolean
+    feishuOpenId?: boolean
+    status?: boolean
+    userName?: boolean
+    userNameEn?: boolean
+    userAvatarUrl?: boolean
+    userEmail?: boolean
+    userMobile?: boolean
+    userDepartmentId?: boolean
+    userDepartmentName?: boolean
+    userInfoRaw?: boolean
+    expiresAt?: boolean
+    approvedAt?: boolean
+    approvedById?: boolean
+    rejectedAt?: boolean
+    rejectedById?: boolean
+    lastSyncedAt?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["feishuPairingRecord"]>
+
+  export type FeishuPairingRecordSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    botChannelId?: boolean
+    code?: boolean
+    feishuOpenId?: boolean
+    status?: boolean
+    userName?: boolean
+    userNameEn?: boolean
+    userAvatarUrl?: boolean
+    userEmail?: boolean
+    userMobile?: boolean
+    userDepartmentId?: boolean
+    userDepartmentName?: boolean
+    userInfoRaw?: boolean
+    expiresAt?: boolean
+    approvedAt?: boolean
+    approvedById?: boolean
+    rejectedAt?: boolean
+    rejectedById?: boolean
+    lastSyncedAt?: boolean
+    isDeleted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    deletedAt?: boolean
+  }
+
+  export type FeishuPairingRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "botChannelId" | "code" | "feishuOpenId" | "status" | "userName" | "userNameEn" | "userAvatarUrl" | "userEmail" | "userMobile" | "userDepartmentId" | "userDepartmentName" | "userInfoRaw" | "expiresAt" | "approvedAt" | "approvedById" | "rejectedAt" | "rejectedById" | "lastSyncedAt" | "isDeleted" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["feishuPairingRecord"]>
+  export type FeishuPairingRecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }
+  export type FeishuPairingRecordIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }
+  export type FeishuPairingRecordIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bot?: boolean | BotDefaultArgs<ExtArgs>
+    botChannel?: boolean | BotChannelDefaultArgs<ExtArgs>
+  }
+
+  export type $FeishuPairingRecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FeishuPairingRecord"
+    objects: {
+      bot: Prisma.$BotPayload<ExtArgs>
+      botChannel: Prisma.$BotChannelPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      botChannelId: string
+      /**
+       * 配对码（6-8位大写字母数字）
+       */
+      code: string
+      /**
+       * 飞书用户 Open ID
+       */
+      feishuOpenId: string
+      /**
+       * 配对状态
+       */
+      status: $Enums.PairingStatus
+      /**
+       * 用户名称
+       */
+      userName: string | null
+      /**
+       * 用户英文名
+       */
+      userNameEn: string | null
+      /**
+       * 用户头像 URL
+       */
+      userAvatarUrl: string | null
+      /**
+       * 用户邮箱
+       */
+      userEmail: string | null
+      /**
+       * 用户手机号
+       */
+      userMobile: string | null
+      /**
+       * 用户部门 ID
+       */
+      userDepartmentId: string | null
+      /**
+       * 用户部门名称
+       */
+      userDepartmentName: string | null
+      /**
+       * 原始用户信息（JSON，存储完整的飞书用户信息）
+       */
+      userInfoRaw: Prisma.JsonValue | null
+      /**
+       * 配对请求创建时间
+       */
+      expiresAt: Date
+      /**
+       * 批准时间
+       */
+      approvedAt: Date | null
+      /**
+       * 批准人 ID
+       */
+      approvedById: string | null
+      /**
+       * 拒绝时间
+       */
+      rejectedAt: Date | null
+      /**
+       * 拒绝人 ID
+       */
+      rejectedById: string | null
+      /**
+       * 最后从飞书同步用户信息的时间
+       */
+      lastSyncedAt: Date | null
+      isDeleted: boolean
+      createdAt: Date
+      updatedAt: Date
+      deletedAt: Date | null
+    }, ExtArgs["result"]["feishuPairingRecord"]>
+    composites: {}
+  }
+
+  type FeishuPairingRecordGetPayload<S extends boolean | null | undefined | FeishuPairingRecordDefaultArgs> = $Result.GetResult<Prisma.$FeishuPairingRecordPayload, S>
+
+  type FeishuPairingRecordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<FeishuPairingRecordFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: FeishuPairingRecordCountAggregateInputType | true
+    }
+
+  export interface FeishuPairingRecordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FeishuPairingRecord'], meta: { name: 'FeishuPairingRecord' } }
+    /**
+     * Find zero or one FeishuPairingRecord that matches the filter.
+     * @param {FeishuPairingRecordFindUniqueArgs} args - Arguments to find a FeishuPairingRecord
+     * @example
+     * // Get one FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FeishuPairingRecordFindUniqueArgs>(args: SelectSubset<T, FeishuPairingRecordFindUniqueArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one FeishuPairingRecord that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {FeishuPairingRecordFindUniqueOrThrowArgs} args - Arguments to find a FeishuPairingRecord
+     * @example
+     * // Get one FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FeishuPairingRecordFindUniqueOrThrowArgs>(args: SelectSubset<T, FeishuPairingRecordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FeishuPairingRecord that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordFindFirstArgs} args - Arguments to find a FeishuPairingRecord
+     * @example
+     * // Get one FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FeishuPairingRecordFindFirstArgs>(args?: SelectSubset<T, FeishuPairingRecordFindFirstArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FeishuPairingRecord that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordFindFirstOrThrowArgs} args - Arguments to find a FeishuPairingRecord
+     * @example
+     * // Get one FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FeishuPairingRecordFindFirstOrThrowArgs>(args?: SelectSubset<T, FeishuPairingRecordFindFirstOrThrowArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more FeishuPairingRecords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FeishuPairingRecords
+     * const feishuPairingRecords = await prisma.feishuPairingRecord.findMany()
+     * 
+     * // Get first 10 FeishuPairingRecords
+     * const feishuPairingRecords = await prisma.feishuPairingRecord.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const feishuPairingRecordWithIdOnly = await prisma.feishuPairingRecord.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FeishuPairingRecordFindManyArgs>(args?: SelectSubset<T, FeishuPairingRecordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a FeishuPairingRecord.
+     * @param {FeishuPairingRecordCreateArgs} args - Arguments to create a FeishuPairingRecord.
+     * @example
+     * // Create one FeishuPairingRecord
+     * const FeishuPairingRecord = await prisma.feishuPairingRecord.create({
+     *   data: {
+     *     // ... data to create a FeishuPairingRecord
+     *   }
+     * })
+     * 
+     */
+    create<T extends FeishuPairingRecordCreateArgs>(args: SelectSubset<T, FeishuPairingRecordCreateArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many FeishuPairingRecords.
+     * @param {FeishuPairingRecordCreateManyArgs} args - Arguments to create many FeishuPairingRecords.
+     * @example
+     * // Create many FeishuPairingRecords
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FeishuPairingRecordCreateManyArgs>(args?: SelectSubset<T, FeishuPairingRecordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FeishuPairingRecords and returns the data saved in the database.
+     * @param {FeishuPairingRecordCreateManyAndReturnArgs} args - Arguments to create many FeishuPairingRecords.
+     * @example
+     * // Create many FeishuPairingRecords
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FeishuPairingRecords and only return the `id`
+     * const feishuPairingRecordWithIdOnly = await prisma.feishuPairingRecord.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FeishuPairingRecordCreateManyAndReturnArgs>(args?: SelectSubset<T, FeishuPairingRecordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a FeishuPairingRecord.
+     * @param {FeishuPairingRecordDeleteArgs} args - Arguments to delete one FeishuPairingRecord.
+     * @example
+     * // Delete one FeishuPairingRecord
+     * const FeishuPairingRecord = await prisma.feishuPairingRecord.delete({
+     *   where: {
+     *     // ... filter to delete one FeishuPairingRecord
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FeishuPairingRecordDeleteArgs>(args: SelectSubset<T, FeishuPairingRecordDeleteArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one FeishuPairingRecord.
+     * @param {FeishuPairingRecordUpdateArgs} args - Arguments to update one FeishuPairingRecord.
+     * @example
+     * // Update one FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FeishuPairingRecordUpdateArgs>(args: SelectSubset<T, FeishuPairingRecordUpdateArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more FeishuPairingRecords.
+     * @param {FeishuPairingRecordDeleteManyArgs} args - Arguments to filter FeishuPairingRecords to delete.
+     * @example
+     * // Delete a few FeishuPairingRecords
+     * const { count } = await prisma.feishuPairingRecord.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FeishuPairingRecordDeleteManyArgs>(args?: SelectSubset<T, FeishuPairingRecordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FeishuPairingRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FeishuPairingRecords
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FeishuPairingRecordUpdateManyArgs>(args: SelectSubset<T, FeishuPairingRecordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FeishuPairingRecords and returns the data updated in the database.
+     * @param {FeishuPairingRecordUpdateManyAndReturnArgs} args - Arguments to update many FeishuPairingRecords.
+     * @example
+     * // Update many FeishuPairingRecords
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more FeishuPairingRecords and only return the `id`
+     * const feishuPairingRecordWithIdOnly = await prisma.feishuPairingRecord.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends FeishuPairingRecordUpdateManyAndReturnArgs>(args: SelectSubset<T, FeishuPairingRecordUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one FeishuPairingRecord.
+     * @param {FeishuPairingRecordUpsertArgs} args - Arguments to update or create a FeishuPairingRecord.
+     * @example
+     * // Update or create a FeishuPairingRecord
+     * const feishuPairingRecord = await prisma.feishuPairingRecord.upsert({
+     *   create: {
+     *     // ... data to create a FeishuPairingRecord
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FeishuPairingRecord we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FeishuPairingRecordUpsertArgs>(args: SelectSubset<T, FeishuPairingRecordUpsertArgs<ExtArgs>>): Prisma__FeishuPairingRecordClient<$Result.GetResult<Prisma.$FeishuPairingRecordPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of FeishuPairingRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordCountArgs} args - Arguments to filter FeishuPairingRecords to count.
+     * @example
+     * // Count the number of FeishuPairingRecords
+     * const count = await prisma.feishuPairingRecord.count({
+     *   where: {
+     *     // ... the filter for the FeishuPairingRecords we want to count
+     *   }
+     * })
+    **/
+    count<T extends FeishuPairingRecordCountArgs>(
+      args?: Subset<T, FeishuPairingRecordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FeishuPairingRecordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FeishuPairingRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FeishuPairingRecordAggregateArgs>(args: Subset<T, FeishuPairingRecordAggregateArgs>): Prisma.PrismaPromise<GetFeishuPairingRecordAggregateType<T>>
+
+    /**
+     * Group by FeishuPairingRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FeishuPairingRecordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FeishuPairingRecordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FeishuPairingRecordGroupByArgs['orderBy'] }
+        : { orderBy?: FeishuPairingRecordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FeishuPairingRecordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFeishuPairingRecordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FeishuPairingRecord model
+   */
+  readonly fields: FeishuPairingRecordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FeishuPairingRecord.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FeishuPairingRecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    bot<T extends BotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotDefaultArgs<ExtArgs>>): Prisma__BotClient<$Result.GetResult<Prisma.$BotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    botChannel<T extends BotChannelDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BotChannelDefaultArgs<ExtArgs>>): Prisma__BotChannelClient<$Result.GetResult<Prisma.$BotChannelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FeishuPairingRecord model
+   */
+  interface FeishuPairingRecordFieldRefs {
+    readonly id: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly botId: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly botChannelId: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly code: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly feishuOpenId: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly status: FieldRef<"FeishuPairingRecord", 'PairingStatus'>
+    readonly userName: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userNameEn: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userAvatarUrl: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userEmail: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userMobile: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userDepartmentId: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userDepartmentName: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly userInfoRaw: FieldRef<"FeishuPairingRecord", 'Json'>
+    readonly expiresAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly approvedAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly approvedById: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly rejectedAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly rejectedById: FieldRef<"FeishuPairingRecord", 'String'>
+    readonly lastSyncedAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly isDeleted: FieldRef<"FeishuPairingRecord", 'Boolean'>
+    readonly createdAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly updatedAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+    readonly deletedAt: FieldRef<"FeishuPairingRecord", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FeishuPairingRecord findUnique
+   */
+  export type FeishuPairingRecordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FeishuPairingRecord to fetch.
+     */
+    where: FeishuPairingRecordWhereUniqueInput
+  }
+
+  /**
+   * FeishuPairingRecord findUniqueOrThrow
+   */
+  export type FeishuPairingRecordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FeishuPairingRecord to fetch.
+     */
+    where: FeishuPairingRecordWhereUniqueInput
+  }
+
+  /**
+   * FeishuPairingRecord findFirst
+   */
+  export type FeishuPairingRecordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FeishuPairingRecord to fetch.
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FeishuPairingRecords to fetch.
+     */
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FeishuPairingRecords.
+     */
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FeishuPairingRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FeishuPairingRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FeishuPairingRecords.
+     */
+    distinct?: FeishuPairingRecordScalarFieldEnum | FeishuPairingRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FeishuPairingRecord findFirstOrThrow
+   */
+  export type FeishuPairingRecordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FeishuPairingRecord to fetch.
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FeishuPairingRecords to fetch.
+     */
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FeishuPairingRecords.
+     */
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FeishuPairingRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FeishuPairingRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FeishuPairingRecords.
+     */
+    distinct?: FeishuPairingRecordScalarFieldEnum | FeishuPairingRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FeishuPairingRecord findMany
+   */
+  export type FeishuPairingRecordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FeishuPairingRecords to fetch.
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FeishuPairingRecords to fetch.
+     */
+    orderBy?: FeishuPairingRecordOrderByWithRelationInput | FeishuPairingRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FeishuPairingRecords.
+     */
+    cursor?: FeishuPairingRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FeishuPairingRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FeishuPairingRecords.
+     */
+    skip?: number
+    distinct?: FeishuPairingRecordScalarFieldEnum | FeishuPairingRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FeishuPairingRecord create
+   */
+  export type FeishuPairingRecordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to create a FeishuPairingRecord.
+     */
+    data: XOR<FeishuPairingRecordCreateInput, FeishuPairingRecordUncheckedCreateInput>
+  }
+
+  /**
+   * FeishuPairingRecord createMany
+   */
+  export type FeishuPairingRecordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FeishuPairingRecords.
+     */
+    data: FeishuPairingRecordCreateManyInput | FeishuPairingRecordCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FeishuPairingRecord createManyAndReturn
+   */
+  export type FeishuPairingRecordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * The data used to create many FeishuPairingRecords.
+     */
+    data: FeishuPairingRecordCreateManyInput | FeishuPairingRecordCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FeishuPairingRecord update
+   */
+  export type FeishuPairingRecordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to update a FeishuPairingRecord.
+     */
+    data: XOR<FeishuPairingRecordUpdateInput, FeishuPairingRecordUncheckedUpdateInput>
+    /**
+     * Choose, which FeishuPairingRecord to update.
+     */
+    where: FeishuPairingRecordWhereUniqueInput
+  }
+
+  /**
+   * FeishuPairingRecord updateMany
+   */
+  export type FeishuPairingRecordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FeishuPairingRecords.
+     */
+    data: XOR<FeishuPairingRecordUpdateManyMutationInput, FeishuPairingRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which FeishuPairingRecords to update
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * Limit how many FeishuPairingRecords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * FeishuPairingRecord updateManyAndReturn
+   */
+  export type FeishuPairingRecordUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * The data used to update FeishuPairingRecords.
+     */
+    data: XOR<FeishuPairingRecordUpdateManyMutationInput, FeishuPairingRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which FeishuPairingRecords to update
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * Limit how many FeishuPairingRecords to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FeishuPairingRecord upsert
+   */
+  export type FeishuPairingRecordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * The filter to search for the FeishuPairingRecord to update in case it exists.
+     */
+    where: FeishuPairingRecordWhereUniqueInput
+    /**
+     * In case the FeishuPairingRecord found by the `where` argument doesn't exist, create a new FeishuPairingRecord with this data.
+     */
+    create: XOR<FeishuPairingRecordCreateInput, FeishuPairingRecordUncheckedCreateInput>
+    /**
+     * In case the FeishuPairingRecord was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FeishuPairingRecordUpdateInput, FeishuPairingRecordUncheckedUpdateInput>
+  }
+
+  /**
+   * FeishuPairingRecord delete
+   */
+  export type FeishuPairingRecordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
+    /**
+     * Filter which FeishuPairingRecord to delete.
+     */
+    where: FeishuPairingRecordWhereUniqueInput
+  }
+
+  /**
+   * FeishuPairingRecord deleteMany
+   */
+  export type FeishuPairingRecordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FeishuPairingRecords to delete
+     */
+    where?: FeishuPairingRecordWhereInput
+    /**
+     * Limit how many FeishuPairingRecords to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * FeishuPairingRecord without action
+   */
+  export type FeishuPairingRecordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FeishuPairingRecord
+     */
+    select?: FeishuPairingRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FeishuPairingRecord
+     */
+    omit?: FeishuPairingRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FeishuPairingRecordInclude<ExtArgs> | null
   }
 
 
@@ -52321,6 +53886,36 @@ export namespace Prisma {
   export type BotChannelScalarFieldEnum = (typeof BotChannelScalarFieldEnum)[keyof typeof BotChannelScalarFieldEnum]
 
 
+  export const FeishuPairingRecordScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    botChannelId: 'botChannelId',
+    code: 'code',
+    feishuOpenId: 'feishuOpenId',
+    status: 'status',
+    userName: 'userName',
+    userNameEn: 'userNameEn',
+    userAvatarUrl: 'userAvatarUrl',
+    userEmail: 'userEmail',
+    userMobile: 'userMobile',
+    userDepartmentId: 'userDepartmentId',
+    userDepartmentName: 'userDepartmentName',
+    userInfoRaw: 'userInfoRaw',
+    expiresAt: 'expiresAt',
+    approvedAt: 'approvedAt',
+    approvedById: 'approvedById',
+    rejectedAt: 'rejectedAt',
+    rejectedById: 'rejectedById',
+    lastSyncedAt: 'lastSyncedAt',
+    isDeleted: 'isDeleted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
+  };
+
+  export type FeishuPairingRecordScalarFieldEnum = (typeof FeishuPairingRecordScalarFieldEnum)[keyof typeof FeishuPairingRecordScalarFieldEnum]
+
+
   export const CapabilityTagScalarFieldEnum: {
     id: 'id',
     tagId: 'tagId',
@@ -52810,6 +54405,20 @@ export namespace Prisma {
    * Reference to a field of type 'ChannelConnectionStatus[]'
    */
   export type ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelConnectionStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PairingStatus'
+   */
+  export type EnumPairingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PairingStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'PairingStatus[]'
+   */
+  export type ListEnumPairingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PairingStatus[]'>
     
   /**
    * Deep Input Types
@@ -53893,6 +55502,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingListRelationFilter
     routingConfig?: XOR<BotRoutingConfigNullableScalarRelationFilter, BotRoutingConfigWhereInput> | null
     models?: BotModelListRelationFilter
+    feishuPairingRecords?: FeishuPairingRecordListRelationFilter
   }
 
   export type BotOrderByWithRelationInput = {
@@ -53929,6 +55539,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingOrderByRelationAggregateInput
     routingConfig?: BotRoutingConfigOrderByWithRelationInput
     models?: BotModelOrderByRelationAggregateInput
+    feishuPairingRecords?: FeishuPairingRecordOrderByRelationAggregateInput
   }
 
   export type BotWhereUniqueInput = Prisma.AtLeast<{
@@ -53968,6 +55579,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingListRelationFilter
     routingConfig?: XOR<BotRoutingConfigNullableScalarRelationFilter, BotRoutingConfigWhereInput> | null
     models?: BotModelListRelationFilter
+    feishuPairingRecords?: FeishuPairingRecordListRelationFilter
   }, "id">
 
   export type BotOrderByWithAggregationInput = {
@@ -55909,6 +57521,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"BotChannel"> | Date | string
     deletedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
     bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    feishuPairingRecords?: FeishuPairingRecordListRelationFilter
   }
 
   export type BotChannelOrderByWithRelationInput = {
@@ -55927,6 +57540,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
     bot?: BotOrderByWithRelationInput
+    feishuPairingRecords?: FeishuPairingRecordOrderByRelationAggregateInput
   }
 
   export type BotChannelWhereUniqueInput = Prisma.AtLeast<{
@@ -55949,6 +57563,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"BotChannel"> | Date | string
     deletedAt?: DateTimeNullableFilter<"BotChannel"> | Date | string | null
     bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    feishuPairingRecords?: FeishuPairingRecordListRelationFilter
   }, "id" | "botId_channelType_name">
 
   export type BotChannelOrderByWithAggregationInput = {
@@ -55989,6 +57604,161 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"BotChannel"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotChannel"> | Date | string
     deletedAt?: DateTimeNullableWithAggregatesFilter<"BotChannel"> | Date | string | null
+  }
+
+  export type FeishuPairingRecordWhereInput = {
+    AND?: FeishuPairingRecordWhereInput | FeishuPairingRecordWhereInput[]
+    OR?: FeishuPairingRecordWhereInput[]
+    NOT?: FeishuPairingRecordWhereInput | FeishuPairingRecordWhereInput[]
+    id?: UuidFilter<"FeishuPairingRecord"> | string
+    botId?: UuidFilter<"FeishuPairingRecord"> | string
+    botChannelId?: UuidFilter<"FeishuPairingRecord"> | string
+    code?: StringFilter<"FeishuPairingRecord"> | string
+    feishuOpenId?: StringFilter<"FeishuPairingRecord"> | string
+    status?: EnumPairingStatusFilter<"FeishuPairingRecord"> | $Enums.PairingStatus
+    userName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userNameEn?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userAvatarUrl?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userEmail?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userMobile?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentId?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userInfoRaw?: JsonNullableFilter<"FeishuPairingRecord">
+    expiresAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    approvedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    approvedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    rejectedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    rejectedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    lastSyncedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    isDeleted?: BoolFilter<"FeishuPairingRecord"> | boolean
+    createdAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    updatedAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    botChannel?: XOR<BotChannelScalarRelationFilter, BotChannelWhereInput>
+  }
+
+  export type FeishuPairingRecordOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    botChannelId?: SortOrder
+    code?: SortOrder
+    feishuOpenId?: SortOrder
+    status?: SortOrder
+    userName?: SortOrderInput | SortOrder
+    userNameEn?: SortOrderInput | SortOrder
+    userAvatarUrl?: SortOrderInput | SortOrder
+    userEmail?: SortOrderInput | SortOrder
+    userMobile?: SortOrderInput | SortOrder
+    userDepartmentId?: SortOrderInput | SortOrder
+    userDepartmentName?: SortOrderInput | SortOrder
+    userInfoRaw?: SortOrderInput | SortOrder
+    expiresAt?: SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    approvedById?: SortOrderInput | SortOrder
+    rejectedAt?: SortOrderInput | SortOrder
+    rejectedById?: SortOrderInput | SortOrder
+    lastSyncedAt?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    bot?: BotOrderByWithRelationInput
+    botChannel?: BotChannelOrderByWithRelationInput
+  }
+
+  export type FeishuPairingRecordWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId_code?: FeishuPairingRecordBotIdCodeCompoundUniqueInput
+    botId_feishuOpenId?: FeishuPairingRecordBotIdFeishuOpenIdCompoundUniqueInput
+    AND?: FeishuPairingRecordWhereInput | FeishuPairingRecordWhereInput[]
+    OR?: FeishuPairingRecordWhereInput[]
+    NOT?: FeishuPairingRecordWhereInput | FeishuPairingRecordWhereInput[]
+    botId?: UuidFilter<"FeishuPairingRecord"> | string
+    botChannelId?: UuidFilter<"FeishuPairingRecord"> | string
+    code?: StringFilter<"FeishuPairingRecord"> | string
+    feishuOpenId?: StringFilter<"FeishuPairingRecord"> | string
+    status?: EnumPairingStatusFilter<"FeishuPairingRecord"> | $Enums.PairingStatus
+    userName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userNameEn?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userAvatarUrl?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userEmail?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userMobile?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentId?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userInfoRaw?: JsonNullableFilter<"FeishuPairingRecord">
+    expiresAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    approvedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    approvedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    rejectedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    rejectedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    lastSyncedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    isDeleted?: BoolFilter<"FeishuPairingRecord"> | boolean
+    createdAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    updatedAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    bot?: XOR<BotScalarRelationFilter, BotWhereInput>
+    botChannel?: XOR<BotChannelScalarRelationFilter, BotChannelWhereInput>
+  }, "id" | "botId_code" | "botId_feishuOpenId">
+
+  export type FeishuPairingRecordOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    botChannelId?: SortOrder
+    code?: SortOrder
+    feishuOpenId?: SortOrder
+    status?: SortOrder
+    userName?: SortOrderInput | SortOrder
+    userNameEn?: SortOrderInput | SortOrder
+    userAvatarUrl?: SortOrderInput | SortOrder
+    userEmail?: SortOrderInput | SortOrder
+    userMobile?: SortOrderInput | SortOrder
+    userDepartmentId?: SortOrderInput | SortOrder
+    userDepartmentName?: SortOrderInput | SortOrder
+    userInfoRaw?: SortOrderInput | SortOrder
+    expiresAt?: SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    approvedById?: SortOrderInput | SortOrder
+    rejectedAt?: SortOrderInput | SortOrder
+    rejectedById?: SortOrderInput | SortOrder
+    lastSyncedAt?: SortOrderInput | SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    _count?: FeishuPairingRecordCountOrderByAggregateInput
+    _max?: FeishuPairingRecordMaxOrderByAggregateInput
+    _min?: FeishuPairingRecordMinOrderByAggregateInput
+  }
+
+  export type FeishuPairingRecordScalarWhereWithAggregatesInput = {
+    AND?: FeishuPairingRecordScalarWhereWithAggregatesInput | FeishuPairingRecordScalarWhereWithAggregatesInput[]
+    OR?: FeishuPairingRecordScalarWhereWithAggregatesInput[]
+    NOT?: FeishuPairingRecordScalarWhereWithAggregatesInput | FeishuPairingRecordScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"FeishuPairingRecord"> | string
+    botId?: UuidWithAggregatesFilter<"FeishuPairingRecord"> | string
+    botChannelId?: UuidWithAggregatesFilter<"FeishuPairingRecord"> | string
+    code?: StringWithAggregatesFilter<"FeishuPairingRecord"> | string
+    feishuOpenId?: StringWithAggregatesFilter<"FeishuPairingRecord"> | string
+    status?: EnumPairingStatusWithAggregatesFilter<"FeishuPairingRecord"> | $Enums.PairingStatus
+    userName?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userNameEn?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userAvatarUrl?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userEmail?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userMobile?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentId?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentName?: StringNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    userInfoRaw?: JsonNullableWithAggregatesFilter<"FeishuPairingRecord">
+    expiresAt?: DateTimeWithAggregatesFilter<"FeishuPairingRecord"> | Date | string
+    approvedAt?: DateTimeNullableWithAggregatesFilter<"FeishuPairingRecord"> | Date | string | null
+    approvedById?: UuidNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    rejectedAt?: DateTimeNullableWithAggregatesFilter<"FeishuPairingRecord"> | Date | string | null
+    rejectedById?: UuidNullableWithAggregatesFilter<"FeishuPairingRecord"> | string | null
+    lastSyncedAt?: DateTimeNullableWithAggregatesFilter<"FeishuPairingRecord"> | Date | string | null
+    isDeleted?: BoolWithAggregatesFilter<"FeishuPairingRecord"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"FeishuPairingRecord"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"FeishuPairingRecord"> | Date | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"FeishuPairingRecord"> | Date | string | null
   }
 
   export type CapabilityTagWhereInput = {
@@ -57943,6 +59713,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateInput = {
@@ -57976,6 +59747,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotUpdateInput = {
@@ -58009,6 +59781,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateInput = {
@@ -58042,6 +59815,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateManyInput = {
@@ -60279,6 +62053,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     bot: BotCreateNestedOneWithoutChannelsInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotChannelInput
   }
 
   export type BotChannelUncheckedCreateInput = {
@@ -60296,6 +62071,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotChannelInput
   }
 
   export type BotChannelUpdateInput = {
@@ -60313,6 +62089,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bot?: BotUpdateOneRequiredWithoutChannelsNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotChannelNestedInput
   }
 
   export type BotChannelUncheckedUpdateInput = {
@@ -60330,6 +62107,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotChannelNestedInput
   }
 
   export type BotChannelCreateManyInput = {
@@ -60376,6 +62154,193 @@ export namespace Prisma {
     connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
     lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FeishuPairingRecordCreateInput = {
+    id?: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    bot: BotCreateNestedOneWithoutFeishuPairingRecordsInput
+    botChannel: BotChannelCreateNestedOneWithoutFeishuPairingRecordsInput
+  }
+
+  export type FeishuPairingRecordUncheckedCreateInput = {
+    id?: string
+    botId: string
+    botChannelId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FeishuPairingRecordUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bot?: BotUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput
+    botChannel?: BotChannelUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    botChannelId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FeishuPairingRecordCreateManyInput = {
+    id?: string
+    botId: string
+    botChannelId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FeishuPairingRecordUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    botChannelId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62328,6 +64293,12 @@ export namespace Prisma {
     none?: BotModelWhereInput
   }
 
+  export type FeishuPairingRecordListRelationFilter = {
+    every?: FeishuPairingRecordWhereInput
+    some?: FeishuPairingRecordWhereInput
+    none?: FeishuPairingRecordWhereInput
+  }
+
   export type BotUsageLogOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -62349,6 +64320,10 @@ export namespace Prisma {
   }
 
   export type BotModelOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FeishuPairingRecordOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -63944,6 +65919,117 @@ export namespace Prisma {
     _max?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
   }
 
+  export type EnumPairingStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PairingStatus | EnumPairingStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPairingStatusFilter<$PrismaModel> | $Enums.PairingStatus
+  }
+
+  export type BotChannelScalarRelationFilter = {
+    is?: BotChannelWhereInput
+    isNot?: BotChannelWhereInput
+  }
+
+  export type FeishuPairingRecordBotIdCodeCompoundUniqueInput = {
+    botId: string
+    code: string
+  }
+
+  export type FeishuPairingRecordBotIdFeishuOpenIdCompoundUniqueInput = {
+    botId: string
+    feishuOpenId: string
+  }
+
+  export type FeishuPairingRecordCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    botChannelId?: SortOrder
+    code?: SortOrder
+    feishuOpenId?: SortOrder
+    status?: SortOrder
+    userName?: SortOrder
+    userNameEn?: SortOrder
+    userAvatarUrl?: SortOrder
+    userEmail?: SortOrder
+    userMobile?: SortOrder
+    userDepartmentId?: SortOrder
+    userDepartmentName?: SortOrder
+    userInfoRaw?: SortOrder
+    expiresAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedById?: SortOrder
+    rejectedAt?: SortOrder
+    rejectedById?: SortOrder
+    lastSyncedAt?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type FeishuPairingRecordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    botChannelId?: SortOrder
+    code?: SortOrder
+    feishuOpenId?: SortOrder
+    status?: SortOrder
+    userName?: SortOrder
+    userNameEn?: SortOrder
+    userAvatarUrl?: SortOrder
+    userEmail?: SortOrder
+    userMobile?: SortOrder
+    userDepartmentId?: SortOrder
+    userDepartmentName?: SortOrder
+    expiresAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedById?: SortOrder
+    rejectedAt?: SortOrder
+    rejectedById?: SortOrder
+    lastSyncedAt?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type FeishuPairingRecordMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    botChannelId?: SortOrder
+    code?: SortOrder
+    feishuOpenId?: SortOrder
+    status?: SortOrder
+    userName?: SortOrder
+    userNameEn?: SortOrder
+    userAvatarUrl?: SortOrder
+    userEmail?: SortOrder
+    userMobile?: SortOrder
+    userDepartmentId?: SortOrder
+    userDepartmentName?: SortOrder
+    expiresAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedById?: SortOrder
+    rejectedAt?: SortOrder
+    rejectedById?: SortOrder
+    lastSyncedAt?: SortOrder
+    isDeleted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type EnumPairingStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PairingStatus | EnumPairingStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPairingStatusWithAggregatesFilter<$PrismaModel> | $Enums.PairingStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPairingStatusFilter<$PrismaModel>
+    _max?: NestedEnumPairingStatusFilter<$PrismaModel>
+  }
+
   export type CapabilityTagCountOrderByAggregateInput = {
     id?: SortOrder
     tagId?: SortOrder
@@ -65207,6 +67293,13 @@ export namespace Prisma {
     connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
   }
 
+  export type FeishuPairingRecordCreateNestedManyWithoutBotInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput> | FeishuPairingRecordCreateWithoutBotInput[] | FeishuPairingRecordUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotInput | FeishuPairingRecordCreateOrConnectWithoutBotInput[]
+    createMany?: FeishuPairingRecordCreateManyBotInputEnvelope
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+  }
+
   export type BotUsageLogUncheckedCreateNestedManyWithoutBotInput = {
     create?: XOR<BotUsageLogCreateWithoutBotInput, BotUsageLogUncheckedCreateWithoutBotInput> | BotUsageLogCreateWithoutBotInput[] | BotUsageLogUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotUsageLogCreateOrConnectWithoutBotInput | BotUsageLogCreateOrConnectWithoutBotInput[]
@@ -65259,6 +67352,13 @@ export namespace Prisma {
     connectOrCreate?: BotModelCreateOrConnectWithoutBotInput | BotModelCreateOrConnectWithoutBotInput[]
     createMany?: BotModelCreateManyBotInputEnvelope
     connect?: BotModelWhereUniqueInput | BotModelWhereUniqueInput[]
+  }
+
+  export type FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput> | FeishuPairingRecordCreateWithoutBotInput[] | FeishuPairingRecordUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotInput | FeishuPairingRecordCreateOrConnectWithoutBotInput[]
+    createMany?: FeishuPairingRecordCreateManyBotInputEnvelope
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -65418,6 +67518,20 @@ export namespace Prisma {
     deleteMany?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
   }
 
+  export type FeishuPairingRecordUpdateManyWithoutBotNestedInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput> | FeishuPairingRecordCreateWithoutBotInput[] | FeishuPairingRecordUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotInput | FeishuPairingRecordCreateOrConnectWithoutBotInput[]
+    upsert?: FeishuPairingRecordUpsertWithWhereUniqueWithoutBotInput | FeishuPairingRecordUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: FeishuPairingRecordCreateManyBotInputEnvelope
+    set?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    disconnect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    delete?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    update?: FeishuPairingRecordUpdateWithWhereUniqueWithoutBotInput | FeishuPairingRecordUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: FeishuPairingRecordUpdateManyWithWhereWithoutBotInput | FeishuPairingRecordUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
+  }
+
   export type BotUsageLogUncheckedUpdateManyWithoutBotNestedInput = {
     create?: XOR<BotUsageLogCreateWithoutBotInput, BotUsageLogUncheckedCreateWithoutBotInput> | BotUsageLogCreateWithoutBotInput[] | BotUsageLogUncheckedCreateWithoutBotInput[]
     connectOrCreate?: BotUsageLogCreateOrConnectWithoutBotInput | BotUsageLogCreateOrConnectWithoutBotInput[]
@@ -65520,6 +67634,20 @@ export namespace Prisma {
     update?: BotModelUpdateWithWhereUniqueWithoutBotInput | BotModelUpdateWithWhereUniqueWithoutBotInput[]
     updateMany?: BotModelUpdateManyWithWhereWithoutBotInput | BotModelUpdateManyWithWhereWithoutBotInput[]
     deleteMany?: BotModelScalarWhereInput | BotModelScalarWhereInput[]
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput> | FeishuPairingRecordCreateWithoutBotInput[] | FeishuPairingRecordUncheckedCreateWithoutBotInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotInput | FeishuPairingRecordCreateOrConnectWithoutBotInput[]
+    upsert?: FeishuPairingRecordUpsertWithWhereUniqueWithoutBotInput | FeishuPairingRecordUpsertWithWhereUniqueWithoutBotInput[]
+    createMany?: FeishuPairingRecordCreateManyBotInputEnvelope
+    set?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    disconnect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    delete?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    update?: FeishuPairingRecordUpdateWithWhereUniqueWithoutBotInput | FeishuPairingRecordUpdateWithWhereUniqueWithoutBotInput[]
+    updateMany?: FeishuPairingRecordUpdateManyWithWhereWithoutBotInput | FeishuPairingRecordUpdateManyWithWhereWithoutBotInput[]
+    deleteMany?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
   }
 
   export type UserInfoCreateNestedOneWithoutProviderKeysInput = {
@@ -66394,6 +68522,20 @@ export namespace Prisma {
     connect?: BotWhereUniqueInput
   }
 
+  export type FeishuPairingRecordCreateNestedManyWithoutBotChannelInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput> | FeishuPairingRecordCreateWithoutBotChannelInput[] | FeishuPairingRecordUncheckedCreateWithoutBotChannelInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotChannelInput | FeishuPairingRecordCreateOrConnectWithoutBotChannelInput[]
+    createMany?: FeishuPairingRecordCreateManyBotChannelInputEnvelope
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+  }
+
+  export type FeishuPairingRecordUncheckedCreateNestedManyWithoutBotChannelInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput> | FeishuPairingRecordCreateWithoutBotChannelInput[] | FeishuPairingRecordUncheckedCreateWithoutBotChannelInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotChannelInput | FeishuPairingRecordCreateOrConnectWithoutBotChannelInput[]
+    createMany?: FeishuPairingRecordCreateManyBotChannelInputEnvelope
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+  }
+
   export type EnumChannelConnectionStatusFieldUpdateOperationsInput = {
     set?: $Enums.ChannelConnectionStatus
   }
@@ -66404,6 +68546,66 @@ export namespace Prisma {
     upsert?: BotUpsertWithoutChannelsInput
     connect?: BotWhereUniqueInput
     update?: XOR<XOR<BotUpdateToOneWithWhereWithoutChannelsInput, BotUpdateWithoutChannelsInput>, BotUncheckedUpdateWithoutChannelsInput>
+  }
+
+  export type FeishuPairingRecordUpdateManyWithoutBotChannelNestedInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput> | FeishuPairingRecordCreateWithoutBotChannelInput[] | FeishuPairingRecordUncheckedCreateWithoutBotChannelInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotChannelInput | FeishuPairingRecordCreateOrConnectWithoutBotChannelInput[]
+    upsert?: FeishuPairingRecordUpsertWithWhereUniqueWithoutBotChannelInput | FeishuPairingRecordUpsertWithWhereUniqueWithoutBotChannelInput[]
+    createMany?: FeishuPairingRecordCreateManyBotChannelInputEnvelope
+    set?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    disconnect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    delete?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    update?: FeishuPairingRecordUpdateWithWhereUniqueWithoutBotChannelInput | FeishuPairingRecordUpdateWithWhereUniqueWithoutBotChannelInput[]
+    updateMany?: FeishuPairingRecordUpdateManyWithWhereWithoutBotChannelInput | FeishuPairingRecordUpdateManyWithWhereWithoutBotChannelInput[]
+    deleteMany?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateManyWithoutBotChannelNestedInput = {
+    create?: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput> | FeishuPairingRecordCreateWithoutBotChannelInput[] | FeishuPairingRecordUncheckedCreateWithoutBotChannelInput[]
+    connectOrCreate?: FeishuPairingRecordCreateOrConnectWithoutBotChannelInput | FeishuPairingRecordCreateOrConnectWithoutBotChannelInput[]
+    upsert?: FeishuPairingRecordUpsertWithWhereUniqueWithoutBotChannelInput | FeishuPairingRecordUpsertWithWhereUniqueWithoutBotChannelInput[]
+    createMany?: FeishuPairingRecordCreateManyBotChannelInputEnvelope
+    set?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    disconnect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    delete?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    connect?: FeishuPairingRecordWhereUniqueInput | FeishuPairingRecordWhereUniqueInput[]
+    update?: FeishuPairingRecordUpdateWithWhereUniqueWithoutBotChannelInput | FeishuPairingRecordUpdateWithWhereUniqueWithoutBotChannelInput[]
+    updateMany?: FeishuPairingRecordUpdateManyWithWhereWithoutBotChannelInput | FeishuPairingRecordUpdateManyWithWhereWithoutBotChannelInput[]
+    deleteMany?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
+  }
+
+  export type BotCreateNestedOneWithoutFeishuPairingRecordsInput = {
+    create?: XOR<BotCreateWithoutFeishuPairingRecordsInput, BotUncheckedCreateWithoutFeishuPairingRecordsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutFeishuPairingRecordsInput
+    connect?: BotWhereUniqueInput
+  }
+
+  export type BotChannelCreateNestedOneWithoutFeishuPairingRecordsInput = {
+    create?: XOR<BotChannelCreateWithoutFeishuPairingRecordsInput, BotChannelUncheckedCreateWithoutFeishuPairingRecordsInput>
+    connectOrCreate?: BotChannelCreateOrConnectWithoutFeishuPairingRecordsInput
+    connect?: BotChannelWhereUniqueInput
+  }
+
+  export type EnumPairingStatusFieldUpdateOperationsInput = {
+    set?: $Enums.PairingStatus
+  }
+
+  export type BotUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput = {
+    create?: XOR<BotCreateWithoutFeishuPairingRecordsInput, BotUncheckedCreateWithoutFeishuPairingRecordsInput>
+    connectOrCreate?: BotCreateOrConnectWithoutFeishuPairingRecordsInput
+    upsert?: BotUpsertWithoutFeishuPairingRecordsInput
+    connect?: BotWhereUniqueInput
+    update?: XOR<XOR<BotUpdateToOneWithWhereWithoutFeishuPairingRecordsInput, BotUpdateWithoutFeishuPairingRecordsInput>, BotUncheckedUpdateWithoutFeishuPairingRecordsInput>
+  }
+
+  export type BotChannelUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput = {
+    create?: XOR<BotChannelCreateWithoutFeishuPairingRecordsInput, BotChannelUncheckedCreateWithoutFeishuPairingRecordsInput>
+    connectOrCreate?: BotChannelCreateOrConnectWithoutFeishuPairingRecordsInput
+    upsert?: BotChannelUpsertWithoutFeishuPairingRecordsInput
+    connect?: BotChannelWhereUniqueInput
+    update?: XOR<XOR<BotChannelUpdateToOneWithWhereWithoutFeishuPairingRecordsInput, BotChannelUpdateWithoutFeishuPairingRecordsInput>, BotChannelUncheckedUpdateWithoutFeishuPairingRecordsInput>
   }
 
   export type ModelCapabilityTagCreateNestedManyWithoutCapabilityTagInput = {
@@ -67237,6 +69439,23 @@ export namespace Prisma {
     _max?: NestedEnumChannelConnectionStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumPairingStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PairingStatus | EnumPairingStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPairingStatusFilter<$PrismaModel> | $Enums.PairingStatus
+  }
+
+  export type NestedEnumPairingStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PairingStatus | EnumPairingStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PairingStatus[] | ListEnumPairingStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPairingStatusWithAggregatesFilter<$PrismaModel> | $Enums.PairingStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPairingStatusFilter<$PrismaModel>
+    _max?: NestedEnumPairingStatusFilter<$PrismaModel>
+  }
+
   export type FileSourceCreateWithoutUserAvatarsInput = {
     id?: string
     isUploaded?: boolean
@@ -67537,6 +69756,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutCreatedByInput = {
@@ -67569,6 +69789,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutCreatedByInput = {
@@ -68319,6 +70540,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPersonaTemplateInput = {
@@ -68351,6 +70573,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPersonaTemplateInput = {
@@ -69395,6 +71618,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutAvatarFileInput = {
@@ -69427,6 +71651,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutAvatarFileInput = {
@@ -69860,6 +72085,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotChannelInput
   }
 
   export type BotChannelUncheckedCreateWithoutBotInput = {
@@ -69876,6 +72102,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotChannelInput
   }
 
   export type BotChannelCreateOrConnectWithoutBotInput = {
@@ -69990,6 +72217,68 @@ export namespace Prisma {
 
   export type BotModelCreateManyBotInputEnvelope = {
     data: BotModelCreateManyBotInput | BotModelCreateManyBotInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type FeishuPairingRecordCreateWithoutBotInput = {
+    id?: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    botChannel: BotChannelCreateNestedOneWithoutFeishuPairingRecordsInput
+  }
+
+  export type FeishuPairingRecordUncheckedCreateWithoutBotInput = {
+    id?: string
+    botChannelId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FeishuPairingRecordCreateOrConnectWithoutBotInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    create: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput>
+  }
+
+  export type FeishuPairingRecordCreateManyBotInputEnvelope = {
+    data: FeishuPairingRecordCreateManyBotInput | FeishuPairingRecordCreateManyBotInput[]
     skipDuplicates?: boolean
   }
 
@@ -70479,6 +72768,52 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"BotModel"> | Date | string
   }
 
+  export type FeishuPairingRecordUpsertWithWhereUniqueWithoutBotInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    update: XOR<FeishuPairingRecordUpdateWithoutBotInput, FeishuPairingRecordUncheckedUpdateWithoutBotInput>
+    create: XOR<FeishuPairingRecordCreateWithoutBotInput, FeishuPairingRecordUncheckedCreateWithoutBotInput>
+  }
+
+  export type FeishuPairingRecordUpdateWithWhereUniqueWithoutBotInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    data: XOR<FeishuPairingRecordUpdateWithoutBotInput, FeishuPairingRecordUncheckedUpdateWithoutBotInput>
+  }
+
+  export type FeishuPairingRecordUpdateManyWithWhereWithoutBotInput = {
+    where: FeishuPairingRecordScalarWhereInput
+    data: XOR<FeishuPairingRecordUpdateManyMutationInput, FeishuPairingRecordUncheckedUpdateManyWithoutBotInput>
+  }
+
+  export type FeishuPairingRecordScalarWhereInput = {
+    AND?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
+    OR?: FeishuPairingRecordScalarWhereInput[]
+    NOT?: FeishuPairingRecordScalarWhereInput | FeishuPairingRecordScalarWhereInput[]
+    id?: UuidFilter<"FeishuPairingRecord"> | string
+    botId?: UuidFilter<"FeishuPairingRecord"> | string
+    botChannelId?: UuidFilter<"FeishuPairingRecord"> | string
+    code?: StringFilter<"FeishuPairingRecord"> | string
+    feishuOpenId?: StringFilter<"FeishuPairingRecord"> | string
+    status?: EnumPairingStatusFilter<"FeishuPairingRecord"> | $Enums.PairingStatus
+    userName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userNameEn?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userAvatarUrl?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userEmail?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userMobile?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentId?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userDepartmentName?: StringNullableFilter<"FeishuPairingRecord"> | string | null
+    userInfoRaw?: JsonNullableFilter<"FeishuPairingRecord">
+    expiresAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    approvedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    approvedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    rejectedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    rejectedById?: UuidNullableFilter<"FeishuPairingRecord"> | string | null
+    lastSyncedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+    isDeleted?: BoolFilter<"FeishuPairingRecord"> | boolean
+    createdAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    updatedAt?: DateTimeFilter<"FeishuPairingRecord"> | Date | string
+    deletedAt?: DateTimeNullableFilter<"FeishuPairingRecord"> | Date | string | null
+  }
+
   export type UserInfoCreateWithoutProviderKeysInput = {
     id?: string
     nickname?: string
@@ -70875,6 +73210,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutModelsInput = {
@@ -70907,6 +73243,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutModelsInput = {
@@ -70955,6 +73292,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutModelsInput = {
@@ -70987,6 +73325,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyCreateWithoutModelAvailabilityInput = {
@@ -71555,6 +73894,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutUsageLogsInput = {
@@ -71587,6 +73927,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutUsageLogsInput = {
@@ -71676,6 +74017,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutUsageLogsInput = {
@@ -71708,6 +74050,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutUsageLogsInput = {
@@ -71787,6 +74130,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutProxyTokenInput = {
@@ -71819,6 +74163,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutProxyTokenInput = {
@@ -71908,6 +74253,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutProxyTokenInput = {
@@ -71940,6 +74286,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ProviderKeyUpsertWithoutProxyTokensInput = {
@@ -72767,6 +75114,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutPluginsInput = {
@@ -72799,6 +75147,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutPluginsInput = {
@@ -72898,6 +75247,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPluginsInput = {
@@ -72930,6 +75280,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type PluginUpsertWithoutInstallationsInput = {
@@ -73266,6 +75617,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutSkillsInput = {
@@ -73298,6 +75650,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutSkillsInput = {
@@ -73411,6 +75764,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutSkillsInput = {
@@ -73443,6 +75797,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type SkillUpsertWithoutInstallationsInput = {
@@ -73765,6 +76120,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutModelRoutingsInput = {
@@ -73797,6 +76153,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutModelRoutingsInput = {
@@ -73845,6 +76202,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutModelRoutingsInput = {
@@ -73877,6 +76235,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotCreateWithoutChannelsInput = {
@@ -73909,6 +76268,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutChannelsInput = {
@@ -73941,11 +76301,74 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutChannelsInput = {
     where: BotWhereUniqueInput
     create: XOR<BotCreateWithoutChannelsInput, BotUncheckedCreateWithoutChannelsInput>
+  }
+
+  export type FeishuPairingRecordCreateWithoutBotChannelInput = {
+    id?: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    bot: BotCreateNestedOneWithoutFeishuPairingRecordsInput
+  }
+
+  export type FeishuPairingRecordUncheckedCreateWithoutBotChannelInput = {
+    id?: string
+    botId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FeishuPairingRecordCreateOrConnectWithoutBotChannelInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    create: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput>
+  }
+
+  export type FeishuPairingRecordCreateManyBotChannelInputEnvelope = {
+    data: FeishuPairingRecordCreateManyBotChannelInput | FeishuPairingRecordCreateManyBotChannelInput[]
+    skipDuplicates?: boolean
   }
 
   export type BotUpsertWithoutChannelsInput = {
@@ -73989,6 +76412,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutChannelsInput = {
@@ -74021,6 +76445,255 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
+  }
+
+  export type FeishuPairingRecordUpsertWithWhereUniqueWithoutBotChannelInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    update: XOR<FeishuPairingRecordUpdateWithoutBotChannelInput, FeishuPairingRecordUncheckedUpdateWithoutBotChannelInput>
+    create: XOR<FeishuPairingRecordCreateWithoutBotChannelInput, FeishuPairingRecordUncheckedCreateWithoutBotChannelInput>
+  }
+
+  export type FeishuPairingRecordUpdateWithWhereUniqueWithoutBotChannelInput = {
+    where: FeishuPairingRecordWhereUniqueInput
+    data: XOR<FeishuPairingRecordUpdateWithoutBotChannelInput, FeishuPairingRecordUncheckedUpdateWithoutBotChannelInput>
+  }
+
+  export type FeishuPairingRecordUpdateManyWithWhereWithoutBotChannelInput = {
+    where: FeishuPairingRecordScalarWhereInput
+    data: XOR<FeishuPairingRecordUpdateManyMutationInput, FeishuPairingRecordUncheckedUpdateManyWithoutBotChannelInput>
+  }
+
+  export type BotCreateWithoutFeishuPairingRecordsInput = {
+    id?: string
+    name: string
+    hostname: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    emoji?: string | null
+    soulMarkdown?: string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    createdBy: UserInfoCreateNestedOneWithoutBotsInput
+    personaTemplate?: PersonaTemplateCreateNestedOneWithoutBotsInput
+    avatarFile?: FileSourceCreateNestedOneWithoutBotAvatarsInput
+    usageLogs?: BotUsageLogCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenCreateNestedOneWithoutBotInput
+    plugins?: BotPluginCreateNestedManyWithoutBotInput
+    skills?: BotSkillCreateNestedManyWithoutBotInput
+    channels?: BotChannelCreateNestedManyWithoutBotInput
+    modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
+    routingConfig?: BotRoutingConfigCreateNestedOneWithoutBotInput
+    models?: BotModelCreateNestedManyWithoutBotInput
+  }
+
+  export type BotUncheckedCreateWithoutFeishuPairingRecordsInput = {
+    id?: string
+    name: string
+    hostname: string
+    containerId?: string | null
+    port?: number | null
+    gatewayToken?: string | null
+    proxyTokenHash?: string | null
+    tags?: BotCreatetagsInput | string[]
+    status?: $Enums.BotStatus
+    createdById: string
+    personaTemplateId?: string | null
+    emoji?: string | null
+    avatarFileId?: string | null
+    soulMarkdown?: string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: $Enums.HealthStatus
+    lastHealthCheck?: Date | string | null
+    botType?: $Enums.BotType
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    usageLogs?: BotUsageLogUncheckedCreateNestedManyWithoutBotInput
+    proxyToken?: ProxyTokenUncheckedCreateNestedOneWithoutBotInput
+    plugins?: BotPluginUncheckedCreateNestedManyWithoutBotInput
+    skills?: BotSkillUncheckedCreateNestedManyWithoutBotInput
+    channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
+    modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
+    routingConfig?: BotRoutingConfigUncheckedCreateNestedOneWithoutBotInput
+    models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+  }
+
+  export type BotCreateOrConnectWithoutFeishuPairingRecordsInput = {
+    where: BotWhereUniqueInput
+    create: XOR<BotCreateWithoutFeishuPairingRecordsInput, BotUncheckedCreateWithoutFeishuPairingRecordsInput>
+  }
+
+  export type BotChannelCreateWithoutFeishuPairingRecordsInput = {
+    id?: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    bot: BotCreateNestedOneWithoutChannelsInput
+  }
+
+  export type BotChannelUncheckedCreateWithoutFeishuPairingRecordsInput = {
+    id?: string
+    botId: string
+    channelType: string
+    name: string
+    credentialsEncrypted: Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: boolean
+    connectionStatus?: $Enums.ChannelConnectionStatus
+    lastConnectedAt?: Date | string | null
+    lastError?: string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type BotChannelCreateOrConnectWithoutFeishuPairingRecordsInput = {
+    where: BotChannelWhereUniqueInput
+    create: XOR<BotChannelCreateWithoutFeishuPairingRecordsInput, BotChannelUncheckedCreateWithoutFeishuPairingRecordsInput>
+  }
+
+  export type BotUpsertWithoutFeishuPairingRecordsInput = {
+    update: XOR<BotUpdateWithoutFeishuPairingRecordsInput, BotUncheckedUpdateWithoutFeishuPairingRecordsInput>
+    create: XOR<BotCreateWithoutFeishuPairingRecordsInput, BotUncheckedCreateWithoutFeishuPairingRecordsInput>
+    where?: BotWhereInput
+  }
+
+  export type BotUpdateToOneWithWhereWithoutFeishuPairingRecordsInput = {
+    where?: BotWhereInput
+    data: XOR<BotUpdateWithoutFeishuPairingRecordsInput, BotUncheckedUpdateWithoutFeishuPairingRecordsInput>
+  }
+
+  export type BotUpdateWithoutFeishuPairingRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdBy?: UserInfoUpdateOneRequiredWithoutBotsNestedInput
+    personaTemplate?: PersonaTemplateUpdateOneWithoutBotsNestedInput
+    avatarFile?: FileSourceUpdateOneWithoutBotAvatarsNestedInput
+    usageLogs?: BotUsageLogUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUpdateManyWithoutBotNestedInput
+    modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
+    routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
+    models?: BotModelUpdateManyWithoutBotNestedInput
+  }
+
+  export type BotUncheckedUpdateWithoutFeishuPairingRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    hostname?: StringFieldUpdateOperationsInput | string
+    containerId?: NullableStringFieldUpdateOperationsInput | string | null
+    port?: NullableIntFieldUpdateOperationsInput | number | null
+    gatewayToken?: NullableStringFieldUpdateOperationsInput | string | null
+    proxyTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: BotUpdatetagsInput | string[]
+    status?: EnumBotStatusFieldUpdateOperationsInput | $Enums.BotStatus
+    createdById?: StringFieldUpdateOperationsInput | string
+    personaTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
+    emoji?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    soulMarkdown?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingConfig?: NullableJsonNullValueInput | InputJsonValue
+    healthStatus?: EnumHealthStatusFieldUpdateOperationsInput | $Enums.HealthStatus
+    lastHealthCheck?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    usageLogs?: BotUsageLogUncheckedUpdateManyWithoutBotNestedInput
+    proxyToken?: ProxyTokenUncheckedUpdateOneWithoutBotNestedInput
+    plugins?: BotPluginUncheckedUpdateManyWithoutBotNestedInput
+    skills?: BotSkillUncheckedUpdateManyWithoutBotNestedInput
+    channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
+    modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
+    routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
+    models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+  }
+
+  export type BotChannelUpsertWithoutFeishuPairingRecordsInput = {
+    update: XOR<BotChannelUpdateWithoutFeishuPairingRecordsInput, BotChannelUncheckedUpdateWithoutFeishuPairingRecordsInput>
+    create: XOR<BotChannelCreateWithoutFeishuPairingRecordsInput, BotChannelUncheckedCreateWithoutFeishuPairingRecordsInput>
+    where?: BotChannelWhereInput
+  }
+
+  export type BotChannelUpdateToOneWithWhereWithoutFeishuPairingRecordsInput = {
+    where?: BotChannelWhereInput
+    data: XOR<BotChannelUpdateWithoutFeishuPairingRecordsInput, BotChannelUncheckedUpdateWithoutFeishuPairingRecordsInput>
+  }
+
+  export type BotChannelUpdateWithoutFeishuPairingRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bot?: BotUpdateOneRequiredWithoutChannelsNestedInput
+  }
+
+  export type BotChannelUncheckedUpdateWithoutFeishuPairingRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    channelType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    config?: NullableJsonNullValueInput | InputJsonValue
+    isEnabled?: BoolFieldUpdateOperationsInput | boolean
+    connectionStatus?: EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+    lastConnectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ModelCapabilityTagCreateWithoutCapabilityTagInput = {
@@ -74139,6 +76812,7 @@ export namespace Prisma {
     channels?: BotChannelCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingCreateNestedManyWithoutBotInput
     models?: BotModelCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordCreateNestedManyWithoutBotInput
   }
 
   export type BotUncheckedCreateWithoutRoutingConfigInput = {
@@ -74171,6 +76845,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedCreateNestedManyWithoutBotInput
     modelRoutings?: BotModelRoutingUncheckedCreateNestedManyWithoutBotInput
     models?: BotModelUncheckedCreateNestedManyWithoutBotInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedCreateNestedManyWithoutBotInput
   }
 
   export type BotCreateOrConnectWithoutRoutingConfigInput = {
@@ -74219,6 +76894,7 @@ export namespace Prisma {
     channels?: BotChannelUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutRoutingConfigInput = {
@@ -74251,6 +76927,7 @@ export namespace Prisma {
     channels?: BotChannelUncheckedUpdateManyWithoutBotNestedInput
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type ComplexityRoutingModelMappingCreateWithoutComplexityConfigInput = {
@@ -75006,6 +77683,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutCreatedByInput = {
@@ -75038,6 +77716,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutCreatedByInput = {
@@ -75255,6 +77934,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutPersonaTemplateInput = {
@@ -75287,6 +77967,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutPersonaTemplateInput = {
@@ -75539,6 +78220,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUpdateOneWithoutBotNestedInput
     models?: BotModelUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateWithoutAvatarFileInput = {
@@ -75571,6 +78253,7 @@ export namespace Prisma {
     modelRoutings?: BotModelRoutingUncheckedUpdateManyWithoutBotNestedInput
     routingConfig?: BotRoutingConfigUncheckedUpdateOneWithoutBotNestedInput
     models?: BotModelUncheckedUpdateManyWithoutBotNestedInput
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotNestedInput
   }
 
   export type BotUncheckedUpdateManyWithoutAvatarFileInput = {
@@ -75680,6 +78363,32 @@ export namespace Prisma {
     isEnabled?: boolean
     isPrimary?: boolean
     createdAt?: Date | string
+  }
+
+  export type FeishuPairingRecordCreateManyBotInput = {
+    id?: string
+    botChannelId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
   }
 
   export type BotUsageLogUpdateWithoutBotInput = {
@@ -75840,6 +78549,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordUpdateManyWithoutBotChannelNestedInput
   }
 
   export type BotChannelUncheckedUpdateWithoutBotInput = {
@@ -75856,6 +78566,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    feishuPairingRecords?: FeishuPairingRecordUncheckedUpdateManyWithoutBotChannelNestedInput
   }
 
   export type BotChannelUncheckedUpdateManyWithoutBotInput = {
@@ -75935,6 +78646,84 @@ export namespace Prisma {
     isEnabled?: BoolFieldUpdateOperationsInput | boolean
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FeishuPairingRecordUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    botChannel?: BotChannelUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botChannelId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateManyWithoutBotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botChannelId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type BotUsageLogCreateManyProviderKeyInput = {
@@ -76613,6 +79402,110 @@ export namespace Prisma {
     complexityLevel?: StringFieldUpdateOperationsInput | string
     priority?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FeishuPairingRecordCreateManyBotChannelInput = {
+    id?: string
+    botId: string
+    code: string
+    feishuOpenId: string
+    status?: $Enums.PairingStatus
+    userName?: string | null
+    userNameEn?: string | null
+    userAvatarUrl?: string | null
+    userEmail?: string | null
+    userMobile?: string | null
+    userDepartmentId?: string | null
+    userDepartmentName?: string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt: Date | string
+    approvedAt?: Date | string | null
+    approvedById?: string | null
+    rejectedAt?: Date | string | null
+    rejectedById?: string | null
+    lastSyncedAt?: Date | string | null
+    isDeleted?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
+  export type FeishuPairingRecordUpdateWithoutBotChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bot?: BotUpdateOneRequiredWithoutFeishuPairingRecordsNestedInput
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateWithoutBotChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type FeishuPairingRecordUncheckedUpdateManyWithoutBotChannelInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    feishuOpenId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPairingStatusFieldUpdateOperationsInput | $Enums.PairingStatus
+    userName?: NullableStringFieldUpdateOperationsInput | string | null
+    userNameEn?: NullableStringFieldUpdateOperationsInput | string | null
+    userAvatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    userEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    userMobile?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    userDepartmentName?: NullableStringFieldUpdateOperationsInput | string | null
+    userInfoRaw?: NullableJsonNullValueInput | InputJsonValue
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedById?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedById?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ModelCapabilityTagCreateManyCapabilityTagInput = {

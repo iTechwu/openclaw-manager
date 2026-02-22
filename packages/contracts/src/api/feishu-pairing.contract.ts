@@ -91,6 +91,23 @@ export const feishuPairingContract = c.router(
       },
       summary: '更新飞书配对配置',
     },
+
+    /**
+     * DELETE /bot/:hostname/feishu-pairing/:code - 删除配对记录
+     * 用于清理已处理的配对请求
+     */
+    delete: {
+      method: 'DELETE',
+      path: '/:code',
+      pathParams: z.object({
+        code: z.string(),
+      }),
+      responses: {
+        200: ApiResponseSchema(PairingActionResponseSchema),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '删除飞书配对记录',
+    },
   },
   {
     pathPrefix: '/bot/:hostname/feishu-pairing',

@@ -1271,14 +1271,30 @@ AUTH_EOF
     const stream = await exec.start({ Detach: false });
 
     return new Promise((resolve, reject) => {
-      let output = '';
-      stream.on('data', (chunk: Buffer) => {
-        output += chunk.toString();
-      });
+      const stdoutChunks: Buffer[] = [];
+      const stderrChunks: Buffer[] = [];
+
+      // Docker stream is multiplexed with 8-byte headers
+      // Format: [stream_type(1), 0, 0, 0, size(4)]
+      container.modem.demuxStream(
+        stream,
+        {
+          write: (chunk: Buffer) => stdoutChunks.push(chunk),
+        },
+        {
+          write: (chunk: Buffer) => stderrChunks.push(chunk),
+        },
+      );
+
       stream.on('end', () => {
+        const stdout = Buffer.concat(stdoutChunks).toString('utf8').trim();
+        const stderr = Buffer.concat(stderrChunks).toString('utf8').trim();
+        const output = stderr ? `${stdout}\n${stderr}` : stdout;
+        this.logger.debug(`Exec output for "${command}": ${output}`);
         resolve(output);
       });
       stream.on('error', (error: Error) => {
+        this.logger.error(`Exec error for "${command}": ${error.message}`);
         reject(error);
       });
     });
@@ -1299,6 +1315,34 @@ AUTH_EOF
       const container = this.docker.getContainer(containerName);
       const info = await container.inspect();
       return info.Id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get container info by name
+   *
+   * @param containerName Container name
+   * @returns Container info if found, null otherwise
+   */
+  async getContainerInfo(containerName: string): Promise<ContainerInfo | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      const container = this.docker.getContainer(containerName);
+      const info = await container.inspect();
+
+      return {
+        id: info.Id,
+        state: info.State.Status,
+        running: info.State.Running,
+        exitCode: info.State.ExitCode ?? 0,
+        startedAt: info.State.StartedAt,
+        finishedAt: info.State.FinishedAt ?? '',
+      };
     } catch {
       return null;
     }
