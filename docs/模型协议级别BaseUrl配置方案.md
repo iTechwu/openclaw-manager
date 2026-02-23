@@ -19,7 +19,26 @@
 | Phase 4 | 更新 ModelProtocolConfigDialog | ✅ 已完成 | `apps/web/.../model-protocol-config-dialog.tsx` |
 | Phase 4 | 更新 ProviderDetailPanel | ✅ 已完成 | `apps/web/.../provider-detail-panel.tsx` |
 | Phase 5 | 生成 Prisma Client | ✅ 已完成 | - |
-| Phase 5 | 构建验证 | ✅ 已完成 | contracts + api 构建成功 |
+| Phase 5 | 构建验证 | ✅ 已完成 | contracts + api + web 构建成功 |
+| Phase 5 | 修复循环引用 | ✅ 已完成 | 将导入移到文件顶部 |
+| Phase 5 | UI 优化 | ✅ 已完成 | 自动预填充 + 必填验证 |
+
+---
+
+## UI 优化功能
+
+### 自动预填充
+
+当 ProviderKey 已配置全局 `baseUrl` 时：
+1. **加载时**：自动将全局 baseUrl 预填充到所有已启用协议的输入框
+2. **勾选协议时**：自动预填充全局 baseUrl 到新勾选的协议
+
+### 验证与状态指示
+
+1. **默认状态**（使用全局 baseUrl）：显示"默认"标签
+2. **自定义状态**（有自定义 URL）：显示绿色 Globe 图标
+3. **缺失状态**（无任何 baseUrl）：输入框边框红色 + 红色警告图标
+4. **提交验证**：选中的协议必须配置 baseUrl 才能提交
 
 ---
 
