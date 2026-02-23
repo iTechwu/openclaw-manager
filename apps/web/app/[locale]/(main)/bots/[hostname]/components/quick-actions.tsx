@@ -6,20 +6,31 @@ import { cn } from '@repo/ui/lib/utils';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+type BotStatus = 'draft' | 'created' | 'starting' | 'running' | 'stopped' | 'error';
+
 interface QuickActionsProps {
-  isRunning: boolean;
+  /** Bot 当前状态 */
+  botStatus: BotStatus;
+  /** 操作加载中 */
   loading?: boolean;
+  /** 是否配置了 Provider */
   hasProvider?: boolean;
+  /** 是否配置了 Channel */
   hasChannel?: boolean;
+  /** 配置检查中 */
   configLoading?: boolean;
+  /** 启动回调 */
   onStart: () => void;
+  /** 停止回调 */
   onStop: () => void;
+  /** 重启回调 */
   onRestart: () => void;
+  /** 诊断回调 */
   onDiagnose: () => void;
 }
 
 export function QuickActions({
-  isRunning,
+  botStatus,
   loading,
   hasProvider,
   hasChannel,
@@ -34,6 +45,11 @@ export function QuickActions({
   // 检查配置是否完成
   const isConfigComplete = hasProvider && hasChannel;
   const isConfigChecking = configLoading;
+
+  // 状态判断
+  const isRunning = botStatus === 'running';
+  const isStarting = botStatus === 'starting';
+  const isTransitioning = isStarting || loading; // 正在启动或操作中
 
   // 包装操作函数，在配置未完成时显示提示
   const wrapActionWithConfigCheck = (
@@ -59,47 +75,55 @@ export function QuickActions({
   const actions = [
     {
       id: 'start',
-      label: t('start'),
+      label: isStarting ? t('starting') : t('start'),
       icon: Play,
       onClick: wrapActionWithConfigCheck(onStart, true),
-      disabled: loading || isRunning,
+      // 启动按钮：正在运行或正在启动时禁用
+      disabled: loading || isRunning || isStarting,
       color: 'green',
       hoverBg: 'hover:bg-green-500/20 hover:border-green-500/50',
-      iconBg: isRunning ? 'bg-muted' : 'bg-green-500/20',
-      iconColor: isRunning ? 'text-muted-foreground' : 'text-green-500',
+      iconBg: isRunning || isStarting ? 'bg-muted' : 'bg-green-500/20',
+      iconColor: isRunning || isStarting ? 'text-muted-foreground' : 'text-green-500',
+      showSpinner: isStarting,
     },
     {
       id: 'stop',
       label: t('stop'),
       icon: Square,
       onClick: onStop,
-      disabled: loading || !isRunning,
+      // 停止按钮：未运行或正在启动时禁用
+      disabled: loading || !isRunning || isStarting,
       color: 'red',
       hoverBg: 'hover:bg-red-500/20 hover:border-red-500/50',
-      iconBg: !isRunning ? 'bg-muted' : 'bg-red-500/20',
-      iconColor: !isRunning ? 'text-muted-foreground' : 'text-red-500',
+      iconBg: !isRunning || isStarting ? 'bg-muted' : 'bg-red-500/20',
+      iconColor: !isRunning || isStarting ? 'text-muted-foreground' : 'text-red-500',
+      showSpinner: false,
     },
     {
       id: 'restart',
-      label: t('restart'),
+      label: isStarting ? t('restarting') : t('restart'),
       icon: RotateCcw,
       onClick: wrapActionWithConfigCheck(onRestart, true),
-      disabled: loading,
+      // 重启按钮：正在启动时禁用
+      disabled: loading || isStarting,
       color: 'amber',
       hoverBg: 'hover:bg-amber-500/20 hover:border-amber-500/50',
-      iconBg: 'bg-amber-500/20',
-      iconColor: 'text-amber-500',
+      iconBg: isStarting ? 'bg-amber-500/20' : 'bg-amber-500/20',
+      iconColor: isStarting ? 'text-amber-500' : 'text-amber-500',
+      showSpinner: loading || isStarting,
     },
     {
       id: 'diagnose',
       label: t('diagnose'),
       icon: Stethoscope,
       onClick: wrapActionWithConfigCheck(onDiagnose, true),
-      disabled: loading,
+      // 诊断按钮：正在启动时禁用
+      disabled: loading || isStarting,
       color: 'purple',
       hoverBg: 'hover:bg-purple-500/20 hover:border-purple-500/50',
       iconBg: 'bg-purple-500/20',
       iconColor: 'text-purple-500',
+      showSpinner: false,
     },
   ];
 
@@ -131,9 +155,10 @@ export function QuickActions({
                   className={cn(
                     'size-12 rounded-full flex items-center justify-center',
                     action.iconBg,
+                    action.showSpinner && 'animate-pulse',
                   )}
                 >
-                  {loading && action.id === 'restart' ? (
+                  {action.showSpinner ? (
                     <Loader2
                       className={cn('size-5 animate-spin', action.iconColor)}
                     />

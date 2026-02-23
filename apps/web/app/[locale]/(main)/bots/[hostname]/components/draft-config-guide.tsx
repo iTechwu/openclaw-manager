@@ -46,7 +46,7 @@ export function DraftConfigGuide({
               </div>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/bots/${hostname}/ai`}>
+              <Link href={`/bots/${hostname}/models`}>
                 <Settings className="size-4 mr-2" />
                 {t('configure')}
               </Link>

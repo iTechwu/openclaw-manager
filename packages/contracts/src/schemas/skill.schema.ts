@@ -108,6 +108,7 @@ export const SkillItemSchema = z.object({
   description: z.string().nullable(),
   descriptionZh: z.string().nullable().optional(),
   version: z.string(),
+  latestVersion: z.string().nullable().optional(),
   skillTypeId: z.string().uuid().nullable().optional(),
   skillType: SkillTypeItemSchema.nullable().optional(),
   definition: z.record(z.string(), z.unknown()),
@@ -176,6 +177,11 @@ export const BotSkillItemSchema = z.object({
   skillId: z.string().uuid(),
   config: z.record(z.string(), z.unknown()).nullable(),
   isEnabled: z.boolean(),
+  installedVersion: z.string().nullable().optional(),
+  updateAvailable: z.boolean().optional(),
+  fileCount: z.number().nullable().optional(),
+  scriptExecuted: z.boolean().optional(),
+  hasReferences: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   skill: SkillItemSchema,
@@ -202,3 +208,119 @@ export const UpdateBotSkillRequestSchema = z.object({
 });
 
 export type UpdateBotSkillRequest = z.infer<typeof UpdateBotSkillRequestSchema>;
+
+/**
+ * 批量安装技能请求 Schema
+ */
+export const BatchInstallSkillRequestSchema = z.object({
+  skillIds: z.array(z.string().uuid()).min(1).max(20),
+});
+
+export type BatchInstallSkillRequest = z.infer<
+  typeof BatchInstallSkillRequestSchema
+>;
+
+/**
+ * 批量安装技能响应 Schema
+ */
+export const BatchInstallResultSchema = z.object({
+  installed: z.number(),
+  skipped: z.number(),
+  failed: z.number(),
+});
+
+export type BatchInstallResult = z.infer<typeof BatchInstallResultSchema>;
+
+/**
+ * 容器内置技能项 Schema（Docker 自动安装的技能）
+ */
+export const ContainerSkillItemSchema = z.object({
+  name: z.string(),
+  enabled: z.boolean(),
+  description: z.string().nullable().optional(),
+  version: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+});
+
+export type ContainerSkillItem = z.infer<typeof ContainerSkillItemSchema>;
+
+/**
+ * 容器内置技能响应 Schema
+ */
+export const ContainerSkillsResponseSchema = z.object({
+  skills: z.array(ContainerSkillItemSchema),
+  source: z.enum(['docker', 'cache', 'none']),
+  fetchedAt: z.string().nullable(),
+});
+
+export type ContainerSkillsResponse = z.infer<
+  typeof ContainerSkillsResponseSchema
+>;
+
+/**
+ * 更新技能版本响应 Schema
+ */
+export const UpdateBotSkillVersionResponseSchema = z.object({
+  botSkill: BotSkillItemSchema,
+  previousVersion: z.string().nullable(),
+  newVersion: z.string(),
+});
+
+export type UpdateBotSkillVersionResponse = z.infer<
+  typeof UpdateBotSkillVersionResponseSchema
+>;
+
+/**
+ * 技能更新检查项 Schema
+ */
+export const SkillUpdateCheckItemSchema = z.object({
+  skillId: z.string().uuid(),
+  skillName: z.string(),
+  currentVersion: z.string().nullable(),
+  latestVersion: z.string(),
+  updateAvailable: z.boolean(),
+});
+
+export type SkillUpdateCheckItem = z.infer<typeof SkillUpdateCheckItemSchema>;
+
+/**
+ * 批量检查更新响应 Schema
+ */
+export const CheckSkillUpdatesResponseSchema = z.object({
+  updates: z.array(SkillUpdateCheckItemSchema),
+  checkedCount: z.number(),
+  updatesAvailable: z.number(),
+});
+
+export type CheckSkillUpdatesResponse = z.infer<
+  typeof CheckSkillUpdatesResponseSchema
+>;
+
+/**
+ * Skill 文件项 Schema
+ */
+export const SkillFileItemSchema = z.object({
+  relativePath: z.string().max(255),
+  content: z.string().max(1024 * 1024), // 1MB 单文件限制
+});
+
+export type SkillFileItem = z.infer<typeof SkillFileItemSchema>;
+
+/**
+ * 从文件安装 Skill 请求 Schema（离线安装 / 私有 skills）
+ */
+export const InstallSkillFromFilesRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/),
+  description: z.string().max(500).optional(),
+  version: z.string().max(20).optional(),
+  files: z.array(SkillFileItemSchema).min(1).max(50),
+});
+
+export type InstallSkillFromFilesRequest = z.infer<
+  typeof InstallSkillFromFilesRequestSchema
+>;

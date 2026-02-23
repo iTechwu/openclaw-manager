@@ -2,158 +2,80 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black.svg)](https://nextjs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-11-red.svg)](https://nestjs.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-> AI Bot lifecycle management and API key orchestration platform, solving key security, request proxy, and operations challenges in multi-Bot, multi-provider scenarios.
+> AI Bot lifecycle management and API key orchestration platform — solving key security, request proxying, and operations challenges across multi-Bot, multi-provider scenarios.
 
-[中文文档](./README.zh-CN.md) | [Demo](#-demo) | [Quick Start](#-quick-start) | [Documentation](#-documentation--standards)
-
-## 🎬 Demo
-
-<!-- Add screenshots or GIFs here -->
-> Screenshots and demo videos coming soon. Star this repo to stay updated!
-
----
-
-## 🆕 What's New
-
-### v1.0.0 (2026-02)
-
-- **Model Routing System**: Intelligent multi-model routing with capability tags, fallback chains, cost strategies, and load balancing
-- **Skill Management System**: New SkillType model with upsert functionality and OpenClaw synchronization
-- **Bot Usage Analytics**: Enhanced token usage tracking, routing statistics, and analytics dashboard
-- **Bot Configuration Resolver**: Runtime configuration now derived from `BotProviderKey` and `BotChannel` tables for better data consistency
-- **Zero-Trust Architecture**: Bot containers never touch API keys directly - all keys are injected at the proxy layer
-- **10 Channel Integrations**: Support for Feishu, Telegram, Slack, WeChat, Discord, WhatsApp, X, Instagram, Teams, and LINE
-- **22 MCP Plugins**: Pre-built plugins for search, file operations, database access, and development tools
-- **Skill System**: Custom tools, prompt templates, and workflows with one-click installation to Bots
-- **Notification System**: Backend quota notifications with real-time alerts
-
----
-
-## 📋 Table of Contents
-
-- [Demo](#-demo)
-- [What's New](#-whats-new)
-- [Project Overview](#-project-overview)
-- [Project Status](#-project-status)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#️-architecture)
-- [Core Features](#-core-features)
-- [Supported Channels](#-supported-channels)
-- [Quick Start](#-quick-start)
-- [Environment Variables](#-environment-variables)
-- [Docker Deployment](#-docker-deployment)
-- [API Overview](#-api-overview)
-- [Development Guide](#-development-guide)
-- [Roadmap](#️-roadmap)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [License](#-license)
+[中文文档](./README.zh-CN.md) | [Quick Start](#-quick-start) | [Architecture](#%EF%B8%8F-architecture) | [API Overview](#-api-overview)
 
 ---
 
 ## 📌 Project Overview
 
-### Purpose & Goals
-
 ClawBotManager is designed for **teams and developers who need to deploy and manage multiple AI Bots**, providing:
 
-- **Bot Lifecycle Management**: Create, start, stop, delete - containerized with Docker
-- **API Key Security Orchestration**: Encrypted storage, tag-based routing, round-robin load balancing
-- **Unified AI Request Proxy**: Single entry point for multiple AI providers, authenticated via Bot Token
-- **Multi-tenant Isolation**: User-based Bot and key separation, supporting team collaboration
+- **Bot Lifecycle Management** — Create, start, stop, delete; containerized with Docker
+- **API Key Security Orchestration** — AES-256-GCM encrypted storage, tag-based routing, round-robin load balancing
+- **Unified AI Request Proxy** — Single entry point for 63 AI providers, authenticated via Bot Token
+- **Multi-tenant Isolation** — User-based Bot and key separation with team collaboration support
 
 ### Problems Solved
 
 | Pain Point | Solution |
 | --- | --- |
 | API Keys scattered and prone to leakage in multi-Bot scenarios | Centralized encrypted storage (AES-256-GCM), unified access via Bot Token |
-| Complex integration with multiple AI providers (OpenAI, Anthropic, Google, etc.) | Unified `/v1/:vendor/*` proxy with automatic authentication and forwarding |
-| Bot-to-key mapping, quotas, failover | Provider Key tag routing + round-robin |
+| Complex integration with multiple AI providers | Unified `/v1/:vendor/*` proxy with automatic authentication and forwarding |
+| Bot-to-key mapping, quotas, failover | Provider Key tag routing + round-robin + fallback chains |
 | Container and database state inconsistency | Reconciliation, orphan resource detection and cleanup |
-
-### Target Users
-
-- Product/development teams running multiple AI Bots
-- Developers wanting unified management of OpenAI, Anthropic, DeepSeek API keys
-- Operations teams needing Bot and API call auditing and usage logs
-
----
-
-## 🧩 Project Status
-
-**Current Stage: MVP / Production Ready**
-
-### Completed ✅
-
-- **Core Capabilities**: Bot CRUD, Provider Key management, AI proxy, Docker container orchestration
-- **Model Routing System**: Capability tags, fallback chains, cost strategies, load balancing, routing statistics
-- **Plugin System**: MCP plugin management, 22 preset plugins (search, file, database, dev tools, etc.), region filtering
-- **Skill System**: Custom tools, prompt templates, workflows, skill installation to Bots, OpenClaw synchronization
-- **Channel System**: 10 channel definitions (Feishu, Telegram, Slack, WeChat, Discord, WhatsApp, X, Instagram, Teams, LINE), credential management, locale-based recommendations
-- **Infrastructure**: User authentication, multiple login methods, file upload, SMS, i18n (Chinese/English)
-- **Diagnostics & Ops**: Container stats, orphan resource detection and cleanup, startup reconciliation
-- **Security**: Zero-trust proxy mode (Bot containers don't touch API keys), AES-256-GCM encryption
-- **Quota Management**: Daily/monthly token limits, 80% threshold warnings, over-quota notifications
-- **Template System**: Persona templates (system + user), 5-step creation wizard
-- **Audit Logs**: Operation logging (CREATE, START, STOP, DELETE)
-- **Bot Usage Analytics**: Token usage tracking, routing statistics, analytics dashboard
-- **Notification System**: Backend quota notifications implemented
-
-### Pending ⏳
-
-- **Channel Connectors**: Actual message send/receive connectors for Feishu, Telegram, WeChat, etc.
-- **Analytics UI**: Backend analytics implemented, frontend dashboard pending
-- **Notification UI**: Backend quota notifications implemented, frontend UI pending
-- **Webhook Handlers**: Contract defined, handlers pending
-- **Permission System**: Fine-grained access control pending
-- **Rate Limiting**: Configuration exists, implementation verification pending
-
-### Production Deployment Notes ⚠️
-
-- Key backup strategy
-- High availability deployment plan
-- Resource rate limiting configuration
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 | Technology | Version | Purpose |
 | --- | --- | --- |
-| Next.js | 16 | React framework with App Router |
-| React | 19 | UI library |
-| TypeScript | 5.x | Type safety |
+| Next.js | 16.1 | React framework with App Router |
+| React | 19.2 | UI library |
+| TypeScript | 5.9 | Type safety |
 | Tailwind CSS | 4 | Styling |
 | shadcn/ui | Latest | UI components |
 | TanStack Query | 5.x | Server state management |
-| ts-rest | 3.53.x | Type-safe API client |
-| next-intl | Latest | Internationalization |
+| ts-rest | 3.53 | Type-safe API client |
+| Zustand | 5.x | Client state management |
+| next-intl | 4.x | Internationalization |
+| Recharts | 3.x | Data visualization |
+| ReactFlow | 11.x | Flow diagrams |
 
 ### Backend
+
 | Technology | Version | Purpose |
 | --- | --- | --- |
-| NestJS | 11 | Node.js framework |
-| Fastify | 5.x | HTTP server |
-| Prisma | 7.x | ORM |
-| PostgreSQL | 14+ | Primary database |
-| Redis | 7+ | Caching & queues |
-| BullMQ | Latest | Job queue |
-| Zod | 4.x | Schema validation |
-| ts-rest | 3.53.x | API contracts |
+| NestJS | 11.1 | Node.js framework |
+| Fastify | 5.2 | HTTP server |
+| Prisma | 7.3 | ORM (38 models) |
+| PostgreSQL | 14+ | Primary database (read/write split) |
+| Redis (ioredis) | 5.9 | Caching |
+| BullMQ | 5.x | Job queue |
+| RabbitMQ | — | Message queue |
+| Zod | 4.3 | Schema validation |
+| ts-rest | 3.53 | API contracts (25 contracts) |
+| Winston | 3.x | Structured logging |
+| Passport | 0.7 | Authentication (JWT, OAuth2) |
+| Dockerode | 4.x | Bot container orchestration |
 
 ### Infrastructure
+
 | Technology | Purpose |
 | --- | --- |
+| pnpm 10 + Turborepo 2.8 | Monorepo management |
 | Docker | Bot containerization |
-| RabbitMQ | Message queue |
-| Winston | Logging |
-| Passport | Authentication (JWT, OAuth2) |
+| Prometheus + prom-client | Metrics collection |
+| Socket.IO | Real-time communication |
 
 ---
 
@@ -161,22 +83,24 @@ ClawBotManager is designed for **teams and developers who need to deploy and man
 
 ### Design Principles
 
-1. **Layered Architecture**: API Layer → Service Layer → DB Layer / Client Layer, strict no cross-layer access
-2. **Zod-first**: All API requests/responses validated via Zod Schema, type-safe
-3. **Contract-driven**: ts-rest defines frontend-backend contracts, compile-time types + runtime validation
-4. **infra / domain boundary**: infra doesn't depend on domain, domain can depend on infra, enabling reuse and testing
-5. **Zero plaintext keys**: API keys encrypted with AES-256-GCM, decrypted only at runtime
+1. **Layered Architecture** — API Layer → Service Layer → DB Layer / Client Layer; strict no cross-layer access
+2. **Zod-first** — All API requests/responses validated via Zod Schema; compile-time types + runtime validation
+3. **Contract-driven** — ts-rest defines frontend-backend contracts
+4. **infra / domain boundary** — infra never depends on domain; domain may depend on infra
+5. **Zero plaintext keys** — API keys encrypted with AES-256-GCM, decrypted only at runtime in the proxy layer
 
-### Overall Architecture
+### System Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                            ClawBotManager                                │
+│                            ClawBotManager                              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Web (Next.js 16)          │  API (NestJS 11 + Fastify)                 │
-│  - Bot Management/Wizard   │  - Bot API (CRUD, lifecycle)               │
-│  - Provider Key Management │  - Proxy (/v1/:vendor/* proxy)             │
-│  - Diagnostics & Ops       │  - Sign / SMS / Uploader                   │
+│  Web (Next.js 16)              │  API (NestJS 11 + Fastify)            │
+│  - Bot Management / Wizard     │  - Bot API (CRUD, lifecycle)          │
+│  - Provider Key Management     │  - Proxy (/v1/:vendor/* forwarding)   │
+│  - Model Routing Config        │  - Model Routing Engine               │
+│  - Plugin & Skill Management   │  - Plugin / Skill / Channel APIs     │
+│  - Diagnostics & Ops           │  - Sign / SMS / Uploader             │
 └─────────────────────────────────────────────────────────────────────────┘
                                         │
                     ┌───────────────────┼───────────────────┐
@@ -189,138 +113,124 @@ ClawBotManager is designed for **teams and developers who need to deploy and man
                     ┌───────────────────┴───────────────────┐
                     ▼                                       ▼
             ┌───────────────────┐                   ┌───────────────────┐
-            │  OpenAI           │                   │  Anthropic        │
-            │  DeepSeek / Groq  │   ...             │  Google / Venice  │
+            │  63 AI Providers  │                   │  OpenAI, Anthropic│
+            │  (see full list)  │   ...             │  Google, DeepSeek │
             └───────────────────┘                   └───────────────────┘
 ```
 
-### Data Flow (Simplified)
+### Data Flow
 
-1. **Create Bot**: User fills config → Assign port → Create Workspace (config.json, soul.md, features.json) → Start Docker container → Write to DB, generate Gateway Token
-2. **Proxy Request**: Client with `Authorization: Bearer <gateway_token>` accesses `/api/v1/openai/...` → Validate Token → Select Provider Key (tag + round-robin) → Decrypt key → Forward to upstream API → Log to BotUsageLog
-3. **Key Management**: User adds Provider Key → AES-256-GCM encrypt → Write to ProviderKey table, supports tag, baseUrl, etc.
+1. **Create Bot** — User fills config → Assign port → Create Workspace (config.json, soul.md, features.json) → Start Docker container → Write to DB, generate Gateway Token
+2. **Proxy Request** — Client sends `Authorization: Bearer <gateway_token>` to `/api/v1/openai/...` → Validate Token → Select Provider Key (tag + round-robin) → Decrypt key → Forward to upstream API → Log to BotUsageLog
+3. **Key Management** — User adds Provider Key → AES-256-GCM encrypt → Store in ProviderKey table with tag, baseUrl, etc.
 
 ### Directory Structure
 
 ```
 clawbotmanager/
 ├── apps/
-│   ├── web/                    # Next.js 16 Frontend
-│   │   ├── app/[locale]/       # Routes
-│   │   │   ├── (auth)/         # Auth route group
-│   │   │   └── (main)/         # Main route group (authenticated)
-│   │   │       ├── bots/       # Bot management
-│   │   │       ├── diagnostics/# Container diagnostics
-│   │   │       ├── plugins/    # Plugin management
-│   │   │       ├── routing/    # Model routing config
-│   │   │       ├── secrets/    # API key management
-│   │   │       ├── settings/   # Settings
-│   │   │       ├── skills/     # Skill management
-│   │   │       └── templates/  # Persona templates
-│   │   ├── components/         # Common components
-│   │   ├── hooks/              # React Hooks
-│   │   └── lib/                # API client, config
+│   ├── web/                        # @repo/web — Next.js 16 Frontend
+│   │   ├── app/[locale]/           # i18n routes
+│   │   │   ├── (auth)/login        # Authentication
+│   │   │   └── (main)/             # Authenticated routes
+│   │   │       ├── bots/           # Bot management + detail
+│   │   │       ├── diagnostics/    # Container diagnostics
+│   │   │       ├── models/         # Model management
+│   │   │       ├── plugins/        # Plugin management
+│   │   │       ├── routing/        # Model routing (capability-tags, fallback-chains,
+│   │   │       │                   #   cost-strategies, complexity-routing, model-pricing)
+│   │   │       ├── secrets/        # API key management
+│   │   │       ├── settings/       # Settings (account, api-keys, notifications, security)
+│   │   │       ├── skills/         # Skill management
+│   │   │       ├── templates/      # Persona templates
+│   │   │       └── admin/models    # Admin model management
+│   │   ├── components/             # Shared components
+│   │   ├── hooks/                  # React hooks
+│   │   └── lib/                    # API client, config, queries
 │   │
-│   └── api/                    # NestJS 11 Backend
-│       ├── src/modules/        # Feature modules (15 modules)
-│       │   ├── bot-api/        # Bot CRUD, Provider Key, Docker, Workspace
-│       │   ├── bot-channel-api/# Bot channel management
-│       │   ├── channel-api/    # Channel definitions
-│       │   ├── message-api/    # Messaging system
-│       │   ├── operate-log-api/# Operation audit logs
+│   └── api/                        # @repo/api — NestJS 11 Backend
+│       ├── src/modules/            # 15 feature modules
+│       │   ├── bot-api/            # Bot CRUD, Provider Key, Docker, Workspace
+│       │   ├── bot-channel-api/    # Bot channel management
+│       │   ├── channel-api/        # Channel definitions
+│       │   ├── message-api/        # Messaging system
+│       │   ├── operate-log-api/    # Operation audit logs
 │       │   ├── persona-template-api/ # Persona templates
-│       │   ├── plugin-api/     # MCP plugin management
-│       │   ├── proxy/          # AI request proxy, Keyring, Upstream
-│       │   ├── sign-api/       # Login/register
-│       │   ├── skill-api/      # Skill management
-│       │   ├── skill-sync/     # Skill synchronization
-│       │   ├── sms-api/        # SMS
-│       │   ├── sse-api/        # Server-sent events
-│       │   ├── uploader/       # File upload
-│       │   └── user-api/       # User management
+│       │   ├── plugin-api/         # MCP plugin management
+│       │   ├── proxy/              # AI request proxy, Keyring, Upstream
+│       │   ├── sign-api/           # Login / register
+│       │   ├── skill-api/          # Skill management
+│       │   ├── skill-sync/         # Skill synchronization (OpenClaw)
+│       │   ├── sms-api/            # SMS
+│       │   ├── sse-api/            # Server-sent events
+│       │   ├── uploader/           # File upload
+│       │   └── user-api/           # User management
 │       ├── libs/
-│       │   ├── infra/          # Infrastructure (prisma, redis, jwt, clients…)
-│       │   │   ├── common/     # Decorators, interceptors, pipes
-│       │   │   ├── clients/    # Third-party API clients (18 clients)
-│       │   │   ├── prisma/     # DB connection, read/write split
-│       │   │   ├── redis/      # Cache
-│       │   │   ├── rabbitmq/   # Message queue
-│       │   │   ├── jwt/        # JWT authentication
-│       │   │   ├── utils/      # Pure utilities
-│       │   │   ├── i18n/       # Internationalization
-│       │   │   ├── shared-db/  # TransactionalServiceBase, UnitOfWork
-│       │   │   └── shared-services/ # Shared services (7 services)
-│       │   └── domain/         # Domain (auth, services)
-│       └── prisma/             # Schema (33 models), migrations
+│       │   ├── infra/              # Infrastructure (reusable, product-agnostic)
+│       │   │   ├── common/         # Decorators, interceptors, pipes, config, filters
+│       │   │   ├── clients/        # Third-party API clients (19 internal clients)
+│       │   │   ├── prisma/         # DB connection, read/write split
+│       │   │   ├── redis/          # Cache
+│       │   │   ├── rabbitmq/       # Message queue
+│       │   │   ├── jwt/            # JWT authentication
+│       │   │   ├── utils/          # Pure utilities
+│       │   │   ├── i18n/           # Internationalization
+│       │   │   ├── shared-db/      # TransactionalServiceBase, UnitOfWork
+│       │   │   └── shared-services/ # 7 shared services (email, file-storage,
+│       │   │                        #   ip-geo, sms, streaming-asr, system-health, uploader)
+│       │   └── domain/             # Domain (business-specific)
+│       │       ├── auth/           # Authentication / identity
+│       │       └── services/       # Business services
+│       └── prisma/                 # Schema (38 models), migrations, seed
 │
-├── packages/                   # Shared packages (7 packages)
-│   ├── contracts/              # ts-rest contracts + Zod Schema (25 contracts)
-│   ├── ui/                     # shadcn/ui components
-│   ├── utils/                  # Utility functions
-│   ├── validators/             # Zod validators
-│   ├── constants/              # Constants
-│   ├── types/                  # Type definitions
-│   └── config/                 # ESLint, Prettier, TS config
+├── packages/                       # 7 shared packages (frontend + backend)
+│   ├── contracts/                  # @repo/contracts — ts-rest contracts + Zod schemas
+│   ├── ui/                         # @repo/ui — shadcn/ui components
+│   ├── utils/                      # @repo/utils — Utility functions
+│   ├── validators/                 # @repo/validators — Zod validators
+│   ├── constants/                  # @repo/constants — Shared constants
+│   ├── types/                      # @repo/types — Type definitions
+│   └── config/                     # @repo/config — ESLint, Prettier, TS config
 │
-├── docs/                       # Documentation
-└── scripts/                    # Init and ops scripts
+├── docs/                           # Documentation
+└── scripts/                        # Init and ops scripts
 ```
-
-### Supported AI Providers
-
-| Category | Vendor | Description |
-| ---- | ------ | ---- |
-| **Mainstream** | `openai` | OpenAI API |
-| | `anthropic` | Anthropic Claude |
-| | `google` | Google Generative AI |
-| | `deepseek` | DeepSeek API |
-| | `groq` | Groq API |
-| **Cloud Services** | `azure-openai` | Azure OpenAI |
-| | `mistral` | Mistral AI |
-| | `openrouter` | OpenRouter |
-| | `together` | Together AI |
-| | `fireworks` | Fireworks AI |
-| | `perplexity` | Perplexity AI |
-| | `cohere` | Cohere |
-| **China** | `zhipu` | Zhipu AI |
-| | `moonshot` | Moonshot AI |
-| | `baichuan` | Baichuan AI |
-| | `dashscope` | Alibaba Tongyi |
-| | `stepfun` | StepFun |
-| | `doubao` | ByteDance Doubao |
-| | `minimax` | MiniMax |
-| | `yi` | 01.AI |
-| | `hunyuan` | Tencent Hunyuan |
-| | `siliconflow` | SiliconFlow |
-| **Other** | `venice` | Venice AI |
-| | `ollama` | Ollama (local) |
-| | `custom` | Custom endpoint |
 
 ---
 
 ## ✨ Core Features
 
-- **Bot Lifecycle**: Create, start, stop, delete - Docker containers + workspace (config.json, soul.md, features.json)
-- **Provider Key Management**: Encrypted storage (AES-256-GCM), tag routing, round-robin, custom baseUrl
-- **Model Routing System**: Capability tags, fallback chains, cost strategies, load balancing, routing statistics
-- **AI Request Proxy**: `/v1/:vendor/*` unified entry, Bot Token auth, streaming response (SSE)
-- **Plugin System (MCP)**: 22 preset plugins (search, file, database, dev tools, etc.), region filtering, one-click install to Bot
-- **Skill System**: Custom tools, prompt templates, workflows, skill installation and configuration, OpenClaw sync
-- **Channel System**: 10 channel definitions, locale-based recommendations, credential management
-- **Zero-trust Mode**: Bot containers don't touch API keys, proxy layer injects keys
-- **Quota Management**: Daily/monthly token limits, threshold warnings, over-quota notifications
-- **Bot Usage Analytics**: Token usage tracking, routing statistics, analytics dashboard
-- **Template System**: Persona templates (system/user), 5-step creation wizard
-- **Diagnostics & Ops**: Container stats, orphan resource detection and cleanup, startup reconciliation
-- **Audit Logs**: Operation logging, compliance audit support
-- **Multi-tenant**: User-isolated Bots and Keys, JWT authentication
-- **Internationalization**: Chinese and English support
+- **Bot Lifecycle** — Create, start, stop, delete; Docker containers + workspace (config.json, soul.md, features.json)
+- **Provider Key Management** — AES-256-GCM encrypted storage, tag routing, round-robin, custom baseUrl
+- **Model Routing System** — Capability tags, fallback chains, cost strategies, complexity routing, load balancing, routing statistics
+- **AI Request Proxy** — `/v1/:vendor/*` unified entry for 63 providers, Bot Token auth, streaming response (SSE)
+- **Plugin System (MCP)** — Preset plugins (search, file, database, dev tools, etc.), region filtering, one-click install to Bot
+- **Skill System** — Custom tools, prompt templates, workflows, skill installation and configuration, OpenClaw sync
+- **Channel System** — 10 channel definitions, locale-based recommendations, credential management
+- **Zero-trust Mode** — Bot containers never touch API keys; proxy layer injects keys at runtime
+- **Quota Management** — Daily/monthly token limits, threshold warnings, over-quota notifications
+- **Bot Usage Analytics** — Token usage tracking, routing statistics, analytics dashboard
+- **Template System** — Persona templates (system/user), Bot creation wizard
+- **Diagnostics & Ops** — Container stats, orphan resource detection and cleanup, startup reconciliation
+- **Audit Logs** — Operation logging (CREATE, START, STOP, DELETE)
+- **Multi-tenant** — User-isolated Bots and Keys, JWT authentication
+- **Internationalization** — Chinese and English support (next-intl)
+
+---
+
+## 🌐 Supported AI Providers (63)
+
+| Category | Providers |
+| --- | --- |
+| **International** | OpenAI, Anthropic, Google Gemini, Azure OpenAI, AWS Bedrock, Vertex AI, Mistral, Groq, Together, Fireworks, Perplexity, Grok (xAI), NVIDIA NIM, Hyperbolic, Cerebras, Hugging Face, GitHub Models, GitHub Copilot, Cohere, AI21, Replicate |
+| **Domestic (China)** | DeepSeek, ZhiPu, Moonshot/Kimi, Baichuan, DashScope/Tongyi, StepFun, Doubao, MiniMax, Yi, Hunyuan, Tencent Cloud TI, Baidu Cloud, Infini, ModelScope, XiRang, MiMo |
+| **Aggregator** | OpenRouter, SiliconFlow, AiHubMix, 302.AI, TokenFlux, Poe, Venice, ocoolAI, DMXAPI, BurnCloud, Cephalon, LANYUN, PH8, Qiniu, PPIO, AlayaNew, AIOnly, LongCat, SophNet, Vercel AI Gateway |
+| **Local/Self-hosted** | Ollama, LM Studio, GPUStack, OpenVINO Model Server, New API |
+| **Custom** | Any OpenAI-compatible endpoint |
 
 ---
 
 ## 📱 Supported Channels
-
-ClawBotManager supports 10 messaging channels with locale-based recommendations:
 
 | Channel | ID | Recommended For | Credentials Required |
 | --- | --- | --- | --- |
@@ -328,14 +238,12 @@ ClawBotManager supports 10 messaging channels with locale-based recommendations:
 | **Telegram** | `telegram` | 🌍 English | Bot Token |
 | **Slack** | `slack` | 🌍 English | Bot Token, App Token, Signing Secret |
 | **WeChat** | `wechat` | 🇨🇳 Chinese, 🌍 English | App ID, App Secret, Token, Encoding AES Key |
-| **Discord** | `discord` | - | Bot Token, Application ID |
-| **WhatsApp** | `whatsapp` | - | Access Token, Phone Number ID, Business Account ID |
-| **Twitter/X** | `twitter` | - | API Key, API Secret, Access Token, Access Token Secret |
-| **Instagram** | `instagram` | - | Access Token, App Secret |
-| **Microsoft Teams** | `teams` | - | App ID, App Password, Tenant ID |
-| **LINE** | `line` | - | Channel Access Token, Channel Secret |
-
-> **Note**: Channel definitions are stored in the database and can be customized. The `popularLocales` field determines which channels are recommended for each locale.
+| **Discord** | `discord` | — | Bot Token, Application ID |
+| **WhatsApp** | `whatsapp` | — | Access Token, Phone Number ID, Business Account ID |
+| **Twitter/X** | `twitter` | — | API Key, API Secret, Access Token, Access Token Secret |
+| **Instagram** | `instagram` | — | Access Token, App Secret |
+| **Microsoft Teams** | `teams` | — | App ID, App Password, Tenant ID |
+| **LINE** | `line` | — | Channel Access Token, Channel Secret |
 
 ---
 
@@ -388,20 +296,19 @@ NEXT_PUBLIC_SERVER_BASE_URL=http://localhost:3100
 ```bash
 pnpm db:generate
 pnpm db:migrate:dev
-# Seed default data from project root
-pnpm db:seed:api
+pnpm db:seed          # Seed default data
 ```
 
 ### 6. Start
 
 ```bash
-pnpm dev          # All
-pnpm dev:web      # Frontend only
-pnpm dev:api      # Backend only
+pnpm dev              # All apps
+pnpm dev:web          # Frontend only
+pnpm dev:api          # Backend only
 ```
 
-- Frontend: <http://localhost:3000>
-- Backend API: <http://localhost:3100/api>
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3100/api
 
 ---
 
@@ -414,23 +321,26 @@ pnpm dev:api      # Backend only
 | `DATABASE_URL` | ✅ | PostgreSQL connection string (write) |
 | `REDIS_URL` | ✅ | Redis connection string |
 | `RABBITMQ_URL` | ✅ | RabbitMQ connection string |
-| `READ_DATABASE_URL` | ❌ | PostgreSQL read replica (defaults to DATABASE_URL) |
-| `BOT_MASTER_KEY` | ❌ | Master key for API key encryption (auto-generated if not set) |
-| `BOT_IMAGE` | ❌ | Docker image for Bot containers (default: `openclaw:latest`) |
-| `BOT_PORT_START` | ❌ | Starting port for Bot containers (default: `9200`) |
-| `BOT_DATA_DIR` | ❌ | Bot data directory (default: `/data/bots`) |
-| `BOT_SECRETS_DIR` | ❌ | Bot secrets directory (default: `/data/secrets`) |
-| `ZERO_TRUST_MODE` | ❌ | Enable zero-trust mode (default: `false`) |
-| `PROXY_TOKEN_TTL` | ❌ | Proxy token TTL in seconds (default: `86400`) |
+| `READ_DATABASE_URL` | — | PostgreSQL read replica (defaults to DATABASE_URL) |
+| `BOT_MASTER_KEY` | — | Master key for API key encryption (auto-generated) |
+| `BOT_IMAGE_GATEWAY` | — | Docker image for GATEWAY bot type (default: `openclaw:local`) |
+| `BOT_IMAGE_TOOL_SANDBOX` | — | Docker image for TOOL_SANDBOX bot type (default: `openclaw-sandbox:bookworm-slim`) |
+| `BOT_IMAGE_BROWSER_SANDBOX` | — | Docker image for BROWSER_SANDBOX bot type (default: `openclaw-sandbox-browser:bookworm-slim`) |
+| `OPENCLAW_SRC_PATH` | — | OpenClaw source path for building images (default: `../openclaw`) |
+| `BOT_PORT_START` | — | Starting port for Bot containers (default: `9200`) |
+| `BOT_DATA_DIR` | — | Bot data directory (default: `/data/bots`) |
+| `BOT_SECRETS_DIR` | — | Bot secrets directory (default: `/data/secrets`) |
+| `ZERO_TRUST_MODE` | — | Enable zero-trust mode (default: `false`) |
+| `PROXY_TOKEN_TTL` | — | Proxy token TTL in seconds (default: `86400`) |
 
-> **Note**: JWT configuration (`secret`, `expireIn`) is in `config.local.yaml`, not environment variables.
+> JWT configuration (`secret`, `expireIn`) is in `config.local.yaml`, not environment variables.
 
 ### Frontend (`apps/web/.env.local`)
 
 | Variable | Required | Description |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SERVER_BASE_URL` | ✅ | Backend API base URL |
-| `NEXT_PUBLIC_API_BASE_URL` | ❌ | API base URL (defaults to server URL + `/api`) |
+| `NEXT_PUBLIC_API_BASE_URL` | — | API base URL (defaults to server URL + `/api`) |
 
 ---
 
@@ -440,11 +350,11 @@ pnpm dev:api      # Backend only
 ./scripts/start-clawbot.sh
 ```
 
-Uses `docker-compose.yml`, starts API and Web services. After health check passes:
-- Frontend: <http://localhost:13000>
-- API: <http://localhost:13100/api>
+Uses `docker-compose.yml` to start API and Web services. After health check passes:
+- Frontend: http://localhost:13000
+- API: http://localhost:13100/api
 
-> Note: AI proxy functionality (keyring-proxy) is integrated into the API service, available via `/api/v1/:vendor/*` endpoints.
+> AI proxy functionality (keyring-proxy) is integrated into the API service, available via `/api/v1/:vendor/*` endpoints.
 
 ---
 
@@ -453,272 +363,288 @@ Uses `docker-compose.yml`, starts API and Web services. After health check passe
 ### Bot (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/bot` | List current user's Bots |
-| POST   | `/api/bot` | Create Bot |
-| GET    | `/api/bot/:hostname` | Get single Bot |
-| POST   | `/api/bot/:hostname/start` | Start |
-| POST   | `/api/bot/:hostname/stop` | Stop |
+| --- | --- | --- |
+| GET | `/api/bot` | List current user's Bots |
+| POST | `/api/bot` | Create Bot |
+| GET | `/api/bot/:hostname` | Get single Bot |
+| POST | `/api/bot/:hostname/start` | Start |
+| POST | `/api/bot/:hostname/stop` | Stop |
 | DELETE | `/api/bot/:hostname` | Delete |
-| GET    | `/api/bot/stats` | Container stats |
-| GET    | `/api/bot/admin/orphans` | Orphan resources |
-| POST   | `/api/bot/admin/cleanup` | Cleanup orphans |
+| GET | `/api/bot/stats` | Container stats |
+| GET | `/api/bot/admin/orphans` | Orphan resources |
+| POST | `/api/bot/admin/cleanup` | Cleanup orphans |
 
 ### Provider Key (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/provider-key` | List API Keys |
-| POST   | `/api/provider-key` | Add Key |
+| --- | --- | --- |
+| GET | `/api/provider-key` | List API Keys |
+| POST | `/api/provider-key` | Add Key |
 | DELETE | `/api/provider-key/:id` | Delete Key |
-| GET    | `/api/provider-key/health` | Health check |
+| GET | `/api/provider-key/health` | Health check |
 
 ### Plugin (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/plugin` | List all plugins |
-| GET    | `/api/plugin/:id` | Get plugin details |
-| GET    | `/api/bot/:hostname/plugins` | Get Bot's installed plugins |
-| POST   | `/api/bot/:hostname/plugins` | Install plugin to Bot |
+| --- | --- | --- |
+| GET | `/api/plugin` | List all plugins |
+| GET | `/api/plugin/:id` | Get plugin details |
+| GET | `/api/bot/:hostname/plugins` | Get Bot's installed plugins |
+| POST | `/api/bot/:hostname/plugins` | Install plugin to Bot |
 | DELETE | `/api/bot/:hostname/plugins/:id` | Uninstall plugin from Bot |
 
 ### Skill (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/skill` | List all skills |
-| GET    | `/api/skill/:id` | Get skill details |
-| POST   | `/api/skill` | Create custom skill |
-| PUT    | `/api/skill/:id` | Update skill |
+| --- | --- | --- |
+| GET | `/api/skill` | List all skills |
+| GET | `/api/skill/:id` | Get skill details |
+| POST | `/api/skill` | Create custom skill |
+| PUT | `/api/skill/:id` | Update skill |
 | DELETE | `/api/skill/:id` | Delete skill |
-| GET    | `/api/bot/:hostname/skills` | Get Bot's installed skills |
-| POST   | `/api/bot/:hostname/skills` | Install skill to Bot |
-| PUT    | `/api/bot/:hostname/skills/:id` | Update skill config |
+| GET | `/api/bot/:hostname/skills` | Get Bot's installed skills |
+| POST | `/api/bot/:hostname/skills` | Install skill to Bot |
+| PUT | `/api/bot/:hostname/skills/:id` | Update skill config |
 | DELETE | `/api/bot/:hostname/skills/:id` | Uninstall skill from Bot |
 
 ### Model Routing (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/bot/:hostname/routing` | Get Bot's routing config |
-| PUT    | `/api/bot/:hostname/routing` | Update routing config |
-| GET    | `/api/routing/capability-tags` | List capability tags |
-| GET    | `/api/routing/fallback-chains` | List fallback chains |
-| GET    | `/api/routing/cost-strategies` | List cost strategies |
-| GET    | `/api/routing/statistics` | Get routing statistics |
+| --- | --- | --- |
+| GET | `/api/bot/:hostname/routing` | Get Bot's routing config |
+| PUT | `/api/bot/:hostname/routing` | Update routing config |
+| GET | `/api/routing/capability-tags` | List capability tags |
+| GET | `/api/routing/fallback-chains` | List fallback chains |
+| GET | `/api/routing/cost-strategies` | List cost strategies |
+| GET | `/api/routing/statistics` | Get routing statistics |
 
 ### Channel (JWT Required)
 
 | Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET    | `/api/channel` | List all channel definitions |
-| GET    | `/api/channel/:id` | Get channel definition details |
-| GET    | `/api/bot/:hostname/channels` | Get Bot's configured channels |
-| POST   | `/api/bot/:hostname/channels` | Add channel to Bot |
-| PUT    | `/api/bot/:hostname/channels/:id` | Update channel config |
+| --- | --- | --- |
+| GET | `/api/channel` | List all channel definitions |
+| GET | `/api/channel/:id` | Get channel definition details |
+| GET | `/api/bot/:hostname/channels` | Get Bot's configured channels |
+| POST | `/api/bot/:hostname/channels` | Add channel to Bot |
+| PUT | `/api/bot/:hostname/channels/:id` | Update channel config |
 | DELETE | `/api/bot/:hostname/channels/:id` | Delete channel |
-| POST   | `/api/bot/:hostname/channels/:id/connection` | Connect/disconnect channel |
+| POST | `/api/bot/:hostname/channels/:id/connection` | Connect/disconnect channel |
 
 ### AI Proxy (Bearer Bot Token)
 
 | Method | Path | Description |
-| ---- | ---- | ----------- |
-| ALL  | `/api/v1/:vendor/*` | Forward to corresponding AI provider (openai, anthropic, etc.) |
-
-More examples in `https/rest-client.http`.
+| --- | --- | --- |
+| ALL | `/api/v1/:vendor/*` | Forward to corresponding AI provider |
 
 ---
 
 ## 👨‍💻 Development Guide
 
-### Project Structure
-
-This is a **pnpm monorepo** managed with **Turborepo**:
+### Commands
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Development (all apps)
-pnpm dev
-
-# Development (specific apps)
-pnpm dev:web          # Next.js frontend only
-pnpm dev:api          # NestJS backend only
-
-# Build
-pnpm build
-pnpm build:web        # Build web only
-pnpm build:api        # Build api only
-
-# Lint & Type Check
-pnpm lint
-pnpm type-check
-
-# Test
-pnpm test
-pnpm test:api
+pnpm install              # Install dependencies
+pnpm dev                  # Development (all apps)
+pnpm dev:web              # Frontend only
+pnpm dev:api              # Backend only
+pnpm build                # Build all
+pnpm lint                 # Lint
+pnpm type-check           # Type check
+pnpm test                 # Test
+pnpm db:generate          # Generate Prisma Client
+pnpm db:migrate:dev       # Development migration
+pnpm db:migrate:deploy    # Production migration
+pnpm db:push              # Push schema without migration
+pnpm db:seed              # Seed database
 ```
 
 ### Adding New Features
 
-#### 1. Define API Contract (packages/contracts)
+1. **Define API Contract** in `packages/contracts/src/api/`
+2. **Implement Backend** — `cd apps/api && npx nest g module <name> src/modules`
+3. **Consume in Frontend** — Use ts-rest React Query hooks
 
-```typescript
-// packages/contracts/src/api/example.contract.ts
-import { initContract } from '@ts-rest/core';
-import { z } from 'zod';
+### Code Standards
 
-const c = initContract();
+- TypeScript strict mode
+- Zod 4 for all validation (not Zod 3)
+- Winston Logger (never `console.log`)
+- Layered architecture: API → Service → DB/Client
+- infra and domain layers kept separate
 
-export const exampleContract = c.router({
-  list: {
-    method: 'GET',
-    path: '/example',
-    responses: {
-      200: z.object({ items: z.array(z.string()) }),
-    },
-  },
-});
-```
+---
 
-#### 2. Implement Backend (apps/api)
+## 🔄 Initialization & Startup Flow
+
+### One-time Setup Scripts
+
+For first-time deployment or new environment setup, execute in order:
 
 ```bash
-# Generate NestJS module
-cd apps/api
-npx nest g module example src/modules
-npx nest g controller example src/modules
-npx nest g service example src/modules
-```
+# 1. Install dependencies
+pnpm install
 
-#### 3. Consume in Frontend (apps/web)
+# 2. Generate encryption master key (BOT_MASTER_KEY)
+./scripts/init-env-secrets.sh
 
-```typescript
-// Use ts-rest React Query hooks
-const { data } = exampleApi.list.useQuery(['example'], {});
-```
+# 3. (Optional) Interactive project initialization wizard
+node scripts/init-project.js
 
-### Database Operations
-
-```bash
-# Generate Prisma Client after schema changes
+# 4. Generate Prisma Client
 pnpm db:generate
 
-# Create migration
-pnpm db:migrate:dev --name <migration_name>
+# 5. Run database migrations
+pnpm db:migrate:dev
 
-# Apply migrations (production)
-pnpm db:migrate:deploy
-
-# Push schema without migration
-pnpm db:push
-
-# Seed database
-pnpm db:seed:api
+# 6. Seed database
+pnpm db:seed
 ```
 
-### Code Style
+### Seed Data Order (`pnpm db:seed`)
 
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Configured in `packages/config`
-- **Prettier**: Auto-formatting
-- **Zod 4**: For all validation (NOT Zod 3)
-- **Winston Logger**: Use instead of `console.log`
+Seed data is executed sequentially as defined in `apps/api/prisma/seed.ts`:
+
+| Order | Data | Data File | Description |
+| --- | --- | --- | --- |
+| 1 | Persona Templates | `scripts/persona-templates.data.ts` | System preset persona templates (en/zh) |
+| 2 | Country Codes | `scripts/country-codes.data.ts` | Country/region codes (full replace) |
+| 3 | Channel Definitions | `scripts/channel-definitions.data.ts` | 10 channel definitions + credential fields |
+| 4 | Plugins | `scripts/plugin-definitions.data.ts` | MCP plugin definitions (by region) |
+| 5 | Model Catalog | `scripts/model-catalog.data.ts` | AI model pricing & capability scores |
+| 6 | Capability Tags | `scripts/capability-tags.data.ts` | Routing capability tags (25 tags) |
+| 7 | Fallback Chains | `scripts/fallback-chains.data.ts` | Model fallback strategies (14 chains) |
+| 8 | Cost Strategies | `scripts/cost-strategies.data.ts` | Cost optimization strategies (13 strategies) |
+
+### NestJS Backend Startup Flow
+
+When `pnpm dev:api` starts, the following phases execute:
+
+**Phase 1: Environment & Configuration**
+
+1. `loadEnv()` — Load `.env` files (monorepo root → `apps/api/.env` → `.env.{NODE_ENV}`)
+2. `initConfig()` — Load YAML config files (`config.local.yaml`, etc.)
+3. `initKeysConfig()` — Load encryption key configuration
+
+**Phase 2: Fastify Server Setup**
+
+4. Create Fastify adapter
+5. Register plugins: `helmet` → `compress` → `SSE` → `multipart` → `rate-limit` → `cookie`
+6. CORS configuration
+7. Global prefix `/api`
+8. API versioning (Header mode: `x-api-version`)
+9. WebSocket adapter (Socket.IO)
+10. Swagger docs (non-production)
+11. Global pipes (ValidationPipe), guards (VersionGuard), interceptors (TransformInterceptor, VersionHeaderInterceptor)
+
+**Phase 3: NestJS Module Initialization** (`OnModuleInit` lifecycle hooks)
+
+NestJS initializes modules by dependency order. Each service's `onModuleInit()` fires in this hierarchy:
+
+```
+Infrastructure Layer (infra)
+├── PrismaWriteService      — Connect to write database (PostgreSQL + PrismaPg)
+├── PrismaReadService       — Connect to read database (fallback to write DB)
+├── DbMetricsService        — Load DB metrics config (slow query thresholds)
+├── RabbitmqService         — Connect to RabbitMQ + auto-reconnect
+├── FeatureFlagService      — Initialize feature flags (memory/Redis/Unleash)
+├── RateLimitService        — Load rate limiting config
+├── AppVersionService       — Load version info (package.json + Git hash)
+├── OpenAIClient            — Load OpenAI API config
+├── EmailService            — Initialize email client (SendCloud)
+└── SmsService              — Initialize SMS client (Aliyun/Tencent/Volcengine)
+
+Application Layer
+├── AppModule               — Set up transaction metrics service reference
+├── DockerService           — Connect to Docker (ping verify, simulation fallback)
+├── ConfigurationService    — Load routing configs (model catalog, capability tags,
+│                             fallback chains, cost strategies) + periodic refresh (5min)
+└── BotUsageAnalyticsService — Load model pricing cache for cost calculations
+
+Startup Services
+├── ReconciliationService   — Reconcile DB with Docker container state
+│                             (disable via ENABLE_STARTUP_RECONCILIATION)
+├── DockerEventService      — Start Docker event listener (2s delay)
+└── BotChannelStartupService — Auto-reconnect enabled Feishu channels (max 3 retries)
+```
+
+**Phase 4: HTTP Listen**
+
+12. Start HTTP server (default port 3100, listen on `0.0.0.0`)
+13. Register graceful shutdown signal handlers (SIGTERM, SIGINT, SIGHUP)
+
+### Init Scripts Reference
+
+| Script | Purpose | When to Run |
+| --- | --- | --- |
+| `scripts/init-env-secrets.sh` | Generate `BOT_MASTER_KEY` (OpenSSL 64-char hex) | First deployment |
+| `scripts/init-project.js` | Interactive project setup (name, ports, DB config) | First deployment (optional) |
+| `scripts/start-clawbot.sh` | Docker Compose startup | Production deployment |
+| `scripts/stop-clawbot.sh` | Docker Compose shutdown | Production ops |
+| `scripts/generate-prisma-enums.ts` | Generate Prisma enum type definitions | After schema changes |
+| `scripts/generate-i18n-errors.ts` | Generate i18n error messages | After error code changes |
 
 ---
 
 ## 🗺️ Roadmap
 
-### Near-term Goals
+### Near-term
 
-| Feature | Status | Description |
-| ---- | ---- | ---- |
-| Channel Connectors | 🚧 In Progress | Implement message send/receive connectors for Feishu, Telegram, WeChat, etc. |
-| Analytics Backend | 📋 Contract Defined | Implement `/analytics/track` endpoint, usage statistics |
-| Notification UI | 📋 Backend Done | Complete frontend notification center, real-time push |
-| Webhook Handlers | 📋 Contract Defined | Implement transcode, audio-transcribe callbacks |
-| Permission System | 📋 To Design | Fine-grained access control (RBAC) |
-| Rate Limiting | 📋 Config Exists | Verify and improve @fastify/rate-limit integration |
+| Feature | Status |
+| --- | --- |
+| Channel Connectors (Feishu, Telegram, WeChat, etc.) | 🚧 In Progress |
+| Analytics UI Dashboard | 📋 Backend Done |
+| Notification UI | 📋 Backend Done |
+| Webhook Handlers | 📋 Contract Defined |
+| Permission System (RBAC) | 📋 To Design |
+| Rate Limiting Verification | 📋 Config Exists |
 
-### Mid-term Goals
+### Mid-term
 
-- **More IM Channels**: WeCom, DingTalk, Slack, Discord, etc.
-- **Monitoring & Alerts**: Prometheus/Grafana integration, Bot health monitoring
-- **Advanced Routing**: Latency and cost-based intelligent routing
-- **Team Collaboration**: Team spaces, member management, permission assignment
-- **API Usage Analytics**: Token consumption stats, cost analysis, trend charts
+- More IM channels (WeCom, DingTalk, etc.)
+- Prometheus/Grafana monitoring and alerts
+- Latency and cost-based intelligent routing
+- Team collaboration (spaces, member management)
+- API usage analytics with cost analysis
 
-### Long-term Vision
+### Long-term
 
-- **Multi-cluster Deployment**: Cross-region Bot scheduling
-- **Channel Marketplace**: More third-party channel integrations
-- **Marketplace**: Template market, Bot sharing
-
----
-
-## 📝 Common Commands
-
-```bash
-pnpm dev              # Development
-pnpm build            # Build
-pnpm db:generate      # Generate Prisma Client
-pnpm db:migrate:dev   # Development migration
-pnpm db:migrate:deploy # Production migration
-pnpm db:push          # Push schema
-pnpm lint             # Lint
-pnpm type-check       # Type check
-pnpm test             # Test
-```
+- Multi-cluster deployment and cross-region scheduling
+- Channel marketplace
+- Template and Bot sharing marketplace
 
 ---
 
 ## 🔍 Troubleshooting
 
-### Common Issues
-
-#### Database Connection Failed
+### Database Connection Failed
 
 ```bash
-# Check PostgreSQL is running
 docker ps | grep postgres
-
-# Verify connection string
 psql $DATABASE_URL -c "SELECT 1"
 ```
 
-#### Docker Permission Denied
+### Docker Permission Denied
 
 ```bash
-# Add user to docker group
 sudo usermod -aG docker $USER
-
-# Restart Docker daemon
 sudo systemctl restart docker
 ```
 
-#### Port Already in Use
+### Port Already in Use
 
 ```bash
-# Find process using port
 lsof -i :3000
-
-# Kill process
 kill -9 <PID>
 ```
 
-#### Prisma Client Out of Sync
+### Prisma Client Out of Sync
 
 ```bash
-# Regenerate Prisma Client
 pnpm db:generate
-
-# If schema changed, create migration
 pnpm db:migrate:dev
 ```
 
-#### Bot Container Won't Start
+### Bot Container Won't Start
 
 1. Check Docker is running: `docker info`
 2. Verify port range is available
@@ -727,77 +653,31 @@ pnpm db:migrate:dev
 
 ---
 
-## 🤝 Contributing
+## 🔒 Security
 
-We welcome contributions! Please follow these steps:
+- All API keys encrypted with **AES-256-GCM** before storage
+- Keys decrypted only at runtime in the proxy layer
+- Bot containers **never** have direct access to API keys (zero-trust)
+- JWT-based authentication with configurable expiration
+- Multiple login methods (email, mobile, OAuth)
+- `BOT_MASTER_KEY` should be stored securely and rotated periodically
+
+---
+
+## 🤝 Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
 3. **Follow** the coding standards in `CLAUDE.md`
 4. **Write** tests for new features
 5. **Commit** with clear messages
-6. **Push** to your fork
-7. **Open** a Pull Request
-
-### Development Standards
-
-- Read `CLAUDE.md` for architecture guidelines
-- Follow the layered architecture (API → Service → DB/Client)
-- Use Zod schemas for all API validation
-- Write Winston logs, not console.log
-- Keep infra and domain layers separate
+6. **Open** a Pull Request
 
 ---
 
-## 🙏 Acknowledgments & Project Origins
+## 🙏 Acknowledgments
 
-### Acknowledgments
-
-We sincerely thank [BotMaker](https://github.com/jgarzik/botmaker), an excellent open-source project. BotMaker's zero-trust API key architecture, keyring-proxy design philosophy, and containerized Bot management approach provided important inspiration and reference for this project's design and implementation.
-
-### Why ClawBotManager Still Exists
-
-Before open-sourcing ClawBotManager, we had already implemented a similar multi-user, multi-team Bot management and API key orchestration system internally. At that time, we discovered the BotMaker project and borrowed many ideas and implementation details from it.
-
-Although BotMaker already solves similar problems well, we decided to open-source ClawBotManager for the following reasons:
-
-1. **Supplementary Capabilities**: During the AI-Native transformation of [psylos1.com](https://psylos1.com), we accumulated enterprise-grade capabilities like multi-tenancy, team collaboration, Provider Key tag routing and round-robin, Prisma + PostgreSQL, etc. We hope to provide the community with alternative technology choices and implementation paths.
-2. **Giving Back**: BotMaker inspired our design. We hope to share our practical experience in multi-user, multi-team management scenarios through open-sourcing our implementation, providing more reference and help to teams with similar needs.
-3. **Joint Progress**: AI Bot management and key orchestration is still a rapidly evolving field. We look forward to working with BotMaker and more open-source projects to provide the community with more choices and better solutions.
-
----
-
-## 🔒 Security Considerations
-
-### API Key Protection
-
-- All API keys are encrypted with **AES-256-GCM** before storage
-- Keys are only decrypted at runtime in the proxy layer
-- Bot containers **never** have direct access to API keys (zero-trust)
-- `BOT_MASTER_KEY` should be stored securely and backed up
-
-### Authentication
-
-- JWT-based authentication with configurable expiration
-- Support for multiple login methods (email, mobile, OAuth)
-- Token refresh mechanism for long-lived sessions
-
-### Best Practices
-
-1. **Never commit** `.env` files or secrets
-2. **Rotate** `BOT_MASTER_KEY` periodically (requires re-encryption)
-3. **Use** read replicas for database scaling
-4. **Enable** rate limiting in production
-5. **Monitor** audit logs for suspicious activity
-
----
-
-## 📂 Documentation & Standards
-
-- **Architecture & Standards**: `CLAUDE.md`, `.cursorrules`
-- **API Contracts**: `packages/contracts/src/api/`
-- **Backend Standards**: `apps/api/docs/` (if exists)
-- **Frontend Standards**: `apps/web/docs/` (if exists)
+We sincerely thank [BotMaker](https://github.com/jgarzik/botmaker) for its zero-trust API key architecture, keyring-proxy design philosophy, and containerized Bot management approach, which provided important inspiration for this project.
 
 ---
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BotStatusSchema } from './prisma-enums.generated';
+import { BotStatusSchema, BotTypeSchema } from './prisma-enums.generated';
 // 从新的 provider schema 导入
 import {
   ProviderVendorSchema,
@@ -41,7 +41,7 @@ export type ContainerStatus = z.infer<typeof ContainerStatusSchema>;
 // ============================================================================
 
 // 注意：aiProvider、model、channelType 字段已移除
-// 这些值现在从 BotProviderKey 和 BotChannel 动态派生
+// 这些值现在从 BotModel 和 BotChannel 动态派生
 // 使用 BotConfigResolverService.getBotRuntimeConfig() 获取这些值
 
 export const BotSchema = z.object({
@@ -53,6 +53,8 @@ export const BotSchema = z.object({
   gatewayToken: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   status: BotStatusSchema,
+  // Bot 类型 - 决定使用哪种 Docker 镜像
+  botType: BotTypeSchema,
   createdById: z.string().uuid(),
   personaTemplateId: z.string().uuid().nullable(),
   emoji: z.string().nullable(),
@@ -86,20 +88,6 @@ export const BotProviderConfigSchema = z.object({
 });
 
 export type BotProviderConfig = z.infer<typeof BotProviderConfigSchema>;
-
-// BotProviderKey Response Schema - 用于 API 响应
-export const BotProviderKeyResponseSchema = z.object({
-  id: z.string().uuid(),
-  providerKeyId: z.string().uuid(),
-  isPrimary: z.boolean(),
-  allowedModels: z.array(z.string()),
-  primaryModel: z.string().nullable(),
-  createdAt: z.coerce.date(),
-});
-
-export type BotProviderKeyResponse = z.infer<
-  typeof BotProviderKeyResponseSchema
->;
 
 /** @deprecated 使用 BotProviderConfigSchema 代替 */
 export const ProviderConfigSchema = BotProviderConfigSchema;
@@ -145,6 +133,8 @@ export const CreateBotInputSchema = z.object({
   persona: PersonaSchema,
   features: WizardFeaturesSchema,
   tags: z.array(z.string()).optional(),
+  // Bot 类型 - 决定使用哪种 Docker 镜像，默认为 GATEWAY
+  botType: BotTypeSchema.optional().default('GATEWAY'),
 });
 
 export type CreateBotInput = z.infer<typeof CreateBotInputSchema>;
@@ -166,6 +156,8 @@ export const SimpleCreateBotInputSchema = z.object({
   persona: PersonaSchema,
   personaTemplateId: z.string().uuid().optional(),
   tags: z.array(z.string()).optional(),
+  // Bot 类型 - 决定使用哪种 Docker 镜像，默认为 GATEWAY
+  botType: BotTypeSchema.optional().default('GATEWAY'),
 });
 
 export type SimpleCreateBotInput = z.infer<typeof SimpleCreateBotInputSchema>;
@@ -272,6 +264,7 @@ export const ProviderKeySchema = z.object({
   label: z.string(),
   tag: z.string().nullable(),
   baseUrl: z.string().nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   createdAt: z.coerce.date(),
 });
 
@@ -292,6 +285,7 @@ export const AddProviderKeyInputSchema = z.object({
     .url({ message: 'Must be a valid URL' })
     .optional()
     .transform((val) => (val?.trim() === '' ? undefined : val)),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type AddProviderKeyInput = z.infer<typeof AddProviderKeyInputSchema>;
@@ -334,6 +328,8 @@ export const VerifyProviderKeyInputSchema = z.object({
     .transform((val) => (val?.trim() === '' ? undefined : val)),
   /** API protocol type - overrides the default from PROVIDER_CONFIGS */
   apiType: ProviderApiTypeSchema.optional(),
+  /** Provider-specific metadata (e.g. MiniMax groupId) */
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type VerifyProviderKeyInput = z.infer<
@@ -367,48 +363,56 @@ export type VerifyProviderKeyResponse = z.infer<
 >;
 
 // ============================================================================
-// Bot Provider Management Schemas
+// Bot Model Management Schemas
 // ============================================================================
 
 /**
- * Bot Provider 详情 Schema - 用于 API 响应
+ * Bot Model 详情 Schema - 用于 API 响应
+ * 直接关联 Bot 和 Model，不再通过 Provider
  */
-export const BotProviderDetailSchema = z.object({
+export const BotModelDetailSchema = z.object({
   id: z.string().uuid(),
-  providerKeyId: z.string().uuid(),
-  vendor: ProviderVendorSchema,
-  apiType: ProviderApiTypeSchema.nullable(),
-  label: z.string(),
-  apiKeyMasked: z.string(),
-  baseUrl: z.string().nullable(),
+  modelId: z.string(),
+  isEnabled: z.boolean(),
   isPrimary: z.boolean(),
-  allowedModels: z.array(z.string()),
-  primaryModel: z.string().nullable(),
   createdAt: z.coerce.date(),
 });
 
-export type BotProviderDetail = z.infer<typeof BotProviderDetailSchema>;
+export type BotModelDetail = z.infer<typeof BotModelDetailSchema>;
 
 /**
- * 添加 Bot Provider 输入 Schema
+ * 添加 Bot Model 输入 Schema
  */
-export const AddBotProviderInputSchema = z.object({
-  keyId: z.string().uuid(),
-  models: z.array(z.string()).min(1, 'At least one model is required'),
-  primaryModel: z.string().optional(),
+export const AddBotModelInputSchema = z.object({
+  /** ModelAvailability ID */
+  modelAvailabilityId: z.string().uuid(),
+  /** 是否设为主模型 */
   isPrimary: z.boolean().optional().default(false),
 });
 
-export type AddBotProviderInput = z.infer<typeof AddBotProviderInputSchema>;
+export type AddBotModelInput = z.infer<typeof AddBotModelInputSchema>;
 
 /**
- * 设置主模型输入 Schema
+ * 批量添加 Bot Model 输入 Schema
  */
-export const SetPrimaryModelInputSchema = z.object({
-  modelId: z.string(),
+export const AddBotModelsInputSchema = z.object({
+  /** ModelAvailability IDs */
+  modelAvailabilityIds: z.array(z.string().uuid()).min(1),
+  /** 主模型的 ModelAvailability ID */
+  primaryModelAvailabilityId: z.string().uuid().optional(),
 });
 
-export type SetPrimaryModelInput = z.infer<typeof SetPrimaryModelInputSchema>;
+export type AddBotModelsInput = z.infer<typeof AddBotModelsInputSchema>;
+
+/**
+ * 移除 Bot Model 输入 Schema
+ */
+export const RemoveBotModelInputSchema = z.object({
+  /** ModelAvailability ID */
+  modelAvailabilityId: z.string().uuid(),
+});
+
+export type RemoveBotModelInput = z.infer<typeof RemoveBotModelInputSchema>;
 
 // ============================================================================
 // Bot Diagnostics Schemas

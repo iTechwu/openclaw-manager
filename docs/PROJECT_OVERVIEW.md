@@ -247,7 +247,10 @@ API_BASE_URL=http://localhost:3100/api
 INTERNAL_API_BASE_URL=http://127.0.0.1:3100/api
 
 # Docker
-BOT_IMAGE=openclaw:latest         # Bot 容器镜像
+BOT_IMAGE_GATEWAY=openclaw:local              # GATEWAY 类型 Bot 镜像
+BOT_IMAGE_TOOL_SANDBOX=openclaw-sandbox:bookworm-slim  # TOOL_SANDBOX 类型 Bot 镜像
+BOT_IMAGE_BROWSER_SANDBOX=openclaw-sandbox-browser:bookworm-slim  # BROWSER_SANDBOX 类型 Bot 镜像
+OPENCLAW_SRC_PATH=../openclaw    # OpenClaw 源码路径（用于构建镜像）
 BOT_PORT_START=9200               # Bot 容器起始端口
 BOT_DATA_DIR=/data/bots           # Bot 工作空间目录
 BOT_SECRETS_DIR=/data/secrets     # Secrets 目录
@@ -436,8 +439,30 @@ const { data } = tsRestClient.bot.list.useQuery({
 
 ### docker-compose.yml 服务
 
-1. **botenv** (profile: build): Bot 环境镜像构建器
-2. **clawbot-manager**: 主应用容器
+1. **api**: NestJS 后端服务 (内部: 3200, 外部: 13100)
+2. **web**: Next.js 前端服务 (内部: 3000, 外部: 13000)
+
+### Bot 镜像构建
+
+所有 Bot 镜像从 openclaw 项目本地构建：
+
+```bash
+# 构建所有镜像
+pnpm docker:build:all
+
+# 单独构建
+pnpm docker:build:gateway  # GATEWAY 类型
+pnpm docker:build:sandbox  # TOOL_SANDBOX 类型
+pnpm docker:build:browser  # BROWSER_SANDBOX 类型
+```
+
+| BotType | 镜像 | 用途 |
+|---------|------|------|
+| `GATEWAY` | `openclaw:local` | 主 Gateway bot（默认）|
+| `TOOL_SANDBOX` | `openclaw-sandbox:bookworm-slim` | 工具沙箱 |
+| `BROWSER_SANDBOX` | `openclaw-sandbox-browser:bookworm-slim` | 浏览器沙箱 + VNC |
+
+### 快速启动
    - 暴露端口 7100
    - 挂载 Docker socket 用于容器管理
    - Volumes: clawbot-data, clawbot-secrets

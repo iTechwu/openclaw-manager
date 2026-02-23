@@ -20,6 +20,7 @@ export interface TokenValidation {
   keyId?: string;
   apiKey?: string;
   baseUrl?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -64,6 +65,14 @@ export class KeyringProxyService {
     private readonly encryptionService: EncryptionService,
     private readonly modelRouterService: ModelRouterService,
   ) {}
+
+  /** 解密 ProviderKey 的 secretEncrypted 字段 */
+  private decryptApiKey(secretEncrypted: Buffer | Uint8Array): string {
+    const raw = Buffer.isBuffer(secretEncrypted)
+      ? secretEncrypted
+      : Buffer.from(secretEncrypted);
+    return this.encryptionService.decrypt(raw);
+  }
 
   /**
    * 注册 Bot 并生成 Proxy Token
@@ -162,10 +171,7 @@ export class KeyringProxyService {
     }
 
     // Decrypt API key
-    const raw = Buffer.isBuffer(providerKey.secretEncrypted)
-      ? providerKey.secretEncrypted
-      : Buffer.from(providerKey.secretEncrypted);
-    const apiKey = this.encryptionService.decrypt(raw);
+    const apiKey = this.decryptApiKey(providerKey.secretEncrypted);
 
     // Update usage stats (async, don't block)
     this.updateUsage(tokenHash).catch((err) => {
@@ -180,6 +186,7 @@ export class KeyringProxyService {
       keyId: proxyToken.keyId,
       apiKey,
       baseUrl: providerKey.baseUrl,
+      metadata: (providerKey.metadata as Record<string, unknown>) ?? null,
     };
   }
 
@@ -303,10 +310,7 @@ export class KeyringProxyService {
         }
 
         // 解密新的 API Key
-        const raw = Buffer.isBuffer(newProviderKey.secretEncrypted)
-          ? newProviderKey.secretEncrypted
-          : Buffer.from(newProviderKey.secretEncrypted);
-        const apiKey = this.encryptionService.decrypt(raw);
+        const apiKey = this.decryptApiKey(newProviderKey.secretEncrypted);
 
         return {
           valid: true,

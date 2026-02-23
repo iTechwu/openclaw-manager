@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { PluginService, BotPluginService, BotService } from '@app/db';
+import { OpenClawClient } from '@app/clients/internal/openclaw';
 import type { Prisma } from '@prisma/client';
 import type {
   PluginListQuery,
@@ -13,6 +14,15 @@ import type {
   UpdatePluginConfigRequest,
 } from '@repo/contracts';
 
+/**
+ * MCP Server 配置（用于 OpenClaw openclaw.json）
+ */
+interface McpServerConfig {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
 @Injectable()
 export class PluginApiService {
   constructor(
@@ -20,6 +30,7 @@ export class PluginApiService {
     private readonly pluginService: PluginService,
     private readonly botPluginService: BotPluginService,
     private readonly botService: BotService,
+    private readonly openClawClient: OpenClawClient,
   ) {}
 
   /**
@@ -196,7 +207,13 @@ export class PluginApiService {
           isEnabled: true,
           createdAt: true,
           updatedAt: true,
-          plugin: true,
+          plugin: {
+            select: {
+              id: true,
+              slug: true,
+              mcpConfig: true,
+            },
+          },
         },
       },
     );
@@ -254,11 +271,42 @@ export class PluginApiService {
         isEnabled: true,
         createdAt: true,
         updatedAt: true,
-        plugin: true,
+        plugin: {
+          select: {
+            id: true,
+            slug: true,
+            mcpConfig: true,
+          },
+        },
       },
     });
 
-    return this.mapBotPluginToItem(fullBotPlugin!);
+    // 注入 MCP Server 配置到容器（如果插件有 mcpConfig 且容器已启动）
+    if (plugin.mcpConfig && bot.containerId) {
+      try {
+        const mcpConfig = this.formatMcpConfigForOpenClaw(
+          plugin.mcpConfig as Record<string, unknown>,
+          botPlugin.config as Record<string, unknown> | null,
+        );
+        await this.openClawClient.injectMcpConfig(bot.containerId, {
+          [plugin.slug]: mcpConfig,
+        });
+        this.logger.info('MCP config injected', {
+          botId: bot.id,
+          pluginSlug: plugin.slug,
+          containerId: bot.containerId,
+        });
+      } catch (error) {
+        this.logger.error('Failed to inject MCP config', {
+          botId: bot.id,
+          pluginSlug: plugin.slug,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        // 不抛出错误，允许插件安装成功（MCP 配置可后续手动注入）
+      }
+    }
+
+    return this.mapBotPluginToItemWithPlugin(fullBotPlugin!, plugin);
   }
 
   /**
@@ -309,11 +357,43 @@ export class PluginApiService {
         isEnabled: true,
         createdAt: true,
         updatedAt: true,
-        plugin: true,
+        plugin: {
+          select: {
+            id: true,
+            slug: true,
+            mcpConfig: true,
+          },
+        },
       },
     });
 
-    return this.mapBotPluginToItem(fullBotPlugin!);
+    // 重新注入 MCP 配置（如果插件有 mcpConfig 且容器已启动）
+    const plugin = (fullBotPlugin as any).plugin;
+    if (plugin?.mcpConfig && bot.containerId) {
+      try {
+        const mcpConfig = this.formatMcpConfigForOpenClaw(
+          plugin.mcpConfig as Record<string, unknown>,
+          updated.config as Record<string, unknown> | null,
+        );
+        await this.openClawClient.injectMcpConfig(bot.containerId, {
+          [plugin.slug]: mcpConfig,
+        });
+        this.logger.info('MCP config re-injected', {
+          botId: bot.id,
+          pluginSlug: plugin.slug,
+        });
+      } catch (error) {
+        this.logger.error('Failed to re-inject MCP config', {
+          botId: bot.id,
+          pluginSlug: plugin.slug,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    // Extract plugin data with type assertion
+    const pluginData = (fullBotPlugin as any).plugin;
+    return this.mapBotPluginToItemWithPlugin(fullBotPlugin!, pluginData);
   }
 
   /**
@@ -337,6 +417,30 @@ export class PluginApiService {
       throw new NotFoundException('插件未安装');
     }
 
+    // 移除 MCP 配置（如果容器已启动）
+    if (bot.containerId) {
+      try {
+        const plugin = await this.pluginService.getById(pluginId);
+        if (plugin?.mcpConfig) {
+          await this.openClawClient.removeMcpConfig(
+            bot.containerId,
+            plugin.slug,
+          );
+          this.logger.info('MCP config removed', {
+            botId: bot.id,
+            pluginSlug: plugin.slug,
+          });
+        }
+      } catch (error) {
+        this.logger.error('Failed to remove MCP config', {
+          botId: bot.id,
+          pluginId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        // 不抛出错误，允许插件卸载成功
+      }
+    }
+
     await this.botPluginService.delete({ id: botPlugin.id });
 
     this.logger.info('Plugin uninstalled', {
@@ -346,6 +450,121 @@ export class PluginApiService {
     });
 
     return { success: true };
+  }
+
+  /**
+   * 批量恢复 Bot 插件的 MCP 配置（容器启动时调用）
+   * @param botId Bot ID
+   * @param containerId 容器 ID
+   */
+  async reconcileBotPlugins(botId: string, containerId: string): Promise<void> {
+    this.logger.info('Reconciling bot plugins', { botId, containerId });
+
+    // 获取所有已启用的插件
+    const botPlugins = await this.botPluginService.list(
+      { botId, isEnabled: true },
+      { limit: 100 },
+      {
+        select: {
+          id: true,
+          botId: true,
+          pluginId: true,
+          config: true,
+          plugin: {
+            select: {
+              id: true,
+              slug: true,
+              mcpConfig: true,
+            },
+          },
+        },
+      },
+    );
+
+    if (botPlugins.list.length === 0) {
+      this.logger.info('No enabled plugins to reconcile', { botId });
+      return;
+    }
+
+    // 批量注入 MCP 配置
+    const mcpServers: Record<string, McpServerConfig> = {};
+    for (const botPlugin of botPlugins.list) {
+      const plugin = (botPlugin as any).plugin;
+      if (plugin?.mcpConfig) {
+        const mcpConfig = this.formatMcpConfigForOpenClaw(
+          plugin.mcpConfig as Record<string, unknown>,
+          botPlugin.config as Record<string, unknown> | null,
+        );
+        mcpServers[plugin.slug] = mcpConfig;
+      }
+    }
+
+    if (Object.keys(mcpServers).length > 0) {
+      try {
+        await this.openClawClient.injectMcpConfig(containerId, mcpServers);
+        this.logger.info('MCP configs reconciled', {
+          botId,
+          plugins: Object.keys(mcpServers),
+        });
+      } catch (error) {
+        this.logger.error('Failed to reconcile MCP configs', {
+          botId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+  }
+
+  /**
+   * 格式化 MCP 配置为 OpenClaw 格式
+   * 支持 ${variableName} 插值替换
+   * @param pluginMcpConfig 插件定义中的 mcpConfig
+   * @param botConfig 用户配置的插件配置
+   * @returns OpenClaw 格式的 MCP Server 配置
+   */
+  private formatMcpConfigForOpenClaw(
+    pluginMcpConfig: Record<string, unknown>,
+    botConfig: Record<string, unknown> | null,
+  ): McpServerConfig {
+    const result: McpServerConfig = {
+      command: (pluginMcpConfig.command as string) || 'npx',
+      args: (pluginMcpConfig.args as string[]) || [],
+    };
+
+    // 处理环境变量（支持插值）
+    if (pluginMcpConfig.env) {
+      const env: Record<string, string> = {};
+      for (const [key, value] of Object.entries(
+        pluginMcpConfig.env as Record<string, unknown>,
+      )) {
+        env[key] = this.interpolateConfigValue(String(value), botConfig || {});
+      }
+      result.env = env;
+    }
+
+    return result;
+  }
+
+  /**
+   * 配置插值：将 ${variableName} 替换为实际值
+   * @param value 包含 ${variableName} 占位符的字符串
+   * @param config 配置对象
+   * @returns 插值后的字符串
+   */
+  private interpolateConfigValue(
+    value: string,
+    config: Record<string, unknown>,
+  ): string {
+    return value.replace(/\$\{(\w+)\}/g, (match, varName) => {
+      const configValue = config[varName];
+      if (configValue === undefined || configValue === null) {
+        this.logger.warn(
+          `Config variable not found: ${varName}, keeping placeholder`,
+        );
+        return match; // 保持原占位符
+      }
+      return String(configValue);
+    });
   }
 
   /**
@@ -387,6 +606,25 @@ export class PluginApiService {
       createdAt: botPlugin.createdAt,
       updatedAt: botPlugin.updatedAt,
       plugin: this.mapPluginToItem(botPlugin.plugin),
+    };
+  }
+
+  /**
+   * 映射 BotPlugin（带 nested plugin）到 BotPluginItem
+   */
+  private mapBotPluginToItemWithPlugin(
+    botPlugin: any,
+    plugin: any,
+  ): BotPluginItem {
+    return {
+      id: botPlugin.id,
+      botId: botPlugin.botId,
+      pluginId: botPlugin.pluginId,
+      config: botPlugin.config as Record<string, unknown> | null,
+      isEnabled: botPlugin.isEnabled,
+      createdAt: botPlugin.createdAt,
+      updatedAt: botPlugin.updatedAt,
+      plugin: this.mapPluginToItem(plugin),
     };
   }
 }

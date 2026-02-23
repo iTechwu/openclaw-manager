@@ -23,9 +23,9 @@ export interface CostStrategy {
 }
 
 /**
- * 模型定价信息
+ * 模型目录定价信息（来自 ModelCatalog 表）
  */
-export interface ModelPricing {
+export interface ModelCatalogPricing {
   model: string;
   vendor: string;
   inputPrice: number; // 美元/百万 tokens
@@ -90,8 +90,8 @@ export class CostTrackerService {
   // 成本策略配置（后续从数据库加载）
   private costStrategies: Map<string, CostStrategy> = new Map();
 
-  // 模型定价信息（后续从数据库加载）
-  private modelPricing: Map<string, ModelPricing> = new Map();
+  // 模型目录定价信息（从 ModelCatalog 加载）
+  private modelCatalog: Map<string, ModelCatalogPricing> = new Map();
 
   // Bot 使用量追踪（内存缓存，定期持久化）
   private botUsage: Map<
@@ -181,7 +181,7 @@ export class CostTrackerService {
    * 初始化默认模型定价
    */
   private initializeDefaultPricing(): void {
-    const defaultPricing: ModelPricing[] = [
+    const defaultPricing: ModelCatalogPricing[] = [
       // Anthropic
       {
         model: 'claude-opus-4-20250514',
@@ -276,7 +276,7 @@ export class CostTrackerService {
     ];
 
     for (const pricing of defaultPricing) {
-      this.modelPricing.set(pricing.model, pricing);
+      this.modelCatalog.set(pricing.model, pricing);
     }
   }
 
@@ -294,15 +294,17 @@ export class CostTrackerService {
   }
 
   /**
-   * 从数据库加载模型定价
+   * 从数据库加载模型目录定价
    */
-  async loadModelPricingFromDb(pricing: ModelPricing[]): Promise<void> {
-    this.modelPricing.clear();
+  async loadModelCatalogPricingFromDb(
+    pricing: ModelCatalogPricing[],
+  ): Promise<void> {
+    this.modelCatalog.clear();
     for (const p of pricing) {
-      this.modelPricing.set(p.model, p);
+      this.modelCatalog.set(p.model, p);
     }
     this.logger.info(
-      `[CostTracker] Loaded ${pricing.length} model pricing from database`,
+      `[CostTracker] Loaded ${pricing.length} model catalog pricing from database`,
     );
   }
 
@@ -310,7 +312,7 @@ export class CostTrackerService {
    * 计算请求成本
    */
   calculateCost(model: string, usage: TokenUsage): CostCalculation {
-    const pricing = this.modelPricing.get(model);
+    const pricing = this.modelCatalog.get(model);
 
     if (!pricing) {
       this.logger.warn(`[CostTracker] No pricing found for model: ${model}`);
@@ -330,8 +332,7 @@ export class CostTrackerService {
 
     let thinkingCost = 0;
     if (usage.thinkingTokens && pricing.thinkingPrice) {
-      thinkingCost =
-        (usage.thinkingTokens / 1_000_000) * pricing.thinkingPrice;
+      thinkingCost = (usage.thinkingTokens / 1_000_000) * pricing.thinkingPrice;
     }
 
     let cacheCost = 0;
@@ -432,14 +433,14 @@ export class CostTrackerService {
     if (dailyLimit && usage.dailyCost >= dailyLimit * alertThreshold) {
       status.alertTriggered = true;
       this.logger.warn(
-        `[CostTracker] Bot ${botId} daily budget alert: ${(usage.dailyCost / dailyLimit * 100).toFixed(1)}% used`,
+        `[CostTracker] Bot ${botId} daily budget alert: ${((usage.dailyCost / dailyLimit) * 100).toFixed(1)}% used`,
       );
     }
 
     if (monthlyLimit && usage.monthlyCost >= monthlyLimit * alertThreshold) {
       status.alertTriggered = true;
       this.logger.warn(
-        `[CostTracker] Bot ${botId} monthly budget alert: ${(usage.monthlyCost / monthlyLimit * 100).toFixed(1)}% used`,
+        `[CostTracker] Bot ${botId} monthly budget alert: ${((usage.monthlyCost / monthlyLimit) * 100).toFixed(1)}% used`,
       );
     }
 
@@ -475,7 +476,7 @@ export class CostTrackerService {
     let bestScore = -Infinity;
 
     for (const modelName of availableModels) {
-      const pricing = this.modelPricing.get(modelName);
+      const pricing = this.modelCatalog.get(modelName);
       if (!pricing) continue;
 
       // 检查最低能力要求
@@ -551,17 +552,17 @@ export class CostTrackerService {
   }
 
   /**
-   * 获取模型定价
+   * 获取模型目录定价
    */
-  getModelPricing(model: string): ModelPricing | undefined {
-    return this.modelPricing.get(model);
+  getModelCatalogPricing(model: string): ModelCatalogPricing | undefined {
+    return this.modelCatalog.get(model);
   }
 
   /**
-   * 获取所有模型定价
+   * 获取所有模型目录定价
    */
-  getAllModelPricing(): ModelPricing[] {
-    return Array.from(this.modelPricing.values());
+  getAllModelCatalogPricing(): ModelCatalogPricing[] {
+    return Array.from(this.modelCatalog.values());
   }
 
   /**

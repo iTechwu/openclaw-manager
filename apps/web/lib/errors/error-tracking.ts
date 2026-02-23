@@ -13,11 +13,11 @@ import type { ErrorInfo } from 'react';
  */
 export interface ErrorContext {
   /** 组件堆栈 */
-  componentStack?: string;
+  componentStack?: string | null;
   /** 用户 ID */
   userId?: string;
   /** 页面 URL */
-  url?: string;
+  url?: string | null;
   /** 额外的元数据 */
   metadata?: Record<string, unknown>;
 }
@@ -115,8 +115,15 @@ export function trackError(
  */
 function sendToErrorService(error: Error, context: ErrorContext): void {
   // 如果配置了 Sentry，使用 Sentry
-  if (typeof window !== 'undefined' && (window as unknown as { Sentry?: unknown }).Sentry) {
-    const Sentry = (window as unknown as { Sentry: { captureException: (e: Error, c: unknown) => void } }).Sentry;
+  if (
+    typeof window !== 'undefined' &&
+    (window as unknown as { Sentry?: unknown }).Sentry
+  ) {
+    const Sentry = (
+      window as unknown as {
+        Sentry: { captureException: (e: Error, c: unknown) => void };
+      }
+    ).Sentry;
     Sentry.captureException(error, {
       extra: context,
     });
@@ -169,7 +176,8 @@ export function trackUnhandledRejection(event: PromiseRejectionEvent): void {
  * 追踪全局错误
  */
 export function trackGlobalError(event: ErrorEvent): void {
-  const error = event.error instanceof Error ? event.error : new Error(event.message);
+  const error =
+    event.error instanceof Error ? event.error : new Error(event.message);
 
   trackError(error, undefined, {
     metadata: {

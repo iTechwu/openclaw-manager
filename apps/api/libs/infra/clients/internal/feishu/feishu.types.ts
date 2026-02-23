@@ -113,13 +113,17 @@ export interface FeishuSendMessageResponse {
   };
 }
 
-// WebSocket 长连接消息
+// ==================== 以下类型已弃用（WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展）====================
+
+// WebSocket 长连接消息（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export interface FeishuWsMessage {
   type: 'event' | 'card' | 'pong';
   data?: FeishuMessageEvent;
 }
 
-// 消息处理回调
+// 消息处理回调（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export type FeishuMessageHandler = (event: FeishuMessageEvent) => Promise<void>;
 
 // 卡片交互事件处理回调
@@ -127,7 +131,8 @@ export type FeishuCardActionHandler = (
   event: FeishuCardActionEvent,
 ) => Promise<FeishuCardActionResponse | void>;
 
-// 连接状态回调
+// 连接状态回调（已弃用）
+/** @deprecated WebSocket 连接已迁移到 OpenClaw 原生 feishu 扩展 */
 export interface FeishuConnectionCallbacks {
   onConnect?: () => void;
   onDisconnect?: (reason?: string) => void;
@@ -276,4 +281,127 @@ export interface FeishuChatInfo {
   chat_type?: string;
   external?: boolean;
   tenant_key?: string;
+}
+
+// ==================== 富文本消息解析类型 ====================
+
+/**
+ * 飞书富文本消息内容（post 类型）
+ * 参考: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/im-v1/message-events/events/post
+ */
+export interface FeishuPostContent {
+  title?: string;
+  content: FeishuPostContentNode[][];
+}
+
+/**
+ * 富文本节点类型
+ */
+export type FeishuPostContentNode =
+  | FeishuPostTextNode
+  | FeishuPostImageNode
+  | FeishuPostLinkNode
+  | FeishuPostAtNode
+  | FeishuPostCodeNode;
+
+export interface FeishuPostTextNode {
+  tag: 'text';
+  text: string;
+  style?: FeishuPostStyle[];
+}
+
+export interface FeishuPostImageNode {
+  tag: 'img';
+  image_key: string;
+  width?: number;
+  height?: number;
+}
+
+export interface FeishuPostLinkNode {
+  tag: 'a';
+  text: string;
+  href: string;
+}
+
+export interface FeishuPostAtNode {
+  tag: 'at';
+  user_id: string;
+  text?: string;
+}
+
+export interface FeishuPostCodeNode {
+  tag: 'code';
+  text: string;
+  style?: FeishuPostStyle[];
+}
+
+export interface FeishuPostStyle {
+  key: 'bold' | 'italic' | 'underline' | 'lineThrough' | 'color';
+  value?: string;
+}
+
+/**
+ * 飞书图片消息内容（image 类型）
+ */
+export interface FeishuImageContent {
+  image_key: string;
+}
+
+/**
+ * 飞书文件消息内容（file 类型）
+ */
+export interface FeishuFileContent {
+  file_key: string;
+  file_name: string;
+}
+
+/**
+ * 图片数据响应
+ */
+export interface FeishuImageData {
+  /** 图片 Base64 编码数据 */
+  base64: string;
+  /** 图片 MIME 类型 */
+  mimeType: string;
+  /** 图片大小（字节） */
+  size: number;
+}
+
+/**
+ * 文件数据响应
+ */
+export interface FeishuFileData {
+  /** 文件 Base64 编码数据 */
+  base64: string;
+  /** 文件 MIME 类型 */
+  mimeType: string;
+  /** 文件大小（字节） */
+  size: number;
+  /** 文件名 */
+  fileName: string;
+}
+
+/**
+ * 解析后的消息内容
+ */
+export interface ParsedFeishuMessage {
+  /** 提取的纯文本内容 */
+  text: string;
+  /** 是否包含图片 */
+  hasImages: boolean;
+  /** 图片信息列表 */
+  images: Array<{
+    imageKey: string;
+    width?: number;
+    height?: number;
+  }>;
+  /** 是否包含文件 */
+  hasFiles: boolean;
+  /** 文件信息列表 */
+  files: Array<{
+    fileKey: string;
+    fileName: string;
+  }>;
+  /** 原始消息类型 */
+  messageType: string;
 }

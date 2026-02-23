@@ -30,7 +30,7 @@ export const notificationKeys = {
 // ============================================================================
 
 export interface NotificationsParams {
-  type?: string;
+  type?: NotificationListQuery['type'];
   isRead?: boolean;
   limit?: number;
   page?: number;
@@ -52,8 +52,19 @@ export function useNotifications(
   params?: NotificationsParams,
   options?: NotificationsOptions,
 ) {
+  const listParams: Partial<NotificationListQuery> | undefined = params
+    ? {
+        type: params.type,
+        isRead: params.isRead,
+        limit: params.limit,
+        page: params.page,
+      }
+    : undefined;
+
+  const queryKey = notificationKeys.list(listParams);
+
   const query = notificationApi.list.useQuery(
-    notificationKeys.list(params),
+    queryKey,
     {
       query: {
         type: params?.type as NotificationListQuery['type'],
@@ -63,6 +74,7 @@ export function useNotifications(
       },
     },
     {
+      queryKey,
       enabled: options?.enabled !== false,
       staleTime: 30000,
     },
@@ -89,10 +101,13 @@ export function useNotifications(
  * 获取未读通知数量
  */
 export function useUnreadNotificationCount() {
+  const queryKey = notificationKeys.unreadCount();
+
   const query = notificationApi.getUnreadCount.useQuery(
-    notificationKeys.unreadCount(),
+    queryKey,
     {},
     {
+      queryKey,
       staleTime: 30000,
       refetchInterval: 60000, // 每分钟刷新一次
     },

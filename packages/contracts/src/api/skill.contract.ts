@@ -10,6 +10,12 @@ import {
   UpdateSkillRequestSchema,
   InstallSkillRequestSchema,
   UpdateBotSkillRequestSchema,
+  BatchInstallSkillRequestSchema,
+  BatchInstallResultSchema,
+  ContainerSkillsResponseSchema,
+  UpdateBotSkillVersionResponseSchema,
+  CheckSkillUpdatesResponseSchema,
+  InstallSkillFromFilesRequestSchema,
 } from '../schemas/skill.schema';
 
 const c = initContract();
@@ -114,6 +120,20 @@ export const botSkillContract = c.router(
     },
 
     /**
+     * 获取容器内置技能列表
+     */
+    containerSkills: {
+      method: 'GET',
+      path: '/:hostname/skills/container',
+      pathParams: z.object({ hostname: z.string() }),
+      responses: {
+        200: createApiResponse(ContainerSkillsResponseSchema),
+      },
+      summary: '获取容器内置技能',
+      description: '获取 Docker 容器中自动安装的内置技能列表',
+    },
+
+    /**
      * 安装技能到 Bot
      */
     install: {
@@ -123,9 +143,25 @@ export const botSkillContract = c.router(
       body: InstallSkillRequestSchema,
       responses: {
         200: createApiResponse(BotSkillItemSchema),
+        409: createApiResponse(z.null()),
       },
       summary: '安装技能',
       description: '为指定 Bot 安装技能',
+    },
+
+    /**
+     * 批量安装技能到 Bot
+     */
+    batchInstall: {
+      method: 'POST',
+      path: '/:hostname/skills/batch',
+      pathParams: z.object({ hostname: z.string() }),
+      body: BatchInstallSkillRequestSchema,
+      responses: {
+        200: createApiResponse(BatchInstallResultSchema),
+      },
+      summary: '批量安装技能',
+      description: '为指定 Bot 批量安装多个技能',
     },
 
     /**
@@ -144,6 +180,56 @@ export const botSkillContract = c.router(
       },
       summary: '更新技能配置',
       description: '更新 Bot 已安装技能的配置',
+    },
+
+    /**
+     * 更新已安装技能到最新版本
+     */
+    updateVersion: {
+      method: 'POST',
+      path: '/:hostname/skills/:skillId/update',
+      pathParams: z.object({
+        hostname: z.string(),
+        skillId: z.string().uuid(),
+      }),
+      body: z.object({}),
+      responses: {
+        200: createApiResponse(UpdateBotSkillVersionResponseSchema),
+      },
+      summary: '更新技能版本',
+      description: '从 GitHub 重新拉取技能内容并更新到最新版本',
+    },
+
+    /**
+     * 批量检查已安装技能的更新
+     */
+    checkUpdates: {
+      method: 'POST',
+      path: '/:hostname/skills/check-updates',
+      pathParams: z.object({ hostname: z.string() }),
+      body: z.object({}),
+      responses: {
+        200: createApiResponse(CheckSkillUpdatesResponseSchema),
+      },
+      summary: '批量检查技能更新',
+      description: '检查所有已安装的 OpenClaw 技能是否有新版本',
+    },
+
+    /**
+     * 从文件安装 Skill（离线安装 / 私有 skills）
+     */
+    installFromFiles: {
+      method: 'POST',
+      path: '/:hostname/skills/install-from-files',
+      pathParams: z.object({ hostname: z.string() }),
+      body: InstallSkillFromFilesRequestSchema,
+      responses: {
+        200: createApiResponse(BotSkillItemSchema),
+        400: createApiResponse(z.null()),
+        409: createApiResponse(z.null()),
+      },
+      summary: '从文件安装技能',
+      description: '直接上传 skill 文件安装到 Bot，支持离线安装和私有 skills',
     },
 
     /**

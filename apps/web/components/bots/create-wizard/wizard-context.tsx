@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import type { SimpleCreateBotInput } from '@repo/contracts';
+import type { SimpleCreateBotInput, BotType } from '@repo/contracts';
 import { SCRATCH_TEMPLATE } from '@/lib/config';
 
 export interface WizardState {
@@ -21,6 +21,8 @@ export interface WizardState {
   avatarPreviewUrl: string;
   soulMarkdown: string;
   tags: string[];
+  /** Bot type - determines which Docker image to use */
+  botType: BotType;
 }
 
 export interface ValidationResult {
@@ -42,6 +44,7 @@ type WizardAction =
   | { type: 'CLEAR_AVATAR' }
   | { type: 'SET_SOUL_MARKDOWN'; markdown: string }
   | { type: 'SET_TAGS'; tags: string[] }
+  | { type: 'SET_BOT_TYPE'; botType: BotType }
   | { type: 'RESET' };
 
 const initialState: WizardState = {
@@ -55,6 +58,7 @@ const initialState: WizardState = {
   avatarPreviewUrl: '',
   soulMarkdown: '',
   tags: [],
+  botType: 'GATEWAY',
 };
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
@@ -112,6 +116,9 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 
     case 'SET_TAGS':
       return { ...state, tags: action.tags };
+
+    case 'SET_BOT_TYPE':
+      return { ...state, botType: action.botType };
 
     case 'RESET':
       return initialState;
@@ -186,6 +193,7 @@ export function buildSimpleCreateBotInput(
       avatarUrl: state.avatarPreviewUrl || undefined,
     },
     tags: state.tags.length > 0 ? state.tags : undefined,
+    botType: state.botType,
   };
 }
 

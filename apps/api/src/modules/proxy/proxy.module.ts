@@ -6,15 +6,22 @@ import {
   BotUsageLogModule,
   MessageDbModule,
   ProxyTokenModule,
-  BotProviderKeyModule,
   BotModelRoutingModule,
   UserInfoModule,
   // Routing configuration DB modules
-  ModelPricingModule,
+  ModelCatalogModule,
   CapabilityTagModule,
   FallbackChainModule,
   CostStrategyModule,
   ComplexityRoutingConfigModule,
+  // New model management modules
+  BotModelModule,
+  ModelAvailabilityModule,
+  // Fallback chain & complexity routing model mapping modules
+  FallbackChainModelModule,
+  ComplexityRoutingModelMappingModule,
+  // Model capability tag module
+  ModelCapabilityTagModule,
 } from '@app/db';
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt/jwt.module';
@@ -37,6 +44,15 @@ import { FallbackEngineService } from './services/fallback-engine.service';
 import { CostTrackerService } from './services/cost-tracker.service';
 import { ConfigurationService } from './services/configuration.service';
 import { BotComplexityRoutingService } from './services/bot-complexity-routing.service';
+import { ModelResolverService } from './services/model-resolver.service';
+import { CircuitBreakerService } from './services/circuit-breaker.service';
+import { CapabilityTagMatchingService } from '../bot-api/services/capability-tag-matching.service';
+// GLM response transformer for reasoning_content handling
+import { GlmResponseTransformerService } from './services/glm-response-transformer.service';
+// Protocol router for dual-layer model system
+import { ProtocolRouterService } from './services/protocol-router.service';
+// Event listeners
+import { HealthScoreListener } from './events/health-score.listener';
 
 /**
  * ProxyModule - API 代理模块
@@ -64,14 +80,21 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
     BotUsageLogModule,
     MessageDbModule,
     ProxyTokenModule,
-    BotProviderKeyModule,
     BotModelRoutingModule,
     // Routing configuration DB modules
-    ModelPricingModule,
+    ModelCatalogModule,
     CapabilityTagModule,
     FallbackChainModule,
     CostStrategyModule,
     ComplexityRoutingConfigModule,
+    // New model management modules
+    BotModelModule,
+    ModelAvailabilityModule,
+    // Fallback chain & complexity routing model mapping modules
+    FallbackChainModelModule,
+    ComplexityRoutingModelMappingModule,
+    // Model capability tag module
+    ModelCapabilityTagModule,
     // Complexity classifier for complexity-based routing
     ComplexityClassifierModule,
   ],
@@ -92,6 +115,18 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
     ConfigurationService,
     // Bot complexity routing service
     BotComplexityRoutingService,
+    // Model resolver service (model → vendor instance)
+    ModelResolverService,
+    // Circuit breaker service (provider failure protection)
+    CircuitBreakerService,
+    // Capability tag matching service (auto-sync tags)
+    CapabilityTagMatchingService,
+    // GLM response transformer (reasoning_content -> content)
+    GlmResponseTransformerService,
+    // Protocol router for dual-layer model system
+    ProtocolRouterService,
+    // Event listeners
+    HealthScoreListener,
   ],
   exports: [
     ProxyService,
@@ -106,6 +141,12 @@ import { BotComplexityRoutingService } from './services/bot-complexity-routing.s
     ConfigurationService,
     // Bot complexity routing service
     BotComplexityRoutingService,
+    // Model resolver service
+    ModelResolverService,
+    // Circuit breaker service
+    CircuitBreakerService,
+    // Protocol router for dual-layer model system
+    ProtocolRouterService,
   ],
 })
 export class ProxyModule {}

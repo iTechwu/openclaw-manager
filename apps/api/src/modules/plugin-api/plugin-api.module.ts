@@ -9,6 +9,7 @@ import {
 import { AuthModule } from '@app/auth';
 import { JwtModule } from '@app/jwt';
 import { RedisModule } from '@app/redis';
+import { OpenClawModule } from '@app/clients/internal/openclaw';
 import { PluginApiController } from './plugin-api.controller';
 import { PluginApiService } from './plugin-api.service';
 
@@ -22,6 +23,7 @@ import { PluginApiService } from './plugin-api.service';
     UserInfoModule,
     AuthModule,
     JwtModule,
+    OpenClawModule,
   ],
   controllers: [PluginApiController],
   providers: [PluginApiService],

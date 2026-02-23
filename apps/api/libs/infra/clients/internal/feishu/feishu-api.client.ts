@@ -19,6 +19,8 @@ import type {
   FeishuCardContent,
   FeishuUserInfo,
   FeishuChatInfo,
+  FeishuImageData,
+  FeishuFileData,
 } from './feishu.types';
 
 export class FeishuApiClient {
@@ -296,5 +298,189 @@ export class FeishuApiClient {
    */
   getConfig(): FeishuChannelConfig {
     return this.config;
+  }
+
+  /**
+   * 下载飞书图片并返回 Base64 编码数据
+   *
+   * 重要：飞书有两种图片下载 API：
+   * 1. /im/v1/images/:image_key - 只能下载机器人自己上传的图片
+   * 2. /im/v1/messages/:message_id/resources/:file_key - 下载用户发送的消息中的图片
+   *
+   * 此方法使用第二种 API 来下载用户发送的图片
+   *
+   * @param messageId 消息 ID（从事件中获取）
+   * @param fileKey 文件 key（从消息内容中提取的 image_key）
+   * @returns 图片数据（Base64、MIME 类型、大小）
+   */
+  async getImageDataFromMessage(
+    messageId: string,
+    fileKey: string,
+  ): Promise<FeishuImageData> {
+    const token = await this.getTenantAccessToken();
+    // 使用获取消息资源文件 API（用于下载用户发送的图片）
+    const url = `${this.baseUrl}/im/v1/messages/${messageId}/resources/${fileKey}?type=image`;
+
+    this.logger.info('Downloading Feishu image from message', {
+      url,
+      messageId,
+      fileKey,
+      hasToken: !!token,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'arraybuffer',
+        }),
+      );
+
+      // 从响应头获取 MIME 类型
+      const contentType =
+        response.headers['content-type'] || 'application/octet-stream';
+
+      // 转换为 Base64
+      const base64 = Buffer.from(response.data).toString('base64');
+
+      this.logger.info('Feishu image downloaded successfully', {
+        messageId,
+        fileKey,
+        mimeType: contentType,
+        size: response.data.byteLength,
+      });
+
+      return {
+        base64,
+        mimeType: contentType,
+        size: response.data.byteLength,
+      };
+    } catch (error) {
+      // 尝试解析错误响应体（Feishu 返回 JSON 错误信息）
+      let errorDetail =
+        error instanceof Error ? error.message : 'Unknown error';
+      if (error?.response?.data) {
+        try {
+          const errorData = error.response.data;
+          if (Buffer.isBuffer(errorData)) {
+            const errorText = errorData.toString('utf-8');
+            const errorJson = JSON.parse(errorText);
+            errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
+          } else if (errorData instanceof ArrayBuffer) {
+            const errorText = Buffer.from(new Uint8Array(errorData)).toString(
+              'utf-8',
+            );
+            const errorJson = JSON.parse(errorText);
+            errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
+          } else if (typeof errorData === 'object') {
+            errorDetail = `${errorData.code}: ${errorData.msg} (${error.message})`;
+          }
+        } catch {
+          // 解析失败，使用原始错误信息
+        }
+      }
+      this.logger.error('Failed to download Feishu image from message', {
+        messageId,
+        fileKey,
+        error: errorDetail,
+        status: error?.response?.status,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 下载飞书文件并返回 Base64 编码数据
+   *
+   * 使用获取消息资源文件 API 下载用户发送的文件
+   *
+   * @param messageId 消息 ID（从事件中获取）
+   * @param fileKey 文件 key（从消息内容中提取的 file_key）
+   * @param fileName 文件名（用于记录日志）
+   * @returns 文件数据（Base64、MIME 类型、大小、文件名）
+   */
+  async getFileDataFromMessage(
+    messageId: string,
+    fileKey: string,
+    fileName: string,
+  ): Promise<FeishuFileData> {
+    const token = await this.getTenantAccessToken();
+    // 使用获取消息资源文件 API（用于下载用户发送的文件）
+    const url = `${this.baseUrl}/im/v1/messages/${messageId}/resources/${fileKey}?type=file`;
+
+    this.logger.info('Downloading Feishu file from message', {
+      url,
+      messageId,
+      fileKey,
+      fileName,
+      hasToken: !!token,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'arraybuffer',
+        }),
+      );
+
+      // 从响应头获取 MIME 类型
+      const contentType =
+        response.headers['content-type'] || 'application/octet-stream';
+
+      // 转换为 Base64
+      const base64 = Buffer.from(response.data).toString('base64');
+
+      this.logger.info('Feishu file downloaded successfully', {
+        messageId,
+        fileKey,
+        fileName,
+        mimeType: contentType,
+        size: response.data.byteLength,
+      });
+
+      return {
+        base64,
+        mimeType: contentType,
+        size: response.data.byteLength,
+        fileName,
+      };
+    } catch (error) {
+      // 尝试解析错误响应体（Feishu 返回 JSON 错误信息）
+      let errorDetail =
+        error instanceof Error ? error.message : 'Unknown error';
+      if (error?.response?.data) {
+        try {
+          const errorData = error.response.data;
+          if (Buffer.isBuffer(errorData)) {
+            const errorText = errorData.toString('utf-8');
+            const errorJson = JSON.parse(errorText);
+            errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
+          } else if (errorData instanceof ArrayBuffer) {
+            const errorText = Buffer.from(new Uint8Array(errorData)).toString(
+              'utf-8',
+            );
+            const errorJson = JSON.parse(errorText);
+            errorDetail = `${errorJson.code}: ${errorJson.msg} (${error.message})`;
+          } else if (typeof errorData === 'object') {
+            errorDetail = `${errorData.code}: ${errorData.msg} (${error.message})`;
+          }
+        } catch {
+          // 解析失败，使用原始错误信息
+        }
+      }
+      this.logger.error('Failed to download Feishu file from message', {
+        messageId,
+        fileKey,
+        fileName,
+        error: errorDetail,
+        status: error?.response?.status,
+      });
+      throw error;
+    }
   }
 }

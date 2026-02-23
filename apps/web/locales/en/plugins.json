@@ -1,14 +1,14 @@
 {
-  "title": "Plugin Market",
-  "description": "Browse and install plugins to extend your Bot's capabilities",
-  "searchPlaceholder": "Search plugins...",
+  "title": "MCP Tools",
+  "description": "Browse and install MCP tools to extend your Bot's capabilities",
+  "searchPlaceholder": "Search MCP tools...",
   "allCategories": "All Categories",
-  "noPlugins": "No plugins found",
+  "noPlugins": "No MCP tools found",
   "tryOtherKeywords": "Try searching with different keywords",
   "official": "Official",
   "noDescription": "No description",
   "recommended": "Recommended",
-  "allPlugins": "All Plugins",
+  "allPlugins": "All MCP Tools",
   "regions": {
     "global": "Global",
     "cn": "China",
@@ -22,5 +22,24 @@
     "COMMUNICATION": "Communication",
     "DEVELOPMENT": "Development",
     "CUSTOM": "Custom"
+  },
+  "botPlugins": {
+    "title": "MCP Tools Management",
+    "addPlugin": "Add MCP Tool",
+    "addDialogTitle": "Add MCP Tool",
+    "addDialogDescription": "Select an MCP tool to install for this Bot",
+    "noAvailable": "No MCP tools available to install",
+    "noInstalled": "No MCP tools installed yet",
+    "addFirst": "Add your first MCP tool",
+    "configure": "Configure",
+    "uninstall": "Uninstall",
+    "install": "Install",
+    "installSuccess": "MCP tool installed successfully",
+    "installFailed": "Installation failed",
+    "uninstallSuccess": "MCP tool uninstalled",
+    "uninstallFailed": "Uninstall failed",
+    "enableSuccess": "MCP tool enabled",
+    "disableSuccess": "MCP tool disabled",
+    "toggleFailed": "Operation failed"
   }
 }

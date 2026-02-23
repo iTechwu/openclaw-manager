@@ -20,7 +20,7 @@
     "delete": "删除",
     "refresh": "刷新",
     "usage": "用量",
-    "plugins": "插件",
+    "plugins": "MCP工具",
     "skills": "技能"
   },
   "status": {
@@ -281,6 +281,22 @@
     "markdown": {
       "hint": "支持 Markdown",
       "placeholder": "# Soul\n\n描述你的 Bot 的个性、指南和行为..."
+    },
+    "botType": {
+      "title": "Bot 类型",
+      "description": "选择 Bot 的运行环境类型",
+      "gateway": {
+        "title": "Gateway",
+        "description": "主 Gateway 类型，包含完整 OpenClaw 运行时，适合一般对话场景"
+      },
+      "toolSandbox": {
+        "title": "工具沙箱",
+        "description": "工具沙箱类型，最小化环境执行代码，适合代码执行和工具调用场景"
+      },
+      "browserSandbox": {
+        "title": "浏览器沙箱",
+        "description": "浏览器沙箱类型，包含 Chromium 浏览器，支持浏览器自动化和 VNC 远程查看"
+      }
     }
   },
   "apiKeyModal": {
@@ -384,11 +400,13 @@
     "nav": {
       "overview": "概览",
       "ai": "AI 配置",
+      "models": "AI 配置",
       "channels": "消息渠道",
+      "pairing": "飞书配对",
       "diagnostics": "测试诊断",
       "logs": "应用日志",
       "settings": "设置",
-      "plugins": "插件",
+      "plugins": "MCP工具",
       "skills": "技能",
       "usage": "使用统计",
       "more": "更多"
@@ -412,6 +430,15 @@
       "stop": "停止",
       "restart": "重启",
       "diagnose": "诊断",
+      "starting": "启动中",
+      "restarting": "重启中",
+      "running": "运行中",
+      "stopped": "已停止",
+      "error": "错误",
+      "draft": "草稿",
+      "created": "已创建",
+      "unknown": "未知",
+      "checking": "检测中...",
       "noLogs": "暂无日志，请先启动服务",
       "autoRefresh": "自动刷新",
       "lines": "行",
@@ -436,38 +463,20 @@
       "title": "AI 模型配置",
       "description": "配置 AI 提供商和模型",
       "tabs": {
-        "providers": "AI 提供商",
+        "models": "模型管理",
         "routing": "模型路由"
       },
-      "addProvider": "添加 Provider",
-      "deleteProvider": "删除 Provider",
-      "setPrimary": "设为主模型",
-      "models": "模型",
-      "configured": "已配置",
-      "notConfigured": "未配置",
-      "noProviders": "尚未配置任何 AI Provider",
-      "addFirst": "添加第一个 Provider",
-      "fetchProvidersFailed": "获取 Provider 列表失败",
-      "setPrimarySuccess": "主模型设置成功",
-      "setFailed": "设置失败",
-      "deleteConfirm": "确定要删除此 Provider 吗？",
-      "deleteSuccess": "Provider 已删除",
-      "deleteFailed": "删除失败",
-      "selectProviderAndModel": "请选择 Provider 和至少一个模型",
-      "addSuccess": "Provider 添加成功",
-      "addFailed": "添加失败",
-      "dialogDescription": "从已配置的 API Keys 中选择一个 Provider 添加到此 Bot",
-      "selectApiKey": "选择 API Key",
-      "noApiKeys": "没有可用的 API Key，请先在设置中添加",
-      "selectApiKeyPlaceholder": "选择一个 API Key",
-      "selectModels": "选择模型",
-      "loadingModels": "加载模型列表...",
-      "noModels": "无可用模型",
-      "primaryModel": "主模型",
-      "setAsPrimary": "设为主模型",
-      "setAsPrimaryProvider": "设为主 Provider（Bot 默认使用此 Provider）",
-      "cancel": "取消",
-      "add": "添加"
+      "refresh": "刷新",
+      "refreshSuccess": "刷新成功",
+      "refreshFailed": "刷新失败",
+      "noModels": "暂无可用模型",
+      "noModelsHint": "请先在系统设置中配置 API Key 并刷新模型列表",
+      "fetchModelsFailed": "获取模型列表失败",
+      "addModelsSuccess": "成功添加 {count} 个模型",
+      "addModelsFailed": "添加模型失败",
+      "removeModelConfirm": "确定要移除此模型吗？",
+      "removeModelSuccess": "模型已移除",
+      "removeModelFailed": "移除模型失败"
     },
     "modelRouting": {
       "title": "模型路由配置",
@@ -500,7 +509,12 @@
         "providerKey": "Provider Key",
         "selectProviderKey": "选择 Provider Key",
         "model": "模型",
-        "selectModel": "选择模型"
+        "selectModel": "选择模型",
+        "searchModels": "搜索模型...",
+        "noModelsFound": "未找到匹配的模型",
+        "modelAvailable": "模型可用",
+        "modelUnavailable": "模型不可用",
+        "lastVerified": "最后验证时间"
       },
       "functionRoute": {
         "title": "功能路由规则",
@@ -613,6 +627,11 @@
           "notAvailable": "模型 {model} 不可用，请先在供应商中配置",
           "noRuleToApply": "请先添加一条规则",
           "availabilityHint": "灰色模型表示未在当前供应商中配置，数字表示可用的供应商数量"
+        },
+        "errors": {
+          "noRules": "请至少添加一条路由规则",
+          "invalidRules": "请为所有规则选择有效的目标模型",
+          "noDefaultTarget": "请选择默认目标模型"
         }
       },
       "loadBalance": {
@@ -628,6 +647,13 @@
         "weight": "权重",
         "weightHint": "0-100，权重越高被选中概率越大",
         "quickAdd": "快速添加",
+        "costOptimization": "成本优化策略",
+        "costOptimizationHint": "选择预设的成本优化策略，自动平衡成本和性能",
+        "strategySelected": "已选择策略: {strategyId}",
+        "errors": {
+          "noTargets": "请至少添加一个目标模型",
+          "invalidTargets": "请为所有目标选择有效的模型"
+        },
         "templates": {
           "title": "预设模板",
           "dualEqual": {
@@ -653,6 +679,14 @@
         "maxAttempts": "最大重试次数",
         "delayMs": "重试延迟 (ms)",
         "quickAdd": "快速添加",
+        "useExistingChain": "使用预设故障转移链",
+        "useExistingChainHint": "选择已配置的故障转移链，或在下方手动配置",
+        "chainSelected": "已选择故障转移链: {chainId}",
+        "chainApplied": "已应用故障转移链「{name}」（{count} 个模型）",
+        "orConfigureManually": "或手动配置故障转移",
+        "errors": {
+          "noPrimary": "请选择主要目标模型"
+        },
         "templates": {
           "title": "预设模板",
           "singleFallback": {
@@ -704,7 +738,64 @@
         "modelCapabilities": "模型能力分析",
         "suggestedRoutingName": "AI 智能路由",
         "suggestedFailoverName": "AI 故障转移"
-      }
+      },
+      "fallbackChain": {
+        "label": "故障转移链",
+        "placeholder": "选择故障转移链",
+        "none": "不使用预设链",
+        "loading": "加载故障转移链...",
+        "models": "个模型",
+        "inactive": "未激活",
+        "create": "创建新链",
+        "createTitle": "创建故障转移链",
+        "createDescription": "配置一组按优先级排列的备用模型",
+        "createSuccess": "故障转移链创建成功",
+        "createError": "创建故障转移链失败",
+        "validation": {
+          "required": "请填写链ID和名称",
+          "noModels": "请至少添加一个模型"
+        },
+        "form": {
+          "chainId": "链ID",
+          "name": "名称",
+          "namePlaceholder": "输入链名称",
+          "description": "描述",
+          "descriptionPlaceholder": "描述此故障转移链的用途",
+          "models": "模型列表",
+          "noModelsAdded": "尚未添加模型",
+          "addModel": "添加模型到链",
+          "create": "创建"
+        }
+      },
+      "costStrategy": {
+        "label": "成本策略",
+        "placeholder": "选择成本策略",
+        "none": "不使用成本策略",
+        "loading": "加载成本策略...",
+        "inactive": "未激活",
+        "create": "创建新策略",
+        "createTitle": "创建成本策略",
+        "createDescription": "配置成本、性能和能力的权重平衡",
+        "createSuccess": "成本策略创建成功",
+        "createError": "创建成本策略失败",
+        "cost": "成本",
+        "performance": "性能",
+        "capability": "能力",
+        "validation": {
+          "required": "请填写策略ID和名称"
+        },
+        "form": {
+          "strategyId": "策略ID",
+          "name": "名称",
+          "namePlaceholder": "输入策略名称",
+          "description": "描述",
+          "descriptionPlaceholder": "描述此策略的优化目标",
+          "weights": "权重配置",
+          "weightsHint": "权重将自动归一化为100%",
+          "create": "创建"
+        }
+      },
+      "cancel": "取消"
     },
     "channels": {
       "title": "消息渠道",
@@ -751,6 +842,108 @@
       "danger": "危险操作",
       "deleteBot": "删除 Bot",
       "deleteConfirm": "确定要删除此 Bot 吗？此操作不可撤销。"
+    },
+    "models": {
+      "title": "AI 模型配置",
+      "description": "管理 AI 模型和路由配置",
+      "tabs": {
+        "models": "模型管理",
+        "routing": "模型路由"
+      },
+      "searchPlaceholder": "搜索模型...",
+      "filter": {
+        "all": "全部",
+        "available": "可用",
+        "added": "已添加"
+      },
+      "statsTotal": "共 {count} 个模型",
+      "statsAvailable": "{count} 可用",
+      "statsAdded": "{count} 已添加",
+      "colModel": "模型名称",
+      "colStatus": "状态",
+      "colTags": "能力标签",
+      "colActions": "操作",
+      "noModels": "暂无可用模型",
+      "noMatchingModels": "没有匹配的模型",
+      "available": "可用",
+      "unavailable": "不可用",
+      "badgeAdded": "已添加",
+      "primary": "主模型",
+      "primaryModel": "主模型",
+      "setAsPrimary": "设为主模型",
+      "addSuccess": "成功添加 {count} 个模型",
+      "addFailed": "添加模型失败",
+      "removeConfirm": "确定要移除此模型吗？",
+      "removeSuccess": "模型已移除",
+      "removeFailed": "移除模型失败",
+      "setPrimarySuccess": "主模型已更新",
+      "setPrimaryFailed": "设置主模型失败",
+      "addSelected": "添加 {count} 个模型",
+      "addBtn": "添加",
+      "removeBtn": "移除",
+      "refresh": "刷新",
+      "refreshSuccess": "刷新成功",
+      "refreshFailed": "刷新失败",
+      "fetchFailed": "获取模型列表失败",
+      "categories": {
+        "reasoning": "推理模型",
+        "coding": "编程模型",
+        "fast": "快速模型",
+        "vision": "视觉模型",
+        "multimodal": "多模态模型",
+        "other": "其他模型"
+      }
+    },
+    "pairing": {
+      "title": "飞书配对",
+      "description": "管理飞书用户配对请求，批准后用户即可与机器人对话",
+      "nav": "飞书配对",
+      "config": {
+        "title": "配对策略",
+        "description": "配置用户访问机器人的策略",
+        "dmPolicy": "直接消息策略",
+        "dmPolicyHint": "控制用户如何获得与机器人对话的权限"
+      },
+      "policy": {
+        "pairing": "配对模式（需要管理员批准）",
+        "open": "开放模式（所有用户可访问）"
+      },
+      "requests": {
+        "title": "配对请求",
+        "empty": "暂无配对请求",
+        "emptyHint": "当用户尝试与机器人对话时，将在此显示配对请求"
+      },
+      "filter": {
+        "all": "全部",
+        "pending": "待处理",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "expired": "已过期"
+      },
+      "table": {
+        "code": "配对码",
+        "userInfo": "用户信息",
+        "status": "状态",
+        "createdAt": "创建时间",
+        "expiresIn": "剩余时间",
+        "actions": "操作"
+      },
+      "actions": {
+        "approve": "批准",
+        "reject": "拒绝",
+        "delete": "清理"
+      },
+      "confirmDelete": "确定要清理这条配对记录吗？此操作将从数据库和 OpenClaw 配置文件中删除该记录。",
+      "manual": {
+        "title": "手动批准配对",
+        "description": "输入用户从飞书机器人消息中获得的配对码和飞书用户 ID 进行批准",
+        "codeLabel": "配对码",
+        "codePlaceholder": "如 Y55XTG3P",
+        "feishuOpenIdLabel": "飞书用户 ID",
+        "feishuOpenIdPlaceholder": "如 ou_xxxxxxxxxxxxx",
+        "approve": "批准配对",
+        "hint": "从用户收到的机器人消息中复制配对码和飞书用户 ID，例如：\"Your Feishu Open ID: ou_xxx\" 和 \"Pairing code: Y55XTG3P\""
+      }
     }
   }
 }

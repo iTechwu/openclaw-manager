@@ -50,7 +50,7 @@ lerna-debug.log*
 *.log.*
 *.gz
 
-# botenv
+# Bot data directories
 apps/api/data/
 apps/api/data/bots/
 

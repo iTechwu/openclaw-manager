@@ -15,6 +15,7 @@
   "createSkillDescription": "Create a new custom skill",
   "comingSoon": "Coming soon",
   "skillTypes": "Skill Types",
+  "loadError": "Failed to load skills. Please try again later.",
   "types": {
     "tool": "Tool",
     "prompt": "Prompt",
@@ -36,6 +37,20 @@
     "version": "Version",
     "cancel": "Cancel",
     "create": "Create"
+  },
+  "detail": {
+    "backToList": "Back to Skills",
+    "notFound": "Skill not found",
+    "author": "Author",
+    "source": "Source",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "viewSource": "View Source",
+    "tags": "Tags",
+    "examples": "Examples",
+    "exampleInput": "Input",
+    "exampleOutput": "Output",
+    "definition": "Definition"
   },
   "fillRequiredFields": "Please fill in required fields",
   "createSuccess": "Skill created successfully",

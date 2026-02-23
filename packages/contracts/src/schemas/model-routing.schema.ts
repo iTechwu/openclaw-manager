@@ -1,16 +1,10 @@
 import { z } from 'zod';
 
-// ============================================================================
-// Model Routing Type Enum
-// ============================================================================
-
-export const ModelRoutingTypeSchema = z.enum([
-  'FUNCTION_ROUTE',
-  'LOAD_BALANCE',
-  'FAILOVER',
-]);
-
-export type ModelRoutingType = z.infer<typeof ModelRoutingTypeSchema>;
+// Import ModelRoutingTypeSchema from prisma-enums.generated (source of truth)
+import {
+  ModelRoutingTypeSchema,
+  type ModelRoutingType,
+} from './prisma-enums.generated';
 
 // ============================================================================
 // Routing Target Schema
@@ -93,6 +87,8 @@ export const LoadBalanceConfigSchema = z.object({
   strategy: LoadBalanceStrategySchema,
   /** 目标列表 */
   targets: z.array(LoadBalanceTargetSchema).min(2),
+  /** 成本策略 ID（可选） */
+  costStrategyId: z.string().nullable().optional(),
 });
 
 export type LoadBalanceConfig = z.infer<typeof LoadBalanceConfigSchema>;

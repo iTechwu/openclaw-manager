@@ -2,9 +2,10 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import {
-  BotProviderKeyService,
   ProviderKeyService,
   ComplexityRoutingConfigService,
+  BotModelService,
+  ModelAvailabilityService,
 } from '@app/db';
 import {
   ComplexityClassifierService,
@@ -79,7 +80,7 @@ const MODEL_CAPABILITY_SCORES: Record<string, number> = {
   'claude-sonnet-4-20250514': 85,
   'claude-3-5-haiku-20241022': 60,
   // OpenAI
-  'o1': 95,
+  o1: 95,
   'o3-mini': 80,
   'gpt-4o': 82,
   'gpt-4o-mini': 55,
@@ -120,9 +121,10 @@ const COMPLEXITY_MIN_SCORES: Record<ComplexityLevel, number> = {
 export class BotComplexityRoutingService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly botProviderKeyService: BotProviderKeyService,
     private readonly providerKeyService: ProviderKeyService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
+    private readonly botModelService: BotModelService,
+    private readonly modelAvailabilityService: ModelAvailabilityService,
     @Optional()
     private readonly complexityClassifier?: ComplexityClassifierService,
   ) {}
@@ -223,44 +225,67 @@ export class BotComplexityRoutingService {
    * 获取 bot 的所有可用模型
    */
   async getBotAvailableModels(botId: string): Promise<BotAvailableModel[]> {
-    const { list: botProviderKeys } = await this.botProviderKeyService.list(
-      { botId },
+    const { list: botModels } = await this.botModelService.list(
+      { botId, isEnabled: true },
       { limit: 100 },
     );
 
-    const availableModels: BotAvailableModel[] = [];
+    return this.getBotAvailableModelsFromBotModel(botModels);
+  }
 
-    for (const bpk of botProviderKeys) {
-      const providerKey = await this.providerKeyService.getById(
-        bpk.providerKeyId,
+  /**
+   * 从 BotModel 表获取可用模型（批量查询，无 N+1）
+   * vendor 信息从 ProviderKey 获取
+   */
+  private async getBotAvailableModelsFromBotModel(
+    botModels: Array<{ modelId: string; isPrimary: boolean }>,
+  ): Promise<BotAvailableModel[]> {
+    if (botModels.length === 0) return [];
+
+    const modelIds = botModels.map((bm) => bm.modelId);
+
+    // Batch query ModelAvailability
+    const { list: allAvailabilities } =
+      await this.modelAvailabilityService.list(
+        { model: { in: modelIds }, isAvailable: true },
+        { limit: 500 },
       );
+
+    if (allAvailabilities.length === 0) return [];
+
+    // Batch query ProviderKeys
+    const uniquePkIds = [
+      ...new Set(allAvailabilities.map((a) => a.providerKeyId)),
+    ];
+    const pkMap = new Map<string, any>();
+    if (uniquePkIds.length > 0) {
+      const { list: providerKeys } = await this.providerKeyService.list(
+        { id: { in: uniquePkIds } },
+        { limit: 500 },
+      );
+      for (const pk of providerKeys) {
+        pkMap.set(pk.id, pk);
+      }
+    }
+
+    // Assemble results
+    const availableModels: BotAvailableModel[] = [];
+    for (const bm of botModels) {
+      const availability = allAvailabilities.find(
+        (a) => a.model === bm.modelId,
+      );
+      if (!availability) continue;
+      const providerKey = pkMap.get(availability.providerKeyId);
       if (!providerKey) continue;
 
-      // 添加主要模型
-      if (bpk.primaryModel) {
-        availableModels.push({
-          providerKeyId: bpk.providerKeyId,
-          vendor: providerKey.vendor,
-          apiType: providerKey.apiType,
-          baseUrl: providerKey.baseUrl,
-          model: bpk.primaryModel,
-          isPrimary: bpk.isPrimary,
-        });
-      }
-
-      // 添加允许的模型
-      for (const model of bpk.allowedModels) {
-        if (model !== bpk.primaryModel) {
-          availableModels.push({
-            providerKeyId: bpk.providerKeyId,
-            vendor: providerKey.vendor,
-            apiType: providerKey.apiType,
-            baseUrl: providerKey.baseUrl,
-            model,
-            isPrimary: false,
-          });
-        }
-      }
+      availableModels.push({
+        providerKeyId: availability.providerKeyId,
+        vendor: providerKey.vendor,
+        apiType: providerKey.apiType,
+        baseUrl: providerKey.baseUrl,
+        model: bm.modelId,
+        isPrimary: bm.isPrimary,
+      });
     }
 
     return availableModels;
@@ -288,7 +313,9 @@ export class BotComplexityRoutingService {
       return {
         enabled: true,
         models: config.models as unknown as ComplexityModelMapping,
-        toolMinComplexity: config.toolMinComplexity as ComplexityLevel | undefined,
+        toolMinComplexity: config.toolMinComplexity as
+          | ComplexityLevel
+          | undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -300,12 +327,14 @@ export class BotComplexityRoutingService {
   }
 
   /**
-   * 从可用模型中选择最佳模型
+   * 从可用模型中选择最佳模型（主模型锚定策略）
    *
    * 选择策略：
-   * 1. 首先尝试匹配配置中指定的模型
-   * 2. 如果没有匹配，选择满足复杂度要求的最佳可用模型
-   * 3. 如果仍然没有，选择能力最强的可用模型
+   * 1. 主模型能力满足复杂度要求 → 使用主模型
+   * 2. 主模型能力不足 → 尝试配置映射中的模型
+   * 3. 配置映射无匹配 → 选择满足复杂度要求的最低成本模型
+   * 4. 无满足要求的模型 → 降级到主模型（保持可用性）
+   * 5. 最终兜底 → 能力最强的模型
    */
   private selectBestModel(
     availableModels: BotAvailableModel[],
@@ -316,7 +345,18 @@ export class BotComplexityRoutingService {
       return null;
     }
 
-    // 1. 尝试匹配配置中指定的模型
+    const primaryModel = availableModels.find((m) => m.isPrimary);
+    const minScore = COMPLEXITY_MIN_SCORES[complexity];
+
+    // 1. 主模型能力满足复杂度要求 → 使用主模型
+    if (primaryModel) {
+      const primaryScore = this.getModelCapabilityScore(primaryModel.model);
+      if (primaryScore >= minScore) {
+        return primaryModel;
+      }
+    }
+
+    // 2. 主模型能力不足 → 尝试配置映射中的模型
     const configModel = configMapping[complexity];
     const exactMatch = availableModels.find(
       (m) =>
@@ -330,8 +370,7 @@ export class BotComplexityRoutingService {
       return exactMatch;
     }
 
-    // 2. 选择满足复杂度要求的最佳可用模型
-    const minScore = COMPLEXITY_MIN_SCORES[complexity];
+    // 3. 选择满足复杂度要求的最低成本模型
     const qualifiedModels = availableModels.filter((m) => {
       const score = this.getModelCapabilityScore(m.model);
       return score >= minScore;
@@ -342,13 +381,17 @@ export class BotComplexityRoutingService {
       qualifiedModels.sort((a, b) => {
         const scoreA = this.getModelCapabilityScore(a.model);
         const scoreB = this.getModelCapabilityScore(b.model);
-        // 选择分数最接近 minScore 的模型（成本优化）
         return Math.abs(scoreA - minScore) - Math.abs(scoreB - minScore);
       });
       return qualifiedModels[0];
     }
 
-    // 3. 如果没有满足要求的模型，选择能力最强的
+    // 4. 无满足要求的模型 → 降级到主模型（保持可用性）
+    if (primaryModel) {
+      return primaryModel;
+    }
+
+    // 5. 最终兜底 → 能力最强的模型
     const sortedByCapability = [...availableModels].sort((a, b) => {
       const scoreA = this.getModelCapabilityScore(a.model);
       const scoreB = this.getModelCapabilityScore(b.model);
@@ -378,4 +421,3 @@ export class BotComplexityRoutingService {
     return 50;
   }
 }
-

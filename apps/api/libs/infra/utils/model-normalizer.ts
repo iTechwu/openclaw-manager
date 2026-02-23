@@ -90,10 +90,7 @@ const PROVIDER_MODEL_ALIASES: Record<string, Record<string, string>> = {
  * @param provider - The AI provider (openai, anthropic, custom, etc.)
  * @returns The normalized model name
  */
-export function normalizeModelName(
-  model: string,
-  provider?: string,
-): string {
+export function normalizeModelName(model: string, provider?: string): string {
   if (!model) return model;
 
   // Skip normalization for custom providers

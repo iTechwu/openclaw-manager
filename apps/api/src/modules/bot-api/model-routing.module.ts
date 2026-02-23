@@ -3,13 +3,17 @@ import {
   BotModule,
   BotModelRoutingModule,
   ProviderKeyModule,
-  BotProviderKeyModule,
+  BotModelModule,
   BotUsageLogModule,
+  ModelAvailabilityModule,
+  CapabilityTagModule,
+  ModelCapabilityTagModule,
 } from '@app/db';
 import { PrismaModule } from '@app/prisma';
 import { ModelRouterService } from './services/model-router.service';
 import { RoutingSuggestionService } from './services/routing-suggestion.service';
 import { ModelRoutingService } from './model-routing.service';
+import { ModelResolverService } from '../proxy/services/model-resolver.service';
 
 /**
  * ModelRoutingModule
@@ -22,14 +26,18 @@ import { ModelRoutingService } from './model-routing.service';
     BotModule,
     BotModelRoutingModule,
     ProviderKeyModule,
-    BotProviderKeyModule,
+    BotModelModule,
+    ModelAvailabilityModule,
     BotUsageLogModule,
+    CapabilityTagModule,
+    ModelCapabilityTagModule,
   ],
   providers: [
     RoutingSuggestionService,
     ModelRouterService,
     ModelRoutingService,
+    ModelResolverService,
   ],
-  exports: [ModelRouterService, ModelRoutingService],
+  exports: [ModelRouterService, ModelRoutingService, ModelResolverService],
 })
 export class ModelRoutingModule {}

@@ -1,10 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import {
   BotModelRoutingService,
-  BotProviderKeyService,
+  BotModelService,
   ProviderKeyService,
+  ModelAvailabilityService,
 } from '@app/db';
 import type { BotModelRouting, ModelRoutingType } from '@prisma/client';
 import type {
@@ -14,6 +15,7 @@ import type {
   FailoverConfig,
   RoutingTarget,
 } from '@repo/contracts';
+import { ModelResolverService } from '../../proxy/services/model-resolver.service';
 
 /**
  * 模型路由结果
@@ -72,8 +74,10 @@ export class ModelRouterService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botModelRoutingService: BotModelRoutingService,
-    private readonly botProviderKeyService: BotProviderKeyService,
+    private readonly botModelService: BotModelService,
     private readonly providerKeyService: ProviderKeyService,
+    private readonly modelAvailabilityService: ModelAvailabilityService,
+    @Optional() private readonly modelResolverService?: ModelResolverService,
   ) {}
 
   /**
@@ -315,49 +319,67 @@ export class ModelRouterService {
   }
 
   /**
-   * 获取默认路由（主 Provider）
+   * 获取默认路由（主 Model）
+   * 使用 ModelResolverService 进行优先级排序的 vendor 选择（如果可用）
    */
   private async getDefaultRoute(botId: string): Promise<ModelRouteResult> {
-    // 获取主要 Provider
-    const primaryBotProviderKey = await this.botProviderKeyService.get({
+    // 获取主要 Model
+    let primaryBotModel = await this.botModelService.get({
       botId,
       isPrimary: true,
     });
 
-    if (!primaryBotProviderKey) {
-      // 尝试获取任意一个 Provider
-      const { list: allProviderKeys } = await this.botProviderKeyService.list(
+    if (!primaryBotModel) {
+      // 尝试获取任意一个 Model
+      const { list: allModels } = await this.botModelService.list(
         { botId },
         { limit: 1 },
       );
 
-      if (allProviderKeys.length === 0) {
-        throw new Error(`No provider configured for bot ${botId}`);
+      if (allModels.length === 0) {
+        throw new Error(`No model configured for bot ${botId}`);
       }
 
-      const providerKey = await this.providerKeyService.getById(
-        allProviderKeys[0].providerKeyId,
-      );
-
-      if (!providerKey) {
-        throw new Error(`Provider key not found for bot ${botId}`);
-      }
-
-      return {
-        providerKeyId: allProviderKeys[0].providerKeyId,
-        vendor: providerKey.vendor,
-        model:
-          allProviderKeys[0].primaryModel ||
-          allProviderKeys[0].allowedModels[0] ||
-          '',
-        apiType: providerKey.apiType,
-        baseUrl: providerKey.baseUrl,
-        reason: 'Default route (first available provider)',
-      };
+      primaryBotModel = allModels[0];
     }
 
+    // 使用 ModelResolverService 进行优先级排序的 vendor 解析
+    if (this.modelResolverService) {
+      const resolved = await this.modelResolverService.resolve(
+        primaryBotModel.modelId,
+      );
+
+      if (resolved) {
+        return {
+          providerKeyId: resolved.providerKeyId,
+          vendor: resolved.vendor,
+          model: primaryBotModel.modelId,
+          apiType: resolved.apiType,
+          baseUrl: resolved.baseUrl,
+          reason: `Default route (${primaryBotModel.isPrimary ? 'primary' : 'first available'} model, resolved via priority=${resolved.vendorPriority} health=${resolved.healthScore})`,
+        };
+      }
+
+      this.logger.warn(
+        `[ModelRouter] ModelResolverService returned no result for ${primaryBotModel.modelId}, falling back to naive selection`,
+      );
+    }
+
+    // Fallback: 无 ModelResolverService 或解析失败时，使用原始逻辑
+    const { list: availabilities } = await this.modelAvailabilityService.list(
+      { model: primaryBotModel.modelId },
+      { limit: 1 },
+    );
+
+    if (availabilities.length === 0 || !availabilities[0].providerKeyId) {
+      throw new Error(
+        `No provider key found for model ${primaryBotModel.modelId}`,
+      );
+    }
+
+    const availability = availabilities[0];
     const providerKey = await this.providerKeyService.getById(
-      primaryBotProviderKey.providerKeyId,
+      availability.providerKeyId,
     );
 
     if (!providerKey) {
@@ -365,15 +387,14 @@ export class ModelRouterService {
     }
 
     return {
-      providerKeyId: primaryBotProviderKey.providerKeyId,
+      providerKeyId: availability.providerKeyId,
       vendor: providerKey.vendor,
-      model:
-        primaryBotProviderKey.primaryModel ||
-        primaryBotProviderKey.allowedModels[0] ||
-        '',
+      model: primaryBotModel.modelId,
       apiType: providerKey.apiType,
       baseUrl: providerKey.baseUrl,
-      reason: 'Default route (primary provider)',
+      reason: primaryBotModel.isPrimary
+        ? 'Default route (primary model)'
+        : 'Default route (first available model)',
     };
   }
 

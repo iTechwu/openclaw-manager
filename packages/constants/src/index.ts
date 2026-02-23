@@ -23,6 +23,18 @@ export const API_CODE = {
   VALIDATION_ERROR: 422,
 } as const;
 
+// Plugin limits
+export const PLUGIN_LIMITS = {
+  /** MCP exec 超时（毫秒） */
+  MCP_EXEC_TIMEOUT: 30000,
+  /** 单个 Bot 最大插件数量 */
+  MAX_PLUGINS_PER_BOT: 20,
+  /** 允许的 MCP 命令白名单（安全限制） */
+  ALLOWED_MCP_COMMANDS: ['npx', 'node'],
+  /** MCP Server 启动超时（毫秒） */
+  MCP_SERVER_STARTUP_TIMEOUT: 10000,
+} as const;
+
 // Pagination defaults
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
@@ -37,6 +49,20 @@ export const FILE_LIMITS = {
   MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   ALLOWED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime'],
+} as const;
+
+// Skill installation limits
+export const SKILL_LIMITS = {
+  /** 单个技能目录最大总大小 (5MB) */
+  MAX_DIR_SIZE: 5 * 1024 * 1024,
+  /** 单个技能目录最大文件数 */
+  MAX_FILE_COUNT: 50,
+  /** 排除的文件名（不写入本地） */
+  EXCLUDED_FILES: ['_meta.json'] as readonly string[],
+  /** 允许执行的脚本名称白名单 */
+  ALLOWED_SCRIPT_NAMES: ['init.sh'] as readonly string[],
+  /** 脚本执行超时 (30s) */
+  SCRIPT_EXEC_TIMEOUT: 30000,
 } as const;
 
 // Auth token keys

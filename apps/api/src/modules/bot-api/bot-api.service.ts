@@ -3,23 +3,31 @@ import {
   NotFoundException,
   ConflictException,
   Logger,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   BotService,
   ProviderKeyService,
-  BotProviderKeyService,
   OperateLogService,
   PersonaTemplateService,
   BotChannelService,
+  BotModelService,
 } from '@app/db';
 import { ProviderVerifyClient } from '@app/clients/internal/provider-verify';
+import { CryptClient } from '@app/clients/internal/crypt';
 import { KeyringProxyService } from '../proxy/services/keyring-proxy.service';
 import { EncryptionService } from './services/encryption.service';
 import { DockerService } from './services/docker.service';
 import { WorkspaceService } from './services/workspace.service';
 import { BotConfigResolverService } from './services/bot-config-resolver.service';
+import { AvailableModelService } from './services/available-model.service';
+import { BotStartupMonitorService } from './services/bot-startup-monitor.service';
+import { ModelVerificationService } from './services/model-verification.service';
 import type { Bot, ProviderKey, BotStatus, Prisma } from '@prisma/client';
+import { PluginApiService } from '../plugin-api/plugin-api.service';
+import { SkillApiService } from '../skill-api/skill-api.service';
 import type {
   CreateBotInput,
   SimpleCreateBotInput,
@@ -30,8 +38,8 @@ import type {
   CleanupReport,
   VerifyProviderKeyInput,
   VerifyProviderKeyResponse,
-  BotProviderDetail,
   BotDiagnoseResponse,
+  ProviderVendor,
 } from '@repo/contracts';
 import { PROVIDER_CONFIGS } from '@repo/contracts';
 import enviromentUtil from 'libs/infra/utils/enviroment.util';
@@ -44,16 +52,24 @@ export class BotApiService {
     private readonly configService: ConfigService,
     private readonly botService: BotService,
     private readonly providerKeyService: ProviderKeyService,
-    private readonly botProviderKeyService: BotProviderKeyService,
     private readonly botChannelService: BotChannelService,
+    private readonly botModelService: BotModelService,
     private readonly encryptionService: EncryptionService,
     private readonly dockerService: DockerService,
     private readonly workspaceService: WorkspaceService,
     private readonly operateLogService: OperateLogService,
     private readonly personaTemplateService: PersonaTemplateService,
     private readonly providerVerifyClient: ProviderVerifyClient,
+    private readonly cryptClient: CryptClient,
     private readonly keyringProxyService: KeyringProxyService,
     private readonly botConfigResolver: BotConfigResolverService,
+    private readonly availableModelService: AvailableModelService,
+    private readonly modelVerificationService: ModelVerificationService,
+    private readonly botStartupMonitor: BotStartupMonitorService,
+    @Inject(forwardRef(() => PluginApiService))
+    private readonly pluginApiService: PluginApiService,
+    @Inject(forwardRef(() => SkillApiService))
+    private readonly skillApiService: SkillApiService,
   ) {
     this.logger.log(`BotApiService initialized`);
   }
@@ -107,11 +123,16 @@ export class BotApiService {
           );
 
           // Sync database status with actual Docker container state
+          // Skip syncing if bot is in 'starting' state (managed by BotStartupMonitorService)
           if (containerStatus) {
             const actualStatus: BotStatus = containerStatus.running
               ? 'running'
               : 'stopped';
-            if (bot.status !== actualStatus && bot.status !== 'error') {
+            if (
+              bot.status !== actualStatus &&
+              bot.status !== 'error' &&
+              bot.status !== 'starting' // Don't override starting status
+            ) {
               // Update database status to match Docker state
               await this.botService.update(
                 { id: bot.id },
@@ -241,6 +262,7 @@ export class BotApiService {
     let apiBaseUrl: string | undefined;
     let proxyToken: string | undefined;
     let proxyTokenHash: string | undefined;
+    let providerKeyRecord: ProviderKey | null = null;
 
     // Check if zero-trust mode is enabled
     const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
@@ -251,6 +273,7 @@ export class BotApiService {
           id: primaryProvider.keyId,
         });
         if (providerKey && providerKey.createdById === userId) {
+          providerKeyRecord = providerKey; // 保存 providerKey 用于后续配置
           apiBaseUrl = providerKey.baseUrl || undefined;
 
           if (!useZeroTrust) {
@@ -286,7 +309,7 @@ export class BotApiService {
     // Container creation is deferred until after proxy registration
 
     // Create bot in database FIRST (without container)
-    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotProviderKey 和 BotChannel 派生
+    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotModel 和 BotChannel 派生
     const bot = await this.botService.create({
       name: input.name,
       hostname: input.hostname,
@@ -296,6 +319,7 @@ export class BotApiService {
       proxyTokenHash: null, // Will be updated after proxy registration
       tags: input.tags || [],
       status: 'created',
+      botType: input.botType || 'GATEWAY',
       emoji: input.persona.emoji || null,
       soulMarkdown: input.persona.soulMarkdown || null,
       personaTemplate: { connect: { id: personaTemplateId } },
@@ -305,42 +329,20 @@ export class BotApiService {
       createdBy: { connect: { id: userId } },
     });
 
-    this.logger.log(`Bot created in database: ${input.hostname} (id: ${bot.id})`);
-
-    // Create BotProviderKey relationships for all providers
-    for (const provider of input.providers) {
-      if (provider.keyId) {
-        try {
-          const isPrimary =
-            provider.providerId ===
-            (input.primaryProvider || input.providers[0].providerId);
-          await this.botProviderKeyService.create({
-            bot: { connect: { id: bot.id } },
-            providerKey: { connect: { id: provider.keyId } },
-            isPrimary,
-            allowedModels: provider.models,
-            primaryModel: provider.primaryModel || provider.models[0] || null,
-          });
-          this.logger.log(
-            `BotProviderKey created for bot ${bot.id} with key ${provider.keyId}, models: ${provider.models.join(', ')}`,
-          );
-        } catch (error) {
-          this.logger.warn(
-            `Failed to create BotProviderKey for bot ${bot.id}:`,
-            error,
-          );
-        }
-      }
-    }
+    this.logger.log(
+      `Bot created in database: ${input.hostname} (id: ${bot.id})`,
+    );
 
     // Register bot with proxy if in zero-trust mode
     if (useZeroTrust && primaryProvider.keyId) {
       try {
         // Determine the vendor for proxy registration
         // For custom providers, use apiType (e.g., "openai") to match the proxy URL
+        // For domestic providers (apiType differs from vendor), also use apiType
         // This ensures the vendor in ProxyToken matches the vendor in the proxy URL
         const proxyVendor =
-          primaryProvider.providerId === 'custom' && apiType
+          primaryProvider.providerId === 'custom' ||
+          (apiType && primaryProvider.providerId !== apiType)
             ? apiType
             : primaryProvider.providerId;
 
@@ -356,7 +358,9 @@ export class BotApiService {
         // Update bot with proxyTokenHash
         await this.botService.update({ id: bot.id }, { proxyTokenHash });
 
-        this.logger.log(`Bot ${input.hostname} registered with proxy (token obtained)`);
+        this.logger.log(
+          `Bot ${input.hostname} registered with proxy (token obtained)`,
+        );
       } catch (error) {
         this.logger.warn(
           `Failed to register bot with proxy, falling back to direct mode:`,
@@ -389,6 +393,52 @@ export class BotApiService {
       }
     }
 
+    // Update OpenClaw configuration with full provider information
+    // This enables native provider support when available
+    try {
+      const proxyUrl = this.getProxyUrl() || '';
+
+      // 检查是否启用"统计优先"模式
+      // 当启用时，所有请求通过 Proxy 以便统计 token 使用情况
+      const preferStats = process.env.PROXY_PREFER_STATS === 'true';
+
+      await this.workspaceService.updateOpenclawConfigWithProvider(
+        {
+          botId: bot.id,
+          userId,
+          hostname: input.hostname,
+          gatewayToken,
+          proxyUrl,
+          proxyToken: proxyToken || '',
+          primaryModel: {
+            modelId: primaryProvider.primaryModel || primaryProvider.models[0],
+            vendor: primaryProvider.providerId,
+            providerKeyId: primaryProvider.keyId || '',
+          },
+          providerKey: providerKeyRecord
+            ? {
+                vendor: providerKeyRecord.vendor,
+                apiKey: apiKey || '', // In zero-trust mode, this is empty
+                baseUrl: providerKeyRecord.baseUrl,
+                apiType: apiType,
+              }
+            : null,
+          useZeroTrust, // 启用 Hybrid-Native 模式（原生 API 协议 + Proxy 转发）
+          preferStats, // 统计优先模式：所有请求通过 Proxy 以便统计
+        },
+        [], // Channels will be added separately via channel configuration
+      );
+      this.logger.log(
+        `OpenClaw config updated with provider info for bot ${input.hostname}, useZeroTrust: ${useZeroTrust}, preferStats: ${preferStats}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to update OpenClaw config for ${input.hostname}:`,
+        error,
+      );
+      // Continue - container can still be created
+    }
+
     // Create container AFTER proxy registration (so it has the proxy token)
     let containerId: string | null = null;
     try {
@@ -407,11 +457,14 @@ export class BotApiService {
         proxyUrl: proxyToken ? this.getProxyUrl() : undefined,
         proxyToken,
         apiType,
+        botType: input.botType || 'GATEWAY',
       });
 
       // Update bot with container ID
       await this.botService.update({ id: bot.id }, { containerId });
-      this.logger.log(`Container created for bot ${input.hostname}: ${containerId}`);
+      this.logger.log(
+        `Container created for bot ${input.hostname}: ${containerId}`,
+      );
     } catch (error) {
       this.logger.warn(
         `Failed to create container for ${input.hostname}:`,
@@ -429,7 +482,7 @@ export class BotApiService {
       targetName: bot.name,
       detail: {
         hostname: bot.hostname,
-        // aiProvider 和 model 从 BotProviderKey 派生，不再记录在日志中
+        // aiProvider 和 model 从 BotModel 派生，不再记录在日志中
       },
     });
 
@@ -482,7 +535,7 @@ export class BotApiService {
 
     // Create bot in database with draft status
     // No workspace, no container, no port allocation
-    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotProviderKey 和 BotChannel 派生
+    // 注意：aiProvider、model、channelType 字段已从数据库移除，实际值从 BotModel 和 BotChannel 派生
     const bot = await this.botService.create({
       name: input.name,
       hostname: input.hostname,
@@ -492,6 +545,7 @@ export class BotApiService {
       proxyTokenHash: null,
       tags: input.tags || [],
       status: 'draft',
+      botType: input.botType || 'GATEWAY',
       emoji: input.persona.emoji || null,
       soulMarkdown: input.persona.soulMarkdown || null,
       personaTemplate: { connect: { id: personaTemplateId } },
@@ -502,6 +556,18 @@ export class BotApiService {
     });
 
     this.logger.log(`Bot created (draft): ${input.hostname}`);
+
+    // 自动绑定所有可用模型
+    try {
+      await this.availableModelService.bindAllAvailableModels(bot.id);
+      this.logger.log(`All available models bound to bot ${input.hostname}`);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to bind available models to bot ${input.hostname}:`,
+        error,
+      );
+      // 不影响主流程，继续执行
+    }
 
     // Log operation
     await this.operateLogService.create({
@@ -638,7 +704,10 @@ export class BotApiService {
       target: 'BOT',
       targetId: bot.id,
       targetName: bot.name,
-      detail: { hostname, pendingConfig: mergedPending } as Prisma.InputJsonValue,
+      detail: {
+        hostname,
+        pendingConfig: mergedPending,
+      } as Prisma.InputJsonValue,
     });
 
     this.logger.log(
@@ -703,7 +772,11 @@ export class BotApiService {
       target: 'BOT',
       targetId: bot.id,
       targetName: bot.name,
-      detail: { hostname, appliedFields, appliedConfig: pendingConfig } as Prisma.InputJsonValue,
+      detail: {
+        hostname,
+        appliedFields,
+        appliedConfig: pendingConfig,
+      } as Prisma.InputJsonValue,
     });
 
     this.logger.log(
@@ -744,7 +817,9 @@ export class BotApiService {
     // 在启动前应用待生效配置
     const pendingConfig = bot.pendingConfig as Record<string, unknown> | null;
     if (pendingConfig && Object.keys(pendingConfig).length > 0) {
-      this.logger.log(`Applying pending config before starting bot ${hostname}`);
+      this.logger.log(
+        `Applying pending config before starting bot ${hostname}`,
+      );
       await this.applyPendingConfig(hostname, userId);
       // 重新获取更新后的 bot
       bot = await this.getBotByHostname(hostname, userId);
@@ -771,7 +846,7 @@ export class BotApiService {
       // Check if container exists and is in a healthy state
       // IMPORTANT: We always recreate the container to ensure new configurations take effect
       // The OpenClaw data (memory, sessions) is persisted in a separate volume and won't be lost
-      let needsRecreate = true; // Always recreate to apply new config
+      const needsRecreate = true; // Always recreate to apply new config
       if (bot.containerId) {
         const containerStatus = await this.dockerService.getContainerStatus(
           bot.containerId,
@@ -803,77 +878,117 @@ export class BotApiService {
       // Ensure OpenClaw data directory exists before creating container
       await this.workspaceService.ensureOpenclawDir(userId, hostname);
 
+      // Sync feishu channel configs to openclaw.json before container creation
+      // This ensures the latest channel configuration is always applied on restart
+      await this.syncFeishuChannelsOnStart(bot.id, userId, hostname);
+
+      // Declare containerId at higher scope so it's accessible after the if-else block
+      let containerId: string | null | undefined = bot.containerId;
+
       if (!needsRecreate && bot.containerId) {
         // This branch is currently unreachable since needsRecreate is always true
         // Kept for potential future optimization where we might skip recreation
         await this.dockerService.startContainer(bot.containerId);
       } else {
-        // Get provider key for this bot
+        // Get provider key for this bot via BotModel
         let apiKey: string | undefined;
         let apiBaseUrl: string | undefined;
         let proxyToken: string | undefined;
         let apiType: string | undefined;
 
-        const botProviderKey = await this.botProviderKeyService.get({
+        // Get primary model from BotModel (fallback to any model if no primary)
+        let primaryBotModel = await this.botModelService.get({
           botId: bot.id,
           isPrimary: true,
         });
+        if (!primaryBotModel) {
+          const { list: allModels } = await this.botModelService.list(
+            { botId: bot.id },
+            { limit: 1 },
+          );
+          primaryBotModel = allModels[0] || null;
+        }
 
         // Check if zero-trust mode is enabled
         const useZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
-        this.logger.log(`Starting bot ${hostname} with zero-trust mode: ${useZeroTrust}`);
+        this.logger.log(
+          `Starting bot ${hostname} with zero-trust mode: ${useZeroTrust}`,
+        );
 
-        if (botProviderKey) {
+        if (primaryBotModel) {
           try {
-            const providerKey = await this.providerKeyService.get({
-              id: botProviderKey.providerKeyId,
-            });
-            if (providerKey && providerKey.createdById === userId) {
-              // Get API type from provider config
-              const providerConfig =
-                PROVIDER_CONFIGS[
-                  providerKey.vendor as keyof typeof PROVIDER_CONFIGS
-                ];
-              apiType = providerConfig?.apiType || 'openai';
-              apiBaseUrl = providerKey.baseUrl || undefined;
+            // Get model availability to find the provider key
+            const modelAvailability =
+              await this.availableModelService.getModelAvailabilityByModelId(
+                primaryBotModel.modelId,
+              );
 
-              if (useZeroTrust) {
-                // Zero-trust mode: Register bot with proxy
-                try {
-                  // Determine the vendor for proxy registration
-                  // For custom providers, use apiType (e.g., "openai") to match the proxy URL
-                  const proxyVendor =
-                    providerKey.vendor === 'custom' && apiType
-                      ? apiType
-                      : providerKey.vendor;
+            if (modelAvailability?.providerKeyId) {
+              const providerKey = await this.providerKeyService.get({
+                id: modelAvailability.providerKeyId,
+              });
 
-                  const registration =
-                    await this.keyringProxyService.registerBot(
-                      bot.id,
-                      proxyVendor,
-                      botProviderKey.providerKeyId,
-                      bot.tags,
+              if (providerKey) {
+                // Get API type: prefer providerKey.apiType from DB, fallback to PROVIDER_CONFIGS
+                const providerConfig =
+                  PROVIDER_CONFIGS[
+                    providerKey.vendor as keyof typeof PROVIDER_CONFIGS
+                  ];
+                apiType =
+                  providerKey.apiType || providerConfig?.apiType || 'openai';
+                apiBaseUrl = providerKey.baseUrl || undefined;
+
+                if (useZeroTrust) {
+                  // Zero-trust mode: Register bot with proxy
+                  try {
+                    // Determine the vendor for proxy registration
+                    // For custom or domestic providers (apiType differs from vendor), use apiType
+                    const proxyVendor =
+                      providerKey.vendor === 'custom' ||
+                      (apiType && providerKey.vendor !== apiType)
+                        ? apiType
+                        : providerKey.vendor;
+
+                    const registration =
+                      await this.keyringProxyService.registerBot(
+                        bot.id,
+                        proxyVendor,
+                        modelAvailability.providerKeyId,
+                        bot.tags,
+                      );
+                    proxyToken = registration.token;
+                    // Update proxyTokenHash in database
+                    const proxyTokenHash =
+                      this.encryptionService.hashToken(proxyToken);
+                    await this.botService.update(
+                      { id: bot.id },
+                      { proxyTokenHash },
                     );
-                  proxyToken = registration.token;
-                  // Update proxyTokenHash in database
-                  const proxyTokenHash =
-                    this.encryptionService.hashToken(proxyToken);
-                  await this.botService.update(
-                    { id: bot.id },
-                    { proxyTokenHash },
-                  );
-                  this.logger.log(
-                    `Bot ${hostname} registered with proxy for start`,
-                  );
-                } catch (proxyError) {
-                  this.logger.warn(
-                    `Failed to register bot with proxy, falling back to direct mode:`,
-                    proxyError,
-                  );
-                  // Fall back to direct mode
+                    this.logger.log(
+                      `Bot ${hostname} registered with proxy for start`,
+                    );
+                  } catch (proxyError) {
+                    this.logger.warn(
+                      `Failed to register bot with proxy, falling back to direct mode:`,
+                      proxyError,
+                    );
+                    // Fall back to direct mode
+                    apiKey = this.encryptionService.decrypt(
+                      Buffer.from(providerKey.secretEncrypted),
+                    );
+                    await this.workspaceService.writeApiKey(
+                      userId,
+                      hostname,
+                      providerKey.vendor,
+                      apiKey,
+                    );
+                  }
+                } else {
+                  // Direct mode: Decrypt and pass API key
                   apiKey = this.encryptionService.decrypt(
                     Buffer.from(providerKey.secretEncrypted),
                   );
+                  // Write API key to secrets directory
                   await this.workspaceService.writeApiKey(
                     userId,
                     hostname,
@@ -881,18 +996,6 @@ export class BotApiService {
                     apiKey,
                   );
                 }
-              } else {
-                // Direct mode: Decrypt and pass API key
-                apiKey = this.encryptionService.decrypt(
-                  Buffer.from(providerKey.secretEncrypted),
-                );
-                // Write API key to secrets directory
-                await this.workspaceService.writeApiKey(
-                  userId,
-                  hostname,
-                  providerKey.vendor,
-                  apiKey,
-                );
               }
             }
           } catch (error) {
@@ -913,7 +1016,7 @@ export class BotApiService {
           hostname,
         );
 
-        // 从 BotProviderKey 和 BotChannel 派生运行时配置
+        // 从 BotModel 和 BotChannel 派生运行时配置
         const runtimeConfig = await this.botConfigResolver.getBotRuntimeConfig(
           bot.id,
         );
@@ -929,7 +1032,7 @@ export class BotApiService {
           useZeroTrust,
         });
 
-        const containerId = await this.dockerService.createContainer({
+        containerId = await this.dockerService.createContainer({
           hostname: bot.hostname,
           isolationKey,
           name: bot.name,
@@ -944,12 +1047,38 @@ export class BotApiService {
           proxyUrl: proxyToken ? currentProxyUrl : undefined,
           proxyToken,
           apiType,
+          botType: bot.botType || 'GATEWAY',
         });
         await this.dockerService.startContainer(containerId);
         await this.botService.update({ id: bot.id }, { containerId });
       }
 
-      await this.botService.update({ id: bot.id }, { status: 'running' });
+      // Safety check: containerId should always be set at this point
+      if (!containerId) {
+        throw new Error('Container ID not set after container creation');
+      }
+
+      // Start monitoring for startup completion
+      // The status will be updated to 'running' when the monitor detects startup completion
+      // or after a timeout
+      this.botStartupMonitor.startMonitoring(
+        bot.id,
+        hostname,
+        userId,
+        containerId,
+      );
+
+      // Reconcile bot plugins after container starts
+      // Use the local containerId variable, not bot.containerId (which is stale)
+      await this.pluginApiService.reconcileBotPlugins(bot.id, containerId);
+
+      // Reconcile bot skills after container starts
+      await this.skillApiService.reconcileBotSkills(
+        bot.id,
+        containerId,
+        userId,
+        hostname,
+      );
 
       // Log operation
       await this.operateLogService.create({
@@ -961,8 +1090,8 @@ export class BotApiService {
         detail: { hostname },
       });
 
-      this.logger.log(`Bot started: ${hostname}`);
-      return { success: true, status: 'running' };
+      this.logger.log(`Bot container started, waiting for initialization: ${hostname}`);
+      return { success: true, status: 'starting' };
     } catch (error) {
       this.logger.error(`Failed to start bot ${hostname}:`, error);
       await this.botService.update({ id: bot.id }, { status: 'error' });
@@ -1100,17 +1229,30 @@ export class BotApiService {
       this.encryptionService.encrypt(input.secret),
     );
 
+    // 如果没有提供 baseUrl，使用 vendor 官方默认的 apiHost
+    const providerConfig = PROVIDER_CONFIGS[input.vendor as ProviderVendor];
+    const effectiveBaseUrl = input.baseUrl || providerConfig?.apiHost || null;
+
     const key = await this.providerKeyService.create({
       vendor: input.vendor,
       apiType: input.apiType || null,
       secretEncrypted,
       label: input.label,
       tag: input.tag || null,
-      baseUrl: input.baseUrl || null,
+      baseUrl: effectiveBaseUrl,
+      metadata: (input.metadata as Prisma.InputJsonValue) || undefined,
       createdBy: { connect: { id: userId } },
     });
 
     this.logger.log(`Provider key added: ${key.id} (${input.vendor})`);
+
+    // 自动获取 models 并写入 ModelAvailability（不验证可用性）
+    // 这是异步操作，不阻塞主流程
+    this.modelVerificationService.refreshModels(key.id).catch((error) => {
+      this.logger.warn(
+        `Failed to auto-refresh models for provider key ${key.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    });
 
     // Log operation
     await this.operateLogService.create({
@@ -1141,6 +1283,9 @@ export class BotApiService {
       { id },
       { isDeleted: true, deletedAt: new Date() },
     );
+
+    // 清理关联的 ModelAvailability 记录（硬删除，因为 ProviderKey 已不可用）
+    await this.availableModelService.cleanupByProviderKeyId(id);
 
     // Log operation
     await this.operateLogService.create({
@@ -1216,211 +1361,6 @@ export class BotApiService {
   }
 
   // ============================================================================
-  // Bot Provider Management
-  // ============================================================================
-
-  /**
-   * Get all providers for a bot
-   */
-  async getBotProviders(
-    hostname: string,
-    userId: string,
-  ): Promise<BotProviderDetail[]> {
-    const bot = await this.getBotByHostname(hostname, userId);
-
-    const { list: botProviderKeys } = await this.botProviderKeyService.list({
-      botId: bot.id,
-    });
-
-    const providers = await Promise.all(
-      botProviderKeys.map(async (bpk) => {
-        const providerKey = await this.providerKeyService.getById(
-          bpk.providerKeyId,
-        );
-        if (!providerKey) {
-          return null;
-        }
-
-        // Mask the API key
-        const secret = this.encryptionService.decrypt(
-          Buffer.from(providerKey.secretEncrypted),
-        );
-        const apiKeyMasked =
-          secret.length > 8
-            ? `${secret.slice(0, 4)}...${secret.slice(-4)}`
-            : '****';
-
-        return {
-          id: bpk.id,
-          providerKeyId: bpk.providerKeyId,
-          vendor: providerKey.vendor as BotProviderDetail['vendor'],
-          apiType: (providerKey.apiType as BotProviderDetail['apiType']) || null,
-          label: providerKey.label,
-          apiKeyMasked,
-          baseUrl: providerKey.baseUrl,
-          isPrimary: bpk.isPrimary,
-          allowedModels: bpk.allowedModels,
-          primaryModel: bpk.primaryModel,
-          createdAt: bpk.createdAt,
-        };
-      }),
-    );
-
-    return providers.filter((p) => p !== null);
-  }
-
-  /**
-   * Add a provider to a bot
-   */
-  async addBotProvider(
-    hostname: string,
-    userId: string,
-    input: {
-      keyId: string;
-      models: string[];
-      primaryModel?: string;
-      isPrimary?: boolean;
-    },
-  ): Promise<BotProviderDetail> {
-    const bot = await this.getBotByHostname(hostname, userId);
-
-    // Verify the provider key belongs to the user
-    const providerKey = await this.providerKeyService.get({
-      id: input.keyId,
-      createdById: userId,
-    });
-    if (!providerKey) {
-      throw new NotFoundException(
-        `Provider key with id "${input.keyId}" not found`,
-      );
-    }
-
-    // Check if this provider key is already added to the bot
-    const existing = await this.botProviderKeyService.get({
-      botId: bot.id,
-      providerKeyId: input.keyId,
-    });
-    if (existing) {
-      throw new ConflictException(
-        'This provider key is already added to the bot',
-      );
-    }
-
-    // If this is set as primary, unset other primary providers
-    if (input.isPrimary) {
-      const { list: existingProviders } = await this.botProviderKeyService.list(
-        { botId: bot.id, isPrimary: true },
-      );
-      for (const ep of existingProviders) {
-        await this.botProviderKeyService.update(
-          { id: ep.id },
-          { isPrimary: false },
-        );
-      }
-    }
-
-    // Create the bot provider key
-    const bpk = await this.botProviderKeyService.create({
-      bot: { connect: { id: bot.id } },
-      providerKey: { connect: { id: input.keyId } },
-      allowedModels: input.models,
-      primaryModel: input.primaryModel || input.models[0] || null,
-      isPrimary: input.isPrimary || false,
-    });
-
-    // Mask the API key
-    const secret = this.encryptionService.decrypt(
-      Buffer.from(providerKey.secretEncrypted),
-    );
-    const apiKeyMasked =
-      secret.length > 8
-        ? `${secret.slice(0, 4)}...${secret.slice(-4)}`
-        : '****';
-
-    const result: BotProviderDetail = {
-      id: bpk.id,
-      providerKeyId: bpk.providerKeyId,
-      vendor: providerKey.vendor as BotProviderDetail['vendor'],
-      apiType: (providerKey.apiType as BotProviderDetail['apiType']) || null,
-      label: providerKey.label,
-      apiKeyMasked,
-      baseUrl: providerKey.baseUrl,
-      isPrimary: bpk.isPrimary,
-      allowedModels: bpk.allowedModels,
-      primaryModel: bpk.primaryModel,
-      createdAt: bpk.createdAt,
-    };
-
-    // 注意：不再更新 Bot 的 aiProvider 和 model 字段
-    // 这些值现在从 BotProviderKey 动态派生
-    if (input.isPrimary) {
-      this.logger.log(
-        `Primary provider set for bot ${bot.hostname}: ${providerKey.vendor}, model: ${input.primaryModel || input.models[0]}`,
-      );
-    }
-
-    // 检查并更新 Bot 状态（从 draft 到 created）
-    await this.checkAndUpdateBotStatus(bot.id);
-
-    return result;
-  }
-
-  /**
-   * Remove a provider from a bot
-   */
-  async removeBotProvider(
-    hostname: string,
-    userId: string,
-    keyId: string,
-  ): Promise<{ ok: boolean }> {
-    const bot = await this.getBotByHostname(hostname, userId);
-
-    const bpk = await this.botProviderKeyService.get({
-      botId: bot.id,
-      providerKeyId: keyId,
-    });
-    if (!bpk) {
-      throw new NotFoundException('Provider not found for this bot');
-    }
-
-    await this.botProviderKeyService.delete({ id: bpk.id });
-
-    return { ok: true };
-  }
-
-  /**
-   * Set the primary model for a bot provider
-   */
-  async setBotPrimaryModel(
-    hostname: string,
-    userId: string,
-    keyId: string,
-    modelId: string,
-  ): Promise<{ ok: boolean }> {
-    const bot = await this.getBotByHostname(hostname, userId);
-
-    const bpk = await this.botProviderKeyService.get({
-      botId: bot.id,
-      providerKeyId: keyId,
-    });
-    if (!bpk) {
-      throw new NotFoundException('Provider not found for this bot');
-    }
-
-    // Verify the model is in the allowed models list
-    if (!bpk.allowedModels.includes(modelId)) {
-      throw new NotFoundException('Model not found in allowed models');
-    }
-
-    await this.botProviderKeyService.update(
-      { id: bpk.id },
-      { primaryModel: modelId },
-    );
-
-    return { ok: true };
-  }
-
-  // ============================================================================
   // Bot Diagnostics
   // ============================================================================
 
@@ -1444,87 +1384,109 @@ export class BotApiService {
       'network',
     ];
 
-    // Provider Key Check
+    // Provider Key Check (via BotModel)
     if (checksToRun.includes('provider_key')) {
       const startTime = Date.now();
-      const { list: botProviderKeys } = await this.botProviderKeyService.list({
+      const { list: botModels } = await this.botModelService.list({
         botId: bot.id,
       });
 
-      if (botProviderKeys.length === 0) {
+      if (botModels.length === 0) {
         results.push({
           name: 'provider_key',
           status: 'fail',
-          message: 'No provider keys configured',
+          message: 'No models configured',
         });
-        recommendations.push('Add at least one AI provider key');
+        recommendations.push('Add at least one AI model');
       } else {
-        // Verify the primary provider key
-        const primaryKey = botProviderKeys.find((k) => k.isPrimary);
-        if (primaryKey) {
-          const providerKey = await this.providerKeyService.getById(
-            primaryKey.providerKeyId,
-          );
-          if (providerKey) {
-            try {
-              const secret = this.encryptionService.decrypt(
-                Buffer.from(providerKey.secretEncrypted),
+        // Verify the primary model's provider key
+        const primaryModel = botModels.find((m) => m.isPrimary);
+        if (primaryModel) {
+          try {
+            const modelAvailability =
+              await this.availableModelService.getModelAvailabilityByModelId(
+                primaryModel.modelId,
               );
-              const verifyResult = await this.providerVerifyClient.verify({
-                vendor: providerKey.vendor as VerifyProviderKeyInput['vendor'],
-                secret,
-                baseUrl: providerKey.baseUrl || undefined,
-              });
-              const latency = Date.now() - startTime;
 
-              if (verifyResult.valid) {
-                results.push({
-                  name: 'provider_key',
-                  status: 'pass',
-                  message: 'API Key valid',
-                  latency,
+            if (modelAvailability?.providerKeyId) {
+              const providerKey = await this.providerKeyService.getById(
+                modelAvailability.providerKeyId,
+              );
+              if (providerKey) {
+                const secret = this.encryptionService.decrypt(
+                  Buffer.from(providerKey.secretEncrypted),
+                );
+                const verifyResult = await this.providerVerifyClient.verify({
+                  vendor:
+                    providerKey.vendor as VerifyProviderKeyInput['vendor'],
+                  secret,
+                  baseUrl: providerKey.baseUrl || undefined,
                 });
+                const latency = Date.now() - startTime;
+
+                if (verifyResult.valid) {
+                  results.push({
+                    name: 'provider_key',
+                    status: 'pass',
+                    message: 'API Key valid',
+                    latency,
+                  });
+                } else {
+                  results.push({
+                    name: 'provider_key',
+                    status: 'fail',
+                    message: verifyResult.error || 'API Key invalid',
+                    latency,
+                  });
+                  recommendations.push('Update your API key');
+                }
               } else {
                 results.push({
                   name: 'provider_key',
                   status: 'fail',
-                  message: verifyResult.error || 'API Key invalid',
-                  latency,
+                  message: 'Provider key not found for primary model',
                 });
-                recommendations.push('Update your API key');
+                recommendations.push('Check your model configuration');
               }
-            } catch (error) {
+            } else {
               results.push({
                 name: 'provider_key',
                 status: 'fail',
-                message: 'Failed to verify API key',
+                message: 'Model availability not found',
               });
-              recommendations.push('Check your API key configuration');
+              recommendations.push('Refresh model availability');
             }
+          } catch (error) {
+            results.push({
+              name: 'provider_key',
+              status: 'fail',
+              message: 'Failed to verify API key',
+            });
+            recommendations.push('Check your API key configuration');
           }
         } else {
           results.push({
             name: 'provider_key',
             status: 'warning',
-            message: 'No primary provider key set',
+            message: 'No primary model set',
           });
-          recommendations.push('Set a primary provider key');
+          recommendations.push('Set a primary model');
         }
       }
     }
 
     // Model Access Check
     if (checksToRun.includes('model_access')) {
-      const { list: botProviderKeys } = await this.botProviderKeyService.list({
+      const primaryModel = await this.botModelService.get({
         botId: bot.id,
         isPrimary: true,
       });
 
-      if (botProviderKeys.length > 0 && botProviderKeys[0]?.primaryModel) {
+      if (primaryModel) {
         results.push({
           name: 'model_access',
           status: 'pass',
-          message: `Primary model: ${botProviderKeys[0].primaryModel}`,
+          message: `Primary model: ${primaryModel.modelId}`,
         });
       } else {
         results.push({
@@ -1570,7 +1532,10 @@ export class BotApiService {
             message: `${errorChannels.length} channel(s) have errors`,
           });
           recommendations.push('Check channel configurations for errors');
-        } else if (connectedChannels.length === 0 && enabledChannels.length > 0) {
+        } else if (
+          connectedChannels.length === 0 &&
+          enabledChannels.length > 0
+        ) {
           results.push({
             name: 'channel_tokens',
             status: 'warning',
@@ -1661,7 +1626,9 @@ export class BotApiService {
               message: 'Container not running, cannot verify network',
               latency,
             });
-            recommendations.push('Start the bot to verify network connectivity');
+            recommendations.push(
+              'Start the bot to verify network connectivity',
+            );
           } else {
             // Container is running, check if it has network access
             // Verify container is on the expected network
@@ -1856,15 +1823,87 @@ export class BotApiService {
       label: key.label,
       tag: key.tag,
       baseUrl: key.baseUrl,
+      metadata: (key.metadata as Record<string, unknown>) ?? null,
       createdAt: key.createdAt,
     };
   }
 
   /**
-   * 检查并更新 Bot 状态
-   * 当 Bot 同时配置了渠道和 AI Provider 时，自动将状态从 draft 更新为 created
+   * 在 Bot 启动时同步飞书通道配置到 channels.json
+   * 该文件会在容器启动时合并到 openclaw.json
+   * 使用方案 B：独立配置文件 + 启动时合并
    */
-  private async checkAndUpdateBotStatus(botId: string): Promise<void> {
+  private async syncFeishuChannelsOnStart(
+    botId: string,
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
+    try {
+      // 获取所有飞书通道
+      const { list: channels } = await this.botChannelService.list({
+        botId,
+        channelType: 'feishu',
+      });
+
+      if (channels.length === 0) {
+        this.logger.debug(`No feishu channels to sync for bot ${hostname}`);
+        // 如果没有通道配置，删除旧的 channels.json 文件
+        await this.workspaceService.removeChannelsConfigFile(userId, hostname);
+        return;
+      }
+
+      // 构建通道配置列表（解密凭证）
+      const channelConfigs = channels.map((channel) => {
+        // 解密凭证
+        let credentials: Record<string, string> = {};
+        if (channel.credentialsEncrypted) {
+          try {
+            const encryptedStr = Buffer.from(
+              channel.credentialsEncrypted,
+            ).toString('utf8');
+            const decrypted = this.cryptClient.decrypt(encryptedStr);
+            credentials = JSON.parse(decrypted);
+          } catch (error) {
+            this.logger.warn(
+              `Failed to decrypt credentials for channel ${channel.id}`,
+              error,
+            );
+          }
+        }
+
+        return {
+          channelType: channel.channelType,
+          accountId: channel.id,
+          credentials,
+          config: (channel.config as Record<string, unknown>) || {},
+          isEnabled: channel.isEnabled,
+        };
+      });
+
+      // 写入到 channels.json 文件（会被挂载到容器并合并）
+      await this.workspaceService.writeChannelsConfigFile(
+        userId,
+        hostname,
+        channelConfigs,
+      );
+
+      this.logger.log(
+        `Wrote channels.json for ${channels.length} feishu channel(s) for bot ${hostname}`,
+      );
+    } catch (error) {
+      // 同步失败不应阻止容器启动，只记录警告
+      this.logger.warn(
+        `Failed to sync feishu channels for bot ${hostname}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * 检查并更新 Bot 状态
+   * 当 Bot 同时配置了渠道和模型时，自动将状态从 draft 更新为 created
+   * 使用 BotConfigResolverService.isConfigured() 进行判断
+   */
+  async checkAndUpdateBotStatus(botId: string): Promise<void> {
     try {
       // 获取当前 bot 状态
       const bot = await this.botService.getById(botId);
@@ -1881,27 +1920,17 @@ export class BotApiService {
         return;
       }
 
-      // 检查是否有渠道配置
-      const { total: channelCount } = await this.botChannelService.list({
-        botId,
-      });
-      const hasChannel = channelCount > 0;
-
-      // 检查是否有 AI Provider 配置
-      const { total: providerCount } = await this.botProviderKeyService.list({
-        botId,
-      });
-      const hasProvider = providerCount > 0;
+      const configured = await this.botConfigResolver.isConfigured(botId);
 
       this.logger.debug(
-        `Bot ${botId} configuration status: hasChannel=${hasChannel}, hasProvider=${hasProvider}`,
+        `Bot ${botId} configuration status: isConfigured=${configured}`,
       );
 
-      // 如果同时配置了渠道和 AI Provider，更新状态为 created
-      if (hasChannel && hasProvider) {
+      // 如果配置完成，更新状态为 created
+      if (configured) {
         await this.botService.update({ id: botId }, { status: 'created' });
         this.logger.log(
-          `Bot ${botId} status updated from draft to created (both channel and AI provider configured)`,
+          `Bot ${botId} status updated from draft to created (both channel and model configured)`,
         );
       }
     } catch (error) {

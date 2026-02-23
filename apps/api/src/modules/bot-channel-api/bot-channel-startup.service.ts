@@ -2,34 +2,29 @@
  * Bot Channel Startup Service
  *
  * 职责：
- * - 应用启动时自动重连所有已启用的飞书渠道
- * - 确保长连接在应用重启后能够自动恢复
- * - 提供连接验证和重试机制
+ * - 应用启动时验证所有已启用的飞书渠道配置
+ * - 连接状态由 OpenClaw 原生 feishu 扩展管理
+ * - 仅验证配置有效性，不主动建立连接
+ *
+ * 迁移说明：
+ * - 原 WebSocket 连接逻辑已迁移到 OpenClaw feishu 扩展
+ * - 此服务现在只负责配置验证和状态同步
  */
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { BotChannelService } from '@app/db';
 import { CryptClient } from '@app/clients/internal/crypt';
-import { FeishuClientService } from '@app/clients/internal/feishu';
-import { FeishuMessageHandlerService } from './feishu-message-handler.service';
 
-// 连接配置
-const CONNECTION_CONFIG = {
-  maxRetries: 3,
-  retryDelayMs: 2000,
-  connectionDelayMs: 500,
-  verifyDelayMs: 1000,
-};
-
-interface ReconnectResult {
+interface ValidationResult {
   total: number;
-  success: number;
-  failed: number;
+  valid: number;
+  invalid: number;
   details: Array<{
     channelId: string;
     channelName: string;
-    status: 'success' | 'failed';
+    botHostname?: string;
+    status: 'valid' | 'invalid';
     error?: string;
   }>;
 }
@@ -40,33 +35,35 @@ export class BotChannelStartupService implements OnModuleInit {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botChannelDb: BotChannelService,
     private readonly cryptClient: CryptClient,
-    private readonly feishuClientService: FeishuClientService,
-    private readonly feishuMessageHandler: FeishuMessageHandlerService,
   ) {}
 
   async onModuleInit(): Promise<void> {
     this.logger.info('='.repeat(60));
-    this.logger.info('BotChannelStartupService: 开始自动重连飞书渠道...');
+    this.logger.info('BotChannelStartupService: 开始验证飞书渠道配置...');
     this.logger.info('='.repeat(60));
 
     try {
-      const result = await this.reconnectAllFeishuChannels();
-      this.logger.info('BotChannelStartupService: 自动重连完成', result);
+      const result = await this.validateAllFeishuChannels();
+      this.logger.info(
+        'BotChannelStartupService: 飞书渠道配置验证完成',
+        result,
+      );
     } catch (error) {
-      this.logger.error('BotChannelStartupService: 自动重连失败', {
+      this.logger.error('BotChannelStartupService: 飞书渠道配置验证失败', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   /**
-   * 重连所有已启用的飞书渠道
+   * 验证所有已启用的飞书渠道配置
+   * 注意：不再主动建立连接，连接由 OpenClaw feishu 扩展管理
    */
-  private async reconnectAllFeishuChannels(): Promise<ReconnectResult> {
-    const result: ReconnectResult = {
+  private async validateAllFeishuChannels(): Promise<ValidationResult> {
+    const result: ValidationResult = {
       total: 0,
-      success: 0,
-      failed: 0,
+      valid: 0,
+      invalid: 0,
       details: [],
     };
 
@@ -79,13 +76,15 @@ export class BotChannelStartupService implements OnModuleInit {
           isDeleted: false,
         },
       },
-      { orderBy: { createdAt: 'asc' } },
+      {
+        orderBy: { createdAt: 'asc' },
+      },
     );
 
     result.total = channels.length;
 
     if (channels.length === 0) {
-      this.logger.info('BotChannelStartupService: 没有需要重连的飞书渠道');
+      this.logger.info('BotChannelStartupService: 没有需要验证的飞书渠道');
       return result;
     }
 
@@ -94,22 +93,15 @@ export class BotChannelStartupService implements OnModuleInit {
       channelIds: channels.map((c) => c.id),
     });
 
-    // 逐个重连
-    for (let i = 0; i < channels.length; i++) {
-      const channel = channels[i];
-
-      // 添加连接间隔，避免同时建立多个连接
-      if (i > 0) {
-        await this.delay(CONNECTION_CONFIG.connectionDelayMs);
-      }
-
-      const channelResult = await this.connectWithRetry(channel);
+    // 逐个验证配置
+    for (const channel of channels) {
+      const channelResult = await this.validateFeishuChannel(channel);
       result.details.push(channelResult);
 
-      if (channelResult.status === 'success') {
-        result.success++;
+      if (channelResult.status === 'valid') {
+        result.valid++;
       } else {
-        result.failed++;
+        result.invalid++;
       }
     }
 
@@ -117,160 +109,130 @@ export class BotChannelStartupService implements OnModuleInit {
   }
 
   /**
-   * 带重试的连接
+   * 验证单个飞书渠道配置
+   * 只验证配置有效性，不建立实际连接
    */
-  private async connectWithRetry(
+  private async validateFeishuChannel(
     channel: any,
-  ): Promise<ReconnectResult['details'][0]> {
-    const { maxRetries, retryDelayMs } = CONNECTION_CONFIG;
+  ): Promise<ValidationResult['details'][0]> {
+    const channelId = channel.id;
+    const channelName = channel.name;
+    const botHostname = channel.bot?.hostname;
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      this.logger.info(
-        `BotChannelStartupService: 尝试连接渠道 (${attempt}/${maxRetries})`,
-        {
-          channelId: channel.id,
-          channelName: channel.name,
-        },
+    try {
+      // 检查凭证是否存在
+      if (!channel.credentialsEncrypted) {
+        await this.updateChannelStatus(channelId, 'DISCONNECTED', '缺少凭证');
+        return {
+          channelId,
+          channelName,
+          botHostname,
+          status: 'invalid',
+          error: 'Missing credentials',
+        };
+      }
+
+      // 解密凭证
+      const encryptedStr = Buffer.from(channel.credentialsEncrypted).toString(
+        'utf8',
+      );
+      const credentialsJson = this.cryptClient.decrypt(encryptedStr);
+      const credentials = JSON.parse(credentialsJson);
+
+      // 验证必需字段
+      if (!credentials.appId || !credentials.appSecret) {
+        await this.updateChannelStatus(
+          channelId,
+          'DISCONNECTED',
+          '凭证不完整：缺少 appId 或 appSecret',
+        );
+        return {
+          channelId,
+          channelName,
+          botHostname,
+          status: 'invalid',
+          error: 'Incomplete credentials: missing appId or appSecret',
+        };
+      }
+
+      // 验证凭证格式（基本检查）
+      if (
+        !credentials.appId.startsWith('cli_') &&
+        !credentials.appId.startsWith('app_')
+      ) {
+        this.logger.warn(
+          'BotChannelStartupService: 飞书 App ID 格式可能不正确',
+          { channelId, appId: credentials.appId.substring(0, 10) + '...' },
+        );
+      }
+
+      // 更新状态为待连接（实际连接由 OpenClaw 管理）
+      await this.updateChannelStatus(channelId, 'DISCONNECTED', null);
+
+      this.logger.info('BotChannelStartupService: 飞书渠道配置验证通过 ✓', {
+        channelId,
+        channelName,
+        botHostname,
+      });
+
+      return {
+        channelId,
+        channelName,
+        botHostname,
+        status: 'valid',
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      await this.updateChannelStatus(
+        channelId,
+        'ERROR',
+        `配置验证失败: ${errorMessage}`,
       );
 
-      try {
-        await this.connectFeishuChannel(channel);
+      this.logger.error('BotChannelStartupService: 飞书渠道配置验证失败 ✗', {
+        channelId,
+        channelName,
+        botHostname,
+        error: errorMessage,
+      });
 
-        // 验证连接状态
-        const isConnected = await this.verifyConnection(channel.id);
-
-        if (isConnected) {
-          // 更新数据库状态
-          await this.botChannelDb.update(
-            { id: channel.id },
-            {
-              connectionStatus: 'CONNECTED',
-              lastConnectedAt: new Date(),
-              lastError: null,
-            },
-          );
-
-          this.logger.info('BotChannelStartupService: 渠道连接成功 ✓', {
-            channelId: channel.id,
-            channelName: channel.name,
-            attempt,
-          });
-
-          return {
-            channelId: channel.id,
-            channelName: channel.name,
-            status: 'success',
-          };
-        } else {
-          throw new Error('连接验证失败：连接状态异常');
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-
-        this.logger.warn(
-          `BotChannelStartupService: 连接尝试失败 (${attempt}/${maxRetries})`,
-          {
-            channelId: channel.id,
-            channelName: channel.name,
-            error: errorMessage,
-          },
-        );
-
-        // 如果不是最后一次尝试，等待后重试
-        if (attempt < maxRetries) {
-          await this.delay(retryDelayMs);
-        } else {
-          // 最后一次尝试失败，更新数据库状态
-          await this.botChannelDb.update(
-            { id: channel.id },
-            {
-              connectionStatus: 'ERROR',
-              lastError: `连接失败 (重试 ${maxRetries} 次): ${errorMessage}`,
-            },
-          );
-
-          this.logger.error('BotChannelStartupService: 渠道连接失败 ✗', {
-            channelId: channel.id,
-            channelName: channel.name,
-            error: errorMessage,
-            attempts: maxRetries,
-          });
-
-          return {
-            channelId: channel.id,
-            channelName: channel.name,
-            status: 'failed',
-            error: errorMessage,
-          };
-        }
-      }
+      return {
+        channelId,
+        channelName,
+        botHostname,
+        status: 'invalid',
+        error: errorMessage,
+      };
     }
-
-    // 不应该到达这里，但为了类型安全
-    return {
-      channelId: channel.id,
-      channelName: channel.name,
-      status: 'failed',
-      error: 'Unknown error',
-    };
   }
 
   /**
-   * 连接单个飞书渠道
+   * 更新渠道连接状态
    */
-  private async connectFeishuChannel(channel: any): Promise<void> {
-    // 解密凭证 - 需要先将 Buffer 转换为 UTF-8 字符串
-    const encryptedStr = Buffer.from(channel.credentialsEncrypted).toString(
-      'utf8',
-    );
-    const credentialsJson = this.cryptClient.decrypt(encryptedStr);
-    const credentials = JSON.parse(credentialsJson);
-
-    const config = (channel.config as Record<string, unknown>) || {};
-
-    // 创建连接，使用共享的消息处理器
-    await this.feishuClientService.createConnection(
-      channel.id,
-      {
-        appId: credentials.appId,
-        appSecret: credentials.appSecret,
-      },
-      {
-        requireMention: (config.requireMention as boolean) ?? true,
-        replyInThread: (config.replyInThread as boolean) ?? false,
-        showTyping: (config.showTyping as boolean) ?? true,
-        domain: (config.domain as 'feishu' | 'lark') ?? 'feishu',
-      },
-      this.feishuMessageHandler.createHandler(channel),
-    );
-
-    // 建立 WebSocket 连接
-    await this.feishuClientService.connect(channel.id);
-  }
-
-  /**
-   * 验证连接状态
-   */
-  private async verifyConnection(channelId: string): Promise<boolean> {
-    // 等待一小段时间让连接稳定
-    await this.delay(CONNECTION_CONFIG.verifyDelayMs);
-
-    // 检查连接状态
-    const isConnected = this.feishuClientService.isConnected(channelId);
-
-    this.logger.debug('BotChannelStartupService: 验证连接状态', {
-      channelId,
-      isConnected,
-    });
-
-    return isConnected;
-  }
-
-  /**
-   * 延迟函数
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  private async updateChannelStatus(
+    channelId: string,
+    status: 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING' | 'ERROR',
+    error: string | null,
+  ): Promise<void> {
+    try {
+      await this.botChannelDb.update(
+        { id: channelId },
+        {
+          connectionStatus: status,
+          lastError: error,
+          // 如果是连接成功，更新最后连接时间
+          ...(status === 'CONNECTED' && { lastConnectedAt: new Date() }),
+        },
+      );
+    } catch (updateError) {
+      this.logger.warn('BotChannelStartupService: 更新渠道状态失败', {
+        channelId,
+        status,
+        error:
+          updateError instanceof Error ? updateError.message : 'Unknown error',
+      });
+    }
   }
 }

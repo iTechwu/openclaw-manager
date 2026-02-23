@@ -3,15 +3,20 @@
  *
  * 职责：
  * - Bot 渠道配置的 CRUD 操作
- * - 渠道连接管理
- * - 凭证加密/解密
+ * - 渠道凭证加密/解密
  * - 凭证验证（基于 ChannelDefinition）
+ * - 更新 openclaw.json 配置（用于 OpenClaw 原生 feishu 扩展）
+ *
+ * 迁移说明：
+ * - WebSocket 连接管理已迁移到 OpenClaw 原生 feishu 扩展
+ * - 此服务不再管理连接状态，仅负责配置管理
  */
 import {
   Injectable,
   Inject,
   NotFoundException,
   BadRequestException,
+  forwardRef,
 } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -19,11 +24,10 @@ import {
   BotChannelService,
   BotService,
   ChannelDefinitionService,
-  BotProviderKeyService,
+  BotModelService,
 } from '@app/db';
 import { CryptClient } from '@app/clients/internal/crypt';
-import { FeishuClientService } from '@app/clients/internal/feishu';
-import { FeishuMessageHandlerService } from './feishu-message-handler.service';
+import { WorkspaceService } from '../bot-api/services/workspace.service';
 import type { Prisma } from '@prisma/client';
 import type {
   BotChannelItem,
@@ -42,11 +46,11 @@ export class BotChannelApiService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly botChannelDb: BotChannelService,
     private readonly botDb: BotService,
-    private readonly botProviderKeyDb: BotProviderKeyService,
+    private readonly botModelDb: BotModelService,
     private readonly channelDefinitionDb: ChannelDefinitionService,
     private readonly cryptClient: CryptClient,
-    private readonly feishuClientService: FeishuClientService,
-    private readonly feishuMessageHandler: FeishuMessageHandlerService,
+    @Inject(forwardRef(() => WorkspaceService))
+    private readonly workspaceService: WorkspaceService,
   ) {}
 
   /**
@@ -159,42 +163,9 @@ export class BotChannelApiService {
     // 检查并更新 Bot 状态（从 draft 到 created）
     await this.checkAndUpdateBotStatus(bot.id);
 
-    // 对于飞书渠道，自动建立 WebSocket 长连接
+    // 对于飞书渠道，同步到 channels.json 配置文件
     if (request.channelType === 'feishu') {
-      try {
-        await this.connectFeishuChannel(channel);
-        // 更新状态为已连接
-        const updatedChannel = await this.botChannelDb.update(
-          { id: channel.id },
-          {
-            connectionStatus: 'CONNECTED',
-            lastConnectedAt: new Date(),
-            lastError: null,
-          },
-        );
-        this.logger.info('Feishu channel auto-connected after creation', {
-          channelId: channel.id,
-        });
-        return this.mapToItem(updatedChannel);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(
-          'Failed to auto-connect Feishu channel after creation',
-          {
-            channelId: channel.id,
-            error: errorMessage,
-          },
-        );
-        // 更新状态为错误，但不影响创建成功
-        await this.botChannelDb.update(
-          { id: channel.id },
-          {
-            connectionStatus: 'ERROR',
-            lastError: errorMessage,
-          },
-        );
-      }
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
     }
 
     return this.mapToItem(channel);
@@ -270,47 +241,9 @@ export class BotChannelApiService {
     // 检查并更新 Bot 状态（从 draft 到 created）
     await this.checkAndUpdateBotStatus(bot.id);
 
-    // 对于飞书渠道，如果凭证或配置更新了，需要重新建立连接
-    if (
-      existingChannel.channelType === 'feishu' &&
-      (request.credentials !== undefined || request.config !== undefined)
-    ) {
-      try {
-        // 先断开现有连接
-        this.feishuClientService.disconnect(channelId);
-
-        // 重新建立连接
-        await this.connectFeishuChannel(channel);
-
-        // 更新状态为已连接
-        const updatedChannel = await this.botChannelDb.update(
-          { id: channelId },
-          {
-            connectionStatus: 'CONNECTED',
-            lastConnectedAt: new Date(),
-            lastError: null,
-          },
-        );
-        this.logger.info('Feishu channel reconnected after update', {
-          channelId,
-        });
-        return this.mapToItem(updatedChannel);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn('Failed to reconnect Feishu channel after update', {
-          channelId,
-          error: errorMessage,
-        });
-        // 更新状态为错误
-        await this.botChannelDb.update(
-          { id: channelId },
-          {
-            connectionStatus: 'ERROR',
-            lastError: errorMessage,
-          },
-        );
-      }
+    // 对于飞书渠道，同步到 channels.json 配置文件
+    if (existingChannel.channelType === 'feishu') {
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
     }
 
     return this.mapToItem(channel);
@@ -334,122 +267,19 @@ export class BotChannelApiService {
       throw new NotFoundException('Channel not found');
     }
 
-    // 如果是飞书渠道，先断开连接
-    if (channel.channelType === 'feishu') {
-      this.feishuClientService.disconnect(channelId);
-    }
-
+    // 先删除数据库记录
     await this.botChannelDb.delete({ id: channelId });
 
     this.logger.info('Bot channel deleted', {
       botId: bot.id,
       channelId,
     });
-  }
 
-  /**
-   * 连接渠道
-   */
-  async connectChannel(
-    userId: string,
-    hostname: string,
-    channelId: string,
-  ): Promise<BotChannelItem> {
-    const bot = await this.getBotByHostname(userId, hostname);
-    const channel = await this.botChannelDb.get({
-      id: channelId,
-      botId: bot.id,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('Channel not found');
-    }
-
-    // 更新状态为连接中
-    await this.botChannelDb.update(
-      { id: channelId },
-      { connectionStatus: 'CONNECTING', lastError: null },
-    );
-
-    try {
-      if (channel.channelType === 'feishu') {
-        await this.connectFeishuChannel(channel);
-      } else {
-        throw new Error(`Unsupported channel type: ${channel.channelType}`);
-      }
-
-      // 更新状态为已连接
-      const updatedChannel = await this.botChannelDb.update(
-        { id: channelId },
-        {
-          connectionStatus: 'CONNECTED',
-          lastConnectedAt: new Date(),
-          lastError: null,
-        },
-      );
-
-      this.logger.info('Bot channel connected', {
-        botId: bot.id,
-        channelId,
-        channelType: channel.channelType,
-      });
-
-      return this.mapToItem(updatedChannel);
-    } catch (error) {
-      // 更新状态为错误
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      const updatedChannel = await this.botChannelDb.update(
-        { id: channelId },
-        {
-          connectionStatus: 'ERROR',
-          lastError: errorMessage,
-        },
-      );
-
-      this.logger.error('Failed to connect bot channel', {
-        botId: bot.id,
-        channelId,
-        error: errorMessage,
-      });
-
-      return this.mapToItem(updatedChannel);
-    }
-  }
-
-  /**
-   * 断开渠道连接
-   */
-  async disconnectChannel(
-    userId: string,
-    hostname: string,
-    channelId: string,
-  ): Promise<BotChannelItem> {
-    const bot = await this.getBotByHostname(userId, hostname);
-    const channel = await this.botChannelDb.get({
-      id: channelId,
-      botId: bot.id,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('Channel not found');
-    }
-
+    // 如果是飞书渠道，同步到 channels.json 配置文件
+    // 注意：删除后需要重新同步，如果没有任何飞书通道，会删除 channels.json
     if (channel.channelType === 'feishu') {
-      this.feishuClientService.disconnect(channelId);
+      await this.syncFeishuChannelsToConfigFile(bot.id, userId, hostname);
     }
-
-    const updatedChannel = await this.botChannelDb.update(
-      { id: channelId },
-      { connectionStatus: 'DISCONNECTED' },
-    );
-
-    this.logger.info('Bot channel disconnected', {
-      botId: bot.id,
-      channelId,
-    });
-
-    return this.mapToItem(updatedChannel);
   }
 
   /**
@@ -749,37 +579,6 @@ export class BotChannelApiService {
   }
 
   /**
-   * 连接飞书渠道
-   */
-  private async connectFeishuChannel(channel: any): Promise<void> {
-    // 解密凭证 - 需要先将 Buffer 转换为 UTF-8 字符串
-    const encryptedStr = Buffer.from(channel.credentialsEncrypted).toString('utf8');
-    const credentialsJson = this.cryptClient.decrypt(encryptedStr);
-    const credentials = JSON.parse(credentialsJson);
-
-    const config = (channel.config as Record<string, unknown>) || {};
-
-    // 创建连接，使用共享的消息处理器
-    await this.feishuClientService.createConnection(
-      channel.id,
-      {
-        appId: credentials.appId,
-        appSecret: credentials.appSecret,
-      },
-      {
-        requireMention: (config.requireMention as boolean) ?? true,
-        replyInThread: (config.replyInThread as boolean) ?? false,
-        showTyping: (config.showTyping as boolean) ?? true,
-        domain: (config.domain as 'feishu' | 'lark') ?? 'feishu',
-      },
-      this.feishuMessageHandler.createHandler(channel),
-    );
-
-    // 建立 WebSocket 连接
-    await this.feishuClientService.connect(channel.id);
-  }
-
-  /**
    * 验证渠道凭证
    * 根据 ChannelDefinition 验证必填字段
    */
@@ -956,32 +755,112 @@ export class BotChannelApiService {
       const { total: channelCount } = await this.botChannelDb.list({ botId });
       const hasChannel = channelCount > 0;
 
-      // 检查是否有 AI Provider 配置
-      const { total: providerCount } = await this.botProviderKeyDb.list({
+      // 检查是否有模型配置
+      const { total: modelCount } = await this.botModelDb.list({
         botId,
       });
-      const hasProvider = providerCount > 0;
+      const hasModel = modelCount > 0;
 
       this.logger.debug('Checking bot configuration status', {
         botId,
         hasChannel,
-        hasProvider,
+        hasModel,
         channelCount,
-        providerCount,
+        modelCount,
       });
 
-      // 如果同时配置了渠道和 AI Provider，更新状态为 created
-      if (hasChannel && hasProvider) {
+      // 如果同时配置了渠道和模型，更新状态为 created
+      if (hasChannel && hasModel) {
         await this.botDb.update({ id: botId }, { status: 'created' });
         this.logger.info('Bot status updated from draft to created', {
           botId,
-          reason: 'Both channel and AI provider are configured',
+          reason: 'Both channel and model are configured',
         });
       }
     } catch (error) {
       // 状态更新失败不应影响主流程
       this.logger.error('Failed to check and update bot status', {
         botId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * 同步所有飞书通道配置到 channels.json
+   * 使用方案 B：独立配置文件 + 启动时合并
+   *
+   * @param botId Bot ID
+   * @param userId 用户 ID
+   * @param hostname Bot 主机名
+   */
+  private async syncFeishuChannelsToConfigFile(
+    botId: string,
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
+    try {
+      // 获取所有飞书通道
+      const { list: channels } = await this.botChannelDb.list({
+        botId,
+        channelType: 'feishu',
+      });
+
+      if (channels.length === 0) {
+        // 如果没有通道配置，删除旧的 channels.json 文件
+        await this.workspaceService.removeChannelsConfigFile(userId, hostname);
+        this.logger.debug('Removed channels.json (no feishu channels)', {
+          botId,
+          hostname,
+        });
+        return;
+      }
+
+      // 构建通道配置列表（解密凭证）
+      const channelConfigs = channels.map((channel) => {
+        // 解密凭证
+        let credentials: Record<string, string> = {};
+        if (channel.credentialsEncrypted) {
+          try {
+            const encryptedStr = Buffer.from(
+              channel.credentialsEncrypted,
+            ).toString('utf8');
+            const decrypted = this.cryptClient.decrypt(encryptedStr);
+            credentials = JSON.parse(decrypted);
+          } catch (error) {
+            this.logger.warn(
+              `Failed to decrypt credentials for channel ${channel.id}`,
+              error,
+            );
+          }
+        }
+
+        return {
+          channelType: channel.channelType,
+          accountId: channel.id,
+          credentials,
+          config: (channel.config as Record<string, unknown>) || {},
+          isEnabled: channel.isEnabled,
+        };
+      });
+
+      // 写入到 channels.json 文件
+      await this.workspaceService.writeChannelsConfigFile(
+        userId,
+        hostname,
+        channelConfigs,
+      );
+
+      this.logger.info('Synced feishu channels to channels.json', {
+        botId,
+        hostname,
+        channelCount: channels.length,
+      });
+    } catch (error) {
+      // 同步失败不应影响主流程
+      this.logger.warn('Failed to sync feishu channels to config file', {
+        botId,
+        hostname,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

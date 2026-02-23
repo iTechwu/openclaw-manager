@@ -2,7 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { ApiResponseSchema, SuccessResponseSchema } from '../base';
 import {
-  ModelPricingSchema,
+  ModelCatalogSchema,
   CapabilityTagSchema,
   FallbackChainSchema,
   CostStrategySchema,
@@ -13,6 +13,7 @@ import {
   ComplexityLevelSchema,
   ComplexityModelConfigSchema,
   ComplexityClassificationResultSchema,
+  RoutingAvailableModelSchema,
 } from '../schemas/routing.schema';
 
 const c = initContract();
@@ -52,7 +53,7 @@ export type BotBudgetQuery = z.infer<typeof BotBudgetQuerySchema>;
 // Create/Update Input Schemas
 // ============================================================================
 
-export const CreateModelPricingInputSchema = z.object({
+export const CreateModelCatalogInputSchema = z.object({
   model: z.string(),
   vendor: z.string(),
   displayName: z.string().optional(),
@@ -66,7 +67,7 @@ export const CreateModelPricingInputSchema = z.object({
   codingScore: z.number().default(50),
   creativityScore: z.number().default(50),
   speedScore: z.number().default(50),
-  contextLength: z.number().default(128),
+  contextLength: z.number().default(128000),
   supportsExtendedThinking: z.boolean().default(false),
   supportsCacheControl: z.boolean().default(false),
   supportsVision: z.boolean().default(false),
@@ -77,15 +78,15 @@ export const CreateModelPricingInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type CreateModelPricingInput = z.infer<
-  typeof CreateModelPricingInputSchema
+export type CreateModelCatalogInput = z.infer<
+  typeof CreateModelCatalogInputSchema
 >;
 
-export const UpdateModelPricingInputSchema =
-  CreateModelPricingInputSchema.partial();
+export const UpdateModelCatalogInputSchema =
+  CreateModelCatalogInputSchema.partial();
 
-export type UpdateModelPricingInput = z.infer<
-  typeof UpdateModelPricingInputSchema
+export type UpdateModelCatalogInput = z.infer<
+  typeof UpdateModelCatalogInputSchema
 >;
 
 export const CreateCapabilityTagInputSchema = z.object({
@@ -119,19 +120,38 @@ export const CreateFallbackChainInputSchema = z.object({
   chainId: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  models: z.array(
-    z.object({
-      vendor: z.string(),
-      model: z.string(),
-      protocol: z.enum(['openai-compatible', 'anthropic-native']),
-      features: z
-        .object({
-          extendedThinking: z.boolean().optional(),
-          cacheControl: z.boolean().optional(),
-        })
-        .optional(),
-    }),
-  ),
+  /** @deprecated 旧版 JSON 模型列表 */
+  models: z
+    .array(
+      z.object({
+        vendor: z.string(),
+        model: z.string(),
+        protocol: z.enum(['openai-compatible', 'anthropic-native']),
+        features: z
+          .object({
+            extendedThinking: z.boolean().optional(),
+            cacheControl: z.boolean().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
+  /** 新版：通过 ModelCatalog ID 引用模型（模型级） */
+  chainModels: z
+    .array(
+      z.object({
+        modelCatalogId: z.string().uuid(),
+        priority: z.number().int().min(0).default(0),
+        protocolOverride: z.string().optional(),
+        featuresOverride: z
+          .object({
+            extendedThinking: z.boolean().optional(),
+            cacheControl: z.boolean().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
   triggerStatusCodes: z.array(z.number()),
   triggerErrorTypes: z.array(z.string()),
   triggerTimeoutMs: z.number().default(60000),
@@ -228,34 +248,12 @@ export type ClassifyComplexityInput = z.infer<
   typeof ClassifyComplexityInputSchema
 >;
 
-// 导入/导出 Schema
-export const ExportConfigResponseSchema = z.object({
-  modelPricing: z.array(ModelPricingSchema),
-  capabilityTags: z.array(CapabilityTagSchema),
-  fallbackChains: z.array(FallbackChainSchema),
-  costStrategies: z.array(CostStrategySchema),
-  exportedAt: z.string(),
-  version: z.string(),
-});
-
-export type ExportConfigResponse = z.infer<typeof ExportConfigResponseSchema>;
-
-export const ImportConfigInputSchema = z.object({
-  modelPricing: z.array(CreateModelPricingInputSchema).optional(),
-  capabilityTags: z.array(CreateCapabilityTagInputSchema).optional(),
-  fallbackChains: z.array(CreateFallbackChainInputSchema).optional(),
-  costStrategies: z.array(CreateCostStrategyInputSchema).optional(),
-  overwrite: z.boolean().default(false),
-});
-
-export type ImportConfigInput = z.infer<typeof ImportConfigInputSchema>;
-
 // ============================================================================
 // Response Schemas
 // ============================================================================
 
-export const ModelPricingListResponseSchema = z.object({
-  list: z.array(ModelPricingSchema),
+export const ModelCatalogListResponseSchema = z.object({
+  list: z.array(ModelCatalogSchema),
 });
 
 export const CapabilityTagListResponseSchema = z.object({
@@ -509,6 +507,7 @@ export const routingAdminContract = c.router(
 
     /**
      * POST /proxy/admin/routing/cost-strategies - 创建成本策略
+     * @todo 后端尚未实现，成本策略目前为内存数据，需先实现 DB 持久化
      */
     createCostStrategy: {
       method: 'POST',
@@ -523,6 +522,7 @@ export const routingAdminContract = c.router(
 
     /**
      * PUT /proxy/admin/routing/cost-strategies/:id - 更新成本策略
+     * @todo 后端尚未实现，成本策略目前为内存数据，需先实现 DB 持久化
      */
     updateCostStrategy: {
       method: 'PUT',
@@ -538,6 +538,7 @@ export const routingAdminContract = c.router(
 
     /**
      * DELETE /proxy/admin/routing/cost-strategies/:id - 删除成本策略
+     * @todo 后端尚未实现，成本策略目前为内存数据，需先实现 DB 持久化
      */
     deleteCostStrategy: {
       method: 'DELETE',
@@ -639,77 +640,140 @@ export const routingAdminContract = c.router(
     },
 
     // ========================================================================
-    // 模型定价管理
+    // 模型目录管理
     // ========================================================================
 
     /**
-     * GET /proxy/admin/routing/model-pricing - 获取所有模型定价
+     * GET /proxy/admin/routing/model-catalog - 获取所有模型目录
      */
-    getModelPricingList: {
+    getModelCatalogList: {
       method: 'GET',
-      path: '/model-pricing',
+      path: '/model-catalog',
       responses: {
-        200: ApiResponseSchema(ModelPricingListResponseSchema),
+        200: ApiResponseSchema(ModelCatalogListResponseSchema),
       },
-      summary: '获取所有模型定价',
+      summary: '获取所有模型目录',
     },
 
     /**
-     * GET /proxy/admin/routing/model-pricing/:model - 获取模型定价
+     * GET /proxy/admin/routing/model-catalog/:model - 获取模型目录
      */
-    getModelPricing: {
+    getModelCatalog: {
       method: 'GET',
-      path: '/model-pricing/:model',
+      path: '/model-catalog/:model',
       pathParams: z.object({ model: z.string() }),
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '获取模型定价',
+      summary: '获取模型目录',
     },
 
     /**
-     * POST /proxy/admin/routing/model-pricing - 创建模型定价
+     * POST /proxy/admin/routing/model-catalog - 创建模型目录
      */
-    createModelPricing: {
+    createModelCatalog: {
       method: 'POST',
-      path: '/model-pricing',
-      body: CreateModelPricingInputSchema,
+      path: '/model-catalog',
+      body: CreateModelCatalogInputSchema,
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         400: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '创建模型定价',
+      summary: '创建模型目录',
     },
 
     /**
-     * PUT /proxy/admin/routing/model-pricing/:id - 更新模型定价
+     * PUT /proxy/admin/routing/model-catalog/:id - 更新模型目录
      */
-    updateModelPricing: {
+    updateModelCatalog: {
       method: 'PUT',
-      path: '/model-pricing/:id',
+      path: '/model-catalog/:id',
       pathParams: z.object({ id: z.string().uuid() }),
-      body: UpdateModelPricingInputSchema,
+      body: UpdateModelCatalogInputSchema,
       responses: {
-        200: ApiResponseSchema(ModelPricingSchema),
+        200: ApiResponseSchema(ModelCatalogSchema),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '更新模型定价',
+      summary: '更新模型目录',
     },
 
     /**
-     * DELETE /proxy/admin/routing/model-pricing/:id - 删除模型定价
+     * DELETE /proxy/admin/routing/model-catalog/:id - 删除模型目录
      */
-    deleteModelPricing: {
+    deleteModelCatalog: {
       method: 'DELETE',
-      path: '/model-pricing/:id',
+      path: '/model-catalog/:id',
       pathParams: z.object({ id: z.string().uuid() }),
       body: z.object({}).optional(),
       responses: {
         200: SuccessResponseSchema,
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '删除模型定价',
+      summary: '删除模型目录',
+    },
+
+    /**
+     * GET /proxy/admin/routing/model-catalog/:id/tags - 获取模型的能力标签
+     */
+    getModelCatalogTags: {
+      method: 'GET',
+      path: '/model-catalog/:id/tags',
+      pathParams: z.object({ id: z.string().uuid() }),
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            list: z.array(
+              z.object({
+                id: z.string(),
+                capabilityTagId: z.string(),
+                tagId: z.string(),
+                name: z.string(),
+                matchSource: z.string(),
+                confidence: z.number(),
+              }),
+            ),
+          }),
+        ),
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '获取模型的能力标签列表',
+    },
+
+    /**
+     * POST /proxy/admin/routing/model-catalog/:id/tags - 手动添加能力标签
+     */
+    addModelCatalogTag: {
+      method: 'POST',
+      path: '/model-catalog/:id/tags',
+      pathParams: z.object({ id: z.string().uuid() }),
+      body: z.object({
+        capabilityTagId: z.string().uuid(),
+      }),
+      responses: {
+        200: SuccessResponseSchema,
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+        400: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '手动为模型添加能力标签',
+    },
+
+    /**
+     * DELETE /proxy/admin/routing/model-catalog/:id/tags/:capabilityTagId - 移除能力标签
+     */
+    removeModelCatalogTag: {
+      method: 'DELETE',
+      path: '/model-catalog/:id/tags/:capabilityTagId',
+      pathParams: z.object({
+        id: z.string().uuid(),
+        capabilityTagId: z.string().uuid(),
+      }),
+      body: z.object({}).optional(),
+      responses: {
+        200: SuccessResponseSchema,
+        404: ApiResponseSchema(z.object({ error: z.string() })),
+      },
+      summary: '移除模型的能力标签',
     },
 
     // ========================================================================
@@ -778,42 +842,71 @@ export const routingAdminContract = c.router(
     },
 
     // ========================================================================
-    // 配置导入/导出
+    // 可用模型查询（路由配置用）
     // ========================================================================
 
     /**
-     * GET /proxy/admin/routing/export - 导出所有配置
+     * GET /proxy/admin/routing/available-models - 获取可用于路由配置的模型列表
+     * 返回 isAvailable=true 的模型，包含定价和能力标签信息
      */
-    exportConfig: {
+    getAvailableModelsForRouting: {
       method: 'GET',
-      path: '/export',
-      responses: {
-        200: ApiResponseSchema(ExportConfigResponseSchema),
-      },
-      summary: '导出所有配置',
-    },
-
-    /**
-     * POST /proxy/admin/routing/import - 导入配置
-     */
-    importConfig: {
-      method: 'POST',
-      path: '/import',
-      body: ImportConfigInputSchema,
+      path: '/available-models',
       responses: {
         200: ApiResponseSchema(
           z.object({
-            imported: z.object({
-              modelPricing: z.number(),
-              capabilityTags: z.number(),
-              fallbackChains: z.number(),
-              costStrategies: z.number(),
-            }),
+            list: z.array(RoutingAvailableModelSchema),
           }),
         ),
-        400: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '导入配置',
+      summary: '获取可用于路由配置的模型列表',
+      description:
+        '返回 ModelAvailability 中 isAvailable=true 的模型，包含定价和能力标签信息，用于路由配置页面的模型选择器',
+    },
+
+    // ========================================================================
+    // 自动同步
+    // ========================================================================
+
+    /**
+     * POST /proxy/admin/routing/sync-model-catalog - 从内置数据同步模型目录
+     */
+    syncModelCatalog: {
+      method: 'POST',
+      path: '/sync-model-catalog',
+      body: z.object({}).optional(),
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            created: z.number(),
+            updated: z.number(),
+            skipped: z.number(),
+          }),
+        ),
+      },
+      summary: '从内置数据同步模型目录',
+    },
+
+    /**
+     * POST /proxy/admin/routing/sync-capability-tags - 自动匹配能力标签
+     */
+    syncCapabilityTags: {
+      method: 'POST',
+      path: '/sync-capability-tags',
+      body: z
+        .object({
+          modelCatalogId: z.string().uuid().optional(),
+        })
+        .optional(),
+      responses: {
+        200: ApiResponseSchema(
+          z.object({
+            processed: z.number(),
+            tagsAssigned: z.number(),
+          }),
+        ),
+      },
+      summary: '自动匹配能力标签到模型',
     },
   },
   {

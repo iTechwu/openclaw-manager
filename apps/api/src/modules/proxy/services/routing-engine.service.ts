@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Optional, OnModuleDestroy } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import {
@@ -9,6 +9,11 @@ import {
   type ModelConfig,
   type ClassifierConfig,
 } from '@app/clients/internal/complexity-classifier';
+import {
+  ModelCatalogService,
+  ComplexityRoutingConfigService,
+  ComplexityRoutingModelMappingService,
+} from '@app/db';
 
 /**
  * 复杂度路由配置
@@ -33,15 +38,16 @@ export interface ComplexityRoutingConfig {
 
 /**
  * 默认复杂度路由配置
+ * GLM-5 优先链路: GLM-5 -> Claude Opus 4.6 -> DeepSeek V3.2
  */
 const DEFAULT_COMPLEXITY_ROUTING: ComplexityRoutingConfig = {
   enabled: true,
   models: {
-    super_easy: { vendor: 'deepseek', model: 'deepseek-v3' },
-    easy: { vendor: 'deepseek', model: 'deepseek-v3' },
-    medium: { vendor: 'openai', model: 'gpt-4o' },
-    hard: { vendor: 'anthropic', model: 'claude-opus-4-20250514' },
-    super_hard: { vendor: 'anthropic', model: 'claude-opus-4-20250514' },
+    super_easy: { vendor: 'zhipu', model: 'glm-5' },
+    easy: { vendor: 'zhipu', model: 'glm-5' },
+    medium: { vendor: 'zhipu', model: 'glm-5' },
+    hard: { vendor: 'zhipu', model: 'glm-5' },
+    super_hard: { vendor: 'zhipu', model: 'glm-5' },
   },
   toolMinComplexity: 'easy',
   classifier: {
@@ -116,6 +122,12 @@ export interface ProxyRequestBody {
 export interface BotRoutingContext {
   botId: string;
   installedSkills: string[];
+  /** 主模型信息（用于锚定路由决策） */
+  primaryModel?: {
+    model: string;
+    vendor: string;
+    providerKeyId: string;
+  };
   routingConfig?: {
     routingEnabled: boolean;
     routingMode: 'auto' | 'manual' | 'cost-optimized' | 'complexity-based';
@@ -136,23 +148,210 @@ export interface BotRoutingContext {
  * - 返回路由决策
  */
 @Injectable()
-export class RoutingEngineService {
+export class RoutingEngineService implements OnModuleDestroy {
   // 预定义能力标签（后续从数据库加载）
   private capabilityTags: Map<string, CapabilityTag> = new Map();
-  // 复杂度路由配置
+  // 复杂度路由配置（运行时缓存）
   private complexityRoutingConfig: ComplexityRoutingConfig =
     DEFAULT_COMPLEXITY_ROUTING;
+  // 复杂度路由配置缓存（按 configId 缓存）
+  private complexityConfigCache = new Map<
+    string,
+    { config: ComplexityRoutingConfig; expiry: number }
+  >();
+  private readonly complexityConfigCacheTTL = 5 * 60 * 1000; // 5 分钟
+
+  // 模型能力评分缓存
+  private modelCapabilityScoreCache = new Map<
+    string,
+    { score: number; expiry: number }
+  >();
+  private readonly scoreCacheTTL = 5 * 60 * 1000; // 5 分钟
+
+  // 定期清理过期缓存的定时器
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Optional()
+    private readonly modelCatalogService?: ModelCatalogService,
+    @Optional()
+    private readonly complexityRoutingConfigService?: ComplexityRoutingConfigService,
+    @Optional()
+    private readonly complexityRoutingModelMappingService?: ComplexityRoutingModelMappingService,
+    @Optional()
     private readonly complexityClassifier?: ComplexityClassifierService,
   ) {
     this.initializeDefaultTags();
+    // 每分钟清理过期缓存
+    this.cleanupInterval = setInterval(
+      () => this.cleanupAllCaches(),
+      60 * 1000,
+    );
+  }
+
+  onModuleDestroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+  }
+
+  /**
+   * 清理所有过期缓存
+   */
+  private cleanupAllCaches(): void {
+    this.cleanupScoreCache();
+    this.cleanupComplexityConfigCache();
+  }
+
+  /**
+   * 清理过期的评分缓存
+   */
+  private cleanupScoreCache(): void {
+    const now = Date.now();
+    for (const [model, entry] of this.modelCapabilityScoreCache) {
+      if (entry.expiry < now) {
+        this.modelCapabilityScoreCache.delete(model);
+      }
+    }
+  }
+
+  /**
+   * 清理过期的复杂度配置缓存
+   */
+  private cleanupComplexityConfigCache(): void {
+    const now = Date.now();
+    for (const [configId, entry] of this.complexityConfigCache) {
+      if (entry.expiry < now) {
+        this.complexityConfigCache.delete(configId);
+      }
+    }
+  }
+
+  /**
+   * 清除模型能力评分缓存
+   */
+  clearCapabilityScoreCache(model?: string): void {
+    if (model) {
+      this.modelCapabilityScoreCache.delete(model);
+    } else {
+      this.modelCapabilityScoreCache.clear();
+    }
+  }
+
+  /**
+   * 清除复杂度路由配置缓存
+   */
+  clearComplexityConfigCache(configId?: string): void {
+    if (configId) {
+      this.complexityConfigCache.delete(configId);
+    } else {
+      this.complexityConfigCache.clear();
+    }
+  }
+
+  /**
+   * 从数据库加载复杂度路由配置
+   */
+  async loadComplexityRoutingConfig(
+    configId?: string,
+  ): Promise<ComplexityRoutingConfig> {
+    // 如果指定了 configId，检查缓存
+    if (configId) {
+      const cached = this.complexityConfigCache.get(configId);
+      if (cached && cached.expiry > Date.now()) {
+        return cached.config;
+      }
+    }
+
+    // 从数据库加载
+    if (
+      this.complexityRoutingConfigService &&
+      this.complexityRoutingModelMappingService
+    ) {
+      try {
+        // 获取配置（默认使用 'default' 配置）
+        const dbConfig = await this.complexityRoutingConfigService.get({
+          configId: configId || 'default',
+          isEnabled: true,
+        });
+
+        if (dbConfig) {
+          // 获取模型映射
+          const mappings =
+            await this.complexityRoutingModelMappingService.listByConfigId(
+              dbConfig.id,
+            );
+
+          // 构建配置对象
+          const config = this.buildComplexityRoutingConfig(dbConfig, mappings);
+
+          // 缓存配置
+          this.complexityConfigCache.set(dbConfig.configId, {
+            config,
+            expiry: Date.now() + this.complexityConfigCacheTTL,
+          });
+
+          this.logger.info(
+            `[RoutingEngine] Loaded complexity routing config from DB: ${dbConfig.configId}`,
+          );
+
+          return config;
+        }
+      } catch (error) {
+        this.logger.warn(
+          `[RoutingEngine] Failed to load complexity routing config from DB, using default`,
+          { error },
+        );
+      }
+    }
+
+    // 返回默认配置
+    return DEFAULT_COMPLEXITY_ROUTING;
+  }
+
+  /**
+   * 从数据库记录构建复杂度路由配置
+   * GLM-5 优先链路: GLM-5 -> Claude Opus 4.6 -> DeepSeek V3.2
+   */
+  private buildComplexityRoutingConfig(
+    dbConfig: any,
+    mappings: any[],
+  ): ComplexityRoutingConfig {
+    const models: Record<ComplexityLevel, ModelConfig> = {
+      super_easy: { vendor: 'zhipu', model: 'glm-5' },
+      easy: { vendor: 'zhipu', model: 'glm-5' },
+      medium: { vendor: 'zhipu', model: 'glm-5' },
+      hard: { vendor: 'zhipu', model: 'glm-5' },
+      super_hard: { vendor: 'zhipu', model: 'glm-5' },
+    };
+
+    // 按 complexityLevel 分组映射
+    for (const mapping of mappings) {
+      const level = mapping.complexityLevel as ComplexityLevel;
+      if (COMPLEXITY_LEVELS.includes(level) && mapping.modelCatalog) {
+        models[level] = {
+          vendor: mapping.modelCatalog.vendor,
+          model: mapping.modelCatalog.model,
+        };
+      }
+    }
+
+    return {
+      enabled: dbConfig.isEnabled,
+      models,
+      toolMinComplexity:
+        (dbConfig.toolMinComplexity as ComplexityLevel) || 'easy',
+      classifier: {
+        model: dbConfig.classifierModel,
+        vendor: dbConfig.classifierVendor,
+      },
+    };
   }
 
   /**
    * 初始化默认能力标签
+   * GLM-5 优先链路: GLM-5 -> Claude Opus 4.6 -> DeepSeek V3.2
    */
   private initializeDefaultTags(): void {
     const defaultTags: CapabilityTag[] = [
@@ -161,8 +360,8 @@ export class RoutingEngineService {
         name: '深度推理',
         category: 'reasoning',
         priority: 100,
-        requiredProtocol: 'anthropic-native',
-        requiredModels: ['claude-opus-4-20250514', 'claude-sonnet-4-20250514'],
+        requiredProtocol: 'openai-compatible',
+        requiredModels: ['glm-5', 'claude-opus-4-6', 'deepseek-v3-2-251201'],
         requiresExtendedThinking: true,
       },
       {
@@ -172,10 +371,10 @@ export class RoutingEngineService {
         priority: 50,
         requiredProtocol: 'openai-compatible',
         requiredModels: [
+          'glm-5',
+          'claude-opus-4-6',
           'gpt-4o',
-          'claude-sonnet-4-20250514',
-          'deepseek-chat',
-          'o3-mini',
+          'deepseek-v3-2-251201',
         ],
       },
       {
@@ -198,10 +397,9 @@ export class RoutingEngineService {
         category: 'cost',
         priority: 90,
         requiredModels: [
-          'deepseek-chat',
+          'deepseek-v3-2-251201',
           'gpt-4o-mini',
-          'gemini-2.0-flash',
-          'doubao-pro-32k',
+          'glm-4.5-flash',
         ],
         requiresCacheControl: true,
       },
@@ -211,22 +409,14 @@ export class RoutingEngineService {
         category: 'context',
         priority: 60,
         requiredProtocol: 'openai-compatible',
-        requiredModels: [
-          'gemini-1.5-pro',
-          'gemini-2.0-flash',
-          'doubao-pro-128k',
-        ],
+        requiredModels: ['glm-5', 'gemini-3-pro-preview', 'claude-opus-4-6'],
       },
       {
         tagId: 'vision',
         name: '视觉理解',
         category: 'vision',
         priority: 75,
-        requiredModels: [
-          'gpt-4o',
-          'claude-sonnet-4-20250514',
-          'gemini-2.0-flash',
-        ],
+        requiredModels: ['glm-5', 'gpt-4o', 'claude-opus-4-6'],
         requiresVision: true,
       },
     ];
@@ -397,9 +587,15 @@ export class RoutingEngineService {
       features: {},
     };
 
-    // 如果没有特殊需求，使用请求的模型
+    // 如果没有特殊需求，优先使用主模型（主模型锚定）
     if (requirements.length === 0) {
-      if (requestedModel) {
+      if (context.primaryModel) {
+        decision.model = context.primaryModel.model;
+        decision.vendor = context.primaryModel.vendor;
+        decision.protocol = this.inferProtocolFromVendor(
+          context.primaryModel.vendor,
+        );
+      } else if (requestedModel) {
         decision.model = requestedModel;
         decision.vendor = this.inferVendorFromModel(requestedModel);
       }
@@ -548,9 +744,13 @@ export class RoutingEngineService {
     context: BotRoutingContext,
     routingHint?: string,
   ): Promise<RouteDecision> {
-    // 1. 获取复杂度路由配置
-    const complexityConfig =
-      context.routingConfig?.complexityRouting || this.complexityRoutingConfig;
+    // 1. 获取复杂度路由配置（优先级：context > 数据库 > 默认）
+    let complexityConfig = context.routingConfig?.complexityRouting;
+
+    if (!complexityConfig) {
+      // 尝试从数据库加载默认配置
+      complexityConfig = await this.loadComplexityRoutingConfig('default');
+    }
 
     // 2. 如果未启用复杂度路由或没有分类器，使用传统路由
     if (!complexityConfig.enabled || !this.complexityClassifier) {
@@ -605,8 +805,86 @@ export class RoutingEngineService {
       }
     }
 
-    // 6. 根据复杂度选择模型
+    // 6. 根据复杂度选择模型（主模型锚定策略）
     const modelConfig = complexityConfig.models[finalLevel];
+
+    // 主模型能力满足当前复杂度要求 → 使用主模型
+    if (context.primaryModel) {
+      const primaryScore = await this.getModelCapabilityScore(
+        context.primaryModel.model,
+      );
+      const requiredScore = this.getMinComplexityScore(finalLevel);
+
+      if (primaryScore >= requiredScore) {
+        // 主模型能力满足要求，使用主模型
+        const decision: RouteDecision = {
+          protocol: this.inferProtocolFromVendor(context.primaryModel.vendor),
+          vendor: context.primaryModel.vendor,
+          model: context.primaryModel.model,
+          features: {},
+          complexity: {
+            level: finalLevel,
+            latencyMs: classifyResult.latencyMs,
+            inheritedFromContext: classifyResult.inheritedFromContext,
+          },
+        };
+
+        this.logger.info(
+          '[RoutingEngine] Using primary model for complexity routing',
+          {
+            complexity: finalLevel,
+            primaryModel: context.primaryModel.model,
+            primaryScore,
+            requiredScore,
+          },
+        );
+
+        // 继续检查特殊能力需求（Extended Thinking, Cache Control 等）
+        // 8. 检查是否需要特殊能力（Extended Thinking, Cache Control 等）
+        const requirements = this.parseCapabilityRequirements(
+          requestBody,
+          routingHint,
+        );
+        if (requirements.length > 0) {
+          const primaryRequirement = requirements[0];
+
+          // Extended Thinking 需要 Anthropic Native
+          if (primaryRequirement.requiresExtendedThinking) {
+            decision.protocol = 'anthropic-native';
+            decision.features.extendedThinking = true;
+            // 如果主模型不是 Anthropic 模型，需要覆盖 vendor/protocol
+            if (decision.vendor !== 'anthropic') {
+              decision.vendor = 'anthropic';
+              decision.model =
+                primaryRequirement.requiredModels?.[0] ||
+                'claude-sonnet-4-20250514';
+            }
+          } else if (primaryRequirement.requiresCacheControl) {
+            decision.protocol = 'anthropic-native';
+            decision.features.cacheControl = true;
+            if (decision.vendor !== 'anthropic') {
+              decision.vendor = 'anthropic';
+              decision.model = 'claude-sonnet-4-20250514';
+            }
+          } else if (primaryRequirement.requiredProtocol) {
+            decision.protocol = primaryRequirement.requiredProtocol;
+          }
+        }
+
+        // 9. 应用 fallback 和 cost 配置
+        if (context.routingConfig) {
+          if (context.routingConfig.fallbackChainId) {
+            decision.fallbackChainId = context.routingConfig.fallbackChainId;
+          }
+          if (context.routingConfig.costStrategyId) {
+            decision.costStrategyId = context.routingConfig.costStrategyId;
+          }
+        }
+
+        return decision;
+      }
+      // 主模型能力不足 → 继续使用复杂度映射的模型
+    }
 
     // 7. 构建路由决策
     const decision: RouteDecision = {
@@ -726,6 +1004,106 @@ export class RoutingEngineService {
     }
 
     return '';
+  }
+
+  /**
+   * 获取模型能力分数
+   * 优先从数据库 ModelCatalog.reasoningScore 读取，其次使用缓存，最后使用硬编码默认值
+   */
+  private async getModelCapabilityScore(model: string): Promise<number> {
+    // 检查缓存
+    const cached = this.modelCapabilityScoreCache.get(model);
+    if (cached && cached.expiry > Date.now()) {
+      return cached.score;
+    }
+
+    // 尝试从数据库读取
+    if (this.modelCatalogService) {
+      try {
+        const catalog = await this.modelCatalogService.get({ model });
+        if (catalog) {
+          // 使用推理评分作为能力分数（0-100）
+          const score = catalog.reasoningScore ?? 50;
+          // 缓存结果
+          this.modelCapabilityScoreCache.set(model, {
+            score,
+            expiry: Date.now() + this.scoreCacheTTL,
+          });
+          return score;
+        }
+      } catch (error) {
+        this.logger.warn(
+          `[RoutingEngine] Failed to get capability score from DB for ${model}, using fallback`,
+          { error },
+        );
+      }
+    }
+
+    // Fallback: 使用硬编码默认值
+    const fallbackScore = this.getFallbackCapabilityScore(model);
+    // 缓存结果（使用较短的 TTL）
+    this.modelCapabilityScoreCache.set(model, {
+      score: fallbackScore,
+      expiry: Date.now() + 60 * 1000, // 1 分钟
+    });
+    return fallbackScore;
+  }
+
+  /**
+   * 硬编码的能力评分（用于数据库不可用时的 fallback）
+   * GLM-5 优先链路评分
+   */
+  private getFallbackCapabilityScore(model: string): number {
+    const modelLower = model.toLowerCase();
+
+    // Zhipu GLM (最高优先级)
+    if (modelLower === 'glm-5' || modelLower.includes('glm-5')) return 95;
+    if (modelLower.includes('glm-4.5')) return 88;
+    if (modelLower.includes('glm-4')) return 75;
+    // Anthropic Claude
+    if (modelLower.includes('claude-opus-4')) return 100;
+    if (modelLower.includes('claude-sonnet-4')) return 85;
+    if (modelLower.includes('claude-3-5-haiku')) return 60;
+    // OpenAI
+    if (modelLower === 'o1' || modelLower.includes('o1-')) return 95;
+    if (modelLower === 'o3-mini' || modelLower.includes('o3-mini')) return 80;
+    if (modelLower === 'gpt-4o' || modelLower.includes('gpt-4o')) return 82;
+    if (modelLower === 'gpt-4o-mini' || modelLower.includes('gpt-4o-mini'))
+      return 55;
+    if (modelLower.includes('gpt-4-turbo')) return 78;
+    // DeepSeek
+    if (
+      modelLower === 'deepseek-reasoner' ||
+      modelLower.includes('deepseek-reasoner')
+    )
+      return 88;
+    if (modelLower.includes('deepseek-v3-2')) return 72;
+    if (modelLower === 'deepseek-v3' || modelLower.includes('deepseek-v3'))
+      return 70;
+    if (modelLower === 'deepseek-chat' || modelLower.includes('deepseek-chat'))
+      return 65;
+    // Google
+    if (modelLower.includes('gemini-2.0-flash')) return 68;
+    if (modelLower.includes('gemini-1.5-pro')) return 75;
+    // Others
+    if (modelLower.includes('llama-3.3-70b-versatile')) return 62;
+
+    // 默认分数
+    return 50;
+  }
+
+  /**
+   * 获取指定复杂度等级所需的最小能力分数
+   */
+  private getMinComplexityScore(level: ComplexityLevel): number {
+    const scoreMap: Record<ComplexityLevel, number> = {
+      super_easy: 0,
+      easy: 40,
+      medium: 60,
+      hard: 80,
+      super_hard: 90,
+    };
+    return scoreMap[level];
   }
 
   /**

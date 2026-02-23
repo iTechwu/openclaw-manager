@@ -34,6 +34,8 @@ import {
   Label,
   Textarea,
   ScrollArea,
+  Alert,
+  AlertDescription,
 } from '@repo/ui';
 import {
   Search,
@@ -46,7 +48,9 @@ import {
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
+  AlertCircle,
 } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import type { CreateSkillRequest, SkillTypeWithCount } from '@repo/contracts';
 
 /**
@@ -81,21 +85,23 @@ function SkillCard({
   const typeIcon = skill.skillType?.icon || '📦';
 
   return (
-    <Card className="hover:border-primary/50 transition-colors">
+    <Card className="hover:border-primary/50 flex h-full cursor-pointer flex-col transition-colors">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded text-lg">
+            <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded text-lg">
               {typeIcon}
             </div>
-            <div>
-              <CardTitle className="text-base">{displayName}</CardTitle>
+            <div className="min-w-0">
+              <CardTitle className="truncate text-base">
+                {displayName}
+              </CardTitle>
               <CardDescription className="text-xs">
                 v{skill.version}
               </CardDescription>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex shrink-0 gap-1">
             {skill.isSystem ? (
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="mr-1 h-3 w-3" />
@@ -110,7 +116,7 @@ function SkillCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <p className="text-muted-foreground line-clamp-2 text-sm">
           {displayDescription || t('noDescription')}
         </p>
@@ -380,7 +386,11 @@ export default function SkillsPage() {
         ? 'true'
         : 'false';
 
-  const { data: response, isLoading } = skillSyncApi.skills.useQuery(
+  const {
+    data: response,
+    isLoading,
+    error: skillsError,
+  } = skillSyncApi.skills.useQuery(
     ['skills', { search, selectedTypeId, sourceFilter, page }],
     {
       query: {
@@ -531,7 +541,12 @@ export default function SkillsPage() {
         </div>
 
         {/* 技能列表 */}
-        {isLoading ? (
+        {skillsError ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{t('loadError')}</AlertDescription>
+          </Alert>
+        ) : isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <SkillCardSkeleton key={i} />
@@ -547,7 +562,9 @@ export default function SkillsPage() {
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {skills.map((skill) => (
-                <SkillCard key={skill.id} skill={skill} t={t} />
+                <Link key={skill.id} href={`/skills/${skill.id}`}>
+                  <SkillCard skill={skill} t={t} />
+                </Link>
               ))}
             </div>
 

@@ -5,13 +5,23 @@ import {
   BotService,
   BotModelRoutingService as BotModelRoutingDbService,
   ProviderKeyService,
-  BotProviderKeyService,
+  BotModelService,
   BotUsageLogService,
+  ModelAvailabilityService,
+  CapabilityTagService,
+  ModelCapabilityTagService,
 } from '@app/db';
 import { ModelRouterService } from './services/model-router.service';
-import { RoutingSuggestionService } from './services/routing-suggestion.service';
+import {
+  RoutingSuggestionService,
+  type PrimaryModelInfo,
+} from './services/routing-suggestion.service';
 import { EncryptionService } from './services/encryption.service';
-import type { BotModelRouting as PrismaBotModelRouting, ModelRoutingType, Prisma } from '@prisma/client';
+import type {
+  BotModelRouting as PrismaBotModelRouting,
+  ModelRoutingType,
+  Prisma,
+} from '@prisma/client';
 import type {
   BotModelRouting,
   CreateRoutingConfigInput,
@@ -21,14 +31,15 @@ import type {
   RoutingStatistics,
   RoutingConfig,
   RoutingSuggestionResult,
-  BotProviderDetail,
 } from '@repo/contracts';
 
 /**
  * Transform Prisma BotModelRouting to contract BotModelRouting
  * Excludes internal fields (isDeleted, deletedAt) that shouldn't be exposed in API
  */
-function toContractRouting(prismaRouting: PrismaBotModelRouting): BotModelRouting {
+function toContractRouting(
+  prismaRouting: PrismaBotModelRouting,
+): BotModelRouting {
   return {
     id: prismaRouting.id,
     botId: prismaRouting.botId,
@@ -53,10 +64,13 @@ export class ModelRoutingService {
     private readonly botService: BotService,
     private readonly botModelRoutingDbService: BotModelRoutingDbService,
     private readonly providerKeyService: ProviderKeyService,
-    private readonly botProviderKeyService: BotProviderKeyService,
+    private readonly botModelService: BotModelService,
+    private readonly modelAvailabilityService: ModelAvailabilityService,
     private readonly botUsageLogService: BotUsageLogService,
     private readonly modelRouterService: ModelRouterService,
     private readonly routingSuggestionService: RoutingSuggestionService,
+    private readonly capabilityTagService: CapabilityTagService,
+    private readonly modelCapabilityTagService: ModelCapabilityTagService,
   ) {}
 
   /**
@@ -240,10 +254,14 @@ export class ModelRoutingService {
     }
 
     // 从路由配置中提取模型列表用于统计查询
-    const models = this.extractModelsFromConfig(routing.config as unknown as RoutingConfig);
+    const models = this.extractModelsFromConfig(
+      routing.config as unknown as RoutingConfig,
+    );
 
     // 从 BotUsageLog 获取统计信息
-    const stats = await this.botUsageLogService.getRoutingStats(bot.id, { models });
+    const stats = await this.botUsageLogService.getRoutingStats(bot.id, {
+      models,
+    });
 
     return {
       routingId,
@@ -280,12 +298,18 @@ export class ModelRoutingService {
     routingId: string,
     userId: string,
   ): Promise<BotModelRouting> {
-    return this.updateRouting(hostname, routingId, { isEnabled: false }, userId);
+    return this.updateRouting(
+      hostname,
+      routingId,
+      { isEnabled: false },
+      userId,
+    );
   }
 
   /**
    * 获取 AI 推荐的路由配置
-   * 根据 Bot 的 allowed_models 分析并生成推荐的路由规则
+   * 根据 Bot 的 models 分析并生成推荐的路由规则
+   * 以主模型为锚点：默认路由 + Fallback 首选
    */
   async suggestRouting(
     hostname: string,
@@ -293,42 +317,150 @@ export class ModelRoutingService {
   ): Promise<RoutingSuggestionResult> {
     const bot = await this.getBotByHostname(hostname, userId);
 
-    // Get all bot provider keys
-    const { list: botProviderKeys } = await this.botProviderKeyService.list({
+    // 1. Get all bot models
+    const { list: botModels } = await this.botModelService.list({
       botId: bot.id,
     });
 
-    // Build provider details for suggestion service
-    const providers: BotProviderDetail[] = await Promise.all(
-      botProviderKeys.map(async (bpk) => {
-        const providerKey = await this.providerKeyService.get({
-          id: bpk.providerKeyId,
-          createdById: userId,
-        });
+    const modelIds = botModels.map((bm) => bm.modelId);
+    const primaryBotModel = botModels.find((bm) => bm.isPrimary);
 
-        return {
-          id: bpk.id,
-          providerKeyId: bpk.providerKeyId,
-          vendor: (providerKey?.vendor || 'openai') as BotProviderDetail['vendor'],
-          apiType: (providerKey?.apiType || null) as BotProviderDetail['apiType'],
-          label: providerKey?.label || '',
-          apiKeyMasked: '****',
-          baseUrl: providerKey?.baseUrl || null,
-          isPrimary: bpk.isPrimary,
-          allowedModels: bpk.allowedModels,
-          primaryModel: bpk.primaryModel,
-          createdAt: bpk.createdAt,
+    // 2. Batch query ModelAvailability (replaces N individual queries)
+    const { list: allAvailabilities } =
+      await this.modelAvailabilityService.list(
+        { model: { in: modelIds } },
+        { limit: 500 },
+      );
+
+    // 3. Batch query ProviderKeys (replaces N individual queries)
+    const uniqueProviderKeyIds = [
+      ...new Set(allAvailabilities.map((a) => a.providerKeyId)),
+    ];
+    const providerKeyMap = new Map<string, any>();
+    if (uniqueProviderKeyIds.length > 0) {
+      const { list: providerKeys } = await this.providerKeyService.list(
+        { id: { in: uniqueProviderKeyIds } },
+        { limit: 500 },
+      );
+      for (const pk of providerKeys) {
+        providerKeyMap.set(pk.id, pk);
+      }
+    }
+
+    // 4. Build modelInfos without N+1 queries
+    const modelInfos = botModels.map((bm) => {
+      const availability = allAvailabilities.find(
+        (a) => a.model === bm.modelId,
+      );
+      const providerKey = availability
+        ? providerKeyMap.get(availability.providerKeyId)
+        : null;
+      return {
+        modelId: bm.modelId,
+        isPrimary: bm.isPrimary,
+        vendor: (providerKey?.vendor as string) || 'openai',
+        providerKeyId: availability?.providerKeyId || null,
+      };
+    });
+
+    // 5. Build PrimaryModelInfo
+    let primaryModel: PrimaryModelInfo | undefined;
+    if (primaryBotModel) {
+      const primaryInfo = modelInfos.find(
+        (m) => m.modelId === primaryBotModel.modelId,
+      );
+      if (primaryInfo?.providerKeyId) {
+        primaryModel = {
+          modelId: primaryInfo.modelId,
+          providerKeyId: primaryInfo.providerKeyId,
+          vendor: primaryInfo.vendor,
         };
-      }),
-    );
+      }
+    }
 
     this.logger.info('Generating routing suggestions', {
       botId: bot.id,
       hostname,
-      providerCount: providers.length,
+      modelCount: modelInfos.length,
+      primaryModel: primaryModel?.modelId ?? 'none',
     });
 
-    return this.routingSuggestionService.generateSuggestions(providers);
+    // 6. Group models by providerKeyId
+    const providerMap = new Map<
+      string,
+      { providerKeyId: string; vendor: string; allowedModels: string[] }
+    >();
+    for (const info of modelInfos) {
+      if (!info.providerKeyId) continue;
+      const existing = providerMap.get(info.providerKeyId);
+      if (existing) {
+        existing.allowedModels.push(info.modelId);
+      } else {
+        providerMap.set(info.providerKeyId, {
+          providerKeyId: info.providerKeyId,
+          vendor: info.vendor,
+          allowedModels: [info.modelId],
+        });
+      }
+    }
+
+    // 7. Fetch capability tags
+    const { list: capabilityTagsRaw } = await this.capabilityTagService.list(
+      { isActive: true },
+      { limit: 100 },
+    );
+    const capabilityTags = capabilityTagsRaw.map((t) => ({
+      tagId: t.tagId,
+      name: t.name,
+      description: t.description,
+      category: t.category,
+      priority: t.priority,
+      requiredModels: (t.requiredModels as string[] | null) ?? null,
+    }));
+
+    // 8. Query ModelCapabilityTags filtered by bot's models (replaces full-table scan)
+    const modelCatalogIds = allAvailabilities
+      .filter((a) => a.modelCatalogId)
+      .map((a) => a.modelCatalogId);
+
+    const { list: modelCapTags } = await this.modelCapabilityTagService.list(
+      modelCatalogIds.length > 0
+        ? { modelCatalogId: { in: modelCatalogIds } }
+        : {},
+      { limit: 5000 },
+      {
+        include: {
+          modelCatalog: { select: { model: true } },
+          capabilityTag: { select: { tagId: true } },
+        },
+      } as any,
+    );
+
+    // 9. Build model -> tagIds associations
+    const modelIdSet = new Set(modelIds);
+    const assocMap = new Map<string, string[]>();
+    for (const mct of modelCapTags as any[]) {
+      const modelName = mct.modelCatalog?.model;
+      const tagId = mct.capabilityTag?.tagId;
+      if (!modelName || !tagId || !modelIdSet.has(modelName)) continue;
+      const existing = assocMap.get(modelName);
+      if (existing) {
+        existing.push(tagId);
+      } else {
+        assocMap.set(modelName, [tagId]);
+      }
+    }
+    const modelTagAssociations = Array.from(assocMap.entries()).map(
+      ([modelId, tagIds]) => ({ modelId, tagIds }),
+    );
+
+    // 10. Generate suggestions with primary model anchor
+    return this.routingSuggestionService.generateSuggestions(
+      Array.from(providerMap.values()),
+      capabilityTags,
+      modelTagAssociations,
+      primaryModel,
+    );
   }
 
   /**

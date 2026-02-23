@@ -4,7 +4,13 @@
 # Services:
 #   - api: NestJS backend (internal: 3200, external: 13100)
 #   - web: Next.js frontend (internal: 3000, external: 13000)
-#   - botenv: Bot environment image (build profile only)
+#
+# Bot Images:
+#   所有 Bot 镜像从 openclaw 项目构建，使用以下命令：
+#   - pnpm docker:build:all      # 构建所有镜像
+#   - pnpm docker:build:gateway  # 构建 GATEWAY 镜像
+#   - pnpm docker:build:sandbox  # 构建 TOOL_SANDBOX 镜像
+#   - pnpm docker:build:browser  # 构建 BROWSER_SANDBOX 镜像
 #
 # Prerequisites:
 #   - PostgreSQL and Redis should be running externally
@@ -17,9 +23,13 @@
 #   - Bot containers use proxy tokens instead of real API keys
 #   - Proxy endpoint: /proxy/v1/{vendor}/*
 #
-# Build args (在 .env 中配置，不配置则使用默认值):
+# Bot Types (botType):
+#   - GATEWAY: Main gateway bot (default) - uses BOT_IMAGE_GATEWAY
+#   - TOOL_SANDBOX: Tool sandbox container - uses BOT_IMAGE_TOOL_SANDBOX
+#   - BROWSER_SANDBOX: Browser sandbox container - uses BOT_IMAGE_BROWSER_SANDBOX
+#
+# Build args (在 .env 中配置):
 #   BASE_NODE_IMAGE: Node 基础镜像
-#   OPENCLAW_BASE_IMAGE: OpenClaw 基础镜像 (botenv)
 #   NPM_REGISTRY: npm 镜像源 (默认 npmmirror.com)
 #
 # Troubleshooting network issues during build:
@@ -29,10 +39,9 @@
 #   4. 或在构建前执行: unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
 #
 # Usage:
-#   docker compose build                 # Build images only
-#   docker compose up -d                 # Start all services (builds if needed)
-#   docker compose up -d api web         # Start only api and web
-#   docker compose --profile build up    # Build botenv image
+#   docker compose build        # Build images only
+#   docker compose up -d        # Start all services (builds if needed)
+#   docker compose up -d api web # Start only api and web
 # =============================================================================
 
 x-common: &common
@@ -49,21 +58,6 @@ x-healthcheck: &healthcheck
   start_period: 10s
 
 services:
-  # ---------------------------------------------------------------------------
-  # Bot Environment Image (build only)
-  # ---------------------------------------------------------------------------
-  botenv:
-    <<: *common
-    profiles: ['build']
-    build:
-      context: .
-      dockerfile: Dockerfile.botenv
-      args:
-        # 来自 .env 中的 OPENCLAW_BASE_IMAGE
-        OPENCLAW_BASE_IMAGE: ${OPENCLAW_BASE_IMAGE:-1panel/openclaw:latest}
-      network: host
-    image: ${BOTENV_IMAGE:-clawbot-env:latest}
-
   # ---------------------------------------------------------------------------
   # API Service - NestJS Backend
   # ---------------------------------------------------------------------------
@@ -96,7 +90,15 @@ services:
       # Bot runtime configuration
       BOT_DATA_DIR: /data/bots
       BOT_SECRETS_DIR: /data/secrets
-      BOTENV_IMAGE: ${BOTENV_IMAGE:-clawbot-env:latest}
+      # Bot images by type (all built from openclaw project)
+      # GATEWAY: 从 openclaw/Dockerfile 构建
+      BOT_IMAGE_GATEWAY: ${BOT_IMAGE_GATEWAY:-openclaw:local}
+      # TOOL_SANDBOX: 从 openclaw/scripts/sandbox-setup.sh 构建
+      BOT_IMAGE_TOOL_SANDBOX: ${BOT_IMAGE_TOOL_SANDBOX:-openclaw-sandbox:bookworm-slim}
+      # BROWSER_SANDBOX: 从 openclaw/scripts/sandbox-browser-setup.sh 构建
+      BOT_IMAGE_BROWSER_SANDBOX: ${BOT_IMAGE_BROWSER_SANDBOX:-openclaw-sandbox-browser:bookworm-slim}
+      # OpenClaw source path for auto-building images
+      OPENCLAW_SRC_PATH: ${OPENCLAW_SRC_PATH:-../openclaw}
       # Volume names for runtime path discovery (used when creating bot containers)
       # Format: <project-name>_<volume-name> (docker compose prefixes with project name)
       DATA_VOLUME_NAME: ${DATA_VOLUME_NAME:-clawbot-manager_clawbot-data}

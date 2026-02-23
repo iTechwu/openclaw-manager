@@ -6,15 +6,18 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@repo/ui/lib/utils';
 import { Badge } from '@repo/ui';
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { botNavItems, botNavExtendedItems } from '@/lib/config/bot-nav';
 
 interface BotSidebarProps {
   hostname: string;
+  botName?: string;
   status?: 'running' | 'stopped' | 'starting' | 'error' | 'created' | 'draft';
   healthStatus?: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
   hasProvider?: boolean;
   hasChannel?: boolean;
+  /** 是否有飞书通道配置 */
+  hasFeishuChannel?: boolean;
   configLoading?: boolean;
 }
 
@@ -53,10 +56,12 @@ const statusConfig = {
 
 export function BotSidebar({
   hostname,
+  botName,
   status = 'stopped',
   healthStatus,
   hasProvider,
   hasChannel,
+  hasFeishuChannel,
   configLoading,
 }: BotSidebarProps) {
   const t = useTranslations('bots.detail');
@@ -79,7 +84,7 @@ export function BotSidebar({
     if (configLoading) return null;
 
     // 只在未配置时显示警告标记
-    if (itemId === 'ai' && hasProvider === false) {
+    if (itemId === 'models' && hasProvider === false) {
       return <Circle className="size-3 text-amber-500 ml-auto flex-shrink-0" />;
     }
     if (itemId === 'channels' && hasChannel === false) {
@@ -87,6 +92,17 @@ export function BotSidebar({
     }
     return null;
   };
+
+  // 过滤导航项：根据条件显示
+  const filteredNavItems = useMemo(() => {
+    return botNavItems.filter((item) => {
+      // 如果需要飞书通道但未配置，则不显示
+      if (item.requires === 'feishuChannel' && !hasFeishuChannel) {
+        return false;
+      }
+      return true;
+    });
+  }, [hasFeishuChannel]);
 
   return (
     <aside className="w-64 border-r bg-card flex flex-col">
@@ -104,7 +120,7 @@ export function BotSidebar({
             <span className="text-lg">🤖</span>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold truncate">{hostname}</h2>
+            <h2 className="font-semibold truncate">{botName || hostname}</h2>
             <div className="flex items-center gap-2">
               <div className={cn('size-2 rounded-full', statusInfo.color)} />
               <span className={cn('text-xs', statusInfo.textColor)}>
@@ -118,7 +134,7 @@ export function BotSidebar({
       {/* 主导航 */}
       <nav className="flex-1 p-3 overflow-y-auto">
         <ul className="space-y-1">
-          {botNavItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             const fullHref = item.href ? `${basePath}${item.href}` : basePath;

@@ -304,6 +304,7 @@ exports.Prisma.BotScalarFieldEnum = {
   pendingConfig: 'pendingConfig',
   healthStatus: 'healthStatus',
   lastHealthCheck: 'lastHealthCheck',
+  botType: 'botType',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -318,6 +319,7 @@ exports.Prisma.ProviderKeyScalarFieldEnum = {
   label: 'label',
   tag: 'tag',
   baseUrl: 'baseUrl',
+  metadata: 'metadata',
   createdById: 'createdById',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
@@ -325,13 +327,39 @@ exports.Prisma.ProviderKeyScalarFieldEnum = {
   deletedAt: 'deletedAt'
 };
 
-exports.Prisma.BotProviderKeyScalarFieldEnum = {
+exports.Prisma.BotModelScalarFieldEnum = {
   id: 'id',
   botId: 'botId',
-  providerKeyId: 'providerKeyId',
+  modelId: 'modelId',
+  isEnabled: 'isEnabled',
   isPrimary: 'isPrimary',
-  allowedModels: 'allowedModels',
-  primaryModel: 'primaryModel',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ModelAvailabilityScalarFieldEnum = {
+  id: 'id',
+  model: 'model',
+  providerKeyId: 'providerKeyId',
+  modelCatalogId: 'modelCatalogId',
+  modelType: 'modelType',
+  isAvailable: 'isAvailable',
+  lastVerifiedAt: 'lastVerifiedAt',
+  errorMessage: 'errorMessage',
+  vendorPriority: 'vendorPriority',
+  healthScore: 'healthScore',
+  supportedApiTypes: 'supportedApiTypes',
+  preferredApiType: 'preferredApiType',
+  apiTypeBaseUrls: 'apiTypeBaseUrls',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ModelCapabilityTagScalarFieldEnum = {
+  id: 'id',
+  modelCatalogId: 'modelCatalogId',
+  capabilityTagId: 'capabilityTagId',
+  matchSource: 'matchSource',
+  confidence: 'confidence',
   createdAt: 'createdAt'
 };
 
@@ -503,6 +531,7 @@ exports.Prisma.SkillScalarFieldEnum = {
   description: 'description',
   descriptionZh: 'descriptionZh',
   version: 'version',
+  latestVersion: 'latestVersion',
   skillTypeId: 'skillTypeId',
   definition: 'definition',
   examples: 'examples',
@@ -513,6 +542,11 @@ exports.Prisma.SkillScalarFieldEnum = {
   sourceUrl: 'sourceUrl',
   author: 'author',
   lastSyncedAt: 'lastSyncedAt',
+  files: 'files',
+  filesSyncedAt: 'filesSyncedAt',
+  fileCount: 'fileCount',
+  hasInitScript: 'hasInitScript',
+  hasReferences: 'hasReferences',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -524,12 +558,16 @@ exports.Prisma.BotSkillScalarFieldEnum = {
   botId: 'botId',
   skillId: 'skillId',
   config: 'config',
+  installedVersion: 'installedVersion',
+  fileCount: 'fileCount',
+  scriptExecuted: 'scriptExecuted',
+  hasReferences: 'hasReferences',
   isEnabled: 'isEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.ModelPricingScalarFieldEnum = {
+exports.Prisma.ModelCatalogScalarFieldEnum = {
   id: 'id',
   model: 'model',
   vendor: 'vendor',
@@ -551,6 +589,13 @@ exports.Prisma.ModelPricingScalarFieldEnum = {
   supportsFunctionCalling: 'supportsFunctionCalling',
   supportsStreaming: 'supportsStreaming',
   recommendedScenarios: 'recommendedScenarios',
+  supportedApiTypes: 'supportedApiTypes',
+  anthropicModelId: 'anthropicModelId',
+  recommendAnthropic: 'recommendAnthropic',
+  recommendReason: 'recommendReason',
+  modelLayer: 'modelLayer',
+  dataSource: 'dataSource',
+  sourceUrl: 'sourceUrl',
   isEnabled: 'isEnabled',
   isDeprecated: 'isDeprecated',
   deprecationDate: 'deprecationDate',
@@ -588,6 +633,33 @@ exports.Prisma.BotChannelScalarFieldEnum = {
   connectionStatus: 'connectionStatus',
   lastConnectedAt: 'lastConnectedAt',
   lastError: 'lastError',
+  isDeleted: 'isDeleted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
+exports.Prisma.FeishuPairingRecordScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  botChannelId: 'botChannelId',
+  code: 'code',
+  feishuOpenId: 'feishuOpenId',
+  status: 'status',
+  userName: 'userName',
+  userNameEn: 'userNameEn',
+  userAvatarUrl: 'userAvatarUrl',
+  userEmail: 'userEmail',
+  userMobile: 'userMobile',
+  userDepartmentId: 'userDepartmentId',
+  userDepartmentName: 'userDepartmentName',
+  userInfoRaw: 'userInfoRaw',
+  expiresAt: 'expiresAt',
+  approvedAt: 'approvedAt',
+  approvedById: 'approvedById',
+  rejectedAt: 'rejectedAt',
+  rejectedById: 'rejectedById',
+  lastSyncedAt: 'lastSyncedAt',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -692,6 +764,25 @@ exports.Prisma.ComplexityRoutingConfigScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.FallbackChainModelScalarFieldEnum = {
+  id: 'id',
+  fallbackChainId: 'fallbackChainId',
+  modelCatalogId: 'modelCatalogId',
+  priority: 'priority',
+  protocolOverride: 'protocolOverride',
+  featuresOverride: 'featuresOverride',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ComplexityRoutingModelMappingScalarFieldEnum = {
+  id: 'id',
+  complexityConfigId: 'complexityConfigId',
+  complexityLevel: 'complexityLevel',
+  modelCatalogId: 'modelCatalogId',
+  priority: 'priority',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -772,6 +863,23 @@ exports.HealthStatus = exports.$Enums.HealthStatus = {
   UNKNOWN: 'UNKNOWN'
 };
 
+exports.BotType = exports.$Enums.BotType = {
+  GATEWAY: 'GATEWAY',
+  TOOL_SANDBOX: 'TOOL_SANDBOX',
+  BROWSER_SANDBOX: 'BROWSER_SANDBOX'
+};
+
+exports.ModelType = exports.$Enums.ModelType = {
+  llm: 'llm',
+  text_embedding: 'text_embedding',
+  speech2text: 'speech2text',
+  tts: 'tts',
+  moderation: 'moderation',
+  rerank: 'rerank',
+  image: 'image',
+  video: 'video'
+};
+
 exports.OperateType = exports.$Enums.OperateType = {
   CREATE: 'CREATE',
   UPDATE: 'UPDATE',
@@ -815,6 +923,13 @@ exports.ChannelConnectionStatus = exports.$Enums.ChannelConnectionStatus = {
   ERROR: 'ERROR'
 };
 
+exports.PairingStatus = exports.$Enums.PairingStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED'
+};
+
 exports.Prisma.ModelName = {
   UserInfo: 'UserInfo',
   PersonaTemplate: 'PersonaTemplate',
@@ -829,7 +944,9 @@ exports.Prisma.ModelName = {
   CountryCode: 'CountryCode',
   Bot: 'Bot',
   ProviderKey: 'ProviderKey',
-  BotProviderKey: 'BotProviderKey',
+  BotModel: 'BotModel',
+  ModelAvailability: 'ModelAvailability',
+  ModelCapabilityTag: 'ModelCapabilityTag',
   BotUsageLog: 'BotUsageLog',
   ProxyToken: 'ProxyToken',
   Message: 'Message',
@@ -842,14 +959,17 @@ exports.Prisma.ModelName = {
   SkillType: 'SkillType',
   Skill: 'Skill',
   BotSkill: 'BotSkill',
-  ModelPricing: 'ModelPricing',
+  ModelCatalog: 'ModelCatalog',
   BotModelRouting: 'BotModelRouting',
   BotChannel: 'BotChannel',
+  FeishuPairingRecord: 'FeishuPairingRecord',
   CapabilityTag: 'CapabilityTag',
   FallbackChain: 'FallbackChain',
   CostStrategy: 'CostStrategy',
   BotRoutingConfig: 'BotRoutingConfig',
-  ComplexityRoutingConfig: 'ComplexityRoutingConfig'
+  ComplexityRoutingConfig: 'ComplexityRoutingConfig',
+  FallbackChainModel: 'FallbackChainModel',
+  ComplexityRoutingModelMapping: 'ComplexityRoutingModelMapping'
 };
 
 /**

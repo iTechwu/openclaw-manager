@@ -45,7 +45,7 @@ const DELETE_ACTIONS = ['delete', 'deleteMany'];
  *
  * 分类说明：
  * - 系统/配置表：SystemTaskQueue
- * - 关联表：BotProviderKey, BotPlugin
+ * - 关联表：BotPlugin, BotSkill, BotModel
  * - 日志表：BotUsageLog, OperateLog
  * - 安全令牌表：ProxyToken
  */
@@ -53,9 +53,14 @@ const NON_SOFT_DELETE_MODELS = [
   // 系统/配置表
   'SystemTaskQueue',
   // 关联表（多对多关系，通过 onDelete: Cascade 级联删除）
-  'BotProviderKey',
   'BotPlugin',
   'BotSkill',
+  'BotModel',
+  'ModelCapabilityTag',
+  'FallbackChainModel',
+  'ComplexityRoutingModelMapping',
+  // 模型可用性缓存表（无需软删除）
+  'ModelAvailability',
   // 日志表（只追加，不删除）
   'BotUsageLog',
   'OperateLog',

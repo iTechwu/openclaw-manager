@@ -3,16 +3,18 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ModelRouterService, RouteRequest } from './model-router.service';
 import {
   BotModelRoutingService,
-  BotProviderKeyService,
+  BotModelService,
   ProviderKeyService,
+  ModelAvailabilityService,
 } from '@app/db';
 import { BotModelRouting, ModelRoutingType } from '@prisma/client';
 
 describe('ModelRouterService', () => {
   let service: ModelRouterService;
   let botModelRoutingService: any;
-  let botProviderKeyService: any;
+  let botModelService: any;
   let providerKeyService: any;
+  let modelAvailabilityService: any;
 
   const mockLogger = {
     info: jest.fn(),
@@ -28,13 +30,19 @@ describe('ModelRouterService', () => {
     baseUrl: 'https://api.openai.com',
   };
 
-  const mockBotProviderKey = {
-    id: 'bot-provider-key-1',
+  const mockBotModel = {
+    id: 'bot-model-1',
     botId: 'bot-1',
-    providerKeyId: 'provider-key-1',
+    modelId: 'gpt-4o',
     isPrimary: true,
-    primaryModel: 'gpt-4o',
-    allowedModels: ['gpt-4o', 'gpt-4o-mini'],
+    isEnabled: true,
+  };
+
+  const mockModelAvailability = {
+    id: 'availability-1',
+    model: 'gpt-4o',
+    providerKeyId: 'provider-key-1',
+    isAvailable: true,
   };
 
   beforeEach(async () => {
@@ -53,7 +61,7 @@ describe('ModelRouterService', () => {
           },
         },
         {
-          provide: BotProviderKeyService,
+          provide: BotModelService,
           useValue: {
             get: jest.fn(),
             list: jest.fn(),
@@ -65,13 +73,20 @@ describe('ModelRouterService', () => {
             getById: jest.fn(),
           },
         },
+        {
+          provide: ModelAvailabilityService,
+          useValue: {
+            list: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<ModelRouterService>(ModelRouterService);
     botModelRoutingService = module.get(BotModelRoutingService);
-    botProviderKeyService = module.get(BotProviderKeyService);
+    botModelService = module.get(BotModelService);
     providerKeyService = module.get(ProviderKeyService);
+    modelAvailabilityService = module.get(ModelAvailabilityService);
 
     // Reset mocks
     jest.clearAllMocks();
@@ -89,7 +104,11 @@ describe('ModelRouterService', () => {
     describe('with no routing configs', () => {
       it('should return default route when no routing configs exist', async () => {
         botModelRoutingService.list.mockResolvedValue({ list: [], total: 0 });
-        botProviderKeyService.get.mockResolvedValue(mockBotProviderKey as any);
+        botModelService.get.mockResolvedValue(mockBotModel as any);
+        modelAvailabilityService.list.mockResolvedValue({
+          list: [mockModelAvailability],
+          total: 1,
+        });
         providerKeyService.getById.mockResolvedValue(mockProviderKey as any);
 
         const request: RouteRequest = {
@@ -350,7 +369,11 @@ describe('ModelRouterService', () => {
   describe('testRoute', () => {
     it('should return the same result as routeRequest', async () => {
       botModelRoutingService.list.mockResolvedValue({ list: [], total: 0 });
-      botProviderKeyService.get.mockResolvedValue(mockBotProviderKey as any);
+      botModelService.get.mockResolvedValue(mockBotModel as any);
+      modelAvailabilityService.list.mockResolvedValue({
+        list: [mockModelAvailability],
+        total: 1,
+      });
       providerKeyService.getById.mockResolvedValue(mockProviderKey as any);
 
       const request: RouteRequest = {

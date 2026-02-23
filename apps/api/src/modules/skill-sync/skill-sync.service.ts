@@ -239,7 +239,8 @@ export class SkillSyncService {
         nameZh: translation?.nameZh || null,
         description: skill.description,
         descriptionZh: translation?.descriptionZh || null,
-        version: '1.0.0',
+        // 保留已有版本，不覆盖为默认值（版本在安装/更新时从 _meta.json 获取）
+        version: existing?.version || '1.0.0',
         skillType: skillTypeId ? { connect: { id: skillTypeId } } : undefined,
         definition: {
           name: skill.name,
@@ -549,10 +550,174 @@ export class SkillSyncService {
         updated: result.updated,
         errors: result.errors,
       });
+
+      // 同步完成后，预同步文件目录（异步执行，不阻塞主流程）
+      this.syncFilesForAllSkills().catch((error) => {
+        this.logger.error('SkillSyncService: 预同步文件目录失败', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      });
     } catch (error) {
       this.logger.error('SkillSyncService: 定时同步任务失败', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
+  }
+
+  // ============================================================================
+  // 文件目录预同步（用于加速安装）
+  // ============================================================================
+
+  /**
+   * 批量预同步所有技能的文件目录
+   * 从 GitHub 拉取完整目录并存储到数据库
+   */
+  async syncFilesForAllSkills(): Promise<{
+    total: number;
+    synced: number;
+    skipped: number;
+    errors: number;
+  }> {
+    this.logger.info('SkillSyncService: 开始预同步所有技能文件目录');
+
+    const result = { total: 0, synced: 0, skipped: 0, errors: 0 };
+
+    try {
+      // 获取所有需要同步文件的技能（有 sourceUrl 但没有 files 或文件过期）
+      const { list: skills } = await this.skillService.list(
+        {
+          source: OPENCLAW_SOURCE,
+          sourceUrl: { not: null },
+        },
+        { limit: 1000 },
+      );
+
+      result.total = skills.length;
+
+      // 批量同步，每次 5 个并发
+      const concurrency = 5;
+      for (let i = 0; i < skills.length; i += concurrency) {
+        const batch = skills.slice(i, i + concurrency);
+
+        const batchResults = await Promise.allSettled(
+          batch.map((skill) => this.syncSkillFiles(skill.id, skill.sourceUrl!)),
+        );
+
+        for (const batchResult of batchResults) {
+          if (batchResult.status === 'fulfilled') {
+            if (batchResult.value === 'synced') {
+              result.synced++;
+            } else {
+              result.skipped++;
+            }
+          } else {
+            result.errors++;
+          }
+        }
+
+        // 进度日志
+        this.logger.info('SkillSyncService: 文件同步进度', {
+          processed: Math.min(i + concurrency, skills.length),
+          total: skills.length,
+          synced: result.synced,
+          skipped: result.skipped,
+          errors: result.errors,
+        });
+
+        // 避免触发 GitHub API 限流
+        if (i + concurrency < skills.length) {
+          await this.delay(1000);
+        }
+      }
+
+      this.logger.info('SkillSyncService: 文件目录预同步完成', result);
+      return result;
+    } catch (error) {
+      this.logger.error('SkillSyncService: 批量文件同步失败', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 同步单个技能的文件目录
+   * @param skillId 技能 ID
+   * @param sourceUrl GitHub 源 URL
+   * @param force 是否强制同步（忽略缓存）
+   */
+  async syncSkillFiles(
+    skillId: string,
+    sourceUrl: string,
+    force = false,
+  ): Promise<'synced' | 'skipped'> {
+    try {
+      // 检查是否需要同步（文件过期时间：24 小时）
+      const skill = await this.skillService.get({ id: skillId });
+      if (!skill) {
+        this.logger.warn('SkillSyncService: 技能不存在', { skillId });
+        return 'skipped';
+      }
+
+      // 如果文件存在且未过期，跳过
+      if (!force && skill.files && skill.filesSyncedAt) {
+        const filesAge = Date.now() - skill.filesSyncedAt.getTime();
+        const maxAge = 24 * 60 * 60 * 1000; // 24 小时
+        if (filesAge < maxAge) {
+          return 'skipped';
+        }
+      }
+
+      // 从 GitHub 拉取完整目录
+      const files = await this.syncClient.fetchSkillDirectory(sourceUrl);
+
+      if (files.length === 0) {
+        this.logger.warn('SkillSyncService: 技能目录为空', {
+          skillId,
+          sourceUrl,
+        });
+        return 'skipped';
+      }
+
+      // 检查是否有 init.sh 和 references
+      const hasInitScript = files.some(
+        (f) => f.relativePath === 'scripts/init.sh',
+      );
+      const hasReferences = files.some((f) =>
+        f.relativePath.startsWith('references/'),
+      );
+
+      // 更新数据库
+      await this.skillService.update({ id: skillId }, {
+        files: files as unknown as Prisma.JsonArray,
+        filesSyncedAt: new Date(),
+        fileCount: files.length,
+        hasInitScript,
+        hasReferences,
+      } as Prisma.SkillUpdateInput);
+
+      this.logger.debug('SkillSyncService: 技能文件同步完成', {
+        skillId,
+        fileCount: files.length,
+        hasInitScript,
+        hasReferences,
+      });
+
+      return 'synced';
+    } catch (error) {
+      this.logger.warn('SkillSyncService: 同步技能文件失败', {
+        skillId,
+        sourceUrl,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 延迟函数
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

@@ -20,7 +20,7 @@
     "delete": "Delete",
     "refresh": "Refresh",
     "usage": "Usage",
-    "plugins": "Plugins",
+    "plugins": "MCP Tools",
     "skills": "Skills"
   },
   "status": {
@@ -278,6 +278,22 @@
     "markdown": {
       "hint": "Markdown supported",
       "placeholder": "# Soul\n\nDescribe your bot's personality, guidelines, and behavior..."
+    },
+    "botType": {
+      "title": "Bot Type",
+      "description": "Select the runtime environment for your bot",
+      "gateway": {
+        "title": "Gateway",
+        "description": "Main Gateway type with full OpenClaw runtime, suitable for general conversation scenarios"
+      },
+      "toolSandbox": {
+        "title": "Tool Sandbox",
+        "description": "Minimal environment for code execution and tool calls"
+      },
+      "browserSandbox": {
+        "title": "Browser Sandbox",
+        "description": "Includes Chromium browser for browser automation with VNC remote viewing support"
+      }
     }
   },
   "apiKeyModal": {
@@ -381,11 +397,13 @@
     "nav": {
       "overview": "Overview",
       "ai": "AI Config",
+      "models": "AI Config",
       "channels": "Channels",
+      "pairing": "Feishu Pairing",
       "diagnostics": "Diagnostics",
       "logs": "Logs",
       "settings": "Settings",
-      "plugins": "Plugins",
+      "plugins": "MCP Tools",
       "skills": "Skills",
       "usage": "Usage",
       "more": "More"
@@ -409,6 +427,15 @@
       "stop": "Stop",
       "restart": "Restart",
       "diagnose": "Diagnose",
+      "starting": "Starting",
+      "restarting": "Restarting",
+      "running": "Running",
+      "stopped": "Stopped",
+      "error": "Error",
+      "draft": "Draft",
+      "created": "Created",
+      "unknown": "Unknown",
+      "checking": "Checking...",
       "noLogs": "No logs available. Start the service first.",
       "autoRefresh": "Auto Refresh",
       "lines": "lines",
@@ -433,38 +460,20 @@
       "title": "AI Model Configuration",
       "description": "Configure AI providers and models",
       "tabs": {
-        "providers": "AI Providers",
+        "models": "Model Management",
         "routing": "Model Routing"
       },
-      "addProvider": "Add Provider",
-      "deleteProvider": "Delete Provider",
-      "setPrimary": "Set as Primary",
-      "models": "Models",
-      "configured": "Configured",
-      "notConfigured": "Not Configured",
-      "noProviders": "No AI Providers configured yet",
-      "addFirst": "Add First Provider",
-      "fetchProvidersFailed": "Failed to fetch provider list",
-      "setPrimarySuccess": "Primary model set successfully",
-      "setFailed": "Failed to set",
-      "deleteConfirm": "Are you sure you want to delete this Provider?",
-      "deleteSuccess": "Provider deleted",
-      "deleteFailed": "Failed to delete",
-      "selectProviderAndModel": "Please select a Provider and at least one model",
-      "addSuccess": "Provider added successfully",
-      "addFailed": "Failed to add",
-      "dialogDescription": "Select a Provider from your configured API Keys to add to this Bot",
-      "selectApiKey": "Select API Key",
-      "noApiKeys": "No API Keys available, please add one in settings first",
-      "selectApiKeyPlaceholder": "Select an API Key",
-      "selectModels": "Select Models",
-      "loadingModels": "Loading model list...",
+      "refresh": "Refresh",
+      "refreshSuccess": "Refresh successful",
+      "refreshFailed": "Refresh failed",
       "noModels": "No models available",
-      "primaryModel": "Primary",
-      "setAsPrimary": "Set as primary",
-      "setAsPrimaryProvider": "Set as primary Provider (Bot will use this Provider by default)",
-      "cancel": "Cancel",
-      "add": "Add"
+      "noModelsHint": "Please configure API Keys in system settings and refresh the model list",
+      "fetchModelsFailed": "Failed to fetch model list",
+      "addModelsSuccess": "Successfully added {count} models",
+      "addModelsFailed": "Failed to add models",
+      "removeModelConfirm": "Are you sure you want to remove this model?",
+      "removeModelSuccess": "Model removed",
+      "removeModelFailed": "Failed to remove model"
     },
     "modelRouting": {
       "title": "Model Routing",
@@ -497,7 +506,12 @@
         "providerKey": "Provider Key",
         "selectProviderKey": "Select Provider Key",
         "model": "Model",
-        "selectModel": "Select Model"
+        "selectModel": "Select Model",
+        "searchModels": "Search models...",
+        "noModelsFound": "No matching models found",
+        "modelAvailable": "Model available",
+        "modelUnavailable": "Model unavailable",
+        "lastVerified": "Last verified"
       },
       "functionRoute": {
         "title": "Function Route Rules",
@@ -610,6 +624,11 @@
           "notAvailable": "Model {model} not available, please configure it in providers first",
           "noRuleToApply": "Please add a rule first",
           "availabilityHint": "Grayed models are not configured in current providers, numbers indicate available provider count"
+        },
+        "errors": {
+          "noRules": "Please add at least one routing rule",
+          "invalidRules": "Please select valid target models for all rules",
+          "noDefaultTarget": "Please select a default target model"
         }
       },
       "loadBalance": {
@@ -625,6 +644,13 @@
         "weight": "Weight",
         "weightHint": "0-100, higher weight means higher selection probability",
         "quickAdd": "Quick Add",
+        "costOptimization": "Cost Optimization Strategy",
+        "costOptimizationHint": "Select a preset cost optimization strategy to balance cost and performance",
+        "strategySelected": "Strategy selected: {strategyId}",
+        "errors": {
+          "noTargets": "Please add at least one target model",
+          "invalidTargets": "Please select valid models for all targets"
+        },
         "templates": {
           "title": "Preset Templates",
           "dualEqual": {
@@ -650,6 +676,14 @@
         "maxAttempts": "Max Attempts",
         "delayMs": "Delay (ms)",
         "quickAdd": "Quick Add",
+        "useExistingChain": "Use Preset Fallback Chain",
+        "useExistingChainHint": "Select a pre-configured fallback chain, or configure manually below",
+        "chainSelected": "Fallback chain selected: {chainId}",
+        "chainApplied": "Applied fallback chain \"{name}\" ({count} models)",
+        "orConfigureManually": "Or configure failover manually",
+        "errors": {
+          "noPrimary": "Please select a primary target model"
+        },
         "templates": {
           "title": "Preset Templates",
           "singleFallback": {
@@ -701,7 +735,64 @@
         "modelCapabilities": "Model Capabilities Analysis",
         "suggestedRoutingName": "AI Smart Routing",
         "suggestedFailoverName": "AI Failover"
-      }
+      },
+      "fallbackChain": {
+        "label": "Fallback Chain",
+        "placeholder": "Select fallback chain",
+        "none": "Don't use preset chain",
+        "loading": "Loading fallback chains...",
+        "models": "models",
+        "inactive": "Inactive",
+        "create": "Create new chain",
+        "createTitle": "Create Fallback Chain",
+        "createDescription": "Configure a set of backup models in priority order",
+        "createSuccess": "Fallback chain created successfully",
+        "createError": "Failed to create fallback chain",
+        "validation": {
+          "required": "Please fill in chain ID and name",
+          "noModels": "Please add at least one model"
+        },
+        "form": {
+          "chainId": "Chain ID",
+          "name": "Name",
+          "namePlaceholder": "Enter chain name",
+          "description": "Description",
+          "descriptionPlaceholder": "Describe the purpose of this fallback chain",
+          "models": "Model List",
+          "noModelsAdded": "No models added yet",
+          "addModel": "Add model to chain",
+          "create": "Create"
+        }
+      },
+      "costStrategy": {
+        "label": "Cost Strategy",
+        "placeholder": "Select cost strategy",
+        "none": "Don't use cost strategy",
+        "loading": "Loading cost strategies...",
+        "inactive": "Inactive",
+        "create": "Create new strategy",
+        "createTitle": "Create Cost Strategy",
+        "createDescription": "Configure weight balance for cost, performance, and capability",
+        "createSuccess": "Cost strategy created successfully",
+        "createError": "Failed to create cost strategy",
+        "cost": "Cost",
+        "performance": "Performance",
+        "capability": "Capability",
+        "validation": {
+          "required": "Please fill in strategy ID and name"
+        },
+        "form": {
+          "strategyId": "Strategy ID",
+          "name": "Name",
+          "namePlaceholder": "Enter strategy name",
+          "description": "Description",
+          "descriptionPlaceholder": "Describe the optimization goal of this strategy",
+          "weights": "Weight Configuration",
+          "weightsHint": "Weights will be automatically normalized to 100%",
+          "create": "Create"
+        }
+      },
+      "cancel": "Cancel"
     },
     "channels": {
       "title": "Message Channels",
@@ -748,6 +839,108 @@
       "danger": "Danger Zone",
       "deleteBot": "Delete Bot",
       "deleteConfirm": "Are you sure you want to delete this Bot? This action cannot be undone."
+    },
+    "models": {
+      "title": "AI Model Configuration",
+      "description": "Manage AI models and routing configuration",
+      "tabs": {
+        "models": "Model Management",
+        "routing": "Model Routing"
+      },
+      "searchPlaceholder": "Search models...",
+      "filter": {
+        "all": "All",
+        "available": "Available",
+        "added": "Added"
+      },
+      "statsTotal": "{count} models",
+      "statsAvailable": "{count} available",
+      "statsAdded": "{count} added",
+      "colModel": "Model",
+      "colStatus": "Status",
+      "colTags": "Capabilities",
+      "colActions": "Actions",
+      "noModels": "No models available",
+      "noMatchingModels": "No matching models",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "badgeAdded": "Added",
+      "primary": "Primary",
+      "primaryModel": "Primary",
+      "setAsPrimary": "Set as Primary",
+      "addSuccess": "Successfully added {count} models",
+      "addFailed": "Failed to add models",
+      "removeConfirm": "Are you sure you want to remove this model?",
+      "removeSuccess": "Model removed",
+      "removeFailed": "Failed to remove model",
+      "setPrimarySuccess": "Primary model updated",
+      "setPrimaryFailed": "Failed to set primary model",
+      "addSelected": "Add {count} models",
+      "addBtn": "Add",
+      "removeBtn": "Remove",
+      "refresh": "Refresh",
+      "refreshSuccess": "Refreshed successfully",
+      "refreshFailed": "Failed to refresh",
+      "fetchFailed": "Failed to fetch models",
+      "categories": {
+        "reasoning": "Reasoning Models",
+        "coding": "Coding Models",
+        "fast": "Fast Models",
+        "vision": "Vision Models",
+        "multimodal": "Multimodal Models",
+        "other": "Other Models"
+      }
+    },
+    "pairing": {
+      "title": "Feishu Pairing",
+      "description": "Manage Feishu user pairing requests. Approved users can chat with the bot.",
+      "nav": "Feishu Pairing",
+      "config": {
+        "title": "Pairing Policy",
+        "description": "Configure user access policy for direct messages",
+        "dmPolicy": "Direct Message Policy",
+        "dmPolicyHint": "Control how users get permission to chat with the bot"
+      },
+      "policy": {
+        "pairing": "Pairing Mode (requires admin approval)",
+        "open": "Open Mode (all users can access)"
+      },
+      "requests": {
+        "title": "Pairing Requests",
+        "empty": "No pairing requests",
+        "emptyHint": "When users try to chat with the bot, pairing requests will appear here"
+      },
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      },
+      "table": {
+        "code": "Pairing Code",
+        "userInfo": "User Info",
+        "status": "Status",
+        "createdAt": "Created",
+        "expiresIn": "Expires In",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "delete": "Clean Up"
+      },
+      "confirmDelete": "Are you sure you want to clean up this pairing record? This will remove it from both the database and OpenClaw configuration file.",
+      "manual": {
+        "title": "Manual Pairing Approval",
+        "description": "Enter the pairing code and Feishu Open ID from the bot message to approve users",
+        "codeLabel": "Pairing Code",
+        "codePlaceholder": "e.g. Y55XTG3P",
+        "feishuOpenIdLabel": "Feishu Open ID",
+        "feishuOpenIdPlaceholder": "e.g. ou_xxxxxxxxxxxxx",
+        "approve": "Approve Pairing",
+        "hint": "Copy the pairing code and Feishu Open ID from the bot's response message, e.g. \"Your Feishu Open ID: ou_xxx\" and \"Pairing code: Y55XTG3P\""
+      }
     }
   }
 }

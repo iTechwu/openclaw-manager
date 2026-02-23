@@ -2,8 +2,8 @@ import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { PrismaService } from '@app/prisma';
-import { BotService, BotUsageLogService, ModelPricingService } from '@app/db';
-import type { Prisma, ModelPricing } from '@prisma/client';
+import { BotService, BotUsageLogService, ModelCatalogService } from '@app/db';
+import type { Prisma, ModelCatalog } from '@prisma/client';
 import type {
   UsageStatsQuery,
   UsageStatsResponse,
@@ -20,7 +20,10 @@ import type {
  * AI 模型定价（每 1M tokens，美元）
  * 作为数据库不可用时的后备方案
  */
-const FALLBACK_MODEL_PRICING: Record<string, { input: number; output: number }> = {
+const FALLBACK_MODEL_PRICING: Record<
+  string,
+  { input: number; output: number }
+> = {
   // OpenAI
   'gpt-4o': { input: 2.5, output: 10 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
@@ -53,7 +56,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly botService: BotService,
     private readonly botUsageLogService: BotUsageLogService,
-    private readonly modelPricingService: ModelPricingService,
+    private readonly modelCatalogService: ModelCatalogService,
   ) {}
 
   async onModuleInit() {
@@ -66,7 +69,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
    */
   async refreshPricingCache(): Promise<void> {
     try {
-      const pricings = await this.modelPricingService.listAll();
+      const pricings = await this.modelCatalogService.listAll();
       this.pricingCache.clear();
 
       for (const pricing of pricings) {
@@ -479,7 +482,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
 
     let totalCost = 0;
     for (const row of result) {
-      const pricing = this.getModelPricing(row.model);
+      const pricing = this.getModelCatalogPricing(row.model);
       const inputCost =
         (Number(row.request_tokens || 0) / 1_000_000) * pricing.input;
       const outputCost =
@@ -506,7 +509,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
   /**
    * 获取模型定价（从缓存）
    */
-  private getModelPricing(model: string | null): {
+  private getModelCatalogPricing(model: string | null): {
     input: number;
     output: number;
   } {

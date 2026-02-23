@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { ModelType } from './prisma-enums.generated';
+
 // ============================================================================
 // Provider Vendor Schema - 支持的 AI 提供商
 // ============================================================================
@@ -119,22 +121,6 @@ export const ProviderCategorySchema = z.enum([
 export type ProviderCategory = z.infer<typeof ProviderCategorySchema>;
 
 // ============================================================================
-// Model Type Schema - 模型类型 (Dify-style)
-// ============================================================================
-
-export const ModelTypeSchema = z.enum([
-  'llm', // 大语言模型
-  'text-embedding', // 文本嵌入
-  'speech2text', // 语音转文字
-  'tts', // 文字转语音
-  'moderation', // 内容审核
-  'rerank', // 重排序
-  'image', // 图像生成
-]);
-
-export type ModelType = z.infer<typeof ModelTypeSchema>;
-
-// ============================================================================
 // Credential Form Schema - 凭证表单配置 (Dify-style)
 // ============================================================================
 
@@ -202,7 +188,14 @@ export const PROVIDER_CONFIGS: Record<ProviderVendor, ProviderConfig> = {
     apiHost: 'https://api.openai.com/v1',
     logo: 'openai.svg',
     description: 'OpenAI 提供 GPT-4、GPT-3.5 等先进的大语言模型',
-    supportedModelTypes: ['llm', 'text-embedding', 'speech2text', 'tts', 'image', 'moderation'],
+    supportedModelTypes: [
+      'llm',
+      'text-embedding',
+      'speech2text',
+      'tts',
+      'image',
+      'moderation',
+    ],
     credentialFormSchemas: [
       {
         variable: 'api_key',
@@ -338,8 +331,7 @@ export const PROVIDER_CONFIGS: Record<ProviderVendor, ProviderConfig> = {
       official: 'https://mistral.ai',
       apiKey: 'https://console.mistral.ai/api-keys/',
       docs: 'https://docs.mistral.ai',
-      models:
-        'https://docs.mistral.ai/getting-started/models/models_overview',
+      models: 'https://docs.mistral.ai/getting-started/models/models_overview',
     },
   },
   groq: {
@@ -619,7 +611,8 @@ export const PROVIDER_CONFIGS: Record<ProviderVendor, ProviderConfig> = {
       official: 'https://console.volcengine.com/ark/',
       apiKey: 'https://www.volcengine.com/experience/ark',
       docs: 'https://www.volcengine.com/docs/82379/1182403',
-      models: 'https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint',
+      models:
+        'https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint',
     },
   },
   minimax: {
@@ -628,6 +621,24 @@ export const PROVIDER_CONFIGS: Record<ProviderVendor, ProviderConfig> = {
     apiType: 'openai',
     category: 'domestic',
     apiHost: 'https://api.minimaxi.com/v1',
+    description:
+      'MiniMax 提供 abab 系列大语言模型。新版 API (api.minimaxi.com) 无需 Group ID；旧版 API (api.minimax.chat) 需要填写 Group ID',
+    credentialFormSchemas: [
+      {
+        variable: 'api_key',
+        label: 'API Key',
+        type: 'secret-input',
+        required: true,
+        placeholder: 'eyJh...',
+      },
+      {
+        variable: 'group_id',
+        label: 'Group ID',
+        type: 'text-input',
+        required: false,
+        placeholder: '如使用旧版 API (api.minimax.chat) 则需填写',
+      },
+    ],
     websites: {
       official: 'https://platform.minimaxi.com/',
       apiKey:

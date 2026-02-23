@@ -1,7 +1,7 @@
 /**
  * Fallback 链种子数据
  * 定义模型降级策略，支持多模型故障转移
- * 最后更新：2026-02-10
+ * 最后更新：2026-02-14
  */
 
 export interface FallbackChainModel {
@@ -32,33 +32,39 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'default',
     name: '默认 Fallback 链',
-    description: '通用场景的模型降级策略，平衡性能与成本',
+    description: '通用场景的模型降级策略，平衡性能与成本，GLM-5 优先',
     models: [
       {
-        vendor: 'anthropic',
-        model: 'claude-sonnet-4-5-20250929',
+        vendor: 'zhipu',
+        model: 'glm-5',
         protocol: 'openai-compatible',
       },
-      { vendor: 'openai', model: 'gpt-5.2', protocol: 'openai-compatible' },
-      { vendor: 'openai', model: 'gpt-4o', protocol: 'openai-compatible' },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'anthropic-native',
+      },
       {
         vendor: 'deepseek',
         model: 'deepseek-v3-2-251201',
         protocol: 'openai-compatible',
       },
+      { vendor: 'openai', model: 'gpt-5.2', protocol: 'openai-compatible' },
+      { vendor: 'openai', model: 'gpt-4o', protocol: 'openai-compatible' },
       {
         vendor: 'google',
         model: 'gemini-2.5-flash',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'zhipu',
-        model: 'glm-4.5',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 60000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -68,13 +74,24 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'deep-reasoning',
     name: '深度推理 Fallback 链',
-    description: '深度推理任务的模型降级策略，优先保持推理能力',
+    description: '深度推理任务的模型降级策略，GLM-5 优先，支持扩展思考',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+        features: { extendedThinking: true },
+      },
       {
         vendor: 'anthropic',
         model: 'claude-opus-4-6',
         protocol: 'anthropic-native',
         features: { extendedThinking: true },
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
       },
       {
         vendor: 'anthropic',
@@ -105,14 +122,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'qwen-3.0-thinking',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'moonshot',
-        model: 'kimi-k2',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 120000,
     maxRetries: 3,
     retryDelayMs: 3000,
@@ -162,7 +180,13 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 30000,
     maxRetries: 3,
     retryDelayMs: 1000,
@@ -172,8 +196,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'fast-response',
     name: '快速响应 Fallback 链',
-    description: '优先使用响应速度快的模型',
+    description: '优先使用响应速度快的模型，GLM-5 优先',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       {
         vendor: 'google',
         model: 'gemini-3-flash-preview',
@@ -197,13 +236,19 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       },
       { vendor: 'xai', model: 'grok-3-mini', protocol: 'openai-compatible' },
       {
-        vendor: 'moonshot',
-        model: 'moonshot-v1-auto',
+        vendor: 'zhipu',
+        model: 'glm-4.5-flash',
         protocol: 'openai-compatible',
       },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 15000,
     maxRetries: 2,
     retryDelayMs: 500,
@@ -213,11 +258,21 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'coding',
     name: '编程任务 Fallback 链',
-    description: '编程任务专用，优先使用代码能力强的模型',
+    description: '编程任务专用，GLM-5 优先，代码能力强',
     models: [
       {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
         vendor: 'anthropic',
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
         protocol: 'openai-compatible',
       },
       {
@@ -228,11 +283,6 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       {
         vendor: 'openai',
         model: 'gpt-5.1-codex',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'deepseek',
-        model: 'deepseek-v3-2-251201',
         protocol: 'openai-compatible',
       },
       { vendor: 'openai', model: 'o4-mini', protocol: 'openai-compatible' },
@@ -251,14 +301,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'kimi-k2',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'zhipu',
-        model: 'glm-4.5',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 90000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -268,8 +319,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'vision',
     name: '视觉理解 Fallback 链',
-    description: '多模态视觉任务专用',
+    description: '多模态视觉任务专用，GLM-5 优先',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       { vendor: 'openai', model: 'gpt-5.2', protocol: 'openai-compatible' },
       { vendor: 'openai', model: 'gpt-4o', protocol: 'openai-compatible' },
       {
@@ -293,24 +359,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'doubao-1.5-vision-pro-32k',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'doubao',
-        model: 'doubao-seed-1-6-vision',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'dashscope',
-        model: 'qwen-vl-max-latest',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'dashscope',
-        model: 'qvq-max',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 60000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -320,8 +377,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'long-context',
     name: '长上下文 Fallback 链',
-    description: '处理超长文档的模型降级策略',
+    description: '处理超长文档的模型降级策略，GLM-5 优先',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       {
         vendor: 'google',
         model: 'gemini-3-pro-preview',
@@ -330,11 +402,6 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       {
         vendor: 'google',
         model: 'gemini-2.5-pro',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'anthropic',
-        model: 'claude-opus-4-6',
         protocol: 'openai-compatible',
       },
       {
@@ -354,16 +421,6 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'qwen-long',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'moonshot',
-        model: 'moonshot-v1-128k',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'moonshot',
-        model: 'kimi-k2',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
     triggerErrorTypes: [
@@ -371,6 +428,8 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       'overloaded',
       'timeout',
       'context_length_exceeded',
+      'connection_error',
+      'connection_refused',
     ],
     triggerTimeoutMs: 180000,
     maxRetries: 2,
@@ -426,7 +485,13 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 120000,
     maxRetries: 2,
     retryDelayMs: 3000,
@@ -459,7 +524,13 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       { vendor: 'alibaba', model: 'wan2.1-14b', protocol: 'openai-compatible' },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 300000,
     maxRetries: 2,
     retryDelayMs: 5000,
@@ -469,8 +540,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'chinese-optimized',
     name: '中文优化 Fallback 链',
-    description: '中文任务优化，优先使用中文能力强的模型',
+    description: '中文任务优化，GLM-5 优先，中文能力强',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       {
         vendor: 'doubao',
         model: 'doubao-seed-1-6-251015',
@@ -492,11 +578,6 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         protocol: 'openai-compatible',
       },
       {
-        vendor: 'deepseek',
-        model: 'deepseek-v3-2-251201',
-        protocol: 'openai-compatible',
-      },
-      {
         vendor: 'moonshot',
         model: 'kimi-k2',
         protocol: 'openai-compatible',
@@ -511,20 +592,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'glm-4.5-flash',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'moonshot',
-        model: 'moonshot-v1-auto',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'anthropic',
-        model: 'claude-sonnet-4-5-20250929',
-        protocol: 'openai-compatible',
-      },
-      { vendor: 'openai', model: 'gpt-4o', protocol: 'openai-compatible' },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 60000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -534,11 +610,21 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'agent-optimized',
     name: 'Agent 任务 Fallback 链',
-    description: 'Agent 任务专用，优先使用工具调用能力强的模型',
+    description: 'Agent 任务专用，GLM-5 优先，工具调用能力强',
     models: [
       {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
         vendor: 'anthropic',
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
         protocol: 'openai-compatible',
       },
       {
@@ -554,18 +640,8 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         protocol: 'openai-compatible',
       },
       {
-        vendor: 'deepseek',
-        model: 'deepseek-v3-2-251201',
-        protocol: 'openai-compatible',
-      },
-      {
         vendor: 'dashscope',
         model: 'qwen-max-latest',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'zhipu',
-        model: 'glm-4.5',
         protocol: 'openai-compatible',
       },
       {
@@ -575,7 +651,14 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
       },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout', 'tool_error'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'tool_error',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 90000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -585,8 +668,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'creative',
     name: '创意写作 Fallback 链',
-    description: '创意写作任务专用，优先使用创造力强的模型',
+    description: '创意写作任务专用，GLM-5 优先，创造力强',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       {
         vendor: 'anthropic',
         model: 'claude-opus-4-5-20251101',
@@ -614,14 +712,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'doubao-1.5-character-pro-32k',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'moonshot',
-        model: 'kimi-k2',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 90000,
     maxRetries: 3,
     retryDelayMs: 2000,
@@ -631,8 +730,23 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
   {
     chainId: 'multimodal',
     name: '多模态 Fallback 链',
-    description: '多模态任务专用，支持图像、音频等多种输入',
+    description: '多模态任务专用，GLM-5 优先，支持图像、音频等多种输入',
     models: [
+      {
+        vendor: 'zhipu',
+        model: 'glm-5',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'anthropic',
+        model: 'claude-opus-4-6',
+        protocol: 'openai-compatible',
+      },
+      {
+        vendor: 'deepseek',
+        model: 'deepseek-v3-2-251201',
+        protocol: 'openai-compatible',
+      },
       { vendor: 'openai', model: 'gpt-4o', protocol: 'openai-compatible' },
       { vendor: 'openai', model: 'gpt-4.1', protocol: 'openai-compatible' },
       {
@@ -660,19 +774,15 @@ export const FALLBACK_CHAINS_DATA: FallbackChainData[] = [
         model: 'doubao-1.5-vision-pro-32k',
         protocol: 'openai-compatible',
       },
-      {
-        vendor: 'doubao',
-        model: 'doubao-seed-1-6-vision',
-        protocol: 'openai-compatible',
-      },
-      {
-        vendor: 'zhipu',
-        model: 'glm-4.5',
-        protocol: 'openai-compatible',
-      },
     ],
     triggerStatusCodes: [429, 500, 502, 503, 504],
-    triggerErrorTypes: ['rate_limit', 'overloaded', 'timeout'],
+    triggerErrorTypes: [
+      'rate_limit',
+      'overloaded',
+      'timeout',
+      'connection_error',
+      'connection_refused',
+    ],
     triggerTimeoutMs: 60000,
     maxRetries: 3,
     retryDelayMs: 2000,

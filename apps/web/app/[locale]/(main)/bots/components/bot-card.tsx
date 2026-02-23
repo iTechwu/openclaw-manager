@@ -216,7 +216,7 @@ export function BotCard({
               className="h-7 flex-1 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
-                router.push(`/bots/${bot.hostname}/ai`);
+                router.push(`/bots/${bot.hostname}/models`);
               }}
             >
               <Cpu className="mr-1 size-3" />

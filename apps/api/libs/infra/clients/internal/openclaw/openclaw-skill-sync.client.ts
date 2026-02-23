@@ -9,11 +9,40 @@
  */
 import { Injectable, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { firstValueFrom, timeout, catchError } from 'rxjs';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
+import { SKILL_LIMITS } from '@repo/constants';
+
+/**
+ * _meta.json 版本信息
+ */
+export interface SkillMetaInfo {
+  latest: {
+    version: string;
+    publishedAt?: number;
+  };
+  history?: Array<{
+    version: string;
+    publishedAt?: number;
+  }>;
+}
+
+/**
+ * 技能目录中的单个文件
+ */
+export interface SkillFile {
+  /** 相对于技能根目录的路径，如 "references/api.md" */
+  relativePath: string;
+  /** 文件内容（文本） */
+  content: string;
+  /** 文件大小（字节） */
+  size: number;
+}
 
 /**
  * 解析后的技能信息
@@ -29,6 +58,34 @@ export interface ParsedSkill {
   category: string;
   /** 技能作者 */
   author: string;
+  /** GitHub 源 URL */
+  sourceUrl: string;
+}
+
+/**
+ * SKILL.md 解析后的内容
+ */
+export interface SkillDefinition {
+  /** 技能名称 */
+  name: string;
+  /** 版本号 */
+  version: string;
+  /** 描述 */
+  description: string;
+  /** 主页 URL */
+  homepage?: string;
+  /** 仓库 URL */
+  repository?: string;
+  /** 是否用户可调用 */
+  userInvocable?: boolean;
+  /** 标签列表 */
+  tags?: string[];
+  /** 元数据 */
+  metadata?: Record<string, unknown>;
+  /** 完整的 Markdown 内容 */
+  content: string;
+  /** 原始 YAML frontmatter */
+  frontmatter: Record<string, unknown>;
   /** GitHub 源 URL */
   sourceUrl: string;
 }
@@ -171,16 +228,22 @@ export class OpenClawSkillSyncClient {
     'https://raw.githubusercontent.com/VoltAgent/awesome-openclaw-skills/main/README.md';
   private readonly requestTimeout = 60000; // 60 秒超时
   private readonly localCachePath: string;
+  private readonly githubToken?: string;
+  private readonly githubProxyUrl?: string;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {
     // 本地缓存文件路径：apps/api/openclaw-skills/README.md
     this.localCachePath = path.resolve(
       __dirname,
       '../../../../../openclaw-skills/README.md',
     );
+    // GitHub Token 和代理 URL（可选）
+    this.githubToken = this.configService.get<string>('GITHUB_TOKEN');
+    this.githubProxyUrl = this.configService.get<string>('GITHUB_PROXY_URL');
   }
 
   /**
@@ -211,11 +274,84 @@ export class OpenClawSkillSyncClient {
   }
 
   /**
+   * 构建 GitHub 请求的 headers 和 URL
+   */
+  private getGitHubRequestConfig(url: string): {
+    url: string;
+    headers: Record<string, string>;
+  } {
+    const headers: Record<string, string> = {};
+    if (this.githubToken) {
+      headers['Authorization'] = `token ${this.githubToken}`;
+    }
+    // 如果配置了代理 URL，替换 GitHub 域名
+    let finalUrl = url;
+    if (this.githubProxyUrl) {
+      finalUrl = url.replace(
+        'https://raw.githubusercontent.com',
+        this.githubProxyUrl,
+      );
+    }
+    return { url: finalUrl, headers };
+  }
+
+  /**
+   * 检查 GitHub API Rate Limit 响应头
+   * remaining < 10 时告警，429 时抛出友好错误
+   */
+  private checkRateLimit(headers: Record<string, unknown>): void {
+    const remaining = Number(headers['x-ratelimit-remaining']);
+    const reset = Number(headers['x-ratelimit-reset']);
+
+    if (isNaN(remaining)) return;
+
+    if (remaining === 0) {
+      const resetTime = reset
+        ? new Date(reset * 1000).toLocaleTimeString()
+        : 'unknown';
+      throw new Error(
+        `GitHub API 请求频率超限，请配置 GITHUB_TOKEN 环境变量以提高限额（60→5000次/小时）。重置时间：${resetTime}`,
+      );
+    }
+
+    if (remaining < 10) {
+      this.logger.warn(
+        'OpenClawSkillSyncClient: GitHub API Rate Limit 即将耗尽',
+        {
+          remaining,
+          resetAt: reset ? new Date(reset * 1000).toISOString() : 'unknown',
+          hasToken: !!this.githubToken,
+        },
+      );
+    }
+  }
+
+  /**
+   * 从 AxiosError 中检测 429 状态码并抛出友好错误
+   */
+  private handleGitHubError(error: unknown): never {
+    const axiosError = error as {
+      response?: { status?: number; headers?: Record<string, unknown> };
+    };
+    if (axiosError?.response?.status === 429) {
+      const reset = Number(axiosError.response.headers?.['x-ratelimit-reset']);
+      const resetTime = reset
+        ? new Date(reset * 1000).toLocaleTimeString()
+        : 'unknown';
+      throw new Error(
+        `GitHub API 请求频率超限（429），请配置 GITHUB_TOKEN 环境变量以提高限额（60→5000次/小时）。重置时间：${resetTime}`,
+      );
+    }
+    throw error;
+  }
+
+  /**
    * 从 GitHub 获取 README 内容
    */
   private async fetchFromGitHub(): Promise<string> {
+    const { url, headers } = this.getGitHubRequestConfig(this.repoUrl);
     const response = await firstValueFrom(
-      this.httpService.get<string>(this.repoUrl).pipe(
+      this.httpService.get<string>(url, { headers }).pipe(
         timeout(this.requestTimeout),
         catchError((error) => {
           this.logger.error('OpenClawSkillSyncClient: GitHub 请求失败', {
@@ -316,10 +452,10 @@ export class OpenClawSkillSyncClient {
         // 检查是否已存在相同 slug（去重）
         if (skillsMap.has(trimmedSlug)) {
           duplicateCount++;
-          this.logger.debug(
-            'OpenClawSkillSyncClient: 跳过重复 slug',
-            { slug: trimmedSlug, sourceUrl: sourceUrl.trim() },
-          );
+          this.logger.debug('OpenClawSkillSyncClient: 跳过重复 slug', {
+            slug: trimmedSlug,
+            sourceUrl: sourceUrl.trim(),
+          });
           continue;
         }
 
@@ -390,5 +526,362 @@ export class OpenClawSkillSyncClient {
       icon: CATEGORY_ICON_MAP[slug] || '📦',
       sortOrder: index + 1,
     }));
+  }
+
+  /**
+   * 获取单个技能的 SKILL.md 内容
+   * 优先使用 raw URL，失败时 fallback 到 GitHub API（适用于 raw.githubusercontent.com 被屏蔽的环境）
+   * @param sourceUrl GitHub tree URL (如 https://github.com/openclaw/skills/tree/main/skills/author/slug/SKILL.md)
+   */
+  async fetchSkillDefinition(sourceUrl: string): Promise<SkillDefinition> {
+    this.logger.info('OpenClawSkillSyncClient: 获取 SKILL.md 内容', {
+      sourceUrl,
+    });
+
+    // 优先尝试 raw URL
+    const rawUrl = this.convertToRawUrl(sourceUrl);
+    const { url, headers } = this.getGitHubRequestConfig(rawUrl);
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<string>(url, { headers }).pipe(
+          timeout(this.requestTimeout),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+      );
+
+      const content = response.data;
+      this.logger.info('OpenClawSkillSyncClient: SKILL.md 获取成功 (raw)', {
+        contentLength: content.length,
+      });
+      return this.parseSkillMd(content, sourceUrl);
+    } catch (rawError) {
+      this.logger.warn(
+        'OpenClawSkillSyncClient: raw URL 获取失败，尝试 GitHub API',
+        {
+          rawUrl,
+          error: rawError instanceof Error ? rawError.message : 'Unknown error',
+        },
+      );
+    }
+
+    // Fallback: 使用 GitHub API（api.github.com 通常不被屏蔽）
+    const apiUrl = this.convertToApiUrl(sourceUrl);
+    if (!apiUrl) {
+      throw new Error(`无法将 sourceUrl 转换为 GitHub API URL: ${sourceUrl}`);
+    }
+
+    const apiHeaders: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json',
+    };
+    if (this.githubToken) {
+      apiHeaders['Authorization'] = `token ${this.githubToken}`;
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService
+          .get<{ content: string; encoding: string }>(apiUrl, {
+            headers: apiHeaders,
+          })
+          .pipe(
+            timeout(this.requestTimeout),
+            catchError((error) => {
+              this.handleGitHubError(error);
+            }),
+          ),
+      );
+
+      this.checkRateLimit(
+        response.headers as unknown as Record<string, unknown>,
+      );
+
+      const content = Buffer.from(response.data.content, 'base64').toString(
+        'utf-8',
+      );
+      this.logger.info(
+        'OpenClawSkillSyncClient: SKILL.md 获取成功 (GitHub API)',
+        { contentLength: content.length },
+      );
+      return this.parseSkillMd(content, sourceUrl);
+    } catch (error) {
+      this.logger.error('OpenClawSkillSyncClient: 获取 SKILL.md 全部失败', {
+        sourceUrl,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 将 GitHub tree URL 转换为 raw URL
+   */
+  private convertToRawUrl(treeUrl: string): string {
+    // https://github.com/openclaw/skills/tree/main/skills/author/slug/SKILL.md
+    // -> https://raw.githubusercontent.com/openclaw/skills/main/skills/author/slug/SKILL.md
+    return treeUrl
+      .replace('github.com', 'raw.githubusercontent.com')
+      .replace('/tree/', '/');
+  }
+
+  /**
+   * 将 GitHub tree URL 转换为 GitHub API URL
+   * https://github.com/{owner}/{repo}/tree/{ref}/{path}
+   * -> https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={ref}
+   */
+  private convertToApiUrl(treeUrl: string): string | null {
+    const match = treeUrl.match(
+      /github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/,
+    );
+    if (!match) return null;
+    const [, owner, repo, ref, filePath] = match;
+    return `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`;
+  }
+
+  /**
+   * 将 SKILL.md 的 GitHub tree URL 转换为其所在目录的 API URL
+   */
+  private convertToDirApiUrl(sourceUrl: string): string | null {
+    const dirUrl = sourceUrl.replace(/\/SKILL\.md$/, '');
+    return this.convertToApiUrl(dirUrl);
+  }
+
+  /**
+   * 解析 SKILL.md 内容
+   * 提取 YAML frontmatter 和 Markdown 内容
+   */
+  private parseSkillMd(content: string, sourceUrl: string): SkillDefinition {
+    // 匹配 YAML frontmatter (--- ... ---)
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+
+    if (!frontmatterMatch) {
+      // 没有 frontmatter，整个内容作为 Markdown
+      return {
+        name: '',
+        version: '1.0.0',
+        description: '',
+        content: content,
+        frontmatter: {},
+        sourceUrl,
+      };
+    }
+
+    const [, yamlContent, markdownContent] = frontmatterMatch;
+
+    // 使用 js-yaml 解析 YAML frontmatter
+    let frontmatter: Record<string, unknown> = {};
+    try {
+      const parsed = yaml.load(yamlContent);
+      frontmatter =
+        parsed && typeof parsed === 'object'
+          ? (parsed as Record<string, unknown>)
+          : {};
+    } catch (error) {
+      this.logger.warn('OpenClawSkillSyncClient: YAML 解析失败，使用空对象', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
+    return {
+      name: (frontmatter.name as string) || '',
+      version: String(frontmatter.version || '1.0.0'),
+      description: (frontmatter.description as string) || '',
+      homepage: frontmatter.homepage as string | undefined,
+      repository: frontmatter.repository as string | undefined,
+      userInvocable: frontmatter['user-invocable'] as boolean | undefined,
+      tags: frontmatter.tags as string[] | undefined,
+      metadata: frontmatter.metadata as Record<string, unknown> | undefined,
+      content: markdownContent.trim(),
+      frontmatter,
+      sourceUrl,
+    };
+  }
+
+  /**
+   * 获取技能的完整目录内容
+   * 使用 GitHub Contents API 递归获取目录下所有文件
+   */
+  async fetchSkillDirectory(sourceUrl: string): Promise<SkillFile[]> {
+    const apiUrl = this.convertToDirApiUrl(sourceUrl);
+    if (!apiUrl) {
+      throw new Error(`无法解析目录 URL: ${sourceUrl}`);
+    }
+
+    const files: SkillFile[] = [];
+    const state = { totalSize: 0 };
+
+    await this.fetchDirectoryRecursive(apiUrl, '', files, state);
+
+    this.logger.info('OpenClawSkillSyncClient: 目录获取完成', {
+      sourceUrl,
+      fileCount: files.length,
+      totalSize: state.totalSize,
+    });
+
+    return files;
+  }
+
+  /**
+   * 递归获取 GitHub 目录内容
+   */
+  private async fetchDirectoryRecursive(
+    apiUrl: string,
+    basePath: string,
+    files: SkillFile[],
+    state: { totalSize: number },
+  ): Promise<void> {
+    const apiHeaders: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json',
+    };
+    if (this.githubToken) {
+      apiHeaders['Authorization'] = `token ${this.githubToken}`;
+    }
+
+    const response = await firstValueFrom(
+      this.httpService
+        .get<
+          Array<{
+            name: string;
+            path: string;
+            type: 'file' | 'dir';
+            size: number;
+            download_url: string | null;
+            content?: string;
+            encoding?: string;
+          }>
+        >(apiUrl, { headers: apiHeaders })
+        .pipe(
+          timeout(this.requestTimeout),
+          catchError((e) => {
+            this.handleGitHubError(e);
+          }),
+        ),
+    );
+
+    this.checkRateLimit(response.headers as unknown as Record<string, unknown>);
+
+    for (const item of response.data) {
+      if (SKILL_LIMITS.EXCLUDED_FILES.includes(item.name)) continue;
+
+      if (item.type === 'file') {
+        if (files.length >= SKILL_LIMITS.MAX_FILE_COUNT) {
+          throw new Error(`文件数量超过限制: ${SKILL_LIMITS.MAX_FILE_COUNT}`);
+        }
+
+        state.totalSize += item.size;
+        if (state.totalSize > SKILL_LIMITS.MAX_DIR_SIZE) {
+          throw new Error(
+            `目录总大小超过限制: ${SKILL_LIMITS.MAX_DIR_SIZE} bytes`,
+          );
+        }
+
+        const relativePath = basePath ? `${basePath}/${item.name}` : item.name;
+        let content: string;
+
+        if (item.content && item.encoding === 'base64') {
+          content = Buffer.from(item.content, 'base64').toString('utf-8');
+        } else if (item.download_url) {
+          const { url, headers } = this.getGitHubRequestConfig(
+            item.download_url,
+          );
+          const fileResponse = await firstValueFrom(
+            this.httpService
+              .get<string>(url, { headers, responseType: 'text' as any })
+              .pipe(
+                timeout(15000),
+                catchError((e) => {
+                  throw e;
+                }),
+              ),
+          );
+          content =
+            typeof fileResponse.data === 'string'
+              ? fileResponse.data
+              : JSON.stringify(fileResponse.data);
+        } else {
+          continue;
+        }
+
+        files.push({ relativePath, content, size: item.size });
+      } else if (item.type === 'dir') {
+        const subDirUrl = apiUrl.replace(
+          /\/contents\/[^?]+/,
+          `/contents/${item.path}`,
+        );
+        await this.fetchDirectoryRecursive(
+          subDirUrl,
+          basePath ? `${basePath}/${item.name}` : item.name,
+          files,
+          state,
+        );
+      }
+    }
+  }
+
+  /**
+   * 获取 Skill 的 _meta.json 版本信息
+   * @param sourceUrl GitHub tree URL for SKILL.md
+   * @returns SkillMetaInfo or null if not found
+   */
+  async fetchSkillMeta(sourceUrl: string): Promise<SkillMetaInfo | null> {
+    const metaUrl = sourceUrl.replace(/SKILL\.md$/, '_meta.json');
+
+    // 尝试 raw URL
+    const rawUrl = this.convertToRawUrl(metaUrl);
+    const { url, headers } = this.getGitHubRequestConfig(rawUrl);
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<string>(url, { headers }).pipe(
+          timeout(15000),
+          catchError((e) => {
+            throw e;
+          }),
+        ),
+      );
+      const data =
+        typeof response.data === 'string'
+          ? JSON.parse(response.data)
+          : response.data;
+      return data as SkillMetaInfo;
+    } catch {
+      // Fallback: GitHub API
+    }
+
+    const apiUrl = this.convertToApiUrl(metaUrl);
+    if (!apiUrl) return null;
+
+    const apiHeaders: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json',
+    };
+    if (this.githubToken) {
+      apiHeaders['Authorization'] = `token ${this.githubToken}`;
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService
+          .get<{ content: string; encoding: string }>(apiUrl, {
+            headers: apiHeaders,
+          })
+          .pipe(
+            timeout(15000),
+            catchError((e) => {
+              this.handleGitHubError(e);
+            }),
+          ),
+      );
+      this.checkRateLimit(
+        response.headers as unknown as Record<string, unknown>,
+      );
+      const content = Buffer.from(response.data.content, 'base64').toString(
+        'utf-8',
+      );
+      return JSON.parse(content) as SkillMetaInfo;
+    } catch {
+      return null;
+    }
   }
 }

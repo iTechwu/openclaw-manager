@@ -1,5 +1,8 @@
 /**
  * Bot Channel API Controller
+ *
+ * 迁移说明：
+ * - connection 端点已弃用，连接由 OpenClaw 原生 feishu 扩展管理
  */
 import { Controller, Req, VERSION_NEUTRAL } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
@@ -77,23 +80,22 @@ export class BotChannelApiController {
     });
   }
 
+  /**
+   * 连接管理端点
+   *
+   * @deprecated 连接现在由 OpenClaw 原生 feishu 扩展自动管理
+   * 此端点保留用于兼容性，返回当前渠道状态
+   */
   @TsRestHandler(c.connection)
   async connection(@Req() req: AuthenticatedRequest) {
-    return tsRestHandler(c.connection, async ({ params, body }) => {
-      let result;
-      if (body.action === 'connect') {
-        result = await this.botChannelApiService.connectChannel(
-          req.userId,
-          params.hostname,
-          params.channelId,
-        );
-      } else {
-        result = await this.botChannelApiService.disconnectChannel(
-          req.userId,
-          params.hostname,
-          params.channelId,
-        );
-      }
+    return tsRestHandler(c.connection, async ({ params }) => {
+      // 连接由 OpenClaw 原生 feishu 扩展自动管理
+      // 返回当前渠道状态
+      const result = await this.botChannelApiService.getChannelById(
+        req.userId,
+        params.hostname,
+        params.channelId,
+      );
       return success(result);
     });
   }

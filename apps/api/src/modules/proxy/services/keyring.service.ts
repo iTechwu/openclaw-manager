@@ -14,6 +14,8 @@ export interface KeySelection {
   baseUrl?: string | null;
   /** 提供商 vendor */
   vendor: string;
+  /** Provider 特定的元数据 */
+  metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -44,6 +46,7 @@ export class KeyringService {
       secretEncrypted: Buffer | Uint8Array;
       baseUrl?: string | null;
       vendor: string;
+      metadata?: unknown;
     }>,
     cacheKey: string,
   ): KeySelection | null {
@@ -65,6 +68,7 @@ export class KeyringService {
         secret,
         baseUrl: key.baseUrl,
         vendor: key.vendor,
+        metadata: (key.metadata as Record<string, unknown>) ?? null,
       };
     } catch (error) {
       this.logger.error(`Failed to decrypt key ${key.id}:`, error);
@@ -81,14 +85,7 @@ export class KeyringService {
       { limit: 100 },
     );
 
-    const keysWithSecret = keys.map((k) => ({
-      id: k.id,
-      secretEncrypted: k.secretEncrypted,
-      baseUrl: k.baseUrl,
-      vendor: k.vendor,
-    }));
-
-    return this.selectFromKeys(keysWithSecret, vendor);
+    return this.selectFromKeys(keys, vendor);
   }
 
   /**
@@ -112,13 +109,7 @@ export class KeyringService {
         );
 
         if (taggedKeys.length > 0) {
-          const keysWithSecret = taggedKeys.map((k) => ({
-            id: k.id,
-            secretEncrypted: k.secretEncrypted,
-            baseUrl: k.baseUrl,
-            vendor: k.vendor,
-          }));
-          return this.selectFromKeys(keysWithSecret, `${vendor}:${tag}`);
+          return this.selectFromKeys(taggedKeys, `${vendor}:${tag}`);
         }
       }
     }
@@ -130,13 +121,7 @@ export class KeyringService {
     );
 
     if (defaultKeys.length > 0) {
-      const keysWithSecret = defaultKeys.map((k) => ({
-        id: k.id,
-        secretEncrypted: k.secretEncrypted,
-        baseUrl: k.baseUrl,
-        vendor: k.vendor,
-      }));
-      return this.selectFromKeys(keysWithSecret, `${vendor}:default`);
+      return this.selectFromKeys(defaultKeys, `${vendor}:default`);
     }
 
     // 最后尝试：该 vendor 的任意密钥
@@ -146,13 +131,7 @@ export class KeyringService {
     );
 
     if (allKeys.length > 0) {
-      const keysWithSecret = allKeys.map((k) => ({
-        id: k.id,
-        secretEncrypted: k.secretEncrypted,
-        baseUrl: k.baseUrl,
-        vendor: k.vendor,
-      }));
-      return this.selectFromKeys(keysWithSecret, vendor);
+      return this.selectFromKeys(allKeys, vendor);
     }
 
     return null;

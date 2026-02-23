@@ -1,4 +1,10 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { RoutingEngineService, CapabilityTag } from './routing-engine.service';
@@ -10,17 +16,19 @@ import {
 import {
   CostTrackerService,
   CostStrategy,
-  ModelPricing,
+  ModelCatalogPricing,
 } from './cost-tracker.service';
 import {
-  ModelPricingService,
+  ModelCatalogService,
   CapabilityTagService,
   FallbackChainService,
   CostStrategyService,
   ComplexityRoutingConfigService,
+  FallbackChainModelService,
+  ComplexityRoutingModelMappingService,
 } from '@app/db';
 import type {
-  ModelPricing as DbModelPricing,
+  ModelCatalog as DbModelCatalog,
   CapabilityTag as DbCapabilityTag,
   FallbackChain as DbFallbackChain,
   CostStrategy as DbCostStrategy,
@@ -29,18 +37,47 @@ import type {
 import type { ConfigLoadStatus } from '@repo/contracts';
 
 /**
+ * 配置变更事件
+ */
+export class ConfigurationChangedEvent {
+  constructor(
+    public readonly configType:
+      | 'modelCatalog'
+      | 'capabilityTags'
+      | 'fallbackChains'
+      | 'costStrategies'
+      | 'complexityRoutingConfigs',
+    public readonly count: number,
+    public readonly timestamp: Date = new Date(),
+  ) {}
+}
+
+/**
+ * 配置变更事件名称
+ */
+export const CONFIG_EVENTS = {
+  CHANGED: 'configuration.changed',
+  REFRESH: 'configuration.refresh',
+} as const;
+
+/**
  * ConfigurationService - 数据库驱动的配置管理服务
  *
  * 负责：
  * - 从数据库加载路由配置
- * - 定期刷新配置
- * - 配置变更通知
+ * - 定期刷新配置（5分钟）
+ * - 配置变更通知（通过 EventEmitter2）
  * - 配置状态监控
+ * - 缓存失效管理
+ *
+ * 配置加载优先级：
+ * 1. 数据库配置（如果存在）
+ * 2. 默认硬编码配置（如果数据库为空）
  */
 @Injectable()
-export class ConfigurationService implements OnModuleInit {
+export class ConfigurationService implements OnModuleInit, OnModuleDestroy {
   private loadStatus: ConfigLoadStatus = {
-    modelPricing: { loaded: false, count: 0 },
+    modelCatalog: { loaded: false, count: 0 },
     capabilityTags: { loaded: false, count: 0 },
     fallbackChains: { loaded: false, count: 0 },
     costStrategies: { loaded: false, count: 0 },
@@ -52,15 +89,18 @@ export class ConfigurationService implements OnModuleInit {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly eventEmitter: EventEmitter2,
     private readonly routingEngine: RoutingEngineService,
     private readonly fallbackEngine: FallbackEngineService,
     private readonly costTracker: CostTrackerService,
     // DB Services for loading configuration from database
-    private readonly modelPricingDb: ModelPricingService,
+    private readonly modelCatalogDb: ModelCatalogService,
     private readonly capabilityTagDb: CapabilityTagService,
     private readonly fallbackChainDb: FallbackChainService,
     private readonly costStrategyDb: CostStrategyService,
     private readonly complexityRoutingConfigDb: ComplexityRoutingConfigService,
+    private readonly fallbackChainModelDb: FallbackChainModelService,
+    private readonly complexityRoutingModelMappingDb: ComplexityRoutingModelMappingService,
   ) {}
 
   /**
@@ -87,7 +127,7 @@ export class ConfigurationService implements OnModuleInit {
     try {
       // 并行加载所有配置
       await Promise.all([
-        this.loadModelPricing(),
+        this.loadModelCatalog(),
         this.loadCapabilityTags(),
         this.loadFallbackChains(),
         this.loadCostStrategies(),
@@ -106,44 +146,47 @@ export class ConfigurationService implements OnModuleInit {
   }
 
   /**
-   * 加载模型定价配置
+   * 加载模型目录配置
    * 优先从数据库加载，如果数据库为空则使用默认配置
    */
-  async loadModelPricing(): Promise<void> {
+  async loadModelCatalog(): Promise<void> {
     try {
       // 从数据库加载
-      const dbPricing = await this.modelPricingDb.listAll();
+      const dbCatalog = await this.modelCatalogDb.listAll();
 
-      let pricing: ModelPricing[];
+      let pricing: ModelCatalogPricing[];
 
-      if (dbPricing && dbPricing.length > 0) {
+      if (dbCatalog && dbCatalog.length > 0) {
         // 转换数据库格式为内部格式
-        pricing = dbPricing.map((p: DbModelPricing) =>
-          this.convertDbModelPricing(p),
+        pricing = dbCatalog.map((p: DbModelCatalog) =>
+          this.convertDbModelCatalog(p),
         );
         this.logger.info(
-          `[ConfigurationService] Loaded ${pricing.length} model pricing entries from database`,
+          `[ConfigurationService] Loaded ${pricing.length} model catalog entries from database`,
         );
       } else {
         // 使用默认配置
-        pricing = this.getDefaultModelPricing();
+        pricing = this.getDefaultModelCatalogPricing();
         this.logger.info(
-          `[ConfigurationService] Using ${pricing.length} default model pricing entries (database empty)`,
+          `[ConfigurationService] Using ${pricing.length} default model catalog entries (database empty)`,
         );
       }
 
-      await this.costTracker.loadModelPricingFromDb(pricing);
+      await this.costTracker.loadModelCatalogPricingFromDb(pricing);
 
-      this.loadStatus.modelPricing = {
+      this.loadStatus.modelCatalog = {
         loaded: true,
         count: pricing.length,
         lastUpdate: new Date().toISOString(),
       };
+
+      // 发送配置变更事件
+      this.emitConfigChangedEvent('modelCatalog', pricing.length);
     } catch (error) {
-      this.logger.error('[ConfigurationService] Failed to load model pricing', {
+      this.logger.error('[ConfigurationService] Failed to load model catalog', {
         error,
       });
-      this.loadStatus.modelPricing.loaded = false;
+      this.loadStatus.modelCatalog.loaded = false;
     }
   }
 
@@ -195,7 +238,8 @@ export class ConfigurationService implements OnModuleInit {
 
   /**
    * 加载 Fallback 链配置
-   * 优先从数据库加载，如果数据库为空则使用默认配置
+   * 优先从关联表 FallbackChainModel 加载（新架构），
+   * 如果关联表为空则回退到旧的 JSON models 字段（兼容迁移期）
    */
   async loadFallbackChains(): Promise<void> {
     try {
@@ -208,9 +252,20 @@ export class ConfigurationService implements OnModuleInit {
       let chains: FallbackChain[];
 
       if (dbChains && dbChains.length > 0) {
-        // 转换数据库格式为内部格式
-        chains = dbChains.map((c: DbFallbackChain) =>
-          this.convertDbFallbackChain(c),
+        // 为每个链加载关联的模型
+        chains = await Promise.all(
+          dbChains.map(async (c: DbFallbackChain) => {
+            const chainModels = await this.fallbackChainModelDb.listByChainId(
+              c.id,
+            );
+
+            if (chainModels.length > 0) {
+              // 新架构：从关联表加载模型
+              return this.convertDbFallbackChainWithModels(c, chainModels);
+            }
+            // 兼容旧架构：从 JSON 字段加载
+            return this.convertDbFallbackChain(c);
+          }),
         );
         this.logger.info(
           `[ConfigurationService] Loaded ${chains.length} fallback chains from database`,
@@ -287,7 +342,8 @@ export class ConfigurationService implements OnModuleInit {
 
   /**
    * 加载复杂度路由配置
-   * 优先从数据库加载，如果数据库为空则使用默认配置
+   * 优先从关联表 ComplexityRoutingModelMapping 加载（新架构），
+   * 如果关联表为空则回退到旧的 JSON models 字段（兼容迁移期）
    */
   async loadComplexityRoutingConfigs(): Promise<void> {
     try {
@@ -304,10 +360,33 @@ export class ConfigurationService implements OnModuleInit {
 
         // 使用第一个启用的配置
         const activeConfig = dbConfigs[0];
-        const models = activeConfig.models as Record<
-          string,
-          { vendor: string; model: string }
-        >;
+
+        // 尝试从新关联表加载模型映射
+        const mappings =
+          await this.complexityRoutingModelMappingDb.listByConfigId(
+            activeConfig.id,
+          );
+
+        let models: Record<string, { vendor: string; model: string }>;
+
+        if (mappings.length > 0) {
+          // 新架构：从关联表构建模型映射
+          models = {} as Record<string, { vendor: string; model: string }>;
+          for (const m of mappings) {
+            if (!models[m.complexityLevel]) {
+              models[m.complexityLevel] = {
+                vendor: m.modelCatalog.vendor,
+                model: m.modelCatalog.model,
+              };
+            }
+          }
+        } else {
+          // 兼容旧架构：从 JSON 字段加载
+          models = (activeConfig.models || {}) as Record<
+            string,
+            { vendor: string; model: string }
+          >;
+        }
 
         this.routingEngine.setComplexityRoutingConfig({
           enabled: true,
@@ -398,6 +477,16 @@ export class ConfigurationService implements OnModuleInit {
   }
 
   /**
+   * 模块销毁时清理资源
+   */
+  onModuleDestroy(): void {
+    this.stopPeriodicRefresh();
+    this.logger.info(
+      '[ConfigurationService] Module destroyed, resources cleaned up',
+    );
+  }
+
+  /**
    * 手动触发配置刷新
    */
   async refreshConfigurations(): Promise<void> {
@@ -417,7 +506,7 @@ export class ConfigurationService implements OnModuleInit {
    */
   isConfigLoaded(): boolean {
     return (
-      this.loadStatus.modelPricing.loaded &&
+      this.loadStatus.modelCatalog.loaded &&
       this.loadStatus.capabilityTags.loaded &&
       this.loadStatus.fallbackChains.loaded &&
       this.loadStatus.costStrategies.loaded &&
@@ -425,14 +514,83 @@ export class ConfigurationService implements OnModuleInit {
     );
   }
 
+  /**
+   * 发送配置变更事件
+   */
+  private emitConfigChangedEvent(
+    configType:
+      | 'modelCatalog'
+      | 'capabilityTags'
+      | 'fallbackChains'
+      | 'costStrategies'
+      | 'complexityRoutingConfigs',
+    count: number,
+  ): void {
+    this.eventEmitter.emit(
+      CONFIG_EVENTS.CHANGED,
+      new ConfigurationChangedEvent(configType, count),
+    );
+  }
+
+  /**
+   * 强制刷新指定类型的配置
+   */
+  async refreshConfigType(
+    configType:
+      | 'modelCatalog'
+      | 'capabilityTags'
+      | 'fallbackChains'
+      | 'costStrategies'
+      | 'complexityRoutingConfigs',
+  ): Promise<void> {
+    this.logger.info(
+      `[ConfigurationService] Refreshing config type: ${configType}`,
+    );
+
+    switch (configType) {
+      case 'modelCatalog':
+        await this.loadModelCatalog();
+        break;
+      case 'capabilityTags':
+        await this.loadCapabilityTags();
+        break;
+      case 'fallbackChains':
+        await this.loadFallbackChains();
+        break;
+      case 'costStrategies':
+        await this.loadCostStrategies();
+        break;
+      case 'complexityRoutingConfigs':
+        await this.loadComplexityRoutingConfigs();
+        break;
+    }
+  }
+
+  /**
+   * 清除所有缓存并重新加载配置
+   */
+  async invalidateAndReload(): Promise<void> {
+    this.logger.info(
+      '[ConfigurationService] Invalidating all caches and reloading...',
+    );
+
+    // 清除各服务的缓存
+    this.routingEngine.clearCapabilityScoreCache();
+    this.routingEngine.clearComplexityConfigCache();
+    this.fallbackEngine.clearChainCache();
+
+    // 重新加载所有配置
+    await this.loadAllConfigurations();
+  }
+
   // ============================================================================
   // 数据库格式转换方法
   // ============================================================================
 
   /**
-   * 转换数据库 ModelPricing 为内部格式
+   * 转换数据库 ModelCatalog 为内部格式
    */
-  private convertDbModelPricing(db: DbModelPricing): ModelPricing {
+  private convertDbModelCatalog(db: DbModelCatalog): ModelCatalogPricing {
     return {
       model: db.model,
       vendor: db.vendor,
@@ -472,13 +630,46 @@ export class ConfigurationService implements OnModuleInit {
   }
 
   /**
-   * 转换数据库 FallbackChain 为内部格式
+   * 转换数据库 FallbackChain 为内部格式（旧 JSON 字段兼容）
    */
   private convertDbFallbackChain(db: DbFallbackChain): FallbackChain {
     return {
+      id: db.id,
       chainId: db.chainId,
       name: db.name,
-      models: db.models as unknown as FallbackModel[],
+      models: (db.models as unknown as FallbackModel[]) || [],
+      triggerStatusCodes: db.triggerStatusCodes as number[],
+      triggerErrorTypes: db.triggerErrorTypes as string[],
+      triggerTimeoutMs: db.triggerTimeoutMs,
+      maxRetries: db.maxRetries,
+      retryDelayMs: db.retryDelayMs,
+      preserveProtocol: db.preserveProtocol,
+    };
+  }
+
+  /**
+   * 转换数据库 FallbackChain + 关联模型为内部格式（新架构）
+   */
+  private convertDbFallbackChainWithModels(
+    db: DbFallbackChain,
+    chainModels: Awaited<
+      ReturnType<FallbackChainModelService['listByChainId']>
+    >,
+  ): FallbackChain {
+    return {
+      id: db.id,
+      chainId: db.chainId,
+      name: db.name,
+      models: chainModels.map((cm) => ({
+        modelCatalogId: cm.modelCatalogId,
+        vendor: cm.modelCatalog.vendor,
+        model: cm.modelCatalog.model,
+        protocol: (cm.protocolOverride || 'openai-compatible') as
+          | 'openai-compatible'
+          | 'anthropic-native',
+        features: cm.featuresOverride as FallbackModel['features'],
+        displayName: cm.modelCatalog.displayName ?? undefined,
+      })),
       triggerStatusCodes: db.triggerStatusCodes as number[],
       triggerErrorTypes: db.triggerErrorTypes as string[],
       triggerTimeoutMs: db.triggerTimeoutMs,
@@ -513,9 +704,9 @@ export class ConfigurationService implements OnModuleInit {
   // ============================================================================
 
   /**
-   * 获取默认模型定价配置
+   * 获取默认模型目录定价配置
    */
-  private getDefaultModelPricing(): ModelPricing[] {
+  private getDefaultModelCatalogPricing(): ModelCatalogPricing[] {
     return [
       // Anthropic 模型
       {

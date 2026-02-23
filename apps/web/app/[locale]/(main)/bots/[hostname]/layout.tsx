@@ -10,7 +10,7 @@ import {
 } from '@/hooks/useBotStatusSSE';
 import { BotSidebar } from './components/bot-sidebar';
 import { Skeleton } from '@repo/ui';
-import { botClient, botChannelClient } from '@/lib/api/contracts';
+import { botModelClient, botChannelClient } from '@/lib/api/contracts';
 
 export default function BotDetailLayout({
   children,
@@ -26,6 +26,7 @@ export default function BotDetailLayout({
   // 配置状态
   const [hasProvider, setHasProvider] = useState(false);
   const [hasChannel, setHasChannel] = useState(false);
+  const [hasFeishuChannel, setHasFeishuChannel] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
 
   // 检查 Provider 和 Channel 配置状态
@@ -35,12 +36,12 @@ export default function BotDetailLayout({
 
       setConfigLoading(true);
       try {
-        // 检查 Provider
-        const providerRes = await botClient.getProviders({
+        // 检查 Model (替代原来的 Provider 检查)
+        const modelRes = await botModelClient.list({
           params: { hostname },
         });
-        if (providerRes.status === 200 && providerRes.body.data) {
-          setHasProvider(providerRes.body.data.providers.length > 0);
+        if (modelRes.status === 200 && modelRes.body.data) {
+          setHasProvider(modelRes.body.data.list.length > 0);
         }
 
         // 检查 Channel
@@ -49,6 +50,11 @@ export default function BotDetailLayout({
         });
         if (channelRes.status === 200 && channelRes.body.data) {
           setHasChannel(channelRes.body.data.total > 0);
+          // 检查是否有飞书通道
+          const feishuChannels = channelRes.body.data.list.filter(
+            (ch) => ch.channelType === 'feishu',
+          );
+          setHasFeishuChannel(feishuChannels.length > 0);
         }
       } catch {
         // 忽略错误，保持默认值
@@ -103,6 +109,7 @@ export default function BotDetailLayout({
       {/* 侧边栏导航 */}
       <BotSidebar
         hostname={hostname}
+        botName={bot?.name}
         status={
           bot?.status as
             | 'running'
@@ -114,6 +121,7 @@ export default function BotDetailLayout({
         }
         hasProvider={hasProvider}
         hasChannel={hasChannel}
+        hasFeishuChannel={hasFeishuChannel}
         configLoading={configLoading}
       />
 

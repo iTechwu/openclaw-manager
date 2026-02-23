@@ -51,9 +51,9 @@ Content-Type: application/json
 {{apiVersionHeader}}
 
 {
-  "email": "normal@pardx.ai",
+  "email": "admin@pardx.ai",
   "password": "3.1415926535",
-  "name": "normal"
+  "name": "admin"
 }
 
 ### 手机号注册

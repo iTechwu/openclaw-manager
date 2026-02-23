@@ -20,11 +20,10 @@ import {
   ProviderKeyHealthSchema,
   VerifyProviderKeyInputSchema,
   VerifyProviderKeyResponseSchema,
-  BotProviderDetailSchema,
-  AddBotProviderInputSchema,
-  SetPrimaryModelInputSchema,
   BotDiagnoseInputSchema,
   BotDiagnoseResponseSchema,
+  BotModelDetailSchema,
+  AddBotModelsInputSchema,
 } from '../schemas/bot.schema';
 
 const c = initContract();
@@ -243,70 +242,75 @@ export const botContract = c.router(
     },
 
     // ============================================================================
-    // Bot Provider Management
+    // Bot Model Management
     // ============================================================================
 
     /**
-     * GET /bot/:hostname/providers - 获取 Bot 的 Provider 列表
+     * GET /bot/:hostname/models - 获取 Bot 的模型列表
      */
-    getProviders: {
+    getModels: {
       method: 'GET',
-      path: '/:hostname/providers',
+      path: '/:hostname/models',
       pathParams: z.object({ hostname: z.string() }),
       responses: {
         200: ApiResponseSchema(
-          z.object({ providers: z.array(BotProviderDetailSchema) }),
+          z.object({ models: z.array(BotModelDetailSchema) }),
         ),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '获取 Bot 的 Provider 列表',
+      summary: '获取 Bot 的模型列表',
     },
 
     /**
-     * POST /bot/:hostname/providers - 添加 Provider 到 Bot
+     * POST /bot/:hostname/models - 批量添加模型到 Bot
      */
-    addProvider: {
+    addModels: {
       method: 'POST',
-      path: '/:hostname/providers',
+      path: '/:hostname/models',
       pathParams: z.object({ hostname: z.string() }),
-      body: AddBotProviderInputSchema,
+      body: AddBotModelsInputSchema,
       responses: {
-        201: ApiResponseSchema(BotProviderDetailSchema),
+        201: ApiResponseSchema(
+          z.object({
+            added: z.number(),
+            models: z.array(BotModelDetailSchema),
+          }),
+        ),
         400: ApiResponseSchema(z.object({ error: z.string() })),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '添加 Provider 到 Bot',
+      summary: '批量添加模型到 Bot',
     },
 
     /**
-     * DELETE /bot/:hostname/providers/:keyId - 从 Bot 移除 Provider
+     * DELETE /bot/:hostname/models/:modelAvailabilityId - 从 Bot 移除模型
      */
-    removeProvider: {
+    removeModel: {
       method: 'DELETE',
-      path: '/:hostname/providers/:keyId',
+      path: '/:hostname/models/:modelAvailabilityId',
       pathParams: z.object({
         hostname: z.string(),
-        keyId: z.string().uuid(),
+        modelAvailabilityId: z.string().uuid(),
       }),
       body: z.object({}).optional(),
       responses: {
         200: ApiResponseSchema(z.object({ ok: z.boolean() })),
         404: ApiResponseSchema(z.object({ error: z.string() })),
       },
-      summary: '从 Bot 移除 Provider',
+      summary: '从 Bot 移除模型',
     },
 
     /**
-     * PUT /bot/:hostname/providers/:keyId/primary-model - 设置主模型
+     * PUT /bot/:hostname/models/:modelAvailabilityId/primary - 设置主模型
      */
-    setPrimaryModel: {
+    setModelPrimary: {
       method: 'PUT',
-      path: '/:hostname/providers/:keyId/primary-model',
+      path: '/:hostname/models/:modelAvailabilityId/primary',
       pathParams: z.object({
         hostname: z.string(),
-        keyId: z.string().uuid(),
+        modelAvailabilityId: z.string().uuid(),
       }),
-      body: SetPrimaryModelInputSchema,
+      body: z.object({}).optional(),
       responses: {
         200: ApiResponseSchema(z.object({ ok: z.boolean() })),
         404: ApiResponseSchema(z.object({ error: z.string() })),

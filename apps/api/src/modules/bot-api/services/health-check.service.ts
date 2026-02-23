@@ -1,10 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { BotService } from '@app/db';
 import { BotSseService } from './bot-sse.service';
+import { BotStartupMonitorService } from './bot-startup-monitor.service';
 import { firstValueFrom, timeout, catchError, of } from 'rxjs';
 import type { HealthStatus } from '@prisma/client';
 
@@ -34,6 +35,8 @@ export class HealthCheckService {
     private readonly botService: BotService,
     private readonly httpService: HttpService,
     private readonly sseService: BotSseService,
+    @Inject(forwardRef(() => BotStartupMonitorService))
+    private readonly startupMonitor: BotStartupMonitorService,
   ) {}
 
   /**
@@ -71,6 +74,7 @@ export class HealthCheckService {
 
   /**
    * 处理卡住的启动状态（每分钟）
+   * 注意：正在被 BotStartupMonitorService 监控的 Bot 会被跳过
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleStuckStates() {
@@ -83,6 +87,14 @@ export class HealthCheckService {
       const now = Date.now();
 
       for (const bot of startingBots) {
+        // 跳过正在被启动监控服务监控的 Bot
+        if (this.startupMonitor.hasActiveMonitor(bot.id)) {
+          this.logger.debug('Skipping bot with active startup monitor', {
+            hostname: bot.hostname,
+          });
+          continue;
+        }
+
         const startTime = bot.updatedAt.getTime();
         const elapsed = now - startTime;
 

@@ -372,9 +372,19 @@ enum HealthStatus {
   @@map("health_status")
 }
 
+/// Bot 类型 - Bot 容器类型
+/// 决定使用哪种 Docker 镜像运行 Bot
+enum BotType {
+  GATEWAY         // 主 Gateway bot（默认）- 使用 openclaw:local 镜像
+  TOOL_SANDBOX    // 工具沙箱容器 - 使用 openclaw-sandbox 镜像
+  BROWSER_SANDBOX // 浏览器沙箱容器 - 使用 openclaw-sandbox-browser 镜像，支持 VNC
+
+  @@map("bot_type")
+}
+
 /// Bot - 机器人实体
 /// 管理 AI 机器人的生命周期和配置
-/// 注意：aiProvider、model、channelType 字段已移除，这些值从 BotProviderKey 和 BotChannel 动态派生
+/// 注意：aiProvider、model、channelType 字段已移除，这些值从 BotModel 和 BotChannel 动态派生
 model Bot {
   id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name              String    @db.VarChar(255)
@@ -399,23 +409,27 @@ model Bot {
   healthStatus    HealthStatus @default(UNKNOWN) @map("health_status")
   lastHealthCheck DateTime?    @map("last_health_check") @db.Timestamptz(6)
 
+  // Bot 类型字段 - 决定使用哪种 Docker 镜像
+  botType BotType @default(GATEWAY) @map("bot_type")
+
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  createdBy       UserInfo          @relation(fields: [createdById], references: [id])
-  personaTemplate PersonaTemplate?  @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
-  avatarFile      FileSource?       @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
-  providerKeys    BotProviderKey[]
-  usageLogs       BotUsageLog[]
-  proxyToken      ProxyToken?
-  plugins         BotPlugin[]
-  skills          BotSkill[]
-  channels        BotChannel[]
-  modelRoutings   BotModelRouting[]
-  routingConfig   BotRoutingConfig?
+  createdBy          UserInfo          @relation(fields: [createdById], references: [id])
+  personaTemplate    PersonaTemplate?  @relation(fields: [personaTemplateId], references: [id], onDelete: SetNull)
+  avatarFile         FileSource?       @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  usageLogs          BotUsageLog[]
+  proxyToken         ProxyToken?
+  plugins            BotPlugin[]
+  skills             BotSkill[]
+  channels           BotChannel[]
+  modelRoutings      BotModelRouting[]
+  routingConfig      BotRoutingConfig?
+  models             BotModel[]
+  feishuPairingRecords FeishuPairingRecord[]
 
   @@index([status])
   @@index([hostname])
@@ -424,6 +438,7 @@ model Bot {
   @@index([avatarFileId])
   @@index([isDeleted])
   @@index([healthStatus])
+  @@index([botType])
   @@map("b_bot")
 }
 
@@ -448,6 +463,8 @@ model ProviderKey {
   tag             String? @db.VarChar(100)
   /// 自定义 API 地址，用于私有部署或代理服务
   baseUrl         String? @map("base_url") @db.VarChar(500)
+  /// 额外配置（JSON），存储 provider 特定的参数，如 MiniMax 的 groupId
+  metadata        Json?   @map("metadata") @db.JsonB
   /// 创建者用户 ID
   createdById     String  @map("created_by_id") @db.Uuid
 
@@ -457,10 +474,10 @@ model ProviderKey {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  createdBy       UserInfo         @relation(fields: [createdById], references: [id])
-  botProviderKeys BotProviderKey[]
-  usageLogs       BotUsageLog[]
-  proxyTokens     ProxyToken[]
+  createdBy          UserInfo            @relation(fields: [createdById], references: [id])
+  usageLogs          BotUsageLog[]
+  proxyTokens        ProxyToken[]
+  modelAvailability  ModelAvailability[]
 
   @@unique([createdById, label], name: "provider_key_user_label_unique")
   @@index([vendor])
@@ -471,24 +488,120 @@ model ProviderKey {
   @@map("b_provider_key")
 }
 
-/// BotProviderKey - Bot 与 ProviderKey 的关联表
-/// 存储 Bot 与 ProviderKey 的关联关系，以及该关联允许使用的模型列表
-model BotProviderKey {
-  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  botId         String   @map("bot_id") @db.Uuid
-  providerKeyId String   @map("provider_key_id") @db.Uuid
-  isPrimary     Boolean  @default(false) @map("is_primary")
-  /// 允许使用的模型列表
-  allowedModels String[] @default([]) @map("allowed_models")
-  /// 主要模型（默认使用的模型）
-  primaryModel  String?  @map("primary_model") @db.VarChar(100)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+/// BotModel - Bot 与模型的关联表
+/// 存储 Bot 可以使用的模型列表
+/// 普通用户只需要关心模型，不需要了解 Provider 概念
+model BotModel {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId     String   @map("bot_id") @db.Uuid
+  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"
+  modelId   String   @map("model_id") @db.VarChar(100)
+  /// 是否启用该模型
+  isEnabled Boolean  @default(true) @map("is_enabled")
+  /// 是否为主模型（Bot 默认使用的模型）
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  bot         Bot         @relation(fields: [botId], references: [id], onDelete: Cascade)
-  providerKey ProviderKey @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
 
-  @@unique([botId, providerKeyId])
-  @@map("b_bot_provider_key")
+  @@unique([botId, modelId])
+  @@index([botId])
+  @@index([modelId])
+  @@map("b_bot_model")
+}
+
+/// 模型类型枚举
+/// 用于分类模型的能力类型（与 provider.schema.ts 中的 ModelTypeSchema 保持一致）
+enum ModelType {
+  llm            @map("llm")            // 大语言模型
+  text_embedding @map("text-embedding") // 文本嵌入
+  speech2text    @map("speech2text")    // 语音转文字
+  tts            @map("tts")            // 文字转语音
+  moderation     @map("moderation")     // 内容审核
+  rerank         @map("rerank")         // 重排序
+  image          @map("image")          // 图像生成
+  video          @map("video")          // 视频生成
+
+  @@map("model_type")
+}
+
+/// ModelAvailability - 模型可用性缓存表
+/// 缓存 API Key 验证结果，避免频繁调用外部 API
+/// vendor 信息从关联的 ProviderKey 中获取，避免数据冗余
+model ModelAvailability {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 模型标识符，如 "gpt-4o", "claude-sonnet-4-20250514"（反范式化冗余，与 ModelCatalog.model 一致）
+  model          String    @db.VarChar(100)
+  /// 关联的 Provider Key（vendor 信息从这里获取）
+  providerKeyId  String    @map("provider_key_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（必填，模型发现时自动创建 catalog）
+  modelCatalogId String    @map("model_catalog_id") @db.Uuid
+  /// 模型类型（llm, image, video, tts, embedding 等）
+  modelType      ModelType @default(llm) @map("model_type")
+  /// 模型是否可用（API Key 验证通过）
+  isAvailable    Boolean   @default(false) @map("is_available")
+  /// 最后验证时间
+  lastVerifiedAt DateTime  @map("last_verified_at") @db.Timestamptz(6)
+  /// 验证失败时的错误信息
+  errorMessage   String?   @map("error_message") @db.Text
+
+  // ============ Vendor 级别特有配置 ============
+  /// 该 vendor 实例的优先级（用于同模型多 vendor 时的选择）
+  vendorPriority Int @default(0) @map("vendor_priority")
+  /// 该 vendor 实例的健康评分（基于历史成功率动态计算）
+  healthScore    Int @default(100) @map("health_score")
+
+  // ============ 协议适配配置（双层模型体系）============
+  /// 模型支持的协议类型列表（从 ModelCatalog 同步）
+  /// 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+  supportedApiTypes String[] @default(["openai"]) @map("supported_api_types")
+  /// 用户优先选择的协议类型（可选，默认使用 Provider 默认协议）
+  /// 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
+  preferredApiType  String?  @map("preferred_api_type") @db.VarChar(50)
+
+  // ============ 协议级别 BaseUrl 配置 ============
+  /// 按协议类型配置的 BaseUrl
+  /// JSON 格式：{ "openai": "https://...", "anthropic": "https://..." }
+  /// 未配置的协议使用 ProviderKey.baseUrl
+  apiTypeBaseUrls   Json?    @map("api_type_base_urls") @db.JsonB
+
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  providerKey    ProviderKey  @relation(fields: [providerKeyId], references: [id], onDelete: Cascade)
+  modelCatalog   ModelCatalog @relation(fields: [modelCatalogId], references: [id], onDelete: Restrict)
+
+  @@unique([providerKeyId, model])
+  @@index([model])
+  @@index([modelCatalogId])
+  @@index([modelType])
+  @@index([isAvailable])
+  @@index([preferredApiType])
+  @@map("b_model_availability")
+}
+
+/// ModelCapabilityTag - 模型与能力标签的关联表
+/// 存储模型（非 vendor 实例）与能力标签的多对多关系，支持匹配来源追踪
+model ModelCapabilityTag {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 ModelCatalog ID（模型级别）
+  modelCatalogId  String   @map("model_catalog_id") @db.Uuid
+  /// 关联的 CapabilityTag ID
+  capabilityTagId String   @map("capability_tag_id") @db.Uuid
+  /// 匹配来源：pattern (模式匹配), feature (特性匹配), scenario (场景匹配), manual (手动)
+  matchSource     String   @default("pattern") @map("match_source") @db.VarChar(20)
+  /// 匹配置信度 (0-100)
+  confidence      Int      @default(100)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  modelCatalog  ModelCatalog  @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
+  capabilityTag CapabilityTag @relation(fields: [capabilityTagId], references: [id], onDelete: Cascade)
+
+  @@unique([modelCatalogId, capabilityTagId])
+  @@index([modelCatalogId])
+  @@index([capabilityTagId])
+  @@index([matchSource])
+  @@map("b_model_capability_tag")
 }
 
 /// BotUsageLog - Bot API 使用日志
@@ -876,6 +989,8 @@ model Skill {
   /// 中文描述（翻译自 description）
   descriptionZh String? @map("description_zh") @db.Text
   version       String  @default("1.0.0") @db.VarChar(20)
+  /// 最新可用版本（来自 _meta.json）
+  latestVersion String? @map("latest_version") @db.VarChar(20)
 
   // 技能类型关联
   skillTypeId String?    @map("skill_type_id") @db.Uuid
@@ -904,8 +1019,21 @@ model Skill {
   sourceUrl    String?   @map("source_url") @db.VarChar(500)
   /// 技能作者（外部来源的作者）
   author       String?   @db.VarChar(100)
-  /// 最后同步时间
+  /// 最后同步时间（元数据同步）
   lastSyncedAt DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
+  // ============ 预同步文件目录（用于加速安装）============
+  /// 完整的技能文件目录（从 GitHub 预同步）
+  /// 格式: [{ relativePath: string, content: string, size: number }]
+  files        Json?     @db.JsonB
+  /// 文件目录同步时间
+  filesSyncedAt DateTime? @map("files_synced_at") @db.Timestamptz(6)
+  /// 文件数量
+  fileCount     Int?      @map("file_count")
+  /// 是否包含初始化脚本 (scripts/init.sh)
+  hasInitScript Boolean   @default(false) @map("has_init_script")
+  /// 是否包含参考文档 (references/)
+  hasReferences Boolean   @default(false) @map("has_references")
 
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -933,6 +1061,14 @@ model BotSkill {
   botId     String   @map("bot_id") @db.Uuid
   skillId   String   @map("skill_id") @db.Uuid
   config    Json? // Skill instance configuration overrides
+  /// 安装时的技能版本
+  installedVersion String? @map("installed_version") @db.VarChar(20)
+  /// 安装的文件数量
+  fileCount        Int?    @map("file_count")
+  /// 是否执行了初始化脚本
+  scriptExecuted   Boolean @default(false) @map("script_executed")
+  /// 是否包含参考文档
+  hasReferences    Boolean @default(false) @map("has_references")
   isEnabled Boolean  @default(true) @map("is_enabled")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -968,11 +1104,15 @@ enum ChannelConnectionStatus {
 /// ModelPricing - AI 模型定价与能力目录
 /// 存储各 AI 模型的定价信息、能力评分和特性支持，用于成本估算和智能路由
 /// 价格单位：美元/百万 tokens
-model ModelPricing {
+/// ModelCatalog - 模型目录（全局模型注册中心）
+/// 以 model 为唯一标识，存储模型身份、定价、能力评分、特性支持等信息
+/// 所有路由配置（能力标签、Fallback、复杂度路由）均引用此表
+/// 原表名 b_model_pricing，重构后升级为 b_model_catalog
+model ModelCatalog {
   id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  /// 模型名称（如 gpt-4o, claude-sonnet-4-20250514）
+  /// 模型标识符（全局唯一），如 "gpt-4o", "claude-sonnet-4-20250514"
   model       String  @unique @db.VarChar(100)
-  /// 服务商标识（openai, anthropic, google, deepseek 等）
+  /// 原始供应商标识（openai, anthropic, google, deepseek 等）
   vendor      String  @db.VarChar(50)
   /// 模型显示名称
   displayName String? @map("display_name") @db.VarChar(255)
@@ -1020,6 +1160,29 @@ model ModelPricing {
   /// 如 ["deep-reasoning", "coding", "general-purpose"]
   recommendedScenarios Json? @map("recommended_scenarios") @db.JsonB
 
+  // ============ 协议适配配置（双层模型体系）============
+  /// 该模型支持的 API 协议类型列表
+  /// 如 ["openai", "anthropic"] 表示同时支持 OpenAI 和 Anthropic 协议
+  /// 用于前端显示协议选择器和后端验证
+  supportedApiTypes  String[] @default(["openai"]) @map("supported_api_types")
+  /// Anthropic 协议模型标识符（如果与 openai 不同）
+  /// 某些模型在 Anthropic 协议下的名称可能与 OpenAI 不同
+  anthropicModelId   String?  @map("anthropic_model_id") @db.VarChar(100)
+  /// 是否推荐使用 Anthropic 协议
+  /// 用于第二层（研究 Agent）模型，充分利用 Extended Thinking
+  recommendAnthropic Boolean  @default(false) @map("recommend_anthropic")
+  /// 推荐使用 Anthropic 协议的原因
+  /// 如 "更好的 Extended Thinking 和流式输出支持"
+  recommendReason    String?  @map("recommend_reason") @db.VarChar(500)
+  /// 模型所属层级：production（第一层）、research（第二层）、both（两者皆可）
+  modelLayer         String   @default("production") @map("model_layer") @db.VarChar(20)
+
+  // ============ 数据来源追踪 ============
+  /// 数据来源：manual (手动), api (API同步), import (导入)
+  dataSource String  @default("manual") @map("data_source") @db.VarChar(20)
+  /// 来源 URL（如果从外部 API 同步）
+  sourceUrl  String? @map("source_url") @db.VarChar(500)
+
   // ============ 状态 ============
   /// 是否启用
   isEnabled       Boolean   @default(true) @map("is_enabled")
@@ -1039,13 +1202,25 @@ model ModelPricing {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  // ============ 关联关系 ============
+  /// 该模型在各 vendor 的可用性记录
+  availabilities            ModelAvailability[]
+  /// 模型能力标签（模型级）
+  capabilityTags            ModelCapabilityTag[]
+  /// Fallback 链引用
+  fallbackChainModels       FallbackChainModel[]
+  /// 复杂度路由引用
+  complexityRoutingMappings ComplexityRoutingModelMapping[]
+
   @@index([vendor])
   @@index([isEnabled])
   @@index([isDeprecated])
   @@index([isDeleted])
   @@index([supportsExtendedThinking])
   @@index([supportsCacheControl])
-  @@map("b_model_pricing")
+  @@index([recommendAnthropic])
+  @@index([modelLayer])
+  @@map("b_model_catalog")
 }
 
 // ============================================================================
@@ -1115,7 +1290,8 @@ model BotChannel {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  bot    Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
+  feishuPairingRecords FeishuPairingRecord[]
 
   @@unique([botId, channelType, name])
   @@index([botId])
@@ -1124,6 +1300,90 @@ model BotChannel {
   @@index([connectionStatus])
   @@index([isDeleted])
   @@map("b_bot_channel")
+}
+
+// ============================================================================
+// Channel Pairing System - 渠道配对系统
+// ============================================================================
+
+/// PairingStatus - 配对状态
+enum PairingStatus {
+  PENDING   // 待处理
+  APPROVED  // 已批准
+  REJECTED  // 已拒绝
+  EXPIRED   // 已过期
+
+  @@map("pairing_status")
+}
+
+/// FeishuPairingRecord - 飞书配对记录
+/// 持久化存储飞书用户的配对信息和用户基本信息
+/// 启动时与文件系统 pairing.json 同步，数据库为最高优先级
+model FeishuPairingRecord {
+  id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+
+  // ============ 关联 ============
+  botId      String @map("bot_id") @db.Uuid
+  botChannelId String @map("bot_channel_id") @db.Uuid
+
+  // ============ 配对信息 ============
+  /// 配对码（6-8位大写字母数字）
+  code          String @db.VarChar(8)
+  /// 飞书用户 Open ID
+  feishuOpenId  String @map("feishu_open_id") @db.VarChar(100)
+  /// 配对状态
+  status        PairingStatus @default(PENDING)
+
+  // ============ 飞书用户信息 ============
+  /// 用户名称
+  userName      String? @map("user_name") @db.VarChar(255)
+  /// 用户英文名
+  userNameEn    String? @map("user_name_en") @db.VarChar(255)
+  /// 用户头像 URL
+  userAvatarUrl String? @map("user_avatar_url") @db.VarChar(500)
+  /// 用户邮箱
+  userEmail     String? @map("user_email") @db.VarChar(255)
+  /// 用户手机号
+  userMobile    String? @map("user_mobile") @db.VarChar(50)
+  /// 用户部门 ID
+  userDepartmentId   String? @map("user_department_id") @db.VarChar(100)
+  /// 用户部门名称
+  userDepartmentName String? @map("user_department_name") @db.VarChar(255)
+  /// 原始用户信息（JSON，存储完整的飞书用户信息）
+  userInfoRaw   Json?  @map("user_info_raw") @db.JsonB
+
+  // ============ 时间戳 ============
+  /// 配对请求创建时间
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  /// 批准时间
+  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(6)
+  /// 批准人 ID
+  approvedById  String?   @map("approved_by_id") @db.Uuid
+  /// 拒绝时间
+  rejectedAt    DateTime? @map("rejected_at") @db.Timestamptz(6)
+  /// 拒绝人 ID
+  rejectedById  String?   @map("rejected_by_id") @db.Uuid
+  /// 最后从飞书同步用户信息的时间
+  lastSyncedAt  DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  bot        Bot        @relation(fields: [botId], references: [id], onDelete: Cascade)
+  botChannel BotChannel @relation(fields: [botChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, code])
+  @@unique([botId, feishuOpenId])
+  @@index([botId])
+  @@index([botChannelId])
+  @@index([code])
+  @@index([feishuOpenId])
+  @@index([status])
+  @@index([isDeleted])
+  @@map("b_feishu_pairing_record")
 }
 
 // ============================================================================
@@ -1178,6 +1438,8 @@ model CapabilityTag {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  modelCapabilityTags ModelCapabilityTag[]
+
   @@index([category])
   @@index([isActive])
   @@index([isBuiltin])
@@ -1196,9 +1458,12 @@ model FallbackChain {
   /// 链描述
   description String? @db.Text
 
-  /// 模型链配置（JSON 数组，按优先级排序）
+  /// @deprecated 旧的 JSON 模型链配置，迁移到 FallbackChainModel 关联表后移除
   /// [{ vendor: "anthropic", model: "claude-sonnet-4", protocol: "anthropic-native", features: {...} }]
-  models Json @db.JsonB
+  models Json? @db.JsonB
+
+  // 新：通过关联表引用实际可用模型
+  chainModels FallbackChainModel[]
 
   // ============ 触发条件 ============
   /// 触发 Fallback 的 HTTP 状态码（JSON 数组）
@@ -1345,9 +1610,12 @@ model ComplexityRoutingConfig {
   description String? @db.Text
 
   // ============ 模型配置 ============
-  /// 各复杂度对应的模型配置（JSON）
+  /// @deprecated 旧的 JSON 模型配置，迁移到 ComplexityRoutingModelMapping 关联表后移除
   /// 格式: { super_easy: {vendor, model}, easy: {...}, medium: {...}, hard: {...}, super_hard: {...} }
-  models Json @db.JsonB
+  models Json? @db.JsonB
+
+  // 新：通过关联表引用实际可用模型
+  modelMappings ComplexityRoutingModelMapping[]
 
   // ============ 分类器配置 ============
   /// 分类器使用的模型
@@ -1374,4 +1642,56 @@ model ComplexityRoutingConfig {
   @@index([isEnabled])
   @@index([isDeleted])
   @@map("b_complexity_routing_config")
+}
+
+/// FallbackChainModel - Fallback 链模型关联表
+/// 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
+model FallbackChainModel {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 FallbackChain ID
+  fallbackChainId String   @map("fallback_chain_id") @db.Uuid
+  /// 关联的 ModelCatalog ID（模型级别，运行时解析到可用 vendor）
+  modelCatalogId  String   @map("model_catalog_id") @db.Uuid
+  /// 在链中的顺序（0 = 首选模型，数值越小优先级越高）
+  priority        Int      @default(0)
+  /// 协议覆盖（可选，默认使用 ProviderKey 的 apiType）
+  protocolOverride    String?  @map("protocol_override") @db.VarChar(50)
+  /// 特性覆盖配置（JSON），如 { extendedThinking: true, cacheControl: true }
+  featuresOverride    Json?    @map("features_override") @db.JsonB
+
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  fallbackChain FallbackChain @relation(fields: [fallbackChainId], references: [id], onDelete: Cascade)
+  modelCatalog  ModelCatalog  @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
+
+  @@unique([fallbackChainId, modelCatalogId])
+  @@index([fallbackChainId])
+  @@index([modelCatalogId])
+  @@index([priority])
+  @@map("b_fallback_chain_model")
+}
+
+/// ComplexityRoutingModelMapping - 复杂度路由模型映射表
+/// 引用 ModelCatalog（模型级别），运行时动态解析到可用 vendor
+model ComplexityRoutingModelMapping {
+  id                    String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  /// 关联的 ComplexityRoutingConfig ID
+  complexityConfigId    String   @map("complexity_config_id") @db.Uuid
+  /// 复杂度级别：super_easy, easy, medium, hard, super_hard
+  complexityLevel       String   @map("complexity_level") @db.VarChar(20)
+  /// 关联的 ModelCatalog ID（模型级别）
+  modelCatalogId        String   @map("model_catalog_id") @db.Uuid
+  /// 在同级别中的优先级（0 = 首选）
+  priority              Int      @default(0)
+
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  complexityConfig  ComplexityRoutingConfig @relation(fields: [complexityConfigId], references: [id], onDelete: Cascade)
+  modelCatalog      ModelCatalog            @relation(fields: [modelCatalogId], references: [id], onDelete: Cascade)
+
+  @@unique([complexityConfigId, complexityLevel, modelCatalogId])
+  @@index([complexityConfigId])
+  @@index([modelCatalogId])
+  @@index([complexityLevel])
+  @@map("b_complexity_routing_model_mapping")
 }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { modelRoutingClient, botClient } from '@/lib/api/contracts';
+import { modelRoutingClient, modelClient } from '@/lib/api/contracts';
 import {
   Button,
   Card,
@@ -55,15 +55,30 @@ import { toast } from 'sonner';
 import type {
   BotModelRouting,
   CreateRoutingConfigInput,
+  FallbackModel,
   UpdateRoutingConfigInput,
   RoutingConfig,
   FunctionRouteRule,
   LoadBalanceTarget,
   RoutingTarget,
-  BotProviderDetail,
   RoutingSuggestionResult,
   SuggestedRoutingRule,
 } from '@repo/contracts';
+import { EnhancedModelSelector } from './enhanced-model-selector';
+import { FallbackChainSelector } from './fallback-chain-selector';
+import { CostStrategySelector } from './cost-strategy-selector';
+import type { EnhancedModelInfo } from '@/hooks/useRoutingConfig';
+import { useFallbackChains } from '@/hooks/useRoutingConfig';
+
+/**
+ * Provider info needed for model selection
+ */
+interface ProviderInfo {
+  providerKeyId: string;
+  vendor: string;
+  label?: string;
+  allowedModels: string[];
+}
 
 interface ModelRoutingConfigProps {
   hostname: string;
@@ -94,7 +109,7 @@ const PREDEFINED_INTENT_KEYS = [
   'longContext',
 ] as const;
 
-// Model recommendations by scenario - based on model-pricing.data.ts
+// Model recommendations by scenario - based on model-catalog.data.ts
 // Updated with latest model versions (2026-02-10)
 const SCENARIO_MODEL_RECOMMENDATIONS: Record<
   string,
@@ -313,9 +328,11 @@ const LOAD_BALANCE_TEMPLATE_KEYS = [
 
 export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
   const t = useTranslations('bots.detail.modelRouting');
+  const { chains: fallbackChains } = useFallbackChains();
 
   const [routings, setRoutings] = useState<BotModelRouting[]>([]);
-  const [botProviders, setBotProviders] = useState<BotProviderDetail[]>([]);
+  const [botProviders, setBotProviders] = useState<ProviderInfo[]>([]);
+  const [enhancedModels, setEnhancedModels] = useState<EnhancedModelInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRouting, setEditingRouting] = useState<BotModelRouting | null>(
@@ -346,6 +363,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     'round_robin' | 'weighted' | 'least_latency'
   >('round_robin');
   const [lbTargets, setLbTargets] = useState<LoadBalanceTarget[]>([]);
+  const [lbCostStrategyId, setLbCostStrategyId] = useState<string | null>(null);
 
   // Failover state
   const [failoverPrimary, setFailoverPrimary] = useState<RoutingTarget>({
@@ -353,24 +371,66 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     model: '',
   });
   const [failoverChain, setFailoverChain] = useState<RoutingTarget[]>([]);
+  const [selectedChainId, setSelectedChainId] = useState<string | null>(null);
   const [retryMaxAttempts, setRetryMaxAttempts] = useState(3);
   const [retryDelayMs, setRetryDelayMs] = useState(1000);
 
-  // Fetch routings and bot providers
+  // Fetch routings and model availability
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [routingsResponse, providersResponse] = await Promise.all([
+      const [routingsResponse, availabilityResponse] = await Promise.all([
         modelRoutingClient.list({ params: { hostname } }),
-        botClient.getProviders({ params: { hostname } }),
+        modelClient.getAvailability({ query: {} }),
       ]);
 
       if (routingsResponse.status === 200 && routingsResponse.body.data) {
         setRoutings(routingsResponse.body.data.routings);
       }
 
-      if (providersResponse.status === 200 && providersResponse.body.data) {
-        setBotProviders(providersResponse.body.data.providers);
+      if (
+        availabilityResponse.status === 200 &&
+        availabilityResponse.body.data
+      ) {
+        // Transform ModelAvailabilityItem[] to ProviderInfo[]
+        // Group models by providerKeyId
+        const providerMap = new Map<string, ProviderInfo>();
+        const availabilityList = availabilityResponse.body.data.list ?? [];
+        const enhanced: EnhancedModelInfo[] = [];
+
+        for (const item of availabilityList) {
+          if (!item.isAvailable) continue; // Only include available models
+
+          const vendor = item.providerKeys?.[0]?.vendor ?? '';
+
+          const existing = providerMap.get(item.providerKeyId);
+          if (existing) {
+            if (!existing.allowedModels.includes(item.model)) {
+              existing.allowedModels.push(item.model);
+            }
+          } else {
+            providerMap.set(item.providerKeyId, {
+              providerKeyId: item.providerKeyId,
+              vendor,
+              allowedModels: [item.model],
+            });
+          }
+
+          // Build enhanced model info with capability tags
+          enhanced.push({
+            providerKeyId: item.providerKeyId,
+            model: item.model,
+            vendor,
+            isAvailable: item.isAvailable,
+            lastVerifiedAt: item.lastVerifiedAt ?? null,
+            pricing: null,
+            capabilityTags: item.capabilityTags ?? [],
+            scores: null,
+          });
+        }
+
+        setBotProviders(Array.from(providerMap.values()));
+        setEnhancedModels(enhanced);
       }
     } catch {
       toast.error('Failed to load routing configurations');
@@ -383,24 +443,9 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     fetchData();
   }, [fetchData]);
 
-  // Get allowed models for a provider key
-  const getModelsForProvider = useCallback(
-    (providerKeyId: string): { id: string; name: string }[] => {
-      const provider = botProviders.find(
-        (p) => p.providerKeyId === providerKeyId,
-      );
-      if (!provider) return [];
-      return provider.allowedModels.map((modelId) => ({
-        id: modelId,
-        name: modelId,
-      }));
-    },
-    [botProviders],
-  );
-
   // Get all providers that have a specific model
   const getProvidersForModel = useCallback(
-    (modelId: string): BotProviderDetail[] => {
+    (modelId: string): ProviderInfo[] => {
       return botProviders.filter((p) => p.allowedModels.includes(modelId));
     },
     [botProviders],
@@ -408,7 +453,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
 
   // Apply a recommended model to the last rule
   const applyRecommendedModel = useCallback(
-    (model: string, providers: BotProviderDetail[]) => {
+    (model: string, providers: ProviderInfo[]) => {
       if (providers.length === 0) {
         toast.error(
           t('functionRoute.recommendedModels.notAvailable', { model }),
@@ -459,8 +504,10 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     setDefaultTarget({ providerKeyId: '', model: '' });
     setLbStrategy('round_robin');
     setLbTargets([]);
+    setLbCostStrategyId(null);
     setFailoverPrimary({ providerKeyId: '', model: '' });
     setFailoverChain([]);
+    setSelectedChainId(null);
     setRetryMaxAttempts(3);
     setRetryDelayMs(1000);
     setEditingRouting(null);
@@ -484,6 +531,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     } else if (config.type === 'LOAD_BALANCE') {
       setLbStrategy(config.strategy);
       setLbTargets(config.targets);
+      setLbCostStrategyId(config.costStrategyId ?? null);
     } else if (config.type === 'FAILOVER') {
       setFailoverPrimary(config.primary);
       setFailoverChain(config.fallbackChain);
@@ -507,6 +555,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
           type: 'LOAD_BALANCE',
           strategy: lbStrategy,
           targets: lbTargets,
+          costStrategyId: lbCostStrategyId,
         };
       case 'FAILOVER':
         return {
@@ -525,6 +574,42 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     if (!formName.trim()) {
       toast.error('Please enter a routing name');
       return;
+    }
+
+    // 验证路由配置
+    if (formType === 'LOAD_BALANCE') {
+      if (lbTargets.length === 0) {
+        toast.error(t('loadBalance.errors.noTargets'));
+        return;
+      }
+      const invalidTargets = lbTargets.filter(
+        (t) => !t.providerKeyId || !t.model,
+      );
+      if (invalidTargets.length > 0) {
+        toast.error(t('loadBalance.errors.invalidTargets'));
+        return;
+      }
+    } else if (formType === 'FAILOVER') {
+      if (!failoverPrimary.providerKeyId || !failoverPrimary.model) {
+        toast.error(t('failover.errors.noPrimary'));
+        return;
+      }
+    } else if (formType === 'FUNCTION_ROUTE') {
+      if (functionRules.length === 0) {
+        toast.error(t('functionRoute.errors.noRules'));
+        return;
+      }
+      const invalidRules = functionRules.filter(
+        (r) => !r.target.providerKeyId || !r.target.model,
+      );
+      if (invalidRules.length > 0) {
+        toast.error(t('functionRoute.errors.invalidRules'));
+        return;
+      }
+      if (!defaultTarget.providerKeyId || !defaultTarget.model) {
+        toast.error(t('functionRoute.errors.noDefaultTarget'));
+        return;
+      }
     }
 
     setActionLoading(true);
@@ -726,7 +811,7 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     }
   };
 
-  // Target selector component
+  // Target selector component - now uses EnhancedModelSelector for direct model selection
   const TargetSelector = ({
     target,
     onChange,
@@ -736,52 +821,16 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     onChange: (target: RoutingTarget) => void;
     label: string;
   }) => {
-    const models = target.providerKeyId
-      ? getModelsForProvider(target.providerKeyId)
-      : [];
-
     return (
-      <div className="space-y-2">
-        <Label>{label}</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <Select
-            value={target.providerKeyId}
-            onValueChange={(value) =>
-              onChange({ ...target, providerKeyId: value, model: '' })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('form.selectProviderKey')} />
-            </SelectTrigger>
-            <SelectContent>
-              {botProviders.map((provider) => (
-                <SelectItem
-                  key={provider.providerKeyId}
-                  value={provider.providerKeyId}
-                >
-                  {provider.label} ({provider.apiType || provider.vendor})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={target.model}
-            onValueChange={(value) => onChange({ ...target, model: value })}
-            disabled={!target.providerKeyId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('form.selectModel')} />
-            </SelectTrigger>
-            <SelectContent>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <EnhancedModelSelector
+        providers={botProviders}
+        enhancedModels={enhancedModels}
+        value={target.providerKeyId && target.model ? target : null}
+        onChange={onChange}
+        label={label}
+        showAvailability={true}
+        showCapabilities={true}
+      />
     );
   };
 
@@ -1358,6 +1407,30 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
               <div className="space-y-4">
                 <h4 className="font-medium">{t('loadBalance.title')}</h4>
 
+                {/* Cost Strategy Selector */}
+                <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Scale className="size-4" />
+                    {t('loadBalance.costOptimization')}
+                  </div>
+                  <CostStrategySelector
+                    value={lbCostStrategyId}
+                    onChange={(strategyId) => {
+                      setLbCostStrategyId(strategyId);
+                      if (strategyId) {
+                        toast.info(
+                          t('loadBalance.strategySelected', { strategyId }),
+                        );
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('loadBalance.costOptimizationHint')}
+                  </p>
+                </div>
+
+                <Separator />
+
                 {/* Strategy */}
                 <div className="space-y-2">
                   <Label>{t('loadBalance.strategy')}</Label>
@@ -1511,6 +1584,75 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
             {formType === 'FAILOVER' && (
               <div className="space-y-4">
                 <h4 className="font-medium">{t('failover.title')}</h4>
+
+                {/* Option to use existing FallbackChain */}
+                <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Shield className="size-4" />
+                    {t('failover.useExistingChain')}
+                  </div>
+                  <FallbackChainSelector
+                    value={selectedChainId}
+                    onChange={(chainId) => {
+                      setSelectedChainId(chainId);
+                      if (chainId) {
+                        // Resolve chain models into failover form fields
+                        const chain = fallbackChains.find(
+                          (c) => c.chainId === chainId,
+                        );
+                        const rawModels = chain?.models ?? [];
+                        const chainModels: FallbackModel[] = rawModels.filter(
+                          (m): m is FallbackModel => m != null,
+                        );
+                        if (chainModels.length > 0) {
+                          const first = chainModels[0];
+                          // Find matching providerKeyId for each model
+                          const resolveTarget = (
+                            m: FallbackModel,
+                          ): RoutingTarget => {
+                            const provider = botProviders.find(
+                              (p) =>
+                                p.vendor === m.vendor &&
+                                p.allowedModels.includes(m.model),
+                            );
+                            return {
+                              providerKeyId: provider?.providerKeyId ?? '',
+                              model: m.model,
+                            };
+                          };
+                          if (first !== undefined) {
+                            setFailoverPrimary(resolveTarget(first));
+                            setFailoverChain(
+                              chainModels.slice(1).map(resolveTarget),
+                            );
+                            toast.success(
+                              t('failover.chainApplied', {
+                                name: chain?.name ?? chainId,
+                                count: chainModels.length,
+                              }),
+                            );
+                          }
+                        } else {
+                          toast.info(t('failover.chainSelected', { chainId }));
+                        }
+                      } else {
+                        // Cleared selection — reset failover fields
+                        setFailoverPrimary({ providerKeyId: '', model: '' });
+                        setFailoverChain([]);
+                      }
+                    }}
+                    providers={botProviders}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('failover.useExistingChainHint')}
+                  </p>
+                </div>
+
+                <Separator />
+
+                <p className="text-sm text-muted-foreground">
+                  {t('failover.orConfigureManually')}
+                </p>
 
                 {/* Primary */}
                 <TargetSelector

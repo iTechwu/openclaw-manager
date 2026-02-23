@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ServerResponse } from 'http';
-import { BotService, BotUsageLogService } from '@app/db';
+import { BotService, BotUsageLogService, ProviderKeyService } from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
 import { KeyringService } from './keyring.service';
 import { KeyringProxyService } from './keyring-proxy.service';
@@ -12,10 +12,13 @@ import { getVendorConfigWithCustomUrl } from '../config/vendor.config';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { normalizeModelForProxy } from '@/utils/model-normalizer';
+import { BotComplexityRoutingService } from './bot-complexity-routing.service';
+import { ModelResolverService } from './model-resolver.service';
+import { CircuitBreakerService } from './circuit-breaker.service';
 import {
-  BotComplexityRoutingService,
-  type ComplexityRouteResult,
-} from './bot-complexity-routing.service';
+  HealthScoreUpdateEvent,
+  HEALTH_SCORE_EVENTS,
+} from '../events/health-score.event';
 
 /**
  * 代理请求参数
@@ -57,7 +60,6 @@ export interface ProxyResult {
 export class ProxyService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly configService: ConfigService,
     private readonly botService: BotService,
     private readonly botUsageLogService: BotUsageLogService,
     private readonly encryptionService: EncryptionService,
@@ -65,6 +67,10 @@ export class ProxyService {
     private readonly keyringProxyService: KeyringProxyService,
     private readonly upstreamService: UpstreamService,
     private readonly quotaService: QuotaService,
+    private readonly modelResolverService: ModelResolverService,
+    private readonly providerKeyService: ProviderKeyService,
+    private readonly circuitBreakerService: CircuitBreakerService,
+    private readonly eventEmitter: EventEmitter2,
     @Optional()
     private readonly botComplexityRouting?: BotComplexityRoutingService,
   ) {}
@@ -114,6 +120,12 @@ export class ProxyService {
     // 例如: openai-compatible → apiType=openai, isCustom=true
     const { apiType: urlApiType, isCustom } = this.parseUrlVendor(vendor);
 
+    // Auto-routing mode: 当使用 compatible 模式时，根据 model 自动路由到可用的 provider
+    // 不需要前端指定具体的 vendor，proxy 自动发现并 fallback
+    if (isCustom) {
+      return this.handleAutoRoutedRequest(params, rawResponse, urlApiType);
+    }
+
     // 检查是否启用 Zero-Trust Mode
     const isZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
 
@@ -122,6 +134,7 @@ export class ProxyService {
     let apiKey: string;
     let baseUrl: string | null | undefined;
     let effectiveApiType: string;
+    let metadata: Record<string, unknown> | null | undefined;
 
     if (isZeroTrust) {
       // Zero-Trust Mode: 使用 ProxyToken 验证
@@ -161,6 +174,7 @@ export class ProxyService {
       keyId = validation.keyId!;
       apiKey = validation.apiKey!;
       baseUrl = validation.baseUrl;
+      metadata = validation.metadata;
       // 使用 token 中的 apiType，如果没有则使用 URL 解析的 apiType
       effectiveApiType = validation.apiType || urlApiType;
     } else {
@@ -190,6 +204,7 @@ export class ProxyService {
       keyId = keySelection.keyId;
       apiKey = keySelection.secret;
       baseUrl = keySelection.baseUrl;
+      metadata = keySelection.metadata;
       effectiveApiType = urlApiType;
     }
 
@@ -211,7 +226,11 @@ export class ProxyService {
     // Normalize model name in request body
     // OpenClaw sends model names with provider prefix (e.g., openai-compatible/gpt-4o)
     // We need to strip the prefix before forwarding to the upstream
-    let normalizedBody = this.normalizeRequestBody(body, effectiveApiType);
+    let normalizedBody = this.normalizeRequestBody(
+      body,
+      effectiveApiType,
+      isCustom,
+    );
 
     // Apply complexity-based routing if enabled
     // This will analyze the request and potentially switch to a different model
@@ -251,12 +270,12 @@ export class ProxyService {
       }
     }
 
-    // 记录请求开始时间
+    // 记录请求开始时间（用于错误情况下的耗时记录）
     const startTime = Date.now();
 
     // 转发请求到上游
     try {
-      const { statusCode, tokenUsage } =
+      const { statusCode, tokenUsage, responseTimeMs } =
         await this.upstreamService.forwardToUpstream(
           {
             vendorConfig: vendorConfig!,
@@ -266,13 +285,12 @@ export class ProxyService {
             body: normalizedBody,
             apiKey,
             customUrl: baseUrl || undefined,
+            metadata,
+            vendor,
           },
           rawResponse,
           effectiveApiType,
         );
-
-      // 计算请求耗时
-      const durationMs = Date.now() - startTime;
 
       // 记录使用日志（包含 token 使用量和耗时）
       await this.logUsage(
@@ -283,7 +301,7 @@ export class ProxyService {
         path,
         tokenUsage,
         undefined,
-        durationMs,
+        responseTimeMs,
       );
 
       // 检查配额并发送通知（异步，不阻塞响应）
@@ -313,6 +331,327 @@ export class ProxyService {
       );
 
       return { success: false, error: `Upstream error: ${errorMessage}` };
+    }
+  }
+
+  /**
+   * Auto-routing: 根据 model 自动发现可用 provider 并逐个 fallback
+   *
+   * 当 URL vendor 为 xxx-compatible 时触发：
+   * 1. 验证 token（仅做身份认证，不做 vendor 匹配）
+   * 2. 从 request body 提取 model 名称
+   * 3. 通过 ModelResolverService 查找所有可用 provider（按 priority/health 排序）
+   * 4. 逐个尝试转发，连接失败时 fallback 到下一个 provider
+   * 5. 更新 health score 反馈
+   */
+  private async handleAutoRoutedRequest(
+    params: ProxyRequestParams,
+    rawResponse: ServerResponse,
+    urlApiType: string,
+  ): Promise<ProxyResult> {
+    const {
+      path,
+      method,
+      headers,
+      body: originalBody,
+      botToken,
+      vendor,
+    } = params;
+    let body = originalBody;
+
+    // 1. 验证 token（仅做身份认证）
+    const isZeroTrust = this.keyringProxyService.isZeroTrustEnabled();
+    let botId: string;
+
+    if (isZeroTrust) {
+      const validation = await this.keyringProxyService.validateToken(botToken);
+      if (!validation.valid) {
+        return { success: false, error: 'Invalid or expired proxy token' };
+      }
+      botId = validation.botId!;
+    } else {
+      const tokenHash = this.encryptionService.hashToken(botToken);
+      const bot = await this.botService.get({ proxyTokenHash: tokenHash });
+      if (!bot) {
+        return { success: false, error: 'Invalid bot token' };
+      }
+      botId = bot.id;
+    }
+
+    // 2. 提取 model 名称
+    let model = this.extractModelFromBody(body);
+    if (!model) {
+      return { success: false, error: 'No model specified in request body' };
+    }
+
+    this.logger.info(
+      `[Proxy] Auto-routing: model=${model}, apiType=${urlApiType}, botId=${botId}`,
+    );
+
+    // 2.5 应用关键词路由：根据消息内容匹配路由规则，可能切换到不同模型
+    try {
+      const bodyJson = body ? JSON.parse(body.toString('utf-8')) : null;
+      const userMessage = bodyJson?.messages
+        ? this.extractUserMessage(bodyJson.messages)
+        : null;
+      if (userMessage) {
+        const routeResult = await this.keyringProxyService.routeModel({
+          botId,
+          message: userMessage,
+        });
+
+        if (routeResult && routeResult.model !== model) {
+          this.logger.info(
+            `[Proxy] Keyword routing matched: "${routeResult.matchedRule || routeResult.reason}" → model=${routeResult.model} (was ${model})`,
+          );
+          model = routeResult.model;
+          body = this.replaceModelInBody(body, model);
+        }
+      }
+    } catch (routeError) {
+      this.logger.warn('[Proxy] Keyword routing failed, using original model', {
+        error:
+          routeError instanceof Error ? routeError.message : String(routeError),
+      });
+    }
+
+    // 3. 解析所有可用 provider（按 vendorPriority DESC, healthScore DESC 排序）
+    // 如果请求路径是 /responses（OpenAI Responses API），只选择支持该协议的 provider
+    // 国内厂商（zhipu, dashscope, doubao 等）apiType='openai'，仅支持 /chat/completions
+    // OpenAI 原生 apiType='openai-response'，支持 /responses
+    const isResponsesApi =
+      path === '/responses' || path.startsWith('/responses/');
+    const resolveOptions = isResponsesApi
+      ? { requiredProtocol: 'openai-response' }
+      : undefined;
+
+    if (isResponsesApi) {
+      this.logger.info(
+        `[Proxy] Auto-routing: /responses path detected, filtering to openai-response protocol only`,
+      );
+    }
+
+    const candidates = await this.modelResolverService.resolveAll(
+      model,
+      resolveOptions,
+    );
+    if (candidates.length === 0) {
+      const protocolHint = isResponsesApi
+        ? ` (only providers with apiType=openai-response support /responses endpoint)`
+        : '';
+      return {
+        success: false,
+        error: `No available providers for model: ${model}${protocolHint}`,
+      };
+    }
+
+    this.logger.info(
+      `[Proxy] Auto-routing: found ${candidates.length} candidate(s) for ${model}: ${candidates.map((c) => `${c.vendor}(priority=${c.vendorPriority},health=${c.healthScore})`).join(', ')}`,
+    );
+
+    // 4. 逐个尝试 provider，连接失败时 fallback
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = candidates[i];
+      const isLastAttempt = i === candidates.length - 1;
+      let startTime = Date.now();
+
+      // 检查断路器状态
+      if (!this.circuitBreakerService.isAvailable(candidate.providerKeyId)) {
+        this.logger.debug(
+          `[Proxy] Auto-routing: provider ${candidate.vendor} circuit is OPEN, skipping`,
+        );
+        continue;
+      }
+
+      try {
+        // 获取 provider key 并解密 API key
+        const providerKey = await this.providerKeyService.getById(
+          candidate.providerKeyId,
+        );
+        if (!providerKey) {
+          this.logger.warn(
+            `[Proxy] Auto-routing: provider key ${candidate.providerKeyId} not found, skipping`,
+          );
+          continue;
+        }
+
+        const apiKey = this.encryptionService.decrypt(
+          Buffer.isBuffer(providerKey.secretEncrypted)
+            ? providerKey.secretEncrypted
+            : Buffer.from(providerKey.secretEncrypted),
+        );
+
+        const effectiveApiType = candidate.apiType || urlApiType;
+        const baseUrl = candidate.baseUrl || null;
+
+        // 获取 vendor 配置
+        const vendorConfig = getVendorConfigWithCustomUrl(
+          effectiveApiType,
+          baseUrl,
+          effectiveApiType as any,
+        );
+        if (!vendorConfig && !baseUrl) {
+          this.logger.warn(
+            `[Proxy] Auto-routing: no vendor config for ${effectiveApiType}, skipping`,
+          );
+          continue;
+        }
+
+        // Normalize request body（strip prefix, remove non-standard fields）
+        const normalizedBody = this.normalizeRequestBody(
+          body,
+          effectiveApiType,
+          true,
+        );
+
+        // Extract normalized model name for logging
+        let normalizedModel = model;
+        try {
+          if (normalizedBody) {
+            const parsed = JSON.parse(normalizedBody.toString('utf-8'));
+            if (parsed.model) normalizedModel = parsed.model;
+          }
+        } catch {
+          // ignore
+        }
+
+        this.logger.info(
+          `[Proxy] Auto-routing: trying provider ${candidate.vendor} (model=${normalizedModel}, key=${candidate.providerKeyId.substring(0, 8)}..., baseUrl=${baseUrl || 'default'}, apiKey=${apiKey.substring(0, 8)}..., path=${path})`,
+        );
+
+        startTime = Date.now();
+
+        // 转发到上游
+        const { statusCode, tokenUsage, responseTimeMs, success } =
+          await this.upstreamService.forwardToUpstream(
+            {
+              vendorConfig: vendorConfig!,
+              path,
+              method,
+              headers,
+              body: normalizedBody,
+              apiKey,
+              customUrl: baseUrl || undefined,
+              metadata:
+                (providerKey.metadata as Record<string, unknown>) ?? null,
+              vendor,
+            },
+            rawResponse,
+            effectiveApiType,
+          );
+
+        // 异步更新 health score（通过事件，避免阻塞请求）
+        this.eventEmitter.emit(
+          HEALTH_SCORE_EVENTS.UPDATE,
+          new HealthScoreUpdateEvent(candidate.providerKeyId, model, success),
+        );
+
+        // 更新断路器状态（成功）
+        this.circuitBreakerService.recordSuccess(candidate.providerKeyId);
+
+        // 记录使用日志
+        await this.logUsage(
+          botId,
+          effectiveApiType,
+          candidate.providerKeyId,
+          statusCode,
+          path,
+          tokenUsage,
+          undefined,
+          responseTimeMs,
+        );
+
+        // 检查配额
+        this.quotaService.checkAndNotify(botId).catch((err) => {
+          this.logger.error('Failed to check quota:', err);
+        });
+
+        return { success: true, statusCode };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        const durationMs = Date.now() - startTime;
+
+        // 异步更新 health score（通过事件，避免阻塞请求）
+        this.eventEmitter.emit(
+          HEALTH_SCORE_EVENTS.UPDATE,
+          new HealthScoreUpdateEvent(candidate.providerKeyId, model, false),
+        );
+
+        // 更新断路器状态（失败）
+        this.circuitBreakerService.recordFailure(
+          candidate.providerKeyId,
+          errorMessage,
+        );
+
+        this.logger.warn(
+          `[Proxy] Auto-routing: provider ${candidate.vendor} failed: ${errorMessage}`,
+        );
+
+        // 如果 response headers 已发送，无法重试
+        if (rawResponse.headersSent) {
+          await this.logUsage(
+            botId,
+            candidate.apiType,
+            candidate.providerKeyId,
+            null,
+            path,
+            null,
+            errorMessage,
+            durationMs,
+          );
+          return { success: false, error: `Upstream error: ${errorMessage}` };
+        }
+
+        // 记录失败日志
+        await this.logUsage(
+          botId,
+          candidate.apiType,
+          candidate.providerKeyId,
+          null,
+          path,
+          null,
+          errorMessage,
+          durationMs,
+        );
+
+        // 最后一个 provider 也失败了
+        if (isLastAttempt) {
+          return {
+            success: false,
+            error: `All ${candidates.length} providers failed for model: ${model}. Last error: ${errorMessage}`,
+          };
+        }
+
+        // 继续尝试下一个 provider
+        this.logger.info(
+          `[Proxy] Auto-routing: falling back to next provider (${i + 1}/${candidates.length})`,
+        );
+      }
+    }
+
+    return {
+      success: false,
+      error: `No available providers for model: ${model}`,
+    };
+  }
+
+  /**
+   * 从 request body 中提取 model 名称（去除 provider prefix）
+   */
+  private extractModelFromBody(body: Buffer | null): string | null {
+    if (!body || body.length === 0) return null;
+    try {
+      const bodyJson = JSON.parse(body.toString('utf-8'));
+      if (bodyJson.model && typeof bodyJson.model === 'string') {
+        const model = bodyJson.model;
+        // Strip provider prefix (e.g., "openai-compatible/gpt-4o" → "gpt-4o")
+        const slashIndex = model.indexOf('/');
+        return slashIndex >= 0 ? model.substring(slashIndex + 1) : model;
+      }
+      return null;
+    } catch {
+      return null;
     }
   }
 
@@ -385,6 +724,7 @@ export class ProxyService {
   private normalizeRequestBody(
     body: Buffer | null,
     vendor: string,
+    isCustom = false,
   ): Buffer | null {
     if (!body || body.length === 0) {
       return body;
@@ -409,10 +749,12 @@ export class ProxyService {
         }
       }
 
+      // Determine if this is a native OpenAI request (not a custom/compatible provider)
+      const isNativeOpenAI = vendor === 'openai' && !isCustom;
+
       // Inject stream_options for streaming requests to get usage data
-      // This is required for OpenAI-compatible APIs to return token usage in streaming responses
-      if (bodyJson.stream === true) {
-        // Only inject if not already present
+      // Only for native OpenAI — custom providers (e.g. Doubao) may reject unknown fields
+      if (bodyJson.stream === true && isNativeOpenAI) {
         if (!bodyJson.stream_options) {
           bodyJson.stream_options = { include_usage: true };
           modified = true;
@@ -421,6 +763,20 @@ export class ProxyService {
           bodyJson.stream_options.include_usage = true;
           modified = true;
           this.logger.debug('Enabled include_usage in stream_options');
+        }
+      }
+
+      // Strip non-standard fields that custom upstream APIs reject
+      if (!isNativeOpenAI) {
+        const nonStandardFields = ['prompt_cache_key', 'stream_options'];
+        for (const field of nonStandardFields) {
+          if (field in bodyJson) {
+            delete bodyJson[field];
+            modified = true;
+            this.logger.debug(
+              `Stripped non-standard field: ${field} (vendor: ${vendor}, isCustom: ${isCustom})`,
+            );
+          }
         }
       }
 
@@ -569,6 +925,23 @@ export class ProxyService {
   /**
    * 从消息数组中提取最后一条用户消息
    */
+  /**
+   * 替换 request body 中的 model 名称
+   */
+  private replaceModelInBody(
+    body: Buffer | null,
+    newModel: string,
+  ): Buffer | null {
+    if (!body || body.length === 0) return body;
+    try {
+      const bodyJson = JSON.parse(body.toString('utf-8'));
+      bodyJson.model = newModel;
+      return Buffer.from(JSON.stringify(bodyJson), 'utf-8');
+    } catch {
+      return body;
+    }
+  }
+
   private extractUserMessage(
     messages: Array<{ role: string; content: unknown }>,
   ): string | null {

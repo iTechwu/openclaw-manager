@@ -1,14 +1,14 @@
 {
-  "title": "插件市场",
-  "description": "浏览和安装插件来扩展 Bot 的能力",
-  "searchPlaceholder": "搜索插件...",
+  "title": "MCP工具",
+  "description": "浏览和安装MCP工具来扩展 Bot 的能力",
+  "searchPlaceholder": "搜索MCP工具...",
   "allCategories": "全部分类",
-  "noPlugins": "暂无插件",
+  "noPlugins": "暂无MCP工具",
   "tryOtherKeywords": "尝试使用其他关键词搜索",
   "official": "官方",
   "noDescription": "暂无描述",
   "recommended": "国内推荐",
-  "allPlugins": "全部插件",
+  "allPlugins": "全部MCP工具",
   "regions": {
     "global": "全球",
     "cn": "国内",
@@ -22,5 +22,24 @@
     "COMMUNICATION": "通讯",
     "DEVELOPMENT": "开发工具",
     "CUSTOM": "自定义"
+  },
+  "botPlugins": {
+    "title": "MCP工具管理",
+    "addPlugin": "添加MCP工具",
+    "addDialogTitle": "添加MCP工具",
+    "addDialogDescription": "选择要安装到此 Bot 的MCP工具",
+    "noAvailable": "没有可安装的MCP工具",
+    "noInstalled": "尚未安装任何MCP工具",
+    "addFirst": "添加第一个MCP工具",
+    "configure": "配置",
+    "uninstall": "卸载",
+    "install": "安装",
+    "installSuccess": "MCP工具安装成功",
+    "installFailed": "安装失败",
+    "uninstallSuccess": "MCP工具已卸载",
+    "uninstallFailed": "卸载失败",
+    "enableSuccess": "MCP工具已启用",
+    "disableSuccess": "MCP工具已禁用",
+    "toggleFailed": "操作失败"
   }
 }

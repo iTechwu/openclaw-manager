@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Bot,
   MessageSquare,
   Stethoscope,
   ScrollText,
@@ -8,6 +7,8 @@ import {
   Puzzle,
   Sparkles,
   BarChart3,
+  Cpu,
+  UserCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -16,6 +17,8 @@ export interface BotNavItem {
   labelKey: string;
   icon: LucideIcon;
   href: string;
+  /** 条件性显示：需要满足的条件 */
+  requires?: 'feishuChannel';
 }
 
 /**
@@ -24,13 +27,20 @@ export interface BotNavItem {
  */
 export const botNavItems: BotNavItem[] = [
   { id: 'overview', labelKey: 'overview', icon: LayoutDashboard, href: '' },
-  { id: 'ai', labelKey: 'ai', icon: Bot, href: '/ai' },
   {
     id: 'channels',
     labelKey: 'channels',
     icon: MessageSquare,
     href: '/channels',
   },
+  {
+    id: 'pairing',
+    labelKey: 'pairing',
+    icon: UserCheck,
+    href: '/pairing',
+    requires: 'feishuChannel',
+  },
+  { id: 'models', labelKey: 'models', icon: Cpu, href: '/models' },
   { id: 'plugins', labelKey: 'plugins', icon: Puzzle, href: '/plugins' },
   { id: 'skills', labelKey: 'skills', icon: Sparkles, href: '/skills' },
   { id: 'usage', labelKey: 'usage', icon: BarChart3, href: '/usage' },

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { botPluginApi, pluginApi } from '@/lib/api/contracts/client';
 import {
   Card,
@@ -56,19 +57,6 @@ const categoryIcons: Record<PluginCategory, React.ElementType> = {
 };
 
 /**
- * 分类标签映射
- */
-const categoryLabels: Record<PluginCategory, string> = {
-  BROWSER: '浏览器',
-  FILESYSTEM: '文件系统',
-  DATABASE: '数据库',
-  API: 'API',
-  COMMUNICATION: '通讯',
-  DEVELOPMENT: '开发工具',
-  CUSTOM: '自定义',
-};
-
-/**
  * 已安装插件卡片
  */
 function InstalledPluginCard({
@@ -76,14 +64,16 @@ function InstalledPluginCard({
   hostname,
   onToggle,
   onUninstall,
+  t,
 }: {
   botPlugin: BotPluginItem;
   hostname: string;
   onToggle: (pluginId: string, enabled: boolean) => void;
   onUninstall: (pluginId: string) => void;
+  t: (key: string) => string;
 }) {
   const { plugin } = botPlugin;
-  const CategoryIcon = categoryIcons[plugin.category];
+  const CategoryIcon = categoryIcons[plugin.category] ?? Puzzle;
 
   return (
     <Card>
@@ -120,12 +110,12 @@ function InstalledPluginCard({
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
-          {plugin.description || '暂无描述'}
+          {plugin.description || t('noDescription')}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" disabled>
             <Settings className="mr-1 h-3 w-3" />
-            配置
+            {t('botPlugins.configure')}
           </Button>
           <Button
             variant="outline"
@@ -133,7 +123,7 @@ function InstalledPluginCard({
             onClick={() => onUninstall(plugin.id)}
           >
             <Trash2 className="mr-1 h-3 w-3" />
-            卸载
+            {t('botPlugins.uninstall')}
           </Button>
         </div>
       </CardContent>
@@ -148,10 +138,12 @@ function AvailablePluginCard({
   plugin,
   onInstall,
   isInstalling,
+  t,
 }: {
   plugin: PluginItem;
   onInstall: (pluginId: string) => void;
   isInstalling: boolean;
+  t: (key: string) => string;
 }) {
   const CategoryIcon = categoryIcons[plugin.category];
 
@@ -182,13 +174,13 @@ function AvailablePluginCard({
             </div>
           </div>
           <Badge variant="outline" className="text-xs">
-            {categoryLabels[plugin.category]}
+            {t(`categories.${plugin.category}`)}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
-          {plugin.description || '暂无描述'}
+          {plugin.description || t('noDescription')}
         </p>
         <Button
           size="sm"
@@ -197,7 +189,7 @@ function AvailablePluginCard({
           disabled={isInstalling}
         >
           <Plus className="mr-1 h-3 w-3" />
-          安装
+          {t('botPlugins.install')}
         </Button>
       </CardContent>
     </Card>
@@ -236,6 +228,7 @@ export default function BotPluginsPage() {
   const params = useParams<{ hostname: string }>();
   const hostname = params.hostname;
   const queryClient = useQueryClient();
+  const t = useTranslations('plugins');
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [installingPluginId, setInstallingPluginId] = useState<string | null>(
@@ -280,12 +273,12 @@ export default function BotPluginsPage() {
         body: { pluginId },
       });
       if (response.status === 200) {
-        toast.success('插件安装成功');
+        toast.success(t('botPlugins.installSuccess'));
         queryClient.invalidateQueries({ queryKey: ['bot-plugins', hostname] });
         setIsAddDialogOpen(false);
       }
     } catch (error) {
-      toast.error('安装失败');
+      toast.error(t('botPlugins.installFailed'));
     } finally {
       setInstallingPluginId(null);
     }
@@ -299,11 +292,15 @@ export default function BotPluginsPage() {
         body: { isEnabled: enabled },
       });
       if (response.status === 200) {
-        toast.success(enabled ? '插件已启用' : '插件已禁用');
+        toast.success(
+          enabled
+            ? t('botPlugins.enableSuccess')
+            : t('botPlugins.disableSuccess'),
+        );
         queryClient.invalidateQueries({ queryKey: ['bot-plugins', hostname] });
       }
     } catch (error) {
-      toast.error('操作失败');
+      toast.error(t('botPlugins.toggleFailed'));
     }
   };
 
@@ -315,11 +312,11 @@ export default function BotPluginsPage() {
         body: {},
       });
       if (response.status === 200) {
-        toast.success('插件已卸载');
+        toast.success(t('botPlugins.uninstallSuccess'));
         queryClient.invalidateQueries({ queryKey: ['bot-plugins', hostname] });
       }
     } catch (error) {
-      toast.error('卸载失败');
+      toast.error(t('botPlugins.uninstallFailed'));
     }
   };
 
@@ -335,7 +332,7 @@ export default function BotPluginsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">插件管理</h1>
+            <h1 className="text-2xl font-bold">{t('botPlugins.title')}</h1>
             <p className="text-muted-foreground text-sm">{hostname}</p>
           </div>
         </div>
@@ -343,13 +340,15 @@ export default function BotPluginsPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              添加插件
+              {t('botPlugins.addPlugin')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>添加插件</DialogTitle>
-              <DialogDescription>选择要安装到此 Bot 的插件</DialogDescription>
+              <DialogTitle>{t('botPlugins.addDialogTitle')}</DialogTitle>
+              <DialogDescription>
+                {t('botPlugins.addDialogDescription')}
+              </DialogDescription>
             </DialogHeader>
             {availableLoading ? (
               <div className="grid gap-4 md:grid-cols-2">
@@ -360,7 +359,7 @@ export default function BotPluginsPage() {
             ) : availablePlugins.length === 0 ? (
               <div className="text-muted-foreground py-8 text-center">
                 <Puzzle className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>没有可安装的插件</p>
+                <p>{t('botPlugins.noAvailable')}</p>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
@@ -370,6 +369,7 @@ export default function BotPluginsPage() {
                     plugin={plugin}
                     onInstall={handleInstall}
                     isInstalling={installingPluginId === plugin.id}
+                    t={t}
                   />
                 ))}
               </div>
@@ -389,10 +389,12 @@ export default function BotPluginsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Puzzle className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
-            <p className="text-muted-foreground mb-4">尚未安装任何插件</p>
+            <p className="text-muted-foreground mb-4">
+              {t('botPlugins.noInstalled')}
+            </p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              添加第一个插件
+              {t('botPlugins.addFirst')}
             </Button>
           </CardContent>
         </Card>
@@ -405,6 +407,7 @@ export default function BotPluginsPage() {
               hostname={hostname}
               onToggle={handleToggle}
               onUninstall={handleUninstall}
+              t={t}
             />
           ))}
         </div>

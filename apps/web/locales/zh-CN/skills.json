@@ -15,6 +15,7 @@
   "createSkillDescription": "创建新的自定义技能",
   "comingSoon": "功能开发中，敬请期待",
   "skillTypes": "技能类型",
+  "loadError": "加载技能失败，请稍后重试。",
   "types": {
     "tool": "工具",
     "prompt": "提示词",
@@ -36,6 +37,20 @@
     "version": "版本",
     "cancel": "取消",
     "create": "创建"
+  },
+  "detail": {
+    "backToList": "返回技能列表",
+    "notFound": "未找到该技能",
+    "author": "作者",
+    "source": "来源",
+    "createdAt": "创建时间",
+    "updatedAt": "更新时间",
+    "viewSource": "查看源码",
+    "tags": "标签",
+    "examples": "示例",
+    "exampleInput": "输入",
+    "exampleOutput": "输出",
+    "definition": "定义"
   },
   "fillRequiredFields": "请填写必填字段",
   "createSuccess": "技能创建成功",

@@ -9,6 +9,7 @@ import type {
   OrphanReport,
   CleanupReport,
   ProviderVendor,
+  BotType,
 } from '@repo/contracts';
 import { normalizeModelName } from '@/utils/model-normalizer';
 
@@ -42,13 +43,16 @@ export interface CreateContainerOptions {
   proxyToken?: string;
   /** API type for the provider (openai, anthropic, gemini, etc.) */
   apiType?: string;
+  /** Bot type - determines which Docker image to use (default: GATEWAY) */
+  botType?: BotType;
 }
 
 @Injectable()
 export class DockerService implements OnModuleInit {
   private readonly logger = new Logger(DockerService.name);
   private docker: Docker;
-  private readonly botImage: string;
+  /** Bot images mapped by bot type */
+  private readonly botImages: Record<BotType, string>;
   private readonly portStart: number;
   private readonly dataDir: string;
   private readonly secretsDir: string;
@@ -64,7 +68,20 @@ export class DockerService implements OnModuleInit {
   private readonly openclawVolumeName: string | null;
 
   constructor(private readonly configService: ConfigService) {
-    this.botImage = process.env.BOT_IMAGE || 'openclaw:latest';
+    // Initialize bot images for each type
+    // Image is configured via BOT_IMAGE_<TYPE> environment variable
+    this.botImages = {
+      GATEWAY: process.env.BOT_IMAGE_GATEWAY || 'openclaw:latest',
+      TOOL_SANDBOX:
+        process.env.BOT_IMAGE_TOOL_SANDBOX || 'openclaw-sandbox:bookworm-slim',
+      BROWSER_SANDBOX:
+        process.env.BOT_IMAGE_BROWSER_SANDBOX ||
+        'openclaw-sandbox-browser:bookworm-slim',
+    };
+    this.logger.log(
+      `Bot images configured: GATEWAY=${this.botImages.GATEWAY}, TOOL_SANDBOX=${this.botImages.TOOL_SANDBOX}, BROWSER_SANDBOX=${this.botImages.BROWSER_SANDBOX}`,
+    );
+
     // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
     const portStartRaw = process.env.BOT_PORT_START || 9200;
     this.portStart =
@@ -89,6 +106,13 @@ export class DockerService implements OnModuleInit {
     this.dataVolumeName = process.env.DATA_VOLUME_NAME || null;
     this.secretsVolumeName = process.env.SECRETS_VOLUME_NAME || null;
     this.openclawVolumeName = process.env.OPENCLAW_VOLUME_NAME || null;
+  }
+
+  /**
+   * Get the Docker image for a bot type
+   */
+  private getBotImage(botType: BotType): string {
+    return this.botImages[botType] || this.botImages.GATEWAY;
   }
 
   async onModuleInit() {
@@ -189,12 +213,18 @@ export class DockerService implements OnModuleInit {
       // Container doesn't exist, which is expected
     }
 
+    // Get bot type with default
+    const botType = options.botType || 'GATEWAY';
+    const botImage = this.getBotImage(botType);
+    this.logger.log(
+      `Creating container for bot type: ${botType}, image: ${botImage}`,
+    );
+
     // Build environment variables
     // Normalize model name to handle aliases like chatgpt-4o-latest -> gpt-4o
-    // For custom providers with apiType, use apiType for normalization
-    // This ensures models like chatgpt-4o-latest are normalized to gpt-4o
+    // Use apiType for normalization when provider differs from apiType
     const normalizationProvider =
-      options.aiProvider === 'custom' && options.apiType
+      options.apiType && options.aiProvider !== options.apiType
         ? options.apiType
         : options.aiProvider;
     const normalizedModel = normalizeModelName(
@@ -207,6 +237,30 @@ export class DockerService implements OnModuleInit {
       );
     }
 
+    // 根据 apiType 确定 Docker 容器内的 provider 标识
+    // OpenClaw 只认识标准 provider（openai、anthropic 等），国产厂商需要映射：
+    //   - apiType=openai, vendor=openai → "openai"
+    //   - apiType=openai, vendor=dashscope/zhipu/... → "openai-compatible"
+    // 同时确保 base URL 和 API key 使用 apiType 对应的环境变量名
+    const originalProvider = options.aiProvider;
+    const originalProviderConfig =
+      PROVIDER_CONFIGS[originalProvider as ProviderVendor];
+    if (
+      options.apiType &&
+      options.aiProvider !== 'custom' &&
+      options.aiProvider !== options.apiType
+    ) {
+      // 保留原始 apiHost 作为 apiBaseUrl 的 fallback
+      if (!options.apiBaseUrl && originalProviderConfig?.apiHost) {
+        options.apiBaseUrl = originalProviderConfig.apiHost;
+      }
+      const dockerProvider = `${options.apiType}-compatible`;
+      this.logger.log(
+        `Mapping provider "${options.aiProvider}" to "${dockerProvider}" for OpenClaw (apiType: ${options.apiType})`,
+      );
+      options.aiProvider = dockerProvider;
+    }
+
     const envVars = [
       `BOT_HOSTNAME=${options.hostname}`,
       `BOT_NAME=${options.name}`,
@@ -215,11 +269,19 @@ export class DockerService implements OnModuleInit {
       `AI_PROVIDER=${options.aiProvider}`,
       `AI_MODEL=${normalizedModel}`,
       `CHANNEL_TYPE=${options.channelType}`,
+      // Original vendor name before mapping (e.g., "zhipu", "dashscope", "openai")
+      // Used to determine API protocol in entrypoint
+      `AI_VENDOR=${originalProvider}`,
+      // npm registry for China network (optional)
+      ...(process.env.NPM_CONFIG_REGISTRY
+        ? [`NPM_CONFIG_REGISTRY=${process.env.NPM_CONFIG_REGISTRY}`]
+        : []),
     ];
 
     // When using named volumes, bot needs to know its workspace subdirectory
     // This must match the condition in buildVolumeBinds
-    const useNamedVolumes = this.dataVolumeName && this.secretsVolumeName && this.openclawVolumeName;
+    const useNamedVolumes =
+      this.dataVolumeName && this.secretsVolumeName && this.openclawVolumeName;
     if (useNamedVolumes) {
       envVars.push(`BOT_WORKSPACE_DIR=/data/bots/${options.isolationKey}`);
       envVars.push(`BOT_SECRETS_DIR=/data/secrets/${options.isolationKey}`);
@@ -329,33 +391,26 @@ export class DockerService implements OnModuleInit {
       envVars.push(`PROXY_TOKEN=${options.proxyToken}`);
 
       // Determine the actual vendor for proxy routing
-      // Vendor mapping rule: ${apiType}${vendor === 'custom' ? '-compatible' : ''}
-      // For custom provider: openai-compatible, anthropic-compatible, etc.
-      // For standard provider: openai, anthropic, etc.
-      // The proxy routes requests based on vendor name: {proxyUrl}/v1/{vendor}/*
-      const proxyVendor =
-        options.aiProvider === 'custom' && options.apiType
-          ? `${options.apiType}-compatible`
-          : options.aiProvider;
+      // Use the original provider name for proxy path (proxy routes by vendor)
+      // For converted providers (e.g., dashscope → openai-compatible), use the converted name
+      const proxyVendor = options.aiProvider;
 
       // Build proxy endpoint based on vendor
       const proxyEndpoint = `${dockerProxyUrl}/v1/${proxyVendor}`;
 
-      // Set the base URL to point to the proxy
-      // For custom provider with openai API type, use OPENAI_BASE_URL so OpenClaw can find it
-      const baseUrlEnvName =
-        options.aiProvider === 'custom' && options.apiType
-          ? getBaseUrlEnvName(options.apiType)
-          : getBaseUrlEnvName(options.aiProvider);
+      // Use apiType for env var naming when provider differs from apiType
+      // e.g., openai-compatible → use OPENAI_BASE_URL (not OPENAI_COMPATIBLE_BASE_URL)
+      const useApiType =
+        options.apiType && options.aiProvider !== options.apiType;
+      const baseUrlEnvName = useApiType
+        ? getBaseUrlEnvName(options.apiType!)
+        : getBaseUrlEnvName(options.aiProvider);
       envVars.push(`${baseUrlEnvName}=${proxyEndpoint}`);
 
       // Set the API key environment variable directly for OpenClaw
-      // OpenClaw reads API keys from standard environment variables at startup
-      // Use proxy token as the API key for authentication with the proxy
-      const apiKeyEnvName =
-        options.aiProvider === 'custom' && options.apiType
-          ? getApiKeyEnvName(options.apiType)
-          : getApiKeyEnvName(options.aiProvider);
+      const apiKeyEnvName = useApiType
+        ? getApiKeyEnvName(options.apiType!)
+        : getApiKeyEnvName(options.aiProvider);
       envVars.push(`${apiKeyEnvName}=${options.proxyToken}`);
 
       this.logger.log(
@@ -363,28 +418,28 @@ export class DockerService implements OnModuleInit {
       );
     } else {
       // Direct mode: Pass API key and base URL directly
+      const useApiType =
+        options.apiType && options.aiProvider !== options.apiType;
+
       if (options.apiKey) {
-        // For custom provider with apiType, use the apiType's env var name
-        const envKeyName =
-          options.aiProvider === 'custom' && options.apiType
-            ? getApiKeyEnvName(options.apiType)
-            : getApiKeyEnvName(options.aiProvider);
+        const envKeyName = useApiType
+          ? getApiKeyEnvName(options.apiType!)
+          : getApiKeyEnvName(options.aiProvider);
         envVars.push(`${envKeyName}=${options.apiKey}`);
       }
 
       // Add custom base URL if provided (convert localhost to host.docker.internal)
       if (options.apiBaseUrl) {
-        // For custom provider with apiType, use the apiType's base URL env var
-        // This ensures OpenClaw can find the correct API endpoint
-        const baseUrlEnvName =
-          options.aiProvider === 'custom' && options.apiType
-            ? getBaseUrlEnvName(options.apiType)
-            : getBaseUrlEnvName(options.aiProvider);
+        const baseUrlEnvName = useApiType
+          ? getBaseUrlEnvName(options.apiType!)
+          : getBaseUrlEnvName(options.aiProvider);
         const dockerBaseUrl = convertToDockerHost(options.apiBaseUrl);
         envVars.push(`${baseUrlEnvName}=${dockerBaseUrl}`);
       } else if (providerConfig?.apiHost) {
         // Use default API host from provider config if no custom URL
-        const baseUrlEnvName = getBaseUrlEnvName(options.aiProvider);
+        const baseUrlEnvName = useApiType
+          ? getBaseUrlEnvName(options.apiType!)
+          : getBaseUrlEnvName(options.aiProvider);
         envVars.push(`${baseUrlEnvName}=${providerConfig.apiHost}`);
       }
 
@@ -406,9 +461,41 @@ export class DockerService implements OnModuleInit {
       options.workspacePath,
     );
 
+    // Build HostConfig with bot type specific settings
+    const hostConfig: Docker.HostConfig = {
+      PortBindings: {
+        [`${options.port}/tcp`]: [{ HostPort: String(options.port) }],
+      },
+      Binds: binds,
+      RestartPolicy: { Name: 'unless-stopped' },
+      NetworkMode: networkMode,
+    };
+
+    // BROWSER_SANDBOX needs additional ports and shared memory for Chrome
+    if (botType === 'BROWSER_SANDBOX') {
+      // Add extra ports for browser sandbox:
+      // - CDP (Chrome DevTools Protocol) on port+1
+      // - VNC on port+2
+      // - noVNC on port+3
+      hostConfig.PortBindings![`${options.port + 1}/tcp`] = [
+        { HostPort: String(options.port + 1) },
+      ];
+      hostConfig.PortBindings![`${options.port + 2}/tcp`] = [
+        { HostPort: String(options.port + 2) },
+      ];
+      hostConfig.PortBindings![`${options.port + 3}/tcp`] = [
+        { HostPort: String(options.port + 3) },
+      ];
+      // Chrome needs 2GB shared memory
+      hostConfig.ShmSize = 2 * 1024 * 1024 * 1024; // 2GB
+      this.logger.log(
+        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}`,
+      );
+    }
+
     const container = await this.docker.createContainer({
       name: containerName,
-      Image: this.botImage,
+      Image: botImage,
       // Start OpenClaw gateway with proper configuration
       // Use shell to configure OpenClaw before starting the gateway:
       // 1. Set the model if AI_MODEL is provided
@@ -426,12 +513,17 @@ export class DockerService implements OnModuleInit {
         # Determine the provider for auth configuration and model prefix
         PROVIDER="${options.aiProvider}"
         if [ "$PROVIDER" = "custom" ] && [ -n "$AI_API_TYPE" ]; then
-          # For custom provider, use AI_API_TYPE as the provider
-          # OpenClaw expects standard provider names like 'openai', 'anthropic', etc.
+          # For custom provider, use AI_API_TYPE for auth and model prefix
           AUTH_PROVIDER="$AI_API_TYPE"
-          # IMPORTANT: Always use standard provider name (not -compatible)
-          # The OpenAI SDK will use OPENAI_BASE_URL environment variable for custom endpoint
           MODEL_PROVIDER="$AI_API_TYPE"
+        elif echo "$PROVIDER" | grep -q -- "-compatible$"; then
+          # For *-compatible providers (e.g., openai-compatible):
+          # Use the BASE provider name (e.g., "openai") as MODEL_PROVIDER
+          # This ensures OpenClaw uses its built-in provider which reads
+          # API keys from standard environment variables (OPENAI_API_KEY, etc.)
+          # The proxy URL still contains "-compatible" for auto-routing
+          AUTH_PROVIDER=$(echo "$PROVIDER" | sed 's/-compatible$//')
+          MODEL_PROVIDER="$AUTH_PROVIDER"
         else
           AUTH_PROVIDER="$PROVIDER"
           MODEL_PROVIDER="$PROVIDER"
@@ -444,8 +536,8 @@ export class DockerService implements OnModuleInit {
           if echo "$AI_MODEL" | grep -q "/"; then
             FULL_MODEL="$AI_MODEL"
           else
-            # Add provider prefix for OpenClaw
-            FULL_MODEL="$AUTH_PROVIDER/$AI_MODEL"
+            # Add provider prefix for OpenClaw (use MODEL_PROVIDER for correct prefix)
+            FULL_MODEL="$MODEL_PROVIDER/$AI_MODEL"
           fi
           echo "Setting model to: $FULL_MODEL"
 
@@ -554,69 +646,62 @@ JSON_EOF
         echo "Created openclaw.json:"
         cat "$JSON_CONFIG_FILE"
 
-        # Create auth-profiles.json with the API key and base URL
-        # OpenClaw looks for API keys and base URLs in this file for each provider
+        # Prepare auth-profiles directory
         AUTH_PROFILES_DIR="$CONFIG_DIR/agents/main/agent"
         mkdir -p "$AUTH_PROFILES_DIR"
         AUTH_PROFILES_FILE="$AUTH_PROFILES_DIR/auth-profiles.json"
-
-        # Build auth-profiles.json with baseUrl for the provider
-        # Include both baseUrl and baseURL since different SDKs use different naming conventions
-        echo "Creating auth-profiles.json for provider: $AUTH_PROVIDER"
-        if [ -n "$OPENAI_BASE_URL" ]; then
-          # Include both baseUrl and baseURL for compatibility
-          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
-{
-  "$AUTH_PROVIDER": {
-    "apiKey": "$API_KEY",
-    "baseUrl": "$OPENAI_BASE_URL",
-    "baseURL": "$OPENAI_BASE_URL"
-  }
-}
-AUTH_EOF
-        else
-          # No custom base URL
-          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
-{
-  "$AUTH_PROVIDER": {
-    "apiKey": "$API_KEY"
-  }
-}
-AUTH_EOF
-        fi
-        echo "Created auth-profiles.json:"
-        cat "$AUTH_PROFILES_FILE"
+        ROOT_AUTH_FILE="$CONFIG_DIR/auth-profiles.json"
 
         # Clean up any invalid config keys from previous runs
         # OpenClaw validates config strictly and rejects unknown keys
-        # Note: Run this AFTER creating our config to avoid overwriting
         echo "Running openclaw doctor --fix to clean up config..."
         node /app/openclaw.mjs doctor --fix 2>/dev/null || true
 
         # CRITICAL: Configure the base URL AFTER doctor --fix
         # doctor --fix overwrites our configuration, so we must set it again
-        # OpenClaw reads models.providers.<provider>.baseUrl for API endpoint
-        if [ -n "$OPENAI_BASE_URL" ]; then
-          echo "Setting OpenAI base URL: $OPENAI_BASE_URL"
-          # Try to set via CLI first (may fail due to schema validation)
-          node /app/openclaw.mjs config set models.providers.openai.baseUrl "$OPENAI_BASE_URL" 2>/dev/null || true
-          node /app/openclaw.mjs config set models.providers.openai.models '[]' 2>/dev/null || true
+        # Use MODEL_PROVIDER (base provider name) for config key
+        #
+        # Determine the API protocol for OpenClaw provider config:
+        # - apiType=openai AND vendor!=openai → "openai-completions" (Chat Completions API: /chat/completions)
+        #   Domestic providers (zhipu, dashscope, doubao, etc.) only support /chat/completions
+        # - Otherwise (e.g., native OpenAI with apiType=openai-response) → leave default
+        # See: https://docs.bigmodel.cn/cn/coding-plan/tool/openclaw
+        OPENCLAW_API_PROTOCOL=""
+        if [ "$AI_API_TYPE" = "openai" ] && [ "$AI_VENDOR" != "openai" ]; then
+          OPENCLAW_API_PROTOCOL="openai-completions"
+        fi
 
-          # Directly patch the openclaw.json file using node (primary method)
-          # This is more reliable than the CLI config set command
-          echo "Configuring models.providers in openclaw.json..."
+        # Configure npm registry for China network (optional)
+        # NPM_CONFIG_REGISTRY env var will be passed by the manager
+        if [ -n "$NPM_CONFIG_REGISTRY" ]; then
+          npm config set registry "$NPM_CONFIG_REGISTRY"
+          echo "npm registry configured: $NPM_CONFIG_REGISTRY"
+        fi
+
+        if [ -n "$OPENAI_BASE_URL" ]; then
+          echo "Setting base URL for provider $MODEL_PROVIDER: $OPENAI_BASE_URL (api: $OPENCLAW_API_PROTOCOL)"
+          # Directly patch openclaw.json with provider config including apiKey and api protocol
+          # This is more reliable than CLI config set commands
           node -e "
             const fs = require('fs');
             const configPath = '$JSON_CONFIG_FILE';
+            const providerKey = '$MODEL_PROVIDER';
+            const apiProtocol = '$OPENCLAW_API_PROTOCOL';
             try {
               const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
               config.models = config.models || {};
               config.models.providers = config.models.providers || {};
-              config.models.providers.openai = config.models.providers.openai || {};
-              config.models.providers.openai.baseUrl = '$OPENAI_BASE_URL';
-              config.models.providers.openai.models = [];
+              config.models.providers[providerKey] = config.models.providers[providerKey] || {};
+              config.models.providers[providerKey].baseUrl = '$OPENAI_BASE_URL';
+              config.models.providers[providerKey].models = [];
+              if ('$API_KEY') {
+                config.models.providers[providerKey].apiKey = '$API_KEY';
+              }
+              if (apiProtocol) {
+                config.models.providers[providerKey].api = apiProtocol;
+              }
               fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-              console.log('Successfully patched openclaw.json with baseUrl');
+              console.log('Patched openclaw.json with provider: ' + providerKey + (apiProtocol ? ' (api: ' + apiProtocol + ')' : ''));
             } catch (e) {
               console.error('Failed to patch config:', e.message);
             }
@@ -629,17 +714,77 @@ AUTH_EOF
           node /app/openclaw.mjs models set "$FULL_MODEL" 2>/dev/null || echo "Warning: Failed to set model"
         fi
 
-        # Debug: Show final openclaw.json configuration
+        # Create auth-profiles.json as a fallback credential source
+        # Primary auth is via environment variables (OPENAI_API_KEY, etc.)
+        # but auth-profiles.json provides a backup for providers that check it
+        echo "Creating auth-profiles.json for provider: $MODEL_PROVIDER"
+        if [ -n "$OPENAI_BASE_URL" ]; then
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$MODEL_PROVIDER": {
+    "apiKey": "$API_KEY",
+    "baseUrl": "$OPENAI_BASE_URL",
+    "baseURL": "$OPENAI_BASE_URL"
+  }
+}
+AUTH_EOF
+        else
+          cat > "$AUTH_PROFILES_FILE" << AUTH_EOF
+{
+  "$MODEL_PROVIDER": {
+    "apiKey": "$API_KEY"
+  }
+}
+AUTH_EOF
+        fi
+        cp "$AUTH_PROFILES_FILE" "$ROOT_AUTH_FILE"
+        # Make auth-profiles read-only to prevent gateway from overwriting during init
+        chmod 444 "$AUTH_PROFILES_FILE" 2>/dev/null || true
+        chmod 444 "$ROOT_AUTH_FILE" 2>/dev/null || true
+        echo "Created auth-profiles.json (read-only):"
+        cat "$AUTH_PROFILES_FILE"
+
+        # ==================== Merge channels configuration ====================
+        # Channels config is stored in /app/secrets/channels.json (mounted from manager)
+        # This file is generated by the manager and should be merged into openclaw.json
+        # before the gateway starts
+        CHANNELS_CONFIG_FILE="/app/secrets/channels.json"
+        if [ -f "$CHANNELS_CONFIG_FILE" ]; then
+          echo "Merging channels configuration from $CHANNELS_CONFIG_FILE"
+          node -e "
+            const fs = require('fs');
+            const configPath = '$JSON_CONFIG_FILE';
+            const channelsPath = '$CHANNELS_CONFIG_FILE';
+            try {
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              const channelsConfig = JSON.parse(fs.readFileSync(channelsPath, 'utf8'));
+              if (channelsConfig.channels) {
+                config.channels = { ...config.channels, ...channelsConfig.channels };
+                fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+                console.log('Merged channels config into openclaw.json');
+                console.log('Channels:', JSON.stringify(Object.keys(channelsConfig.channels)));
+              }
+            } catch (e) {
+              console.error('Failed to merge channels config:', e.message);
+            }
+          " || echo "Warning: Failed to merge channels config"
+        else
+          echo "No channels config file found at $CHANNELS_CONFIG_FILE"
+        fi
+        # ==================== End channels merge ====================
+
+        # Debug: Show final configuration
         echo "=== Final openclaw.json ==="
         cat "$JSON_CONFIG_FILE" 2>/dev/null || echo "Config file not found"
         echo "==========================="
-
-        # Debug: Output all relevant environment variables
         echo "=== Environment Configuration ==="
         echo "PROVIDER: $PROVIDER"
+        echo "AI_VENDOR: $AI_VENDOR"
         echo "AUTH_PROVIDER: $AUTH_PROVIDER"
         echo "MODEL_PROVIDER: $MODEL_PROVIDER"
+        echo "FULL_MODEL: $FULL_MODEL"
         echo "AI_API_TYPE: $AI_API_TYPE"
+        echo "OPENCLAW_API_PROTOCOL: $OPENCLAW_API_PROTOCOL"
         echo "OPENAI_BASE_URL: $OPENAI_BASE_URL"
         echo "PROXY_URL: $PROXY_URL"
         if [ -n "$PROXY_TOKEN" ]; then echo "PROXY_TOKEN: [SET]"; else echo "PROXY_TOKEN: [NOT SET]"; fi
@@ -647,31 +792,32 @@ AUTH_EOF
         echo "================================="
 
         # Start the gateway
-        # Note: --bind lan is configured in openclaw.json, but we pass it here for clarity
-        # The gateway token is configured in openclaw.json for WebSocket authentication
+        # Using exec so gateway becomes PID 1 for proper signal handling
         exec node /app/openclaw.mjs gateway --port ${options.port} --bind lan
         `,
       ],
       Env: envVars,
       ExposedPorts: {
         [`${options.port}/tcp`]: {},
+        // BROWSER_SANDBOX needs extra exposed ports
+        ...(botType === 'BROWSER_SANDBOX' && {
+          [`${options.port + 1}/tcp`]: {}, // CDP
+          [`${options.port + 2}/tcp`]: {}, // VNC
+          [`${options.port + 3}/tcp`]: {}, // noVNC
+        }),
       },
-      HostConfig: {
-        PortBindings: {
-          [`${options.port}/tcp`]: [{ HostPort: String(options.port) }],
-        },
-        Binds: binds,
-        RestartPolicy: { Name: 'unless-stopped' },
-        NetworkMode: networkMode,
-      },
+      HostConfig: hostConfig,
       Labels: {
         'clawbot-manager.hostname': options.hostname,
         'clawbot-manager.isolation-key': options.isolationKey,
         'clawbot-manager.managed': 'true',
+        'clawbot-manager.bot-type': botType,
       },
     });
 
-    this.logger.log(`Container created: ${container.id}`);
+    this.logger.log(
+      `Container created: ${container.id} (type: ${botType}, image: ${botImage})`,
+    );
     return container.id;
   }
 
@@ -1098,5 +1244,107 @@ AUTH_EOF
     });
 
     return logs.toString();
+  }
+
+  /**
+   * Execute a command in a running container
+   *
+   * @param containerId Container ID or name
+   * @param command Command to execute
+   * @returns Command output (stdout + stderr)
+   */
+  async execInContainer(containerId: string, command: string): Promise<string> {
+    if (!this.isAvailable()) {
+      throw new Error('Docker not available');
+    }
+
+    const container = this.docker.getContainer(containerId);
+
+    // Create exec instance
+    const exec = await container.exec({
+      Cmd: ['/bin/sh', '-c', command],
+      AttachStdout: true,
+      AttachStderr: true,
+    });
+
+    // Start exec and capture output
+    const stream = await exec.start({ Detach: false });
+
+    return new Promise((resolve, reject) => {
+      const stdoutChunks: Buffer[] = [];
+      const stderrChunks: Buffer[] = [];
+
+      // Docker stream is multiplexed with 8-byte headers
+      // Format: [stream_type(1), 0, 0, 0, size(4)]
+      container.modem.demuxStream(
+        stream,
+        {
+          write: (chunk: Buffer) => stdoutChunks.push(chunk),
+        },
+        {
+          write: (chunk: Buffer) => stderrChunks.push(chunk),
+        },
+      );
+
+      stream.on('end', () => {
+        const stdout = Buffer.concat(stdoutChunks).toString('utf8').trim();
+        const stderr = Buffer.concat(stderrChunks).toString('utf8').trim();
+        const output = stderr ? `${stdout}\n${stderr}` : stdout;
+        this.logger.debug(`Exec output for "${command}": ${output}`);
+        resolve(output);
+      });
+      stream.on('error', (error: Error) => {
+        this.logger.error(`Exec error for "${command}": ${error.message}`);
+        reject(error);
+      });
+    });
+  }
+
+  /**
+   * Get container by name
+   *
+   * @param containerName Container name
+   * @returns Container ID if found, null otherwise
+   */
+  async getContainerByName(containerName: string): Promise<string | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      const container = this.docker.getContainer(containerName);
+      const info = await container.inspect();
+      return info.Id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get container info by name
+   *
+   * @param containerName Container name
+   * @returns Container info if found, null otherwise
+   */
+  async getContainerInfo(containerName: string): Promise<ContainerInfo | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      const container = this.docker.getContainer(containerName);
+      const info = await container.inspect();
+
+      return {
+        id: info.Id,
+        state: info.State.Status,
+        running: info.State.Running,
+        exitCode: info.State.ExitCode ?? 0,
+        startedAt: info.State.StartedAt,
+        finishedAt: info.State.FinishedAt ?? '',
+      };
+    } catch {
+      return null;
+    }
   }
 }
