@@ -894,12 +894,13 @@ export class AvailableModelService {
     models: Array<{
       modelId: string;
       modelName: string;
-      supportedApiTypes: string[];
-      preferredApiType: string | null;
-      layer: string;
+      supportedApiTypes: ('openai' | 'anthropic' | 'gemini')[];
+      preferredApiType: 'openai' | 'anthropic' | 'gemini' | null;
+      layer: 'production' | 'research' | 'both';
       recommendAnthropic: boolean;
       recommendReason: string | null;
       anthropicModelId: string | null;
+      apiTypeBaseUrls: Record<string, string | null> | null;
     }>;
   } | null> {
     // 1. 获取 ProviderKey
@@ -922,15 +923,35 @@ export class AvailableModelService {
           ? await this.modelCatalogService.get({ id: availability.modelCatalogId })
           : null;
 
+        // Cast supportedApiTypes to ModelApiType[]
+        const supportedApiTypes = (availability.supportedApiTypes ?? ['openai']) as (
+          | 'openai'
+          | 'anthropic'
+          | 'gemini'
+        )[];
+
+        // 解析 apiTypeBaseUrls（JSON 字段）
+        let apiTypeBaseUrls: Record<string, string | null> | null = null;
+        if (availability.apiTypeBaseUrls) {
+          try {
+            apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+          } catch {
+            this.logger.warn('[AvailableModel] Failed to parse apiTypeBaseUrls', {
+              modelId: availability.id,
+            });
+          }
+        }
+
         return {
           modelId: availability.id,
           modelName: availability.model,
-          supportedApiTypes: availability.supportedApiTypes ?? ['openai'],
-          preferredApiType: availability.preferredApiType ?? null,
-          layer: catalog?.modelLayer ?? 'production',
+          supportedApiTypes,
+          preferredApiType: (availability.preferredApiType as 'openai' | 'anthropic' | 'gemini') ?? null,
+          layer: (catalog?.modelLayer ?? 'production') as 'production' | 'research' | 'both',
           recommendAnthropic: catalog?.recommendAnthropic ?? false,
           recommendReason: catalog?.recommendReason ?? null,
           anthropicModelId: catalog?.anthropicModelId ?? null,
+          apiTypeBaseUrls,
         };
       }),
     );
@@ -948,42 +969,51 @@ export class AvailableModelService {
   async updateModelProtocolConfig(
     providerKeyId: string,
     modelId: string,
-    supportedApiTypes: string[],
-    preferredApiType: string | null,
-    layer?: string,
+    supportedApiTypes: ('openai' | 'anthropic' | 'gemini')[],
+    preferredApiType: 'openai' | 'anthropic' | 'gemini' | null,
+    layer?: 'production' | 'research' | 'both',
     anthropicModelId?: string | null,
+    apiTypeBaseUrls?: Record<string, string | null> | null,
   ): Promise<void> {
     // 1. 更新 ModelAvailability 的协议配置
-    await this.modelAvailabilityService.update(
-      { id: modelId },
-      {
-        supportedApiTypes,
-        preferredApiType,
-      },
-    );
+    const updateData: {
+      supportedApiTypes: string[];
+      preferredApiType: string | null;
+      apiTypeBaseUrls?: Record<string, string | null> | null;
+    } = {
+      supportedApiTypes,
+      preferredApiType,
+    };
+
+    // 只有在传入 apiTypeBaseUrls 时才更新
+    if (apiTypeBaseUrls !== undefined) {
+      updateData.apiTypeBaseUrls = apiTypeBaseUrls;
+    }
+
+    await this.modelAvailabilityService.update({ id: modelId }, updateData);
 
     // 2. 如果有 ModelCatalog，更新层级和 Anthropic 模型 ID
     const availability = await this.modelAvailabilityService.get({ id: modelId });
     if (availability?.modelCatalogId) {
-      const updateData: Record<string, unknown> = {};
+      const catalogUpdateData: Record<string, unknown> = {};
       if (layer) {
-        updateData.modelLayer = layer;
+        catalogUpdateData.modelLayer = layer;
       }
       if (anthropicModelId !== undefined) {
-        updateData.anthropicModelId = anthropicModelId;
+        catalogUpdateData.anthropicModelId = anthropicModelId;
       }
 
-      if (Object.keys(updateData).length > 0) {
+      if (Object.keys(catalogUpdateData).length > 0) {
         await this.modelCatalogService.update(
           { id: availability.modelCatalogId },
-          updateData,
+          catalogUpdateData,
         );
       }
     }
 
     this.logger.info(
       '[AvailableModel] Updated model protocol config',
-      { providerKeyId, modelId, supportedApiTypes, preferredApiType, layer },
+      { providerKeyId, modelId, supportedApiTypes, preferredApiType, layer, apiTypeBaseUrls },
     );
   }
 
@@ -994,10 +1024,11 @@ export class AvailableModelService {
     providerKeyId: string,
     models: Array<{
       modelId: string;
-      supportedApiTypes: string[];
-      preferredApiType: string | null;
-      layer?: string;
+      supportedApiTypes: ('openai' | 'anthropic' | 'gemini')[];
+      preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null;
+      layer?: 'production' | 'research' | 'both';
       anthropicModelId?: string | null;
+      apiTypeBaseUrls?: Record<string, string | null> | null;
     }>,
   ): Promise<{ updated: number; errors: Array<{ modelId: string; error: string }> }> {
     let updated = 0;
@@ -1009,9 +1040,10 @@ export class AvailableModelService {
           providerKeyId,
           model.modelId,
           model.supportedApiTypes,
-          model.preferredApiType,
+          model.preferredApiType ?? null,
           model.layer,
           model.anthropicModelId,
+          model.apiTypeBaseUrls,
         );
         updated++;
       } catch (error) {
@@ -1030,5 +1062,49 @@ export class AvailableModelService {
     );
 
     return { updated, errors };
+  }
+
+  // ============================================================================
+  // 协议级别 BaseUrl 辅助方法
+  // ============================================================================
+
+  /**
+   * 获取模型指定协议的 BaseUrl
+   *
+   * 优先级：
+   * 1. ModelAvailability.apiTypeBaseUrls[apiType]
+   * 2. ProviderKey.baseUrl
+   * 3. 返回 null（由调用方决定默认值）
+   */
+  async getModelApiTypeBaseUrl(
+    modelAvailabilityId: string,
+    apiType: 'openai' | 'anthropic' | 'gemini',
+  ): Promise<string | null> {
+    // 1. 获取 ModelAvailability
+    const availability = await this.modelAvailabilityService.get({
+      id: modelAvailabilityId,
+    });
+    if (!availability) {
+      return null;
+    }
+
+    // 2. 检查协议级别配置
+    if (availability.apiTypeBaseUrls) {
+      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+      if (apiTypeBaseUrls[apiType]) {
+        return apiTypeBaseUrls[apiType];
+      }
+    }
+
+    // 3. 回退到 ProviderKey 全局配置
+    const providerKey = await this.providerKeyService.get({
+      id: availability.providerKeyId,
+    });
+    if (providerKey?.baseUrl) {
+      return providerKey.baseUrl;
+    }
+
+    // 4. 返回 null，由调用方决定默认值
+    return null;
   }
 }

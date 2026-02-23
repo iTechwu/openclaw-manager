@@ -349,6 +349,7 @@ exports.Prisma.ModelAvailabilityScalarFieldEnum = {
   healthScore: 'healthScore',
   supportedApiTypes: 'supportedApiTypes',
   preferredApiType: 'preferredApiType',
+  apiTypeBaseUrls: 'apiTypeBaseUrls',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

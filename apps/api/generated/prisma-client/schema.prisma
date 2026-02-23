@@ -559,6 +559,12 @@ model ModelAvailability {
   /// 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
   preferredApiType  String?  @map("preferred_api_type") @db.VarChar(50)
 
+  // ============ 协议级别 BaseUrl 配置 ============
+  /// 按协议类型配置的 BaseUrl
+  /// JSON 格式：{ "openai": "https://...", "anthropic": "https://..." }
+  /// 未配置的协议使用 ProviderKey.baseUrl
+  apiTypeBaseUrls Json? @map("api_type_base_urls") @db.JsonB
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

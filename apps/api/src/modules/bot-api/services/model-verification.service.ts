@@ -626,6 +626,9 @@ export class ModelVerificationService {
       lastVerifiedAt: Date;
       errorMessage: string | null;
       modelCatalogId: string;
+      supportedApiTypes: string[];
+      preferredApiType: string | null;
+      modelLayer: 'production' | 'research' | 'both' | null;
       capabilityTags: Array<{ id: string; name: string }>;
       providerKeys: Array<{
         id: string;
@@ -667,6 +670,9 @@ export class ModelVerificationService {
       lastVerifiedAt: item.lastVerifiedAt,
       errorMessage: item.errorMessage,
       modelCatalogId: item.modelCatalogId,
+      supportedApiTypes: item.supportedApiTypes ?? ['openai'],
+      preferredApiType: item.preferredApiType ?? null,
+      modelLayer: (item.modelCatalog?.modelLayer as 'production' | 'research' | 'both' | null) ?? null,
       capabilityTags:
         item.modelCatalog?.capabilityTags?.map((mct: any) => ({
           id: mct.capabilityTag?.id ?? mct.capabilityTagId,

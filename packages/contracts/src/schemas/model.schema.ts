@@ -1,5 +1,13 @@
 import { z } from 'zod';
 import { ModelTypeSchema } from './prisma-enums.generated';
+import {
+  ModelApiTypeSchema,
+  ModelLayerSchema,
+  ApiTypeBaseUrlConfigSchema,
+  type ModelApiType,
+  type ModelLayer,
+  type ApiTypeBaseUrlConfig,
+} from './model-api-type-support.schema';
 
 // ============================================================================
 // Available Model Schema (面向用户展示的模型信息)
@@ -273,6 +281,12 @@ export const ModelAvailabilityItemSchema = z.object({
   errorMessage: z.string().nullable(),
   /** 关联的 ModelCatalog ID */
   modelCatalogId: z.string().uuid(),
+  /** 支持的协议类型列表 */
+  supportedApiTypes: z.array(z.string()).optional(),
+  /** 优先选择的协议类型 */
+  preferredApiType: z.string().nullable().optional(),
+  /** 模型层级（来自 ModelCatalog） */
+  modelLayer: ModelLayerSchema.nullable().optional(),
   /** 能力标签列表 */
   capabilityTags: z
     .array(
@@ -785,14 +799,6 @@ export type GenerateFallbackChainInput = z.infer<
 // Model API Protocol Configuration Schemas
 // ============================================================================
 
-// Import from model-api-type-support schema
-import {
-  ModelApiTypeSchema,
-  ModelLayerSchema,
-  type ModelApiType,
-  type ModelLayer,
-} from './model-api-type-support.schema';
-
 /**
  * 单个模型的协议配置
  */
@@ -813,6 +819,8 @@ export const ModelProtocolConfigItemSchema = z.object({
   recommendReason: z.string().nullable(),
   /** Anthropic 协议模型 ID */
   anthropicModelId: z.string().nullable(),
+  /** 按协议类型配置的 BaseUrl */
+  apiTypeBaseUrls: ApiTypeBaseUrlConfigSchema.nullable().optional(),
 });
 
 export type ModelProtocolConfigItem = z.infer<typeof ModelProtocolConfigItemSchema>;
@@ -849,6 +857,8 @@ export const UpdateModelProtocolConfigInputSchema = z.object({
   layer: ModelLayerSchema.optional(),
   /** Anthropic 协议模型 ID */
   anthropicModelId: z.string().nullable().optional(),
+  /** 按协议类型配置的 BaseUrl */
+  apiTypeBaseUrls: ApiTypeBaseUrlConfigSchema.nullable().optional(),
 });
 
 export type UpdateModelProtocolConfigInput = z.infer<
@@ -869,6 +879,8 @@ export const BatchUpdateModelProtocolConfigInputSchema = z.object({
       preferredApiType: ModelApiTypeSchema.nullable(),
       layer: ModelLayerSchema.optional(),
       anthropicModelId: z.string().nullable().optional(),
+      /** 按协议类型配置的 BaseUrl */
+      apiTypeBaseUrls: ApiTypeBaseUrlConfigSchema.nullable().optional(),
     }),
   ),
 });

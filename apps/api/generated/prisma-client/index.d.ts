@@ -22290,6 +22290,7 @@ export namespace Prisma {
     healthScore: number
     supportedApiTypes: number
     preferredApiType: number
+    apiTypeBaseUrls: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -22351,6 +22352,7 @@ export namespace Prisma {
     healthScore?: true
     supportedApiTypes?: true
     preferredApiType?: true
+    apiTypeBaseUrls?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -22455,6 +22457,7 @@ export namespace Prisma {
     healthScore: number
     supportedApiTypes: string[]
     preferredApiType: string | null
+    apiTypeBaseUrls: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: ModelAvailabilityCountAggregateOutputType | null
@@ -22491,6 +22494,7 @@ export namespace Prisma {
     healthScore?: boolean
     supportedApiTypes?: boolean
     preferredApiType?: boolean
+    apiTypeBaseUrls?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22510,6 +22514,7 @@ export namespace Prisma {
     healthScore?: boolean
     supportedApiTypes?: boolean
     preferredApiType?: boolean
+    apiTypeBaseUrls?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22529,6 +22534,7 @@ export namespace Prisma {
     healthScore?: boolean
     supportedApiTypes?: boolean
     preferredApiType?: boolean
+    apiTypeBaseUrls?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
@@ -22548,11 +22554,12 @@ export namespace Prisma {
     healthScore?: boolean
     supportedApiTypes?: boolean
     preferredApiType?: boolean
+    apiTypeBaseUrls?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelCatalogId" | "modelType" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "vendorPriority" | "healthScore" | "supportedApiTypes" | "preferredApiType" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
+  export type ModelAvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "model" | "providerKeyId" | "modelCatalogId" | "modelType" | "isAvailable" | "lastVerifiedAt" | "errorMessage" | "vendorPriority" | "healthScore" | "supportedApiTypes" | "preferredApiType" | "apiTypeBaseUrls" | "createdAt" | "updatedAt", ExtArgs["result"]["modelAvailability"]>
   export type ModelAvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerKey?: boolean | ProviderKeyDefaultArgs<ExtArgs>
     modelCatalog?: boolean | ModelCatalogDefaultArgs<ExtArgs>
@@ -22620,6 +22627,12 @@ export namespace Prisma {
        * 用于第二层（研究 Agent）模型选择使用 Anthropic 协议
        */
       preferredApiType: string | null
+      /**
+       * 按协议类型配置的 BaseUrl
+       * JSON 格式：{ "openai": "https://...", "anthropic": "https://..." }
+       * 未配置的协议使用 ProviderKey.baseUrl
+       */
+      apiTypeBaseUrls: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["modelAvailability"]>
@@ -23059,6 +23072,7 @@ export namespace Prisma {
     readonly healthScore: FieldRef<"ModelAvailability", 'Int'>
     readonly supportedApiTypes: FieldRef<"ModelAvailability", 'String[]'>
     readonly preferredApiType: FieldRef<"ModelAvailability", 'String'>
+    readonly apiTypeBaseUrls: FieldRef<"ModelAvailability", 'Json'>
     readonly createdAt: FieldRef<"ModelAvailability", 'DateTime'>
     readonly updatedAt: FieldRef<"ModelAvailability", 'DateTime'>
   }
@@ -53664,6 +53678,7 @@ export namespace Prisma {
     healthScore: 'healthScore',
     supportedApiTypes: 'supportedApiTypes',
     preferredApiType: 'preferredApiType',
+    apiTypeBaseUrls: 'apiTypeBaseUrls',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -55940,6 +55955,7 @@ export namespace Prisma {
     healthScore?: IntFilter<"ModelAvailability"> | number
     supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
     preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
+    apiTypeBaseUrls?: JsonNullableFilter<"ModelAvailability">
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -55959,6 +55975,7 @@ export namespace Prisma {
     healthScore?: SortOrder
     supportedApiTypes?: SortOrder
     preferredApiType?: SortOrderInput | SortOrder
+    apiTypeBaseUrls?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     providerKey?: ProviderKeyOrderByWithRelationInput
@@ -55982,6 +55999,7 @@ export namespace Prisma {
     healthScore?: IntFilter<"ModelAvailability"> | number
     supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
     preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
+    apiTypeBaseUrls?: JsonNullableFilter<"ModelAvailability">
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     providerKey?: XOR<ProviderKeyScalarRelationFilter, ProviderKeyWhereInput>
@@ -56001,6 +56019,7 @@ export namespace Prisma {
     healthScore?: SortOrder
     supportedApiTypes?: SortOrder
     preferredApiType?: SortOrderInput | SortOrder
+    apiTypeBaseUrls?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ModelAvailabilityCountOrderByAggregateInput
@@ -56026,6 +56045,7 @@ export namespace Prisma {
     healthScore?: IntWithAggregatesFilter<"ModelAvailability"> | number
     supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
     preferredApiType?: StringNullableWithAggregatesFilter<"ModelAvailability"> | string | null
+    apiTypeBaseUrls?: JsonNullableWithAggregatesFilter<"ModelAvailability">
     createdAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ModelAvailability"> | Date | string
   }
@@ -60239,6 +60259,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
@@ -60258,6 +60279,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -60273,6 +60295,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
@@ -60292,6 +60315,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -60309,6 +60333,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -60324,6 +60349,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -60341,6 +60367,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -64814,6 +64841,7 @@ export namespace Prisma {
     healthScore?: SortOrder
     supportedApiTypes?: SortOrder
     preferredApiType?: SortOrder
+    apiTypeBaseUrls?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -73231,6 +73259,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     modelCatalog: ModelCatalogCreateNestedOneWithoutAvailabilitiesInput
@@ -73248,6 +73277,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -73419,6 +73449,7 @@ export namespace Prisma {
     healthScore?: IntFilter<"ModelAvailability"> | number
     supportedApiTypes?: StringNullableListFilter<"ModelAvailability">
     preferredApiType?: StringNullableFilter<"ModelAvailability"> | string | null
+    apiTypeBaseUrls?: JsonNullableFilter<"ModelAvailability">
     createdAt?: DateTimeFilter<"ModelAvailability"> | Date | string
     updatedAt?: DateTimeFilter<"ModelAvailability"> | Date | string
   }
@@ -76165,6 +76196,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     providerKey: ProviderKeyCreateNestedOneWithoutModelAvailabilityInput
@@ -76182,6 +76214,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79105,6 +79138,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79240,6 +79274,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     modelCatalog?: ModelCatalogUpdateOneRequiredWithoutAvailabilitiesNestedInput
@@ -79257,6 +79292,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79273,6 +79309,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79595,6 +79632,7 @@ export namespace Prisma {
     healthScore?: number
     supportedApiTypes?: ModelAvailabilityCreatesupportedApiTypesInput | string[]
     preferredApiType?: string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79635,6 +79673,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerKey?: ProviderKeyUpdateOneRequiredWithoutModelAvailabilityNestedInput
@@ -79652,6 +79691,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79668,6 +79708,7 @@ export namespace Prisma {
     healthScore?: IntFieldUpdateOperationsInput | number
     supportedApiTypes?: ModelAvailabilityUpdatesupportedApiTypesInput | string[]
     preferredApiType?: NullableStringFieldUpdateOperationsInput | string | null
+    apiTypeBaseUrls?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

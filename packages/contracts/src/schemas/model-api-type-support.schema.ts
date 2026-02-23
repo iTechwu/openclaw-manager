@@ -45,6 +45,22 @@ export const ModelLayerSchema = z.enum(['production', 'research', 'both']);
 export type ModelLayer = z.infer<typeof ModelLayerSchema>;
 
 // ============================================================================
+// 协议级别 BaseUrl 配置 Schema
+// ============================================================================
+
+/**
+ * 协议类型的 BaseUrl 配置
+ * 键为协议类型，值为 BaseUrl 字符串或 null
+ * 示例：{ "openai": "https://api.custom.com/v1", "anthropic": "https://api.anthropic.com" }
+ */
+export const ApiTypeBaseUrlConfigSchema = z.record(
+  z.string(), // 键为协议类型字符串
+  z.string().url('无效的 URL 格式').nullable(), // 值为 URL 字符串或 null
+);
+
+export type ApiTypeBaseUrlConfig = z.infer<typeof ApiTypeBaseUrlConfigSchema>;
+
+// ============================================================================
 // 模型协议支持配置 Schema
 // ============================================================================
 

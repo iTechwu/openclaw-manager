@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ServerResponse } from 'http';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { BotService, BotUsageLogService, ProviderKeyService } from '@app/db';
+import { BotService, BotUsageLogService, ProviderKeyService, ModelAvailabilityService } from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
 import { KeyringProxyService } from './keyring-proxy.service';
 import { UpstreamService } from './upstream.service';
@@ -79,6 +79,7 @@ export class ProtocolRouterService {
     private readonly upstreamService: UpstreamService,
     private readonly quotaService: QuotaService,
     private readonly providerKeyService: ProviderKeyService,
+    private readonly modelAvailabilityService: ModelAvailabilityService,
   ) {}
 
   /**
@@ -153,7 +154,22 @@ export class ProtocolRouterService {
 
     // 5. 构建 Anthropic 请求
     const anthropicBody = this.buildAnthropicRequestBody(body, anthropicModelId);
-    const baseUrl = providerKey.baseUrl || this.getAnthropicBaseUrl(providerVendor);
+
+    // 获取协议级别的 BaseUrl（优先级：协议级 > 全局 > 默认）
+    let baseUrl: string | null = null;
+
+    // 优先使用协议级别配置
+    if (providerKey.modelAvailabilityId) {
+      baseUrl = await this.getProtocolSpecificBaseUrl(
+        providerKey.modelAvailabilityId,
+        'anthropic',
+      );
+    }
+
+    // 回退到全局配置
+    if (!baseUrl) {
+      baseUrl = providerKey.baseUrl || this.getAnthropicBaseUrl(providerVendor);
+    }
 
     // 6. 获取 vendor 配置
     const vendorConfig = getVendorConfigWithCustomUrl(
@@ -296,11 +312,10 @@ export class ProtocolRouterService {
     secretEncrypted: Buffer;
     baseUrl: string | null;
     metadata: Record<string, unknown> | null;
+    modelAvailabilityId: string | null;
   } | null> {
     // 查找该 vendor 的 Provider Keys
-    const keys = await this.providerKeyService.findMany({
-      where: { vendor },
-    });
+    const { list: keys } = await this.providerKeyService.list({ vendor });
 
     if (keys.length === 0) {
       return null;
@@ -310,6 +325,24 @@ export class ProtocolRouterService {
     // TODO: 实现更复杂的负载均衡策略
     const selectedKey = keys[0];
 
+    // 查找对应的 ModelAvailability 记录
+    let modelAvailabilityId: string | null = null;
+    try {
+      const { list: availabilities } = await this.modelAvailabilityService.list(
+        { providerKeyId: selectedKey.id, model },
+        { limit: 1 },
+      );
+      if (availabilities.length > 0) {
+        modelAvailabilityId = availabilities[0].id;
+      }
+    } catch (error) {
+      this.logger.warn('[ProtocolRouter] Failed to find ModelAvailability', {
+        providerKeyId: selectedKey.id,
+        model,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
     return {
       id: selectedKey.id,
       secretEncrypted: Buffer.isBuffer(selectedKey.secretEncrypted)
@@ -317,6 +350,7 @@ export class ProtocolRouterService {
         : Buffer.from(selectedKey.secretEncrypted),
       baseUrl: selectedKey.baseUrl,
       metadata: (selectedKey.metadata as Record<string, unknown>) ?? null,
+      modelAvailabilityId,
     };
   }
 
@@ -333,6 +367,35 @@ export class ProtocolRouterService {
     };
 
     return anthropicEndpoints[vendor] ?? null;
+  }
+
+  /**
+   * 获取协议级别的 BaseUrl
+   * 从 ModelAvailability.apiTypeBaseUrls 中获取指定协议的 BaseUrl
+   */
+  private async getProtocolSpecificBaseUrl(
+    modelAvailabilityId: string,
+    apiType: 'openai' | 'anthropic' | 'gemini',
+  ): Promise<string | null> {
+    try {
+      const availability = await this.modelAvailabilityService.get({
+        id: modelAvailabilityId,
+      });
+
+      if (!availability || !availability.apiTypeBaseUrls) {
+        return null;
+      }
+
+      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+      return apiTypeBaseUrls[apiType] ?? null;
+    } catch (error) {
+      this.logger.warn('[ProtocolRouter] Failed to get protocol-specific baseUrl', {
+        modelAvailabilityId,
+        apiType,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return null;
+    }
   }
 
   /**
