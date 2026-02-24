@@ -31,7 +31,7 @@ import { RedisService } from '@app/redis';
 import ipUtil from '@/utils/ip.util';
 import enviromentUtil from '@/utils/enviroment.util';
 
-// 添加全局错误处理
+// 添加全局错误处理 - 未处理的 Promise 拒绝
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // 可选择性地退出应用程序
