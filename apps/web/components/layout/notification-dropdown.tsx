@@ -13,12 +13,13 @@ import {
   Badge,
   ScrollArea,
 } from '@repo/ui';
-import { Bell, CheckCheck, Loader2 } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { messageApi } from '@/lib/api/contracts/client';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import Link from 'next/link';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQueryOptions = any;
@@ -63,6 +64,14 @@ export function NotificationDropdown() {
     },
   });
 
+  // Mark all as read mutation
+  const markAllAsReadMutation = messageApi.markAllAsRead.useMutation({
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    },
+  });
+
   const unreadCount = unreadData?.body?.data?.total || 0;
   const messages = messagesData?.body?.data?.list || [];
 
@@ -73,12 +82,7 @@ export function NotificationDropdown() {
   };
 
   const handleMarkAllAsRead = async () => {
-    const unreadMessageIds = messages
-      .filter((msg) => !msg.isRead)
-      .map((msg) => msg.message.id);
-    if (unreadMessageIds.length > 0) {
-      await handleMarkAsRead(unreadMessageIds);
-    }
+    await markAllAsReadMutation.mutateAsync({ body: {} });
   };
 
   const getDateLocale = () => {
@@ -140,7 +144,7 @@ export function NotificationDropdown() {
               size="sm"
               className="h-6 text-xs"
               onClick={handleMarkAllAsRead}
-              disabled={markAsReadMutation.isPending}
+              disabled={markAllAsReadMutation.isPending}
             >
               <CheckCheck className="size-3 mr-1" />
               {t('markAllRead')}
@@ -188,6 +192,24 @@ export function NotificationDropdown() {
             ))
           )}
         </ScrollArea>
+        {messages.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-center text-primary hover:text-primary/80"
+                asChild
+              >
+                <Link href="/messages" onClick={() => setIsOpen(false)}>
+                  <ExternalLink className="size-3 mr-2" />
+                  {t('viewMore')}
+                </Link>
+              </Button>
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

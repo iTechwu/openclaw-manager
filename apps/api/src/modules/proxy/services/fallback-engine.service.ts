@@ -676,7 +676,10 @@ export class FallbackEngineService implements OnModuleDestroy {
       return null;
     }
 
-    return this.modelResolverService.resolve(model, { excludeProviderKeyIds });
+    return this.modelResolverService.resolve(model, {
+      excludeProviderKeyIds,
+      respectPreferredApiType: true,
+    });
   }
 
   /**
@@ -693,6 +696,7 @@ export class FallbackEngineService implements OnModuleDestroy {
 
     return this.modelResolverService.resolveAll(model, {
       excludeProviderKeyIds,
+      respectPreferredApiType: true,
     });
   }
 

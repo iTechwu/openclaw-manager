@@ -127,6 +127,10 @@ export interface BotRoutingContext {
     model: string;
     vendor: string;
     providerKeyId: string;
+    /** 用户配置的首选协议类型 */
+    preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null;
+    /** 模型支持的协议类型列表 */
+    supportedApiTypes?: ('openai' | 'anthropic' | 'gemini')[];
   };
   routingConfig?: {
     routingEnabled: boolean;
@@ -594,6 +598,8 @@ export class RoutingEngineService implements OnModuleDestroy {
         decision.vendor = context.primaryModel.vendor;
         decision.protocol = this.inferProtocolFromVendor(
           context.primaryModel.vendor,
+          context.primaryModel.preferredApiType,
+          context.primaryModel.supportedApiTypes,
         );
       } else if (requestedModel) {
         decision.model = requestedModel;
@@ -818,7 +824,11 @@ export class RoutingEngineService implements OnModuleDestroy {
       if (primaryScore >= requiredScore) {
         // 主模型能力满足要求，使用主模型
         const decision: RouteDecision = {
-          protocol: this.inferProtocolFromVendor(context.primaryModel.vendor),
+          protocol: this.inferProtocolFromVendor(
+            context.primaryModel.vendor,
+            context.primaryModel.preferredApiType,
+            context.primaryModel.supportedApiTypes,
+          ),
           vendor: context.primaryModel.vendor,
           model: context.primaryModel.model,
           features: {},
@@ -1107,12 +1117,33 @@ export class RoutingEngineService implements OnModuleDestroy {
   }
 
   /**
-   * 从 vendor 推断协议
+   * 从 vendor 和首选协议推断协议
+   *
+   * @param vendor - 供应商名称
+   * @param preferredApiType - 用户配置的首选协议
+   * @param supportedApiTypes - 模型支持的协议列表
+   * @returns 推断的协议类型
    */
   private inferProtocolFromVendor(
     vendor: string,
+    preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null,
+    supportedApiTypes?: ('openai' | 'anthropic' | 'gemini')[],
   ): 'openai-compatible' | 'anthropic-native' {
-    // 只有 Anthropic 使用原生协议，其他都使用 OpenAI 兼容协议
+    // 优先使用用户配置的首选协议
+    if (preferredApiType === 'anthropic') {
+      // 验证是否支持
+      if (!supportedApiTypes || supportedApiTypes.includes('anthropic')) {
+        this.logger.debug(
+          `[RoutingEngine] Using preferredApiType='anthropic' for vendor ${vendor}`,
+        );
+        return 'anthropic-native';
+      }
+      this.logger.warn(
+        `[RoutingEngine] preferredApiType='anthropic' not in supportedApiTypes for vendor ${vendor}, falling back to default`,
+      );
+    }
+
+    // 回退到默认逻辑：只有 Anthropic 使用原生协议
     return vendor === 'anthropic' ? 'anthropic-native' : 'openai-compatible';
   }
 }

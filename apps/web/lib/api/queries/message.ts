@@ -48,10 +48,25 @@ export const useMarkMessagesAsRead = () => {
 };
 
 /**
+ * Mark all messages as read
+ */
+export const useMarkAllMessagesAsRead = () => {
+  const queryClient = useQueryClient();
+
+  return tsRestClient.message.markAllAsRead.useMutation({
+    onSuccess: () => {
+      // Invalidate message queries to refetch
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    },
+  });
+};
+
+/**
  * Helper hook for message operations
  */
 export const useMessageOperations = () => {
   const markAsReadMutation = useMarkMessagesAsRead();
+  const markAllAsReadMutation = useMarkAllMessagesAsRead();
 
   const markAsRead = async (messageIds: string[]) => {
     try {
@@ -63,13 +78,17 @@ export const useMessageOperations = () => {
     }
   };
 
-  const markAllAsRead = async (messageIds: string[]) => {
-    return markAsRead(messageIds);
+  const markAllAsRead = async () => {
+    try {
+      await markAllAsReadMutation.mutateAsync({ body: {} });
+    } catch (error) {
+      console.error('Failed to mark all messages as read:', error);
+    }
   };
 
   return {
     markAsRead,
     markAllAsRead,
-    isMarking: markAsReadMutation.isPending,
+    isMarking: markAsReadMutation.isPending || markAllAsReadMutation.isPending,
   };
 };

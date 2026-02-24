@@ -34,6 +34,7 @@ export const namespaces = [
   'creative',
   'errors',
   'forms',
+  'messages',
   'navigation',
   'plugins',
   'secrets',

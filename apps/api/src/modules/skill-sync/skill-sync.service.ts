@@ -444,8 +444,16 @@ export class SkillSyncService {
     }
 
     // 按系统/自定义筛选
+    // 注意：isSystem 可能是布尔值（transform 后）或字符串（transform 未应用）
     if (isSystem !== undefined) {
-      where.isSystem = isSystem === 'true';
+      // 兼容处理：支持布尔值和字符串
+      if (typeof isSystem === 'boolean') {
+        where.isSystem = isSystem;
+      } else if (isSystem === 'true') {
+        where.isSystem = true;
+      } else if (isSystem === 'false') {
+        where.isSystem = false;
+      }
     }
 
     // 搜索

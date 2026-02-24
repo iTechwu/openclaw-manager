@@ -37,6 +37,7 @@
     "plugins": "MCP Tools",
     "skills": "Skills",
     "templates": "Templates",
+    "messages": "Messages",
     "secrets": "API Keys",
     "diagnostics": "Diagnostics",
     "routing": "Routing",
@@ -60,6 +61,7 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
+    "page": "Page",
     "loading": "Loading...",
     "retry": "Retry"
   },
@@ -83,6 +85,7 @@
     "empty": "No notifications",
     "markAllRead": "Mark all read",
     "markAsRead": "Mark as read",
+    "viewMore": "View all",
     "quotaWarning": "Quota Warning",
     "quotaExceeded": "Quota Exceeded"
   }
