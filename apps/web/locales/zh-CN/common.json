@@ -87,6 +87,7 @@
     "markAsRead": "标记已读",
     "viewMore": "查看更多",
     "quotaWarning": "配额警告",
-    "quotaExceeded": "配额超限"
+    "quotaExceeded": "配额超限",
+    "readAt": "已读于 {time}"
   }
 }

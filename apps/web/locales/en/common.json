@@ -87,6 +87,7 @@
     "markAsRead": "Mark as read",
     "viewMore": "View all",
     "quotaWarning": "Quota Warning",
-    "quotaExceeded": "Quota Exceeded"
+    "quotaExceeded": "Quota Exceeded",
+    "readAt": "Read {time}"
   }
 }
