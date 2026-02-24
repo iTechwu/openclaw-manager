@@ -242,4 +242,226 @@ export class BotUsageLogService extends TransactionalServiceBase {
       targetStats,
     };
   }
+
+  /**
+   * 用量统计聚合查询
+   * 返回指定时间范围内的总用量统计
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateStats(
+    where: Prisma.BotUsageLogWhereInput,
+  ): Promise<{
+    totalRequestTokens: number;
+    totalResponseTokens: number;
+    totalDurationMs: number;
+    requestCount: number;
+    avgDurationMs: number | null;
+  }> {
+    const result = await this.getReadClient().botUsageLog.aggregate({
+      where,
+      _sum: {
+        requestTokens: true,
+        responseTokens: true,
+        durationMs: true,
+      },
+      _count: {
+        id: true,
+      },
+      _avg: {
+        durationMs: true,
+      },
+    });
+
+    return {
+      totalRequestTokens: result._sum.requestTokens || 0,
+      totalResponseTokens: result._sum.responseTokens || 0,
+      totalDurationMs: result._sum.durationMs || 0,
+      requestCount: result._count.id,
+      avgDurationMs: result._avg.durationMs,
+    };
+  }
+
+  /**
+   * 错误计数查询
+   * 返回指定条件下的错误请求数量
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async countErrors(
+    where: Prisma.BotUsageLogWhereInput,
+  ): Promise<number> {
+    return this.getReadClient().botUsageLog.count({
+      where: {
+        ...where,
+        OR: [{ statusCode: { gte: 400 } }, { errorMessage: { not: null } }],
+      },
+    });
+  }
+
+  /**
+   * 按时间桶聚合查询（原生 SQL）
+   * 用于生成趋势数据
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateByTimeBucket(
+    botId: string,
+    startDate: Date,
+    endDate: Date,
+    granularity: 'hour' | 'day' | 'week',
+  ): Promise<Array<{
+    bucket: Date;
+    requestTokens: number;
+    responseTokens: number;
+    requestCount: number;
+    errorCount: number;
+  }>> {
+    const truncFormat =
+      granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
+
+    const result = await this.getReadClient().$queryRaw<
+      Array<{
+        bucket: Date;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+        request_count: bigint;
+        error_count: bigint;
+      }>
+    >`
+      SELECT
+        date_trunc(${truncFormat}, created_at) as bucket,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens,
+        COUNT(*) as request_count,
+        COUNT(*) FILTER (WHERE status_code >= 400 OR error_message IS NOT NULL) as error_count
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY bucket
+      ORDER BY bucket ASC
+    `;
+
+    return result.map((row) => ({
+      bucket: row.bucket,
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+      requestCount: Number(row.request_count),
+      errorCount: Number(row.error_count),
+    }));
+  }
+
+  /**
+   * 按分组聚合查询（原生 SQL）
+   * 用于生成分组统计数据
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateByGroup(
+    botId: string,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
+    groupBy: 'vendor' | 'model' | 'status',
+  ): Promise<Array<{
+    groupKey: string;
+    requestTokens: number;
+    responseTokens: number;
+    requestCount: number;
+  }>> {
+    let groupColumn: string;
+    switch (groupBy) {
+      case 'vendor':
+        groupColumn = 'vendor';
+        break;
+      case 'model':
+        groupColumn = 'model';
+        break;
+      case 'status':
+        groupColumn =
+          "CASE WHEN status_code >= 400 OR error_message IS NOT NULL THEN 'error' ELSE 'success' END";
+        break;
+    }
+
+    const params: unknown[] = [botId];
+    let paramIndex = 2;
+
+    let sql = `
+      SELECT
+        ${groupColumn} as group_key,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens,
+        COUNT(*) as request_count
+      FROM b_usage_log
+      WHERE bot_id = $1::uuid
+    `;
+
+    if (startDate) {
+      sql += ` AND created_at >= $${paramIndex}`;
+      params.push(startDate);
+      paramIndex++;
+    }
+
+    if (endDate) {
+      sql += ` AND created_at <= $${paramIndex}`;
+      params.push(endDate);
+      paramIndex++;
+    }
+
+    sql += `
+      GROUP BY ${groupColumn}
+      ORDER BY request_count DESC
+    `;
+
+    const result = await this.getReadClient().$queryRawUnsafe<
+      Array<{
+        group_key: string | null;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+        request_count: bigint;
+      }>
+    >(sql, ...params);
+
+    return result.map((row) => ({
+      groupKey: row.group_key || 'unknown',
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+      requestCount: Number(row.request_count),
+    }));
+  }
+
+  /**
+   * 按模型聚合成本查询（原生 SQL）
+   * 用于计算总成本
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateCostByModel(
+    botId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Array<{
+    model: string | null;
+    requestTokens: number;
+    responseTokens: number;
+  }>> {
+    const result = await this.getReadClient().$queryRaw<
+      Array<{
+        model: string | null;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+      }>
+    >`
+      SELECT
+        model,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY model
+    `;
+
+    return result.map((row) => ({
+      model: row.model,
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+    }));
+  }
 }

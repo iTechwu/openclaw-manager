@@ -22,6 +22,25 @@ export type { ProviderVendor, ProviderApiType } from './provider.schema';
 // BotStatus/BotStatusSchema 来自 prisma-enums.generated，由 index 统一导出
 
 // ============================================================================
+// Sandbox Mode Schema
+// ============================================================================
+
+/**
+ * Sandbox mode determines how OpenClaw creates sandbox containers
+ * - session: Create a new sandbox for each session (highest isolation, most resources)
+ * - agent: Create a sandbox for each agent (medium isolation)
+ * - shared: All sessions share one sandbox (lowest isolation, least resources)
+ */
+export const SandboxModeSchema = z.enum(['session', 'agent', 'shared']);
+
+export type SandboxMode = z.infer<typeof SandboxModeSchema>;
+
+/**
+ * Default sandbox mode
+ */
+export const DEFAULT_SANDBOX_MODE: SandboxMode = 'session';
+
+// ============================================================================
 // Container Status Schema
 // ============================================================================
 

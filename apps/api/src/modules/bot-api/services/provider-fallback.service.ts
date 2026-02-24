@@ -180,7 +180,8 @@ export class ProviderFallbackService implements OnModuleInit {
 
     try {
       // 获取 Proxy URL
-      const proxyUrl = enviromentUtil.generateEnvironmentUrls().internalApi || '';
+      const proxyUrl =
+        enviromentUtil.generateEnvironmentUrls().internalApi || '';
 
       // 为 Bot 注册新的 Proxy Token（用于 Zero-Trust 模式）
       // 注意：这会生成一个新的 token，需要通过热更新推送到容器
@@ -209,7 +210,10 @@ export class ProviderFallbackService implements OnModuleInit {
         } catch (regError) {
           this.logger.error(
             `[ProviderFallback] Failed to register proxy token for bot ${bot.hostname}`,
-            { error: regError instanceof Error ? regError.message : String(regError) },
+            {
+              error:
+                regError instanceof Error ? regError.message : String(regError),
+            },
           );
           // 继续使用空 token，配置更新会记录警告
         }
@@ -271,7 +275,12 @@ export class ProviderFallbackService implements OnModuleInit {
         } catch (reloadError) {
           this.logger.warn(
             `[ProviderFallback] Gateway RPC failed for bot ${bot.hostname}, container restart may be needed`,
-            { error: reloadError instanceof Error ? reloadError.message : String(reloadError) },
+            {
+              error:
+                reloadError instanceof Error
+                  ? reloadError.message
+                  : String(reloadError),
+            },
           );
         }
       }
@@ -339,7 +348,8 @@ export class ProviderFallbackService implements OnModuleInit {
 
     try {
       // 获取配置信息
-      const proxyUrl = enviromentUtil.generateEnvironmentUrls().internalApi || '';
+      const proxyUrl =
+        enviromentUtil.generateEnvironmentUrls().internalApi || '';
 
       // 获取 Provider Key 信息
       let providerKeyInfo = null;
@@ -457,9 +467,7 @@ export class ProviderFallbackService implements OnModuleInit {
   /**
    * 获取 Bot 的主模型信息（包含 vendor 和 providerKeyId）
    */
-  private async getBotPrimaryModel(
-    botId: string,
-  ): Promise<{
+  private async getBotPrimaryModel(botId: string): Promise<{
     modelId: string;
     vendor: string;
     providerKeyId: string;
@@ -468,8 +476,7 @@ export class ProviderFallbackService implements OnModuleInit {
       const { list: botModels } = await this.botModelService.list({ botId });
 
       // 查找主模型（isPrimary = true 或第一个模型）
-      const primaryModel =
-        botModels.find((m) => m.isPrimary) || botModels[0];
+      const primaryModel = botModels.find((m) => m.isPrimary) || botModels[0];
 
       if (!primaryModel) {
         return null;

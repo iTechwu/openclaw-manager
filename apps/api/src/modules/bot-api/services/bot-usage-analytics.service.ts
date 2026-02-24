@@ -1,9 +1,8 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { PrismaService } from '@app/prisma';
 import { BotService, BotUsageLogService, ModelCatalogService } from '@app/db';
-import type { Prisma, ModelCatalog } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import type {
   UsageStatsQuery,
   UsageStatsResponse,
@@ -53,7 +52,6 @@ export class BotUsageAnalyticsService implements OnModuleInit {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly prisma: PrismaService,
     private readonly botService: BotService,
     private readonly botUsageLogService: BotUsageLogService,
     private readonly modelCatalogService: ModelCatalogService,
@@ -140,36 +138,18 @@ export class BotUsageAnalyticsService implements OnModuleInit {
       },
     };
 
-    // 使用 Prisma 聚合查询
+    // 使用 BotUsageLogService 聚合查询
     const [aggregation, errorCount] = await Promise.all([
-      this.prisma.read.botUsageLog.aggregate({
-        where,
-        _sum: {
-          requestTokens: true,
-          responseTokens: true,
-          durationMs: true,
-        },
-        _count: {
-          id: true,
-        },
-        _avg: {
-          durationMs: true,
-        },
-      }),
-      this.prisma.read.botUsageLog.count({
-        where: {
-          ...where,
-          OR: [{ statusCode: { gte: 400 } }, { errorMessage: { not: null } }],
-        },
-      }),
+      this.botUsageLogService.aggregateStats(where),
+      this.botUsageLogService.countErrors(where),
     ]);
 
-    const requestTokens = aggregation._sum.requestTokens || 0;
-    const responseTokens = aggregation._sum.responseTokens || 0;
-    const requestCount = aggregation._count.id;
+    const requestTokens = aggregation.totalRequestTokens;
+    const responseTokens = aggregation.totalResponseTokens;
+    const requestCount = aggregation.requestCount;
     const successCount = requestCount - errorCount;
     const errorRate = requestCount > 0 ? errorCount / requestCount : 0;
-    const avgDurationMs = aggregation._avg.durationMs;
+    const avgDurationMs = aggregation.avgDurationMs;
 
     // 计算预估成本
     const estimatedCost = await this.calculateCost(bot.id, startDate, endDate);
@@ -337,42 +317,23 @@ export class BotUsageAnalyticsService implements OnModuleInit {
     endDate: Date,
     granularity: 'hour' | 'day' | 'week',
   ): Promise<TrendDataPoint[]> {
-    // 使用原生 SQL 进行时间桶聚合
-    const truncFormat =
-      granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
-
-    const result = await this.prisma.read.$queryRaw<
-      Array<{
-        bucket: Date;
-        request_tokens: bigint | null;
-        response_tokens: bigint | null;
-        request_count: bigint;
-        error_count: bigint;
-      }>
-    >`
-      SELECT
-        date_trunc(${truncFormat}, created_at) as bucket,
-        SUM(request_tokens) as request_tokens,
-        SUM(response_tokens) as response_tokens,
-        COUNT(*) as request_count,
-        COUNT(*) FILTER (WHERE status_code >= 400 OR error_message IS NOT NULL) as error_count
-      FROM b_usage_log
-      WHERE bot_id = ${botId}::uuid
-        AND created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY bucket
-      ORDER BY bucket ASC
-    `;
+    // 使用 BotUsageLogService 进行时间桶聚合
+    const result = await this.botUsageLogService.aggregateByTimeBucket(
+      botId,
+      startDate,
+      endDate,
+      granularity,
+    );
 
     return result.map((row) => ({
       timestamp: row.bucket,
-      requestTokens: Number(row.request_tokens || 0),
-      responseTokens: Number(row.response_tokens || 0),
-      requestCount: Number(row.request_count),
-      errorCount: Number(row.error_count),
+      requestTokens: row.requestTokens,
+      responseTokens: row.responseTokens,
+      requestCount: row.requestCount,
+      errorCount: row.errorCount,
       estimatedCost: this.estimateCostForTokens(
-        Number(row.request_tokens || 0),
-        Number(row.response_tokens || 0),
+        row.requestTokens,
+        row.responseTokens,
       ),
     }));
   }
@@ -388,64 +349,31 @@ export class BotUsageAnalyticsService implements OnModuleInit {
     const startDate = (where.createdAt as { gte?: Date })?.gte;
     const endDate = (where.createdAt as { lte?: Date })?.lte;
 
-    let groupColumn: string;
-    switch (groupBy) {
-      case 'vendor':
-        groupColumn = 'vendor';
-        break;
-      case 'model':
-        groupColumn = 'model';
-        break;
-      case 'status':
-        groupColumn =
-          "CASE WHEN status_code >= 400 OR error_message IS NOT NULL THEN 'error' ELSE 'success' END";
-        break;
-    }
-
-    const result = await this.prisma.read.$queryRawUnsafe<
-      Array<{
-        group_key: string | null;
-        request_tokens: bigint | null;
-        response_tokens: bigint | null;
-        request_count: bigint;
-      }>
-    >(
-      `
-      SELECT
-        ${groupColumn} as group_key,
-        SUM(request_tokens) as request_tokens,
-        SUM(response_tokens) as response_tokens,
-        COUNT(*) as request_count
-      FROM b_usage_log
-      WHERE bot_id = $1::uuid
-        ${startDate ? `AND created_at >= $2` : ''}
-        ${endDate ? `AND created_at <= $3` : ''}
-      GROUP BY ${groupColumn}
-      ORDER BY request_count DESC
-    `,
+    // 使用 BotUsageLogService 进行分组聚合
+    const result = await this.botUsageLogService.aggregateByGroup(
       botId,
       startDate,
       endDate,
+      groupBy,
     );
 
     const totalRequests = result.reduce(
-      (sum, row) => sum + Number(row.request_count),
+      (sum, row) => sum + row.requestCount,
       0,
     );
 
     return result.map((row) => ({
-      key: row.group_key || 'unknown',
-      requestTokens: Number(row.request_tokens || 0),
-      responseTokens: Number(row.response_tokens || 0),
-      requestCount: Number(row.request_count),
+      key: row.groupKey,
+      requestTokens: row.requestTokens,
+      responseTokens: row.responseTokens,
+      requestCount: row.requestCount,
       percentage:
         totalRequests > 0
-          ? Math.round((Number(row.request_count) / totalRequests) * 10000) /
-            100
+          ? Math.round((row.requestCount / totalRequests) * 10000) / 100
           : 0,
       estimatedCost: this.estimateCostForTokens(
-        Number(row.request_tokens || 0),
-        Number(row.response_tokens || 0),
+        row.requestTokens,
+        row.responseTokens,
       ),
     }));
   }
@@ -461,32 +389,18 @@ export class BotUsageAnalyticsService implements OnModuleInit {
     // 确保缓存有效
     await this.ensureCacheValid();
 
-    // 按模型分组计算成本
-    const result = await this.prisma.read.$queryRaw<
-      Array<{
-        model: string | null;
-        request_tokens: bigint | null;
-        response_tokens: bigint | null;
-      }>
-    >`
-      SELECT
-        model,
-        SUM(request_tokens) as request_tokens,
-        SUM(response_tokens) as response_tokens
-      FROM b_usage_log
-      WHERE bot_id = ${botId}::uuid
-        AND created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY model
-    `;
+    // 使用 BotUsageLogService 按模型聚合成本
+    const result = await this.botUsageLogService.aggregateCostByModel(
+      botId,
+      startDate,
+      endDate,
+    );
 
     let totalCost = 0;
     for (const row of result) {
       const pricing = this.getModelCatalogPricing(row.model);
-      const inputCost =
-        (Number(row.request_tokens || 0) / 1_000_000) * pricing.input;
-      const outputCost =
-        (Number(row.response_tokens || 0) / 1_000_000) * pricing.output;
+      const inputCost = (row.requestTokens / 1_000_000) * pricing.input;
+      const outputCost = (row.responseTokens / 1_000_000) * pricing.output;
       totalCost += inputCost + outputCost;
     }
 

@@ -103,6 +103,9 @@ services:
       # Format: <project-name>_<volume-name> (docker compose prefixes with project name)
       DATA_VOLUME_NAME: ${DATA_VOLUME_NAME:-clawbot-manager_clawbot-data}
       SECRETS_VOLUME_NAME: ${SECRETS_VOLUME_NAME:-clawbot-manager_clawbot-secrets}
+      # Bot 容器资源限制 (由 ClawBotManager 创建 Bot 时应用)
+      BOT_CONTAINER_CPU_LIMIT: ${BOT_CONTAINER_CPU_LIMIT:-1}
+      BOT_CONTAINER_MEMORY_LIMIT: ${BOT_CONTAINER_MEMORY_LIMIT:-2147483648}
     ports:
       - '${API_PORT:-13100}:3200'
     volumes:

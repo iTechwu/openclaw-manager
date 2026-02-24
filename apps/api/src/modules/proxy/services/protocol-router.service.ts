@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ServerResponse } from 'http';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { BotService, BotUsageLogService, ProviderKeyService, ModelAvailabilityService } from '@app/db';
+import {
+  BotService,
+  BotUsageLogService,
+  ProviderKeyService,
+  ModelAvailabilityService,
+} from '@app/db';
 import { EncryptionService } from '../../bot-api/services/encryption.service';
 import { KeyringProxyService } from './keyring-proxy.service';
 import { UpstreamService } from './upstream.service';
@@ -103,8 +108,7 @@ export class ProtocolRouterService {
     let botId: string;
 
     if (isZeroTrust) {
-      const validation =
-        await this.keyringProxyService.validateToken(botToken);
+      const validation = await this.keyringProxyService.validateToken(botToken);
       if (!validation.valid) {
         return { success: false, error: 'Invalid or expired proxy token' };
       }
@@ -131,7 +135,8 @@ export class ProtocolRouterService {
     );
 
     // 3. 获取模型的 Anthropic 协议标识符
-    const anthropicModelId = getAnthropicModelId(providerVendor, model) ?? model;
+    const anthropicModelId =
+      getAnthropicModelId(providerVendor, model) ?? model;
 
     // 4. 获取 Provider Key
     const providerKey = await this.getProviderKeyForModel(
@@ -153,7 +158,10 @@ export class ProtocolRouterService {
     );
 
     // 5. 构建 Anthropic 请求
-    const anthropicBody = this.buildAnthropicRequestBody(body, anthropicModelId);
+    const anthropicBody = this.buildAnthropicRequestBody(
+      body,
+      anthropicModelId,
+    );
 
     // 获取协议级别的 BaseUrl（优先级：协议级 > 全局 > 默认）
     let baseUrl: string | null = null;
@@ -287,7 +295,12 @@ export class ProtocolRouterService {
     // Anthropic 模型
     if (model.startsWith('claude-')) return 'anthropic';
     // OpenAI 模型
-    if (model.startsWith('gpt-') || model.startsWith('o1-') || model.startsWith('o3-')) return 'openai';
+    if (
+      model.startsWith('gpt-') ||
+      model.startsWith('o1-') ||
+      model.startsWith('o3-')
+    )
+      return 'openai';
     // Google 模型
     if (model.startsWith('gemini-')) return 'google';
     // DeepSeek 模型
@@ -295,7 +308,8 @@ export class ProtocolRouterService {
     // GLM 模型
     if (model.startsWith('glm-')) return 'zhipu';
     // Kimi 模型
-    if (model.startsWith('kimi-') || model.startsWith('moonshot-')) return 'moonshot';
+    if (model.startsWith('kimi-') || model.startsWith('moonshot-'))
+      return 'moonshot';
     // 默认
     return 'openai';
   }
@@ -386,14 +400,20 @@ export class ProtocolRouterService {
         return null;
       }
 
-      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<
+        string,
+        string | null
+      >;
       return apiTypeBaseUrls[apiType] ?? null;
     } catch (error) {
-      this.logger.warn('[ProtocolRouter] Failed to get protocol-specific baseUrl', {
-        modelAvailabilityId,
-        apiType,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        '[ProtocolRouter] Failed to get protocol-specific baseUrl',
+        {
+          modelAvailabilityId,
+          apiType,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      );
       return null;
     }
   }

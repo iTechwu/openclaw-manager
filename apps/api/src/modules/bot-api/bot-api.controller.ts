@@ -768,22 +768,26 @@ export class BotApiController {
   @TsRestHandler(mc.getProviderModelProtocolConfig)
   @AdminAuth()
   async getProviderModelProtocolConfig(): Promise<any> {
-    return tsRestHandler(mc.getProviderModelProtocolConfig, async ({ params }) => {
-      const config = await this.availableModelService.getProviderModelProtocolConfig(
-        params.providerKeyId,
-      );
-      if (!config) {
-        return {
-          status: 404,
-          body: {
-            code: 404,
-            msg: 'Provider key not found',
-            data: { error: 'Provider key not found' },
-          },
-        };
-      }
-      return success(config);
-    });
+    return tsRestHandler(
+      mc.getProviderModelProtocolConfig,
+      async ({ params }) => {
+        const config =
+          await this.availableModelService.getProviderModelProtocolConfig(
+            params.providerKeyId,
+          );
+        if (!config) {
+          return {
+            status: 404,
+            body: {
+              code: 404,
+              msg: 'Provider key not found',
+              data: { error: 'Provider key not found' },
+            },
+          };
+        }
+        return success(config);
+      },
+    );
   }
 
   /**
@@ -811,13 +815,17 @@ export class BotApiController {
   @TsRestHandler(mc.batchUpdateModelProtocolConfig)
   @AdminAuth()
   async batchUpdateModelProtocolConfig(): Promise<any> {
-    return tsRestHandler(mc.batchUpdateModelProtocolConfig, async ({ body }) => {
-      const result = await this.availableModelService.batchUpdateModelProtocolConfig(
-        body.providerKeyId,
-        body.models,
-      );
-      return success(result);
-    });
+    return tsRestHandler(
+      mc.batchUpdateModelProtocolConfig,
+      async ({ body }) => {
+        const result =
+          await this.availableModelService.batchUpdateModelProtocolConfig(
+            body.providerKeyId,
+            body.models,
+          );
+        return success(result);
+      },
+    );
   }
 
   // ============================================================================

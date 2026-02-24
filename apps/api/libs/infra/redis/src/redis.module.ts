@@ -6,6 +6,9 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonErrorCode } from '@repo/contracts/errors';
 import { ApiException, apiError } from '@/filter/exception/api.exception';
 import enviroment from '@/utils/enviroment.util';
+import { createContextLogger } from '@/utils/logger-standalone.util';
+
+const logger = createContextLogger('RedisModule');
 
 @Module({
   imports: [ConfigModule],
@@ -22,10 +25,7 @@ import enviroment from '@/utils/enviroment.util';
           const client = new Redis(redisUrl, {
             retryStrategy(times) {
               if (times > 10) {
-                console.error(
-                  'Redis连接失败',
-                  'Redis reconnect exhausted after 10 retries.',
-                );
+                logger.error('Redis reconnect exhausted after 10 retries');
                 return null;
               }
               return Math.min(times * 150, 3000);
@@ -33,24 +33,18 @@ import enviroment from '@/utils/enviroment.util';
           });
 
           client.on('connect', () => {
-            if (enviroment.isProduction()) {
-              console.log('Redis client connected');
-            }
+            logger.info('Redis client connected');
           });
 
           client.on('error', (error) => {
-            if (enviroment.isProduction()) {
-              console.error('Error connecting to Redis', error);
-            } else {
-              console.debug('Error connecting to Redis', error);
-            }
-            // throw new ApiException('invalidRedis');
+            logger.error('Error connecting to Redis', { error: error.message });
           });
 
           return client;
         } catch (e) {
-          console.error('Redis error', e);
-          // throw new ApiException('invalidRedis');
+          logger.error('Redis error', {
+            error: e instanceof Error ? e.message : String(e),
+          });
           return null;
         }
       },

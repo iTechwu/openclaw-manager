@@ -66,6 +66,12 @@ export class DockerService implements OnModuleInit {
   private readonly dataVolumeName: string | null;
   private readonly secretsVolumeName: string | null;
   private readonly openclawVolumeName: string | null;
+  /**
+   * Container resource limits
+   * Configured via BOT_CONTAINER_CPU_LIMIT and BOT_CONTAINER_MEMORY_LIMIT environment variables
+   */
+  private readonly containerCpuLimit: number;
+  private readonly containerMemoryLimit: number;
 
   constructor(private readonly configService: ConfigService) {
     // Initialize bot images for each type
@@ -80,6 +86,16 @@ export class DockerService implements OnModuleInit {
     };
     this.logger.log(
       `Bot images configured: GATEWAY=${this.botImages.GATEWAY}, TOOL_SANDBOX=${this.botImages.TOOL_SANDBOX}, BROWSER_SANDBOX=${this.botImages.BROWSER_SANDBOX}`,
+    );
+
+    // Container resource limits (default: 1 CPU, 2GB memory)
+    // BOT_CONTAINER_CPU_LIMIT: CPU cores (1 = 1 CPU)
+    // BOT_CONTAINER_MEMORY_LIMIT: Memory in bytes (2147483648 = 2GB)
+    this.containerCpuLimit = Number(process.env.BOT_CONTAINER_CPU_LIMIT) || 1;
+    this.containerMemoryLimit =
+      Number(process.env.BOT_CONTAINER_MEMORY_LIMIT) || 2147483648;
+    this.logger.log(
+      `Container resource limits: CPU=${this.containerCpuLimit} cores, Memory=${(this.containerMemoryLimit / 1024 / 1024 / 1024).toFixed(1)}GB`,
     );
 
     // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
@@ -469,9 +485,16 @@ export class DockerService implements OnModuleInit {
       Binds: binds,
       RestartPolicy: { Name: 'unless-stopped' },
       NetworkMode: networkMode,
+      // Resource limits to prevent single bot from consuming too many resources
+      // CpuQuota: 100000 = 1 CPU (microseconds per 100ms period)
+      CpuQuota: this.containerCpuLimit * 100000,
+      // Memory limit in bytes
+      Memory: this.containerMemoryLimit,
+      // MemorySwap = Memory means no swap usage
+      MemorySwap: this.containerMemoryLimit,
     };
 
-    // BROWSER_SANDBOX needs additional ports and shared memory for Chrome
+    // BROWSER_SANDBOX needs additional ports, shared memory, and higher resource limits for Chrome
     if (botType === 'BROWSER_SANDBOX') {
       // Add extra ports for browser sandbox:
       // - CDP (Chrome DevTools Protocol) on port+1
@@ -488,8 +511,12 @@ export class DockerService implements OnModuleInit {
       ];
       // Chrome needs 2GB shared memory
       hostConfig.ShmSize = 2 * 1024 * 1024 * 1024; // 2GB
+      // Browser sandbox needs higher resource limits (4 CPU, 8GB memory)
+      hostConfig.CpuQuota = 400000; // 4 CPU
+      hostConfig.Memory = 8 * 1024 * 1024 * 1024; // 8GB
+      hostConfig.MemorySwap = 8 * 1024 * 1024 * 1024;
       this.logger.log(
-        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}`,
+        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}, CPU=4, Memory=8GB`,
       );
     }
 

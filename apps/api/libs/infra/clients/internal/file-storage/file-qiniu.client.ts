@@ -694,8 +694,10 @@ export class FileQiniuClient implements FileStorageInterface {
             // 这里只返回任务id，转由客户端发请求查询
             res(data.persistentId);
           } else {
-            console.log(resp.statusCode);
-            console.log(data);
+            this.logger.warn('Qiniu fop request failed', {
+              statusCode: resp.statusCode,
+              data,
+            });
           }
         },
       );
@@ -711,7 +713,7 @@ export class FileQiniuClient implements FileStorageInterface {
     return new Promise((res) => {
       this.operManager.prefop(persistentId, (err, data, resp) => {
         if (err) {
-          console.log(err);
+          this.logger.error('Qiniu queryFopStatus error', { error: err });
           throw apiError(CommonErrorCode.QiniuQueryFopStatusError);
         }
         if (resp.statusCode == 200) {
@@ -720,8 +722,10 @@ export class FileQiniuClient implements FileStorageInterface {
           // res({ code, key })
           res(item);
         } else {
-          console.log(resp.statusCode);
-          console.log(data);
+          this.logger.warn('Qiniu prefop request failed', {
+            statusCode: resp.statusCode,
+            data,
+          });
         }
       });
     });

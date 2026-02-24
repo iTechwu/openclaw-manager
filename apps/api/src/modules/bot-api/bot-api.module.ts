@@ -87,7 +87,11 @@ import { SkillApiModule } from '../skill-api/skill-api.module';
     FeishuPairingRecordModule,
     FeishuClientModule,
   ],
-  controllers: [BotApiController, ModelRoutingController, FeishuPairingController],
+  controllers: [
+    BotApiController,
+    ModelRoutingController,
+    FeishuPairingController,
+  ],
   providers: [
     BotApiService,
     EncryptionService,
