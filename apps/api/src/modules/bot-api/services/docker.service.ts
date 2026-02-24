@@ -12,6 +12,7 @@ import type {
   BotType,
 } from '@repo/contracts';
 import { normalizeModelName } from '@/utils/model-normalizer';
+import { dockerConfig } from '@/common/config/validation';
 
 export interface ContainerInfo {
   id: string;
@@ -74,39 +75,30 @@ export class DockerService implements OnModuleInit {
   private readonly containerMemoryLimit: number;
 
   constructor(private readonly configService: ConfigService) {
-    // Initialize bot images for each type
-    // Image is configured via BOT_IMAGE_<TYPE> environment variable
+    // Initialize bot images for each type (使用类型安全的环境变量配置)
     this.botImages = {
-      GATEWAY: process.env.BOT_IMAGE_GATEWAY || 'openclaw:latest',
-      TOOL_SANDBOX:
-        process.env.BOT_IMAGE_TOOL_SANDBOX || 'openclaw-sandbox:bookworm-slim',
-      BROWSER_SANDBOX:
-        process.env.BOT_IMAGE_BROWSER_SANDBOX ||
-        'openclaw-sandbox-browser:bookworm-slim',
+      GATEWAY: dockerConfig.images.gateway,
+      TOOL_SANDBOX: dockerConfig.images.toolSandbox,
+      BROWSER_SANDBOX: dockerConfig.images.browserSandbox,
     };
     this.logger.log(
       `Bot images configured: GATEWAY=${this.botImages.GATEWAY}, TOOL_SANDBOX=${this.botImages.TOOL_SANDBOX}, BROWSER_SANDBOX=${this.botImages.BROWSER_SANDBOX}`,
     );
 
-    // Container resource limits (default: 1 CPU, 2GB memory)
-    // BOT_CONTAINER_CPU_LIMIT: CPU cores (1 = 1 CPU)
-    // BOT_CONTAINER_MEMORY_LIMIT: Memory in bytes (2147483648 = 2GB)
-    this.containerCpuLimit = Number(process.env.BOT_CONTAINER_CPU_LIMIT) || 1;
-    this.containerMemoryLimit =
-      Number(process.env.BOT_CONTAINER_MEMORY_LIMIT) || 2147483648;
+    // Container resource limits
+    this.containerCpuLimit = dockerConfig.limits.cpu;
+    this.containerMemoryLimit = dockerConfig.limits.memory;
     this.logger.log(
       `Container resource limits: CPU=${this.containerCpuLimit} cores, Memory=${(this.containerMemoryLimit / 1024 / 1024 / 1024).toFixed(1)}GB`,
     );
 
-    // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
-    const portStartRaw = process.env.BOT_PORT_START || 9200;
-    this.portStart =
-      typeof portStartRaw === 'number'
-        ? portStartRaw
-        : Number(portStartRaw) || 9200;
-    const dataDir = process.env.BOT_DATA_DIR || '/data/bots';
-    const secretsDir = process.env.BOT_SECRETS_DIR || '/data/secrets';
-    const openclawDir = process.env.BOT_OPENCLAW_DIR || '/data/openclaw';
+    // 端口配置
+    this.portStart = dockerConfig.portStart;
+
+    // 目录配置
+    const dataDir = dockerConfig.directories.data;
+    const secretsDir = dockerConfig.directories.secrets;
+    const openclawDir = dockerConfig.directories.openclaw;
 
     // 统一规范为绝对路径，避免 Docker 把相对路径当作 volume 名称（从而报类似 "includes invalid characters"）
     this.dataDir = isAbsolute(dataDir) ? dataDir : join(process.cwd(), dataDir);
@@ -118,10 +110,9 @@ export class DockerService implements OnModuleInit {
       : join(process.cwd(), openclawDir);
 
     // Volume names for containerized deployment
-    // When set, bot containers will mount from these named volumes instead of host paths
-    this.dataVolumeName = process.env.DATA_VOLUME_NAME || null;
-    this.secretsVolumeName = process.env.SECRETS_VOLUME_NAME || null;
-    this.openclawVolumeName = process.env.OPENCLAW_VOLUME_NAME || null;
+    this.dataVolumeName = dockerConfig.volumes.data || null;
+    this.secretsVolumeName = dockerConfig.volumes.secrets || null;
+    this.openclawVolumeName = dockerConfig.volumes.openclaw || null;
   }
 
   /**

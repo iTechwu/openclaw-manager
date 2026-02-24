@@ -322,6 +322,17 @@ export const openaiSchema = z.object({
   baseUrl: z.string().url().optional(),
 });
 
+/**
+ * IP Info Configuration Schema
+ * IP 地理位置信息服务配置
+ */
+export const ipInfoSchema = z.object({
+  /** IP Info API URL */
+  url: z.string().url(),
+  /** IP Info API Token */
+  token: z.string().min(1),
+});
+
 // Full Keys Configuration Schema
 export const keysConfigSchema = z.object({
   google: googleServiceAccountSchema,
@@ -340,6 +351,7 @@ export const keysConfigSchema = z.object({
   wechat: wechatSchema.optional(),
   agentx: agentxSchema.optional(),
   openai: openaiSchema.optional(),
+  ipinfo: ipInfoSchema.optional(),
 });
 
 // ============================================================================
@@ -438,6 +450,9 @@ export type AgentXConfig = z.infer<typeof agentxSchema>;
 
 /** OpenAI 配置类型 */
 export type OpenAIConfig = z.infer<typeof openaiSchema>;
+
+/** IP Info 配置类型 */
+export type IpInfoConfig = z.infer<typeof ipInfoSchema>;
 
 /**
  * Validation result type

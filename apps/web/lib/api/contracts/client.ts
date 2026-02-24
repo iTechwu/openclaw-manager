@@ -1,7 +1,7 @@
 'use client';
 
 import { initQueryClient } from '@ts-rest/react-query';
-import { initClient, type ApiFetcherArgs } from '@ts-rest/core';
+import { initClient, type ApiFetcherArgs, type AppRouter } from '@ts-rest/core';
 import { toast } from 'sonner';
 import {
   analyticsContract,
@@ -271,7 +271,7 @@ const customFetch = async (args: ApiFetcherArgs) => baseFetch(args, true);
 const publicFetch = async (args: ApiFetcherArgs) => baseFetch(args, false);
 
 // ============================================================================
-// Direct API Clients (for imperative calls)
+// Client Options
 // ============================================================================
 
 /**
@@ -296,275 +296,187 @@ const publicClientOptions = {
   throwOnUnknownStatus: false,
 };
 
-/**
- * Download API - Direct client
- */
-export const downloadClient = initClient(downloadContract, clientOptions);
-
-/**
- * Notification API - Direct client
- */
-/**
- * Sign API - Direct client (PUBLIC - no auth required)
- */
-export const signClient = initClient(signContract, publicClientOptions);
-
-/**
- * User API - Direct client
- */
-export const userClient = initClient(userContract, clientOptions);
-
-/**
- * SMS API - Direct client (PUBLIC - no auth required)
- */
-export const smsClient = initClient(smsContract, publicClientOptions);
-
-/**
- * Uploader API - Direct client
- */
-export const uploaderClient = initClient(uploaderContract, clientOptions);
-
-/**
- * Analytics API - Direct client (for imperative calls)
- */
-export const analyticsClient = initClient(analyticsContract, clientOptions);
-
 // ============================================================================
-// React Query Clients (for hooks)
+// Factory Functions (NEW - 推荐使用)
 // ============================================================================
 
 /**
- * Download API - React Query hooks
+ * 创建 API 客户端的工厂函数
+ * 同时返回 Direct Client 和 React Query Client
+ *
+ * @example
+ * const bot = createApiClient(botContract);
+ * // 使用: bot.client (imperative), bot.query (React Query hooks)
  */
-export const downloadApi = initQueryClient(downloadContract, clientOptions);
+function createApiClient<T extends AppRouter>(contract: T, isPublic = false) {
+  const options = isPublic ? publicClientOptions : clientOptions;
+  return {
+    client: initClient(contract, options),
+    query: initQueryClient(contract, options),
+  };
+}
 
-/**
- * Message API - React Query hooks
- */
-export const messageApi = initQueryClient(messageContract, clientOptions);
+// ============================================================================
+// Public API Clients (不需要认证)
+// ============================================================================
 
-/**
- * Setting API - React Query hooks
- */
-export const settingApi = initQueryClient(settingContract, clientOptions);
+export const sign = createApiClient(signContract, true);
+export const sms = createApiClient(smsContract, true);
 
-/**
- * Analytics API - React Query hooks
- */
-export const analyticsApi = initQueryClient(analyticsContract, clientOptions);
+// ============================================================================
+// Authenticated API Clients
+// ============================================================================
 
-/**
- * Bot API - Direct client
- */
-export const botClient = initClient(botContract, clientOptions);
+export const analytics = createApiClient(analyticsContract);
+export const download = createApiClient(downloadContract);
+export const message = createApiClient(messageContract);
+export const setting = createApiClient(settingContract);
+export const user = createApiClient(userContract);
+export const uploader = createApiClient(uploaderContract);
+export const bot = createApiClient(botContract);
+export const botUsage = createApiClient(botUsageContract);
+export const providerKey = createApiClient(providerKeyContract);
+export const system = createApiClient(systemContract);
+export const personaTemplate = createApiClient(personaTemplateContract);
+export const channel = createApiClient(channelContract);
+export const botChannel = createApiClient(botChannelContract);
+export const plugin = createApiClient(pluginContract);
+export const botPlugin = createApiClient(botPluginContract);
+export const skill = createApiClient(skillContract);
+export const botSkill = createApiClient(botSkillContract);
+export const modelRouting = createApiClient(modelRoutingContract);
+export const routingAdmin = createApiClient(routingAdminContract);
+export const notification = createApiClient(notificationContract);
+export const skillSync = createApiClient(skillSyncContract);
+export const model = createApiClient(modelContract);
+export const botModel = createApiClient(botModelContract);
+export const feishuPairing = createApiClient(feishuPairingContract);
 
-/**
- * Bot API - React Query hooks
- */
-export const botApi = initQueryClient(botContract, clientOptions);
+// ============================================================================
+// Legacy Exports (向后兼容 - 将在后续版本移除)
+// ============================================================================
 
-/**
- * Provider Key API - Direct client
- */
-export const providerKeyClient = initClient(providerKeyContract, clientOptions);
+/** @deprecated Use `bot.client` instead */
+export const botClient = bot.client;
+/** @deprecated Use `bot.query` instead */
+export const botApi = bot.query;
 
-/**
- * Provider Key API - React Query hooks
- */
-export const providerKeyApi = initQueryClient(
-  providerKeyContract,
-  clientOptions,
-);
+/** @deprecated Use `message.client` instead */
+export const messageClient = message.client;
+/** @deprecated Use `message.query` instead */
+export const messageApi = message.query;
 
-/**
- * System API - Direct client
- */
-export const systemClient = initClient(systemContract, clientOptions);
+/** @deprecated Use `analytics.client` instead */
+export const analyticsClient = analytics.client;
+/** @deprecated Use `analytics.query` instead */
+export const analyticsApi = analytics.query;
 
-/**
- * System API - React Query hooks
- */
-export const systemApi = initQueryClient(systemContract, clientOptions);
+/** @deprecated Use `setting.client` instead */
+export const settingClient = setting.client;
+/** @deprecated Use `setting.query` instead */
+export const settingApi = setting.query;
 
-/**
- * Persona Template API - Direct client
- */
-export const personaTemplateClient = initClient(
-  personaTemplateContract,
-  clientOptions,
-);
+/** @deprecated Use `download.client` instead */
+export const downloadClient = download.client;
+/** @deprecated Use `download.query` instead */
+export const downloadApi = download.query;
 
-/**
- * Persona Template API - React Query hooks
- */
-export const personaTemplateApi = initQueryClient(
-  personaTemplateContract,
-  clientOptions,
-);
+/** @deprecated Use `user.client` instead */
+export const userClient = user.client;
 
-/**
- * Channel API - Direct client
- */
-export const channelClient = initClient(channelContract, clientOptions);
+/** @deprecated Use `sign.client` instead */
+export const signClient = sign.client;
 
-/**
- * Channel API - React Query hooks
- */
-export const channelApi = initQueryClient(channelContract, clientOptions);
+/** @deprecated Use `sms.client` instead */
+export const smsClient = sms.client;
 
-/**
- * Bot Usage API - Direct client
- */
-export const botUsageClient = initClient(botUsageContract, clientOptions);
+/** @deprecated Use `uploader.client` instead */
+export const uploaderClient = uploader.client;
 
-/**
- * Bot Usage API - React Query hooks
- */
-export const botUsageApi = initQueryClient(botUsageContract, clientOptions);
+/** @deprecated Use `botUsage.client` instead */
+export const botUsageClient = botUsage.client;
+/** @deprecated Use `botUsage.query` instead */
+export const botUsageApi = botUsage.query;
 
-/**
- * Plugin API - Direct client
- */
-export const pluginClient = initClient(pluginContract, clientOptions);
+/** @deprecated Use `providerKey.client` instead */
+export const providerKeyClient = providerKey.client;
+/** @deprecated Use `providerKey.query` instead */
+export const providerKeyApi = providerKey.query;
 
-/**
- * Plugin API - React Query hooks
- */
-export const pluginApi = initQueryClient(pluginContract, clientOptions);
+/** @deprecated Use `system.client` instead */
+export const systemClient = system.client;
+/** @deprecated Use `system.query` instead */
+export const systemApi = system.query;
 
-/**
- * Bot Plugin API - Direct client
- */
-export const botPluginClient = initClient(botPluginContract, clientOptions);
+/** @deprecated Use `personaTemplate.client` instead */
+export const personaTemplateClient = personaTemplate.client;
+/** @deprecated Use `personaTemplate.query` instead */
+export const personaTemplateApi = personaTemplate.query;
 
-/**
- * Bot Plugin API - React Query hooks
- */
-export const botPluginApi = initQueryClient(botPluginContract, clientOptions);
+/** @deprecated Use `channel.client` instead */
+export const channelClient = channel.client;
+/** @deprecated Use `channel.query` instead */
+export const channelApi = channel.query;
 
-/**
- * Skill API - Direct client
- */
-export const skillClient = initClient(skillContract, clientOptions);
+/** @deprecated Use `botChannel.client` instead */
+export const botChannelClient = botChannel.client;
+/** @deprecated Use `botChannel.query` instead */
+export const botChannelApi = botChannel.query;
 
-/**
- * Skill API - React Query hooks
- */
-export const skillApi = initQueryClient(skillContract, clientOptions);
+/** @deprecated Use `plugin.client` instead */
+export const pluginClient = plugin.client;
+/** @deprecated Use `plugin.query` instead */
+export const pluginApi = plugin.query;
 
-/**
- * Bot Skill API - Direct client
- */
-export const botSkillClient = initClient(botSkillContract, clientOptions);
+/** @deprecated Use `botPlugin.client` instead */
+export const botPluginClient = botPlugin.client;
+/** @deprecated Use `botPlugin.query` instead */
+export const botPluginApi = botPlugin.query;
 
-/**
- * Bot Skill API - React Query hooks
- */
-export const botSkillApi = initQueryClient(botSkillContract, clientOptions);
+/** @deprecated Use `skill.client` instead */
+export const skillClient = skill.client;
+/** @deprecated Use `skill.query` instead */
+export const skillApi = skill.query;
 
-/**
- * Bot Channel API - Direct client
- */
-export const botChannelClient = initClient(botChannelContract, clientOptions);
+/** @deprecated Use `botSkill.client` instead */
+export const botSkillClient = botSkill.client;
+/** @deprecated Use `botSkill.query` instead */
+export const botSkillApi = botSkill.query;
 
-/**
- * Bot Channel API - React Query hooks
- */
-export const botChannelApi = initQueryClient(botChannelContract, clientOptions);
+/** @deprecated Use `modelRouting.client` instead */
+export const modelRoutingClient = modelRouting.client;
+/** @deprecated Use `modelRouting.query` instead */
+export const modelRoutingApi = modelRouting.query;
 
-/**
- * Model Routing API - Direct client
- */
-export const modelRoutingClient = initClient(
-  modelRoutingContract,
-  clientOptions,
-);
+/** @deprecated Use `routingAdmin.client` instead */
+export const routingAdminClient = routingAdmin.client;
+/** @deprecated Use `routingAdmin.query` instead */
+export const routingAdminApi = routingAdmin.query;
 
-/**
- * Model Routing API - React Query hooks
- */
-export const modelRoutingApi = initQueryClient(
-  modelRoutingContract,
-  clientOptions,
-);
+/** @deprecated Use `notification.client` instead */
+export const notificationClient = notification.client;
+/** @deprecated Use `notification.query` instead */
+export const notificationApi = notification.query;
 
-/**
- * Routing Admin API - Direct client
- */
-export const routingAdminClient = initClient(
-  routingAdminContract,
-  clientOptions,
-);
+/** @deprecated Use `skillSync.client` instead */
+export const skillSyncClient = skillSync.client;
+/** @deprecated Use `skillSync.query` instead */
+export const skillSyncApi = skillSync.query;
 
-/**
- * Routing Admin API - React Query hooks
- */
-export const routingAdminApi = initQueryClient(
-  routingAdminContract,
-  clientOptions,
-);
+/** @deprecated Use `model.client` instead */
+export const modelClient = model.client;
+/** @deprecated Use `model.query` instead */
+export const modelApi = model.query;
 
-/**
- * Notification API - Direct client
- */
-export const notificationClient = initClient(
-  notificationContract,
-  clientOptions,
-);
+/** @deprecated Use `botModel.client` instead */
+export const botModelClient = botModel.client;
+/** @deprecated Use `botModel.query` instead */
+export const botModelApi = botModel.query;
 
-/**
- * Notification API - React Query hooks
- */
-export const notificationApi = initQueryClient(
-  notificationContract,
-  clientOptions,
-);
-
-/**
- * Skill Sync API - Direct client
- */
-export const skillSyncClient = initClient(skillSyncContract, clientOptions);
-
-/**
- * Skill Sync API - React Query hooks
- */
-export const skillSyncApi = initQueryClient(skillSyncContract, clientOptions);
-
-/**
- * Model API - Direct client
- */
-export const modelClient = initClient(modelContract, clientOptions);
-
-/**
- * Model API - React Query hooks
- */
-export const modelApi = initQueryClient(modelContract, clientOptions);
-
-/**
- * Bot Model API - Direct client
- */
-export const botModelClient = initClient(botModelContract, clientOptions);
-
-/**
- * Bot Model API - React Query hooks
- */
-export const botModelApi = initQueryClient(botModelContract, clientOptions);
-
-/**
- * Feishu Pairing API - Direct client
- */
-export const feishuPairingClient = initClient(
-  feishuPairingContract,
-  clientOptions,
-);
-
-/**
- * Feishu Pairing API - React Query hooks
- */
-export const feishuPairingApi = initQueryClient(
-  feishuPairingContract,
-  clientOptions,
-);
+/** @deprecated Use `feishuPairing.client` instead */
+export const feishuPairingClient = feishuPairing.client;
+/** @deprecated Use `feishuPairing.query` instead */
+export const feishuPairingApi = feishuPairing.query;
 
 // ============================================================================
 // Generic ts-rest Client (for custom contracts)
@@ -582,47 +494,47 @@ export const feishuPairingApi = initQueryClient(
  */
 export const tsRestClient = {
   request: customFetch,
-  // React Query clients (for hooks)
-  analytics: analyticsApi,
-  message: messageApi,
-  setting: settingApi,
-  download: downloadApi,
-  bot: botApi,
-  botUsage: botUsageApi,
-  providerKey: providerKeyApi,
-  system: systemApi,
-  personaTemplate: personaTemplateApi,
-  channel: channelApi,
-  botChannel: botChannelApi,
-  plugin: pluginApi,
-  botPlugin: botPluginApi,
-  skill: skillApi,
-  botSkill: botSkillApi,
-  modelRouting: modelRoutingApi,
-  routingAdmin: routingAdminApi,
-  notification: notificationApi,
-  skillSync: skillSyncApi,
-  model: modelApi,
-  botModel: botModelApi,
-  feishuPairing: feishuPairingApi,
-  // Direct clients (for imperative calls)
-  analyticsClient,
-  botClient,
-  botUsageClient,
-  providerKeyClient,
-  systemClient,
-  personaTemplateClient,
-  channelClient,
-  botChannelClient,
-  pluginClient,
-  botPluginClient,
-  skillClient,
-  botSkillClient,
-  modelRoutingClient,
-  routingAdminClient,
-  notificationClient,
-  skillSyncClient,
-  modelClient,
-  botModelClient,
-  feishuPairingClient,
+  // React Query clients (for hooks) - 使用新的 query 属性
+  analytics: analytics.query,
+  message: message.query,
+  setting: setting.query,
+  download: download.query,
+  bot: bot.query,
+  botUsage: botUsage.query,
+  providerKey: providerKey.query,
+  system: system.query,
+  personaTemplate: personaTemplate.query,
+  channel: channel.query,
+  botChannel: botChannel.query,
+  plugin: plugin.query,
+  botPlugin: botPlugin.query,
+  skill: skill.query,
+  botSkill: botSkill.query,
+  modelRouting: modelRouting.query,
+  routingAdmin: routingAdmin.query,
+  notification: notification.query,
+  skillSync: skillSync.query,
+  model: model.query,
+  botModel: botModel.query,
+  feishuPairing: feishuPairing.query,
+  // Direct clients (for imperative calls) - 使用新的 client 属性
+  analyticsClient: analytics.client,
+  botClient: bot.client,
+  botUsageClient: botUsage.client,
+  providerKeyClient: providerKey.client,
+  systemClient: system.client,
+  personaTemplateClient: personaTemplate.client,
+  channelClient: channel.client,
+  botChannelClient: botChannel.client,
+  pluginClient: plugin.client,
+  botPluginClient: botPlugin.client,
+  skillClient: skill.client,
+  botSkillClient: botSkill.client,
+  modelRoutingClient: modelRouting.client,
+  routingAdminClient: routingAdmin.client,
+  notificationClient: notification.client,
+  skillSyncClient: skillSync.client,
+  modelClient: model.client,
+  botModelClient: botModel.client,
+  feishuPairingClient: feishuPairing.client,
 };

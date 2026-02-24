@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import * as Rabbitmq from 'amqplib';
 import { RABBITMQ_CONNECTION, RabbitmqConnection } from './dto/rabbitmq.dto';
 import { RabbitmqService } from './rabbitmq.service';
-import { PrismaModule } from '@app/prisma';
 import { RedisModule } from '@app/redis';
 import { ConfigModule } from '@nestjs/config';
 import { createContextLogger } from '@/utils/logger-standalone.util';
@@ -10,7 +9,7 @@ import { createContextLogger } from '@/utils/logger-standalone.util';
 const logger = createContextLogger('RabbitmqModule');
 
 @Module({
-  imports: [PrismaModule, RedisModule, ConfigModule],
+  imports: [RedisModule, ConfigModule],
   providers: [
     {
       provide: RABBITMQ_CONNECTION,

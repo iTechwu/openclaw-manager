@@ -1,9 +1,19 @@
 # =============================================================================
-# ClawBot Manager - Docker Compose Configuration
+# ClawBot Manager - Unified Docker Compose Configuration
 # =============================================================================
-# Services:
-#   - api: NestJS backend (internal: 3200, external: 13100)
-#   - web: Next.js frontend (internal: 3000, external: 13000)
+# 统一配置：开发环境和生产环境共用此文件
+# 环境变量统一存储在 apps/api/.env 中
+#
+# 架构:
+#   - Docker Socket 代理 (生产环境推荐，通过 --profile prod 启用)
+#   - ClawBotManager API + Web
+#   - PostgreSQL 和 Redis 为外部服务 (通过环境变量配置)
+#   - Gateway Bot 由 API 动态创建
+#
+# Bot Types (botType):
+#   - GATEWAY: Main gateway bot (default) - uses BOT_IMAGE_GATEWAY
+#   - TOOL_SANDBOX: Tool sandbox container - uses BOT_IMAGE_TOOL_SANDBOX
+#   - BROWSER_SANDBOX: Browser sandbox container - uses BOT_IMAGE_BROWSER_SANDBOX
 #
 # Bot Images:
 #   所有 Bot 镜像从 openclaw 项目构建，使用以下命令：
@@ -12,36 +22,20 @@
 #   - pnpm docker:build:sandbox  # 构建 TOOL_SANDBOX 镜像
 #   - pnpm docker:build:browser  # 构建 BROWSER_SANDBOX 镜像
 #
-# Prerequisites:
-#   - PostgreSQL and Redis should be running externally
-#   - Configure DATABASE_URL and REDIS_URL in environment or .env files
+# 使用方法:
+#   # 开发环境 (必须指定 env 文件)
+#   docker compose --env-file ./apps/api/.env up -d
 #
-# Zero-Trust Mode:
-#   Bot containers access AI APIs through the proxy endpoint:
-#   - Bot containers must be on the same network (common_network)
-#   - INTERNAL_API_BASE_URL should be set to http://clawbot-api:3200/api
-#   - Bot containers use proxy tokens instead of real API keys
-#   - Proxy endpoint: /proxy/v1/{vendor}/*
+#   # 生产环境 (使用 docker-socket-proxy)
+#   docker compose --env-file ./apps/api/.env --profile prod up -d
 #
-# Bot Types (botType):
-#   - GATEWAY: Main gateway bot (default) - uses BOT_IMAGE_GATEWAY
-#   - TOOL_SANDBOX: Tool sandbox container - uses BOT_IMAGE_TOOL_SANDBOX
-#   - BROWSER_SANDBOX: Browser sandbox container - uses BOT_IMAGE_BROWSER_SANDBOX
+#   # 仅构建镜像
+#   docker compose --env-file ./apps/api/.env build
 #
-# Build args (在 .env 中配置):
-#   BASE_NODE_IMAGE: Node 基础镜像
-#   NPM_REGISTRY: npm 镜像源 (默认 npmmirror.com)
+#   # 使用其他 env 文件
+#   docker compose --env-file ./apps/api/.env.prod up -d
 #
-# Troubleshooting network issues during build:
-#   1. 如果遇到 ECONNRESET 错误，Dockerfile 会自动重试并回退到官方 npm registry
-#   2. 可以手动设置 NPM_REGISTRY=https://registry.npmjs.org 使用官方源
-#   3. Docker Desktop: Settings -> Resources -> Proxies -> 关闭或修正代理
-#   4. 或在构建前执行: unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
-#
-# Usage:
-#   docker compose build        # Build images only
-#   docker compose up -d        # Start all services (builds if needed)
-#   docker compose up -d api web # Start only api and web
+# 文档: docs/单机多Bot架构部署方案.md
 # =============================================================================
 
 x-common: &common
@@ -55,12 +49,60 @@ x-healthcheck: &healthcheck
   interval: 30s
   timeout: 10s
   retries: 3
-  start_period: 10s
+  start_period: 30s
+
+x-logging: &logging
+  driver: 'json-file'
+  options:
+    max-size: '100m'
+    max-file: '5'
+    labels: 'service'
+    tag: '{{.Name}}'
 
 services:
-  # ---------------------------------------------------------------------------
+  # ===========================================================================
+  # Docker Socket 代理 (生产环境安全增强)
+  # ===========================================================================
+  # 使用 docker-socket-proxy 限制 API 访问权限
+  # 避免 API 直接访问 Docker Socket 的安全风险
+  # 仅在 --profile prod 时启动
+  docker-proxy:
+    profiles:
+      - prod
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: clawbot-docker-proxy
+    restart: unless-stopped
+    environment:
+      # 只允许必要的 Docker API 操作
+      - CONTAINERS=1 # 允许容器操作 (创建、启动、停止、删除)
+      - IMAGES=1 # 允许镜像操作 (查询、使用)
+      - NETWORKS=1 # 允许网络操作 (连接到网络)
+      - VOLUMES=0 # 禁止卷操作
+      - INFO=0 # 禁止系统信息查询
+      - VERSION=1 # 允许版本查询
+      - POST=1 # 允许 POST 请求 (创建容器)
+      - DELETE=1 # 允许 DELETE 请求 (删除容器)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - clawbot-internal
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:2375/version']
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      <<: *logging
+      options:
+        max-size: '10m'
+        max-file: '2'
+
+  # ===========================================================================
   # API Service - NestJS Backend
-  # ---------------------------------------------------------------------------
+  # ===========================================================================
   api:
     <<: *common
     build:
@@ -70,67 +112,79 @@ services:
       args:
         BASE_NODE_IMAGE: ${BASE_NODE_IMAGE:-node:24.1-slim}
         NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
-        # 构建时 prisma generate 需 DATABASE_URL，优先用 apps/api/.env（已放行），或从根 .env 传入
+        # 构建时 prisma generate 需 DATABASE_URL，优先用 apps/api/.env，或从根 .env 传入
         DATABASE_URL: ${DATABASE_URL:-}
       network: host
-    image: clawbot-api:latest
+    image: ${DOCKER_REGISTRY:-clawbot-api}:${IMAGE_TAG:-latest}
     container_name: clawbot-api
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
+        required: false
     env_file:
       - path: ./apps/api/.env
         required: true
       - path: ./apps/api/.env.production
         required: false
-      - path: ./.env
-        required: false
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 3200
+      # Docker 配置
+      # 开发环境: 不设置 DOCKER_HOST，直接使用 docker socket
+      # 生产环境: DOCKER_HOST=tcp://docker-proxy:2375
+      DOCKER_HOST: ${DOCKER_HOST:-}
       # Config file name (defaults to config.local.yaml if not set)
       YAML_CONFIG_FILENAME: ${YAML_CONFIG_FILENAME:-config.local.yaml}
       # Bot runtime configuration
       BOT_DATA_DIR: /data/bots
       BOT_SECRETS_DIR: /data/secrets
       # Bot images by type (all built from openclaw project)
-      # GATEWAY: 从 openclaw/Dockerfile 构建
       BOT_IMAGE_GATEWAY: ${BOT_IMAGE_GATEWAY:-openclaw:local}
-      # TOOL_SANDBOX: 从 openclaw/scripts/sandbox-setup.sh 构建
       BOT_IMAGE_TOOL_SANDBOX: ${BOT_IMAGE_TOOL_SANDBOX:-openclaw-sandbox:bookworm-slim}
-      # BROWSER_SANDBOX: 从 openclaw/scripts/sandbox-browser-setup.sh 构建
       BOT_IMAGE_BROWSER_SANDBOX: ${BOT_IMAGE_BROWSER_SANDBOX:-openclaw-sandbox-browser:bookworm-slim}
       # OpenClaw source path for auto-building images
       OPENCLAW_SRC_PATH: ${OPENCLAW_SRC_PATH:-../openclaw}
-      # Volume names for runtime path discovery (used when creating bot containers)
-      # Format: <project-name>_<volume-name> (docker compose prefixes with project name)
-      DATA_VOLUME_NAME: ${DATA_VOLUME_NAME:-clawbot-manager_clawbot-data}
-      SECRETS_VOLUME_NAME: ${SECRETS_VOLUME_NAME:-clawbot-manager_clawbot-secrets}
       # Bot 容器资源限制 (由 ClawBotManager 创建 Bot 时应用)
       BOT_CONTAINER_CPU_LIMIT: ${BOT_CONTAINER_CPU_LIMIT:-1}
       BOT_CONTAINER_MEMORY_LIMIT: ${BOT_CONTAINER_MEMORY_LIMIT:-2147483648}
+      # 日志级别
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
-      - '${API_PORT:-13100}:3200'
+      - '${API_PORT:-13100}:${API_PORT:-13100}'
     volumes:
-      - api-logs:/app/apps/api/logs
-      # Mount config files from host (these are not baked into the image)
-      - ./apps/api/config.local.yaml:/app/apps/api/config.local.yaml:ro
-      - ./apps/api/keys:/app/apps/api/keys:ro
-      # Docker socket for container management (required for bot lifecycle)
-      - /var/run/docker.sock:/var/run/docker.sock
       # Bot data and secrets volumes (persistent across container rebuilds)
       - clawbot-data:/data/bots
       - clawbot-secrets:/data/secrets
+      - clawbot-openclaw:/data/openclaw
+      - clawbot-logs:/var/log/clawbot
+      # 开发环境: 直接挂载 docker socket
+      # 生产环境: 通过 DOCKER_HOST 访问代理，但仍保留挂载以便代理使用
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 配置文件挂载 (开发环境)
+      - ./apps/api/config.local.yaml:/app/apps/api/config.local.yaml:ro
+      - ./apps/api/keys:/app/apps/api/keys:ro
       # Shared secrets (read-only, for proxy tokens etc.)
       - ./secrets:/secrets:ro
     networks:
-      - common_network
+      - clawbot-internal
+      - clawbot-external
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     healthcheck:
       <<: *healthcheck
       test: ['CMD', 'curl', '-f', 'http://localhost:3200/health']
+    deploy:
+      resources:
+        limits:
+          cpus: '${API_CPU_LIMIT:-2}'
+          memory: ${API_MEMORY_LIMIT:-4G}
+        reservations:
+          cpus: '${API_CPU_RESERVE:-1}'
+          memory: ${API_MEMORY_RESERVE:-2G}
+    logging:
+      <<: *logging
 
-  # ---------------------------------------------------------------------------
+  # ===========================================================================
   # Web Service - Next.js Frontend
-  # ---------------------------------------------------------------------------
+  # ===========================================================================
   web:
     <<: *common
     build:
@@ -138,46 +192,71 @@ services:
       dockerfile: Dockerfile
       target: web
       args:
-        # 来自 .env 中的 BASE_NODE_IMAGE
         BASE_NODE_IMAGE: ${BASE_NODE_IMAGE:-node:24.1-slim}
         NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
       network: host
-    image: clawbot-web:latest
+    image: ${DOCKER_REGISTRY:-clawbot-web}:${IMAGE_TAG:-latest}
     container_name: clawbot-web
-    env_file:
-      - ./.env
-      - ./apps/web/.env.local
-    environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 3000
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://api:3200/api}
-    ports:
-      - '${WEB_PORT:-13000}:3000'
     depends_on:
       api:
         condition: service_healthy
+    env_file:
+      - ./apps/web/.env.local
+    ports:
+      - '${WEB_PORT:-13000}:3000'
     networks:
-      - common_network
+      - clawbot-external
     healthcheck:
       <<: *healthcheck
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+    deploy:
+      resources:
+        limits:
+          cpus: '${WEB_CPU_LIMIT:-1}'
+          memory: ${WEB_MEMORY_LIMIT:-2G}
+        reservations:
+          cpus: '${WEB_CPU_RESERVE:-0.5}'
+          memory: ${WEB_MEMORY_RESERVE:-1G}
+    logging:
+      <<: *logging
+      options:
+        max-size: '50m'
+        max-file: '3'
 
 # =============================================================================
 # Networks
 # =============================================================================
+# 开发环境:
+#   - INTERNAL_NETWORK=common_network (与 PostgreSQL, Redis 共享)
+#   - EXTERNAL_NETWORK=common_network (同一网络)
+#   - NETWORK_EXTERNAL=true (网络已存在)
+#
+# 生产环境:
+#   - INTERNAL_NETWORK=clawbot-internal (服务间通信)
+#   - EXTERNAL_NETWORK=clawbot-external (对外暴露)
+#   - NETWORK_EXTERNAL=true
+#
+# 创建命令:
+#   docker network create clawbot-internal
+#   docker network create clawbot-external
+#   # 或使用已有的 common_network (开发环境)
 networks:
-  common_network:
+  clawbot-internal:
+    name: ${INTERNAL_NETWORK:-common_network}
+    external: true
+  clawbot-external:
+    name: ${EXTERNAL_NETWORK:-common_network}
     external: true
 
 # =============================================================================
 # Volumes
 # =============================================================================
 volumes:
-  api-logs:
-    name: clawbot-api-logs
-  # Bot workspace data (persistent across container rebuilds)
   clawbot-data:
-    name: ${DATA_VOLUME_NAME:-clawbot-manager_clawbot-data}
-  # Bot secrets (API keys, tokens - persistent across container rebuilds)
+    name: clawbot-data
   clawbot-secrets:
-    name: ${SECRETS_VOLUME_NAME:-clawbot-manager_clawbot-secrets}
+    name: clawbot-secrets
+  clawbot-openclaw:
+    name: clawbot-openclaw
+  clawbot-logs:
+    name: clawbot-logs

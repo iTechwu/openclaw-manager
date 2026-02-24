@@ -335,7 +335,6 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:13100/api}
     networks:
       - clawbot-external
     ports:
@@ -464,8 +463,6 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile.dev
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:3200
     volumes:
       - ./apps/web:/app
       - /app/node_modules

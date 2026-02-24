@@ -18,7 +18,7 @@ export const microServiceSchema = z.object({
   name: z.string().min(1),
   ChineseName: z.string().optional(),
   version: z.string().optional(),
-  port: z.number().int().positive().max(65535),
+  port: z.number().int().positive().max(65535).optional(),
   logger: z.boolean().default(true),
   transport: z.enum(['TCP', 'UDP', 'HTTP']).default('TCP'),
   host: z.string().optional(),
@@ -85,6 +85,7 @@ export const uploadConfigSchema = z.object({
 
 /**
  * IP info configuration schema
+ * Note: ipinfo 配置存储在 keys/config.json，在 initConfig 时合并到 yaml config
  */
 export const ipInfoConfigSchema = z.object({
   url: z.string().url(),
@@ -412,12 +413,16 @@ export const rateLimitConfigSchema = z.object({
 export const yamlConfigSchema = z.object({
   app: appConfigSchema,
   uploadConfig: uploadConfigSchema.optional(),
+  // ipinfo 从 keys/config.json 合并 (通过 configuration.ts)
   ipinfo: ipInfoConfigSchema.optional(),
   outOfAnonymityPath: pathConfigSchema.optional(),
   outOfUserPath: pathConfigSchema.optional(),
+  // pinecone.apiKey 已移至环境变量 PINECONE_API_KEY
   pinecone: z.object({ apiKey: z.string() }).optional(),
-  jwt: jwtConfigSchema,
-  crypto: cryptoConfigSchema,
+  // jwt 配置已移至环境变量 JWT_SECRET, JWT_EXPIRE_IN
+  jwt: jwtConfigSchema.optional(),
+  // crypto 配置已移至环境变量 CRYPTO_KEY, CRYPTO_IV
+  crypto: cryptoConfigSchema.optional(),
   cdn: cdnConfigSchema.optional(),
   redis: z.array(redisCacheKeySchema).optional(),
   buckets: z.array(bucketConfigSchema).optional(),
