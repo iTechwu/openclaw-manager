@@ -75,6 +75,11 @@ export class SkillSyncController {
   @TsRestHandler(c.skills)
   async skills() {
     return tsRestHandler(c.skills, async ({ query }) => {
+      this.logger.info('SkillSyncController: 收到技能列表查询请求', {
+        query,
+        isSystem: query.isSystem,
+        isSystemType: typeof query.isSystem,
+      });
       const result = await this.skillSyncService.listSkills(
         query as unknown as SkillSyncListQuery,
       );

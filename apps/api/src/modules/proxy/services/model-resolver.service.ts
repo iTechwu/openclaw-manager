@@ -2,6 +2,12 @@ import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { ModelAvailabilityService, ProviderKeyService } from '@app/db';
+import type { ModelApiType } from '@repo/contracts';
+
+/**
+ * 协议级别的 BaseUrl 配置类型
+ */
+export type ApiTypeBaseUrlConfig = Record<string, string | null>;
 
 /**
  * 解析后的模型实例
@@ -15,6 +21,12 @@ export interface ResolvedModel {
   baseUrl: string;
   vendorPriority: number;
   healthScore: number;
+  /** 用户配置的首选协议类型 */
+  preferredApiType: ModelApiType | null;
+  /** 模型支持的协议类型列表 */
+  supportedApiTypes: ModelApiType[];
+  /** 各协议对应的 BaseUrl 配置 */
+  apiTypeBaseUrls: ApiTypeBaseUrlConfig | null;
 }
 
 export interface ResolveOptions {
@@ -22,6 +34,8 @@ export interface ResolveOptions {
   requiredProtocol?: string;
   excludeProviderKeyIds?: string[];
   minHealthScore?: number;
+  /** 是否优先使用用户配置的 preferredApiType */
+  respectPreferredApiType?: boolean;
 }
 
 /**
@@ -227,16 +241,49 @@ export class ModelResolverService implements OnModuleDestroy {
       },
     );
 
-    return candidates.map(({ availability: c, providerKey: pk }) => ({
-      availabilityId: c.id,
-      providerKeyId: c.providerKeyId,
-      model: c.model,
-      vendor: pk.vendor,
-      apiType: pk.apiType,
-      baseUrl: pk.baseUrl || '',
-      vendorPriority: c.vendorPriority,
-      healthScore: c.healthScore,
-    }));
+    return candidates.map(({ availability: c, providerKey: pk }) => {
+      // 从 ModelAvailability 读取协议配置
+      const preferredApiType = c.preferredApiType as ModelApiType | null;
+      const supportedApiTypes = (c.supportedApiTypes as ModelApiType[]) || ['openai'];
+      const apiTypeBaseUrls = c.apiTypeBaseUrls as ApiTypeBaseUrlConfig | null;
+
+      // 计算 effectiveApiType
+      // 如果启用了 respectPreferredApiType 且有配置首选协议，则使用首选协议
+      // 否则使用 ProviderKey 的 apiType
+      let effectiveApiType: string = pk.apiType;
+
+      if (options?.respectPreferredApiType && preferredApiType) {
+        // 验证 preferredApiType 在 supportedApiTypes 中
+        if (supportedApiTypes.includes(preferredApiType)) {
+          effectiveApiType = preferredApiType;
+          this.logger.debug(
+            `[ModelResolver] Using preferredApiType='${preferredApiType}' for model ${c.model} (vendor: ${pk.vendor})`,
+          );
+        } else {
+          this.logger.warn(
+            `[ModelResolver] preferredApiType='${preferredApiType}' not in supportedApiTypes=[${supportedApiTypes.join(', ')}] for model ${c.model}, falling back to ${pk.apiType}`,
+          );
+        }
+      }
+
+      // 获取协议对应的 BaseUrl（优先使用协议级别配置）
+      const protocolBaseUrl = apiTypeBaseUrls?.[effectiveApiType];
+      const finalBaseUrl = protocolBaseUrl || pk.baseUrl || '';
+
+      return {
+        availabilityId: c.id,
+        providerKeyId: c.providerKeyId,
+        model: c.model,
+        vendor: pk.vendor,
+        apiType: effectiveApiType,
+        baseUrl: finalBaseUrl,
+        vendorPriority: c.vendorPriority,
+        healthScore: c.healthScore,
+        preferredApiType,
+        supportedApiTypes,
+        apiTypeBaseUrls,
+      };
+    });
   }
 
   private async enrichWithProviderKeys(

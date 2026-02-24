@@ -37,6 +37,7 @@
     "plugins": "MCP工具",
     "skills": "技能管理",
     "templates": "人设模板",
+    "messages": "消息中心",
     "secrets": "API密钥",
     "diagnostics": "诊断",
     "routing": "路由配置",
@@ -60,6 +61,7 @@
     "back": "返回",
     "next": "下一步",
     "previous": "上一步",
+    "page": "第",
     "loading": "加载中...",
     "retry": "重试"
   },
@@ -83,6 +85,7 @@
     "empty": "暂无通知",
     "markAllRead": "全部已读",
     "markAsRead": "标记已读",
+    "viewMore": "查看更多",
     "quotaWarning": "配额警告",
     "quotaExceeded": "配额超限"
   }

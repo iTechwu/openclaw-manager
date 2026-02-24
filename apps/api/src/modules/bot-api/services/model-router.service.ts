@@ -347,6 +347,7 @@ export class ModelRouterService {
     if (this.modelResolverService) {
       const resolved = await this.modelResolverService.resolve(
         primaryBotModel.modelId,
+        { respectPreferredApiType: true },
       );
 
       if (resolved) {

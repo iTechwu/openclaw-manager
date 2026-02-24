@@ -422,8 +422,8 @@ export class ProxyService {
     const isResponsesApi =
       path === '/responses' || path.startsWith('/responses/');
     const resolveOptions = isResponsesApi
-      ? { requiredProtocol: 'openai-response' }
-      : undefined;
+      ? { requiredProtocol: 'openai-response', respectPreferredApiType: true }
+      : { respectPreferredApiType: true };
 
     if (isResponsesApi) {
       this.logger.info(
@@ -446,7 +446,7 @@ export class ProxyService {
     }
 
     this.logger.info(
-      `[Proxy] Auto-routing: found ${candidates.length} candidate(s) for ${model}: ${candidates.map((c) => `${c.vendor}(priority=${c.vendorPriority},health=${c.healthScore})`).join(', ')}`,
+      `[Proxy] Auto-routing: found ${candidates.length} candidate(s) for ${model}: ${candidates.map((c) => `${c.vendor}(apiType=${c.apiType},preferred=${c.preferredApiType ?? 'none'},priority=${c.vendorPriority},health=${c.healthScore})`).join(', ')}`,
     );
 
     // 4. 逐个尝试 provider，连接失败时 fallback

@@ -67,6 +67,14 @@ export class MessageApiService {
   }
 
   /**
+   * Mark all messages as read
+   * 标记所有消息为已读
+   */
+  async markAllAsRead(userId: string): Promise<number> {
+    return this.messageDb.markAllAsRead(userId);
+  }
+
+  /**
    * Get unread message count
    * 获取未读消息数量
    */

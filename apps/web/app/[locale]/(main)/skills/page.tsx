@@ -379,12 +379,14 @@ export default function SkillsPage() {
   const skillTypes = skillTypesResponse?.body?.data?.skillTypes || [];
 
   // 获取技能列表（使用分页 API）
+  // 注意：必须传递布尔值，不能是字符串
+  // 因为 jsonQuery: true 会将字符串序列化为 JSON（带引号）
+  // 布尔值 true → JSON.stringify → true → URL: isSystem=true
+  // 字符串 'true' → JSON.stringify → "true" → URL: isSystem=%22true%22
   const isSystemParam =
     sourceFilter === 'all'
-      ? 'all'
-      : sourceFilter === 'system'
-        ? 'true'
-        : 'false';
+      ? undefined
+      : sourceFilter === 'system';
 
   const {
     data: response,
@@ -396,7 +398,7 @@ export default function SkillsPage() {
       query: {
         search: search || undefined,
         skillTypeId: selectedTypeId || undefined,
-        isSystem: isSystemParam as 'all' | 'true' | 'false',
+        isSystem: isSystemParam,
         page,
         limit: PAGE_SIZE,
       },

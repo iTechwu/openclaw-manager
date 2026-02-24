@@ -9,7 +9,7 @@
 
 > AI Bot 全生命周期管理与 API 密钥编排平台 — 解决多 Bot、多提供商场景下的密钥安全、请求代理与运维难题。
 
-[English](./README.md) | [快速开始](#-快速开始) | [架构设计](#%EF%B8%8F-架构设计) | [API 概览](#-api-概览)
+[English](./README.md) | [快速开始](#-快速开始) | [架构设计](#%EF%B8%8F-架构设计) | [API 概览](#-api-概览) | [文档](./docs/) — [架构](./docs/ARCHITECTURE.md) | [开发](./docs/DEVELOPMENT.md) | [指南](./docs/GUIDE.md)
 
 ---
 
@@ -143,6 +143,7 @@ clawbotmanager/
 │   │   │       ├── settings/       # 设置（账户、API 密钥、通知、安全）
 │   │   │       ├── skills/         # 技能管理
 │   │   │       ├── templates/      # Persona 模板
+│   │   │       ├── messages/       # 消息中心
 │   │   │       └── admin/models    # 管理员模型管理
 │   │   ├── components/             # 通用组件
 │   │   ├── hooks/                  # React Hooks
@@ -193,6 +194,9 @@ clawbotmanager/
 │   └── config/                     # @repo/config — ESLint、Prettier、TS 配置
 │
 ├── docs/                           # 文档
+│   ├── ARCHITECTURE.md             # 架构与设计（路由、协议、BotType）
+│   ├── DEVELOPMENT.md              # 实施与开发指南
+│   └── GUIDE.md                    # 使用指南（飞书、OpenClaw 配置、Skills）
 └── scripts/                        # 初始化与运维脚本
 ```
 
@@ -211,6 +215,7 @@ clawbotmanager/
 - **配额管理** — 日/月 Token 限制、阈值警告、超额通知
 - **Bot 用量分析** — Token 使用追踪、路由统计、分析仪表板
 - **模板系统** — Persona 模板（系统/用户）、Bot 创建向导
+- **消息中心** — 用户消息、通知
 - **诊断与运维** — 容器统计、孤立资源检测与清理、启动对账
 - **审计日志** — 操作日志记录（CREATE、START、STOP、DELETE）
 - **多租户** — 按用户隔离 Bot 与 Key，JWT 认证
@@ -429,6 +434,15 @@ pnpm dev:api          # 仅后端
 | PUT | `/api/bot/:hostname/channels/:id` | 更新渠道配置 |
 | DELETE | `/api/bot/:hostname/channels/:id` | 删除渠道 |
 | POST | `/api/bot/:hostname/channels/:id/connection` | 连接/断开渠道 |
+
+### Message 消息（需 JWT）
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/message/messages` | 获取消息列表 |
+| PATCH | `/api/message/messages/read` | 设置已读 |
+| PATCH | `/api/message/messages/read/all` | 全部标记已读 |
+| GET | `/api/message/messages/unread/count` | 获取未读数量 |
 
 ### AI 代理（Bearer Bot Token）
 

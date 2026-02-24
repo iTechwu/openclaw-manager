@@ -9,7 +9,7 @@
 
 > AI Bot lifecycle management and API key orchestration platform — solving key security, request proxying, and operations challenges across multi-Bot, multi-provider scenarios.
 
-[中文文档](./README.zh-CN.md) | [Quick Start](#-quick-start) | [Architecture](#%EF%B8%8F-architecture) | [API Overview](#-api-overview)
+[中文文档](./README.zh-CN.md) | [Quick Start](#-quick-start) | [Architecture](#%EF%B8%8F-architecture) | [API Overview](#-api-overview) | [Docs](./docs/) — [ARCHITECTURE](./docs/ARCHITECTURE.md) | [DEVELOPMENT](./docs/DEVELOPMENT.md) | [GUIDE](./docs/GUIDE.md)
 
 ---
 
@@ -143,6 +143,7 @@ clawbotmanager/
 │   │   │       ├── settings/       # Settings (account, api-keys, notifications, security)
 │   │   │       ├── skills/         # Skill management
 │   │   │       ├── templates/      # Persona templates
+│   │   │       ├── messages/       # Message center
 │   │   │       └── admin/models    # Admin model management
 │   │   ├── components/             # Shared components
 │   │   ├── hooks/                  # React hooks
@@ -193,6 +194,9 @@ clawbotmanager/
 │   └── config/                     # @repo/config — ESLint, Prettier, TS config
 │
 ├── docs/                           # Documentation
+│   ├── ARCHITECTURE.md             # Architecture & design (routing, protocol, BotType)
+│   ├── DEVELOPMENT.md              # Implementation & development guide
+│   └── GUIDE.md                    # User guide (Feishu, OpenClaw config, Skills)
 └── scripts/                        # Init and ops scripts
 ```
 
@@ -211,6 +215,7 @@ clawbotmanager/
 - **Quota Management** — Daily/monthly token limits, threshold warnings, over-quota notifications
 - **Bot Usage Analytics** — Token usage tracking, routing statistics, analytics dashboard
 - **Template System** — Persona templates (system/user), Bot creation wizard
+- **Message Center** — User messaging, notifications
 - **Diagnostics & Ops** — Container stats, orphan resource detection and cleanup, startup reconciliation
 - **Audit Logs** — Operation logging (CREATE, START, STOP, DELETE)
 - **Multi-tenant** — User-isolated Bots and Keys, JWT authentication
@@ -429,6 +434,15 @@ Uses `docker-compose.yml` to start API and Web services. After health check pass
 | PUT | `/api/bot/:hostname/channels/:id` | Update channel config |
 | DELETE | `/api/bot/:hostname/channels/:id` | Delete channel |
 | POST | `/api/bot/:hostname/channels/:id/connection` | Connect/disconnect channel |
+
+### Message (JWT Required)
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/api/message/messages` | List user messages |
+| PATCH | `/api/message/messages/read` | Set messages as read |
+| PATCH | `/api/message/messages/read/all` | Mark all as read |
+| GET | `/api/message/messages/unread/count` | Get unread count |
 
 ### AI Proxy (Bearer Bot Token)
 

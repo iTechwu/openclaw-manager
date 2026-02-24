@@ -43,6 +43,20 @@ export class MessageApiController {
   }
 
   /**
+   * PATCH /api/message/messages/read/all
+   * Mark all messages as read
+   */
+  @SimpleAuth()
+  @TsRestHandler(messageContract.markAllAsRead)
+  async markAllAsRead(@Req() req: FastifyRequest): Promise<any> {
+    return tsRestHandler(messageContract.markAllAsRead, async () => {
+      const userId = (req as any).userId as string;
+      const count = await this.messageApiService.markAllAsRead(userId);
+      return success({ count });
+    });
+  }
+
+  /**
    * GET /api/message/messages/unread/count
    * Get unread message count
    */

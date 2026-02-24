@@ -60,18 +60,40 @@ export const SkillTypeListSchema = z.object({
  */
 export const SkillSyncListQuerySchema = PaginationQuerySchema.extend({
   skillTypeId: z.string().uuid().optional(),
-  isSystem: z
-    .enum(['true', 'false', 'all'])
-    .optional()
-    .default('all')
-    .transform((val) => {
-      if (val === 'all') return undefined;
-      return val === 'true';
-    }),
+  // 处理 ts-rest jsonQuery: true 导致的 JSON 序列化
+  // 前端传入 'true' → JSON序列化为 "true" → URL编码为 %22true%22
+  // 需要先 JSON.parse 再处理
+  isSystem: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null) return undefined;
+      // 如果是布尔值，直接返回
+      if (typeof val === 'boolean') return val;
+      // 尝试 JSON 解析（处理 JSON 序列化的字符串）
+      if (typeof val === 'string') {
+        try {
+          const parsed = JSON.parse(val);
+          // 如果解析结果是布尔值，返回
+          if (typeof parsed === 'boolean') return parsed;
+          // 如果解析结果是字符串 'true' 或 'false'，返回对应的布尔值
+          if (parsed === 'true') return true;
+          if (parsed === 'false') return false;
+          // 如果不是上述情况，直接处理原始字符串
+        } catch {
+          // JSON 解析失败，直接处理原始字符串
+        }
+        // 直接处理原始字符串
+        if (val === 'true') return true;
+        if (val === 'false') return false;
+      }
+      return undefined;
+    },
+    z.boolean().optional(),
+  ),
   search: z.string().optional(),
 });
 
-export type SkillSyncListQuery = z.input<typeof SkillSyncListQuerySchema>;
+// 使用 z.output 获取转换后的类型（isSystem 为 boolean | undefined）
+export type SkillSyncListQuery = z.output<typeof SkillSyncListQuerySchema>;
 
 /**
  * 技能列表响应 Schema

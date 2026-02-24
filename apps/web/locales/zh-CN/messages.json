@@ -1,0 +1,31 @@
+{
+  "title": "消息中心",
+  "description": "查看和管理您的消息",
+  "empty": "暂无消息",
+  "emptyDescription": "您还没有收到任何消息",
+  "markAsRead": "标记已读",
+  "markAllRead": "全部标记已读",
+  "unread": "未读",
+  "all": "全部",
+  "read": "已读",
+  "filter": {
+    "all": "全部",
+    "unread": "未读",
+    "read": "已读"
+  },
+  "card": {
+    "from": "发送者",
+    "receivedAt": "接收时间",
+    "viewDetails": "查看详情"
+  },
+  "stats": {
+    "total": "总计",
+    "unread": "未读",
+    "read": "已读"
+  },
+  "toast": {
+    "markSuccess": "消息已标记为已读",
+    "markAllSuccess": "所有消息已标记为已读",
+    "markError": "标记已读失败"
+  }
+}
