@@ -1726,8 +1726,19 @@ export class BotApiService {
 
       return { logs, containerId: bot.containerId };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // 如果容器不存在（404），清除过期的 containerId
+      if (errorMessage.includes('no such container') || errorMessage.includes('HTTP code 404')) {
+        this.logger.warn(
+          `Container ${bot.containerId} no longer exists for bot ${hostname}, clearing stale containerId`,
+        );
+        await this.botService.update({ id: bot.id }, { containerId: null });
+        return { logs: [], containerId: null };
+      }
+
       this.logger.error(
-        `Failed to get logs for bot ${hostname}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to get logs for bot ${hostname}: ${errorMessage}`,
       );
       return { logs: [], containerId: bot.containerId };
     }

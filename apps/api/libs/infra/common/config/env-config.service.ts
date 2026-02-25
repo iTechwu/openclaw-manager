@@ -139,8 +139,8 @@ export const dockerConfig = {
 
   get limits() {
     return {
-      cpu: getEnvWithDefault('BOT_CONTAINER_CPU_LIMIT', 1),
-      memory: getEnvWithDefault('BOT_CONTAINER_MEMORY_LIMIT', 2147483648),
+      cpu: Number(getEnvWithDefault('BOT_CONTAINER_CPU_LIMIT', 1)),
+      memory: Number(getEnvWithDefault('BOT_CONTAINER_MEMORY_LIMIT', 2147483648)),
     };
   },
 
