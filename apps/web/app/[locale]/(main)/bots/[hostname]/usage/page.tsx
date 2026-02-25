@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import {
+  useBotUsageBreakdown,
   useBotUsageStats,
   useBotUsageTrend,
-  useBotUsageBreakdown,
 } from '@/hooks/useBotUsage';
+import { Link } from '@/i18n/navigation';
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   Card,
   CardContent,
   CardDescription,
@@ -19,27 +20,26 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Skeleton,
-  Alert,
-  AlertDescription,
-  AlertTitle,
 } from '@repo/ui';
 import {
   Activity,
-  Zap,
-  AlertTriangle,
-  DollarSign,
-  Clock,
-  TrendingUp,
-  ArrowLeft,
   AlertCircle,
+  AlertTriangle,
+  ArrowLeft,
+  Clock,
+  DollarSign,
   RefreshCw,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
+import { useMemo, useState } from 'react';
 
 /**
  * 统计卡片组件
@@ -90,6 +90,10 @@ function StatCard({
 
 /**
  * 简单的趋势图表组件
+ *
+ * 性能优化：
+ * - 数据采样：超过 100 个点时自动采样，减少 DOM 节点
+ * - useMemo：缓存计算结果，避免重复计算
  */
 function SimpleTrendChart({
   data,
@@ -108,6 +112,51 @@ function SimpleTrendChart({
   inputLabel: string;
   outputLabel: string;
 }) {
+  // 数据采样：超过 100 个点时采样，减少渲染压力
+  const sampledData = useMemo(() => {
+    if (!data || data.length <= 100) return data;
+
+    const step = Math.ceil(data.length / 100);
+    return data.filter((_, index) => index % step === 0);
+  }, [data]);
+
+  // 计算最大值用于缩放（基于采样后数据）
+  const maxValue = useMemo(() => {
+    if (!sampledData || sampledData.length === 0) return 0;
+    return Math.max(
+      ...sampledData.map((d) => Math.max(d.requestTokens, d.responseTokens)),
+    );
+  }, [sampledData]);
+
+  // 缓存图表柱状条渲染
+  const chartBars = useMemo(() => {
+    if (!sampledData || maxValue === 0) return null;
+
+    return sampledData.map((point, index) => {
+      const requestHeight = (point.requestTokens / maxValue) * 100;
+      const responseHeight = (point.responseTokens / maxValue) * 100;
+
+      return (
+        <div
+          key={index}
+          className="flex flex-1 flex-col items-center gap-1"
+          title={`${new Date(point.timestamp).toLocaleDateString()}\n${inputLabel}: ${point.requestTokens.toLocaleString()}\n${outputLabel}: ${point.responseTokens.toLocaleString()}`}
+        >
+          <div className="flex w-full flex-1 items-end gap-0.5">
+            <div
+              className="flex-1 rounded-t bg-blue-500 transition-all"
+              style={{ height: `${requestHeight}%` }}
+            />
+            <div
+              className="flex-1 rounded-t bg-green-500 transition-all"
+              style={{ height: `${responseHeight}%` }}
+            />
+          </div>
+        </div>
+      );
+    });
+  }, [sampledData, maxValue, inputLabel, outputLabel]);
+
   if (loading) {
     return (
       <div className="flex h-[300px] items-center justify-center">
@@ -124,40 +173,9 @@ function SimpleTrendChart({
     );
   }
 
-  // 计算最大值用于缩放
-  const maxValue = Math.max(
-    ...data.map((d) => Math.max(d.requestTokens, d.responseTokens)),
-  );
-
   return (
     <div className="h-[300px] w-full">
-      <div className="flex h-full items-end gap-1">
-        {data.map((point, index) => {
-          const requestHeight =
-            maxValue > 0 ? (point.requestTokens / maxValue) * 100 : 0;
-          const responseHeight =
-            maxValue > 0 ? (point.responseTokens / maxValue) * 100 : 0;
-
-          return (
-            <div
-              key={index}
-              className="flex flex-1 flex-col items-center gap-1"
-              title={`${new Date(point.timestamp).toLocaleDateString()}\n${inputLabel}: ${point.requestTokens.toLocaleString()}\n${outputLabel}: ${point.responseTokens.toLocaleString()}`}
-            >
-              <div className="flex w-full flex-1 items-end gap-0.5">
-                <div
-                  className="flex-1 rounded-t bg-blue-500 transition-all"
-                  style={{ height: `${requestHeight}%` }}
-                />
-                <div
-                  className="flex-1 rounded-t bg-green-500 transition-all"
-                  style={{ height: `${responseHeight}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <div className="flex h-full items-end gap-1">{chartBars}</div>
       <div className="mt-2 flex justify-center gap-4 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded bg-blue-500" />
@@ -252,7 +270,7 @@ export default function BotUsagePage() {
   // 计算日期范围
   const dateRange = useMemo(() => {
     const now = new Date();
-    const endDate = now;
+    const endDate = new Date(now); // 创建副本，避免引用问题
     let startDate: Date;
 
     switch (period) {
@@ -263,10 +281,12 @@ export default function BotUsagePage() {
       case 'week':
         startDate = new Date(now);
         startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
         break;
       case 'month':
         startDate = new Date(now);
         startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setHours(0, 0, 0, 0);
         break;
     }
 
@@ -290,6 +310,7 @@ export default function BotUsagePage() {
     data: trendResponse,
     isLoading: trendLoading,
     error: trendError,
+    refetch: refetchTrend,
   } = useBotUsageTrend({
     hostname,
     granularity: period === 'day' ? 'hour' : 'day',
@@ -303,11 +324,21 @@ export default function BotUsagePage() {
     data: breakdownResponse,
     isLoading: breakdownLoading,
     error: breakdownError,
+    refetch: refetchBreakdown,
   } = useBotUsageBreakdown({
     hostname,
     groupBy,
+    startDate: dateRange.startDate.toISOString(),
+    endDate: dateRange.endDate.toISOString(),
   });
   const breakdown = breakdownResponse?.body?.data;
+
+  // 刷新所有数据
+  const refetchAll = () => {
+    refetchStats();
+    refetchTrend();
+    refetchBreakdown();
+  };
 
   // 格式化数字
   const formatNumber = (num: number) => {
@@ -341,7 +372,7 @@ export default function BotUsagePage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => refetchStats()}
+            onClick={refetchAll}
             className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
             title={t('refresh')}
           >
@@ -466,7 +497,9 @@ export default function BotUsagePage() {
                   <SelectItem value="vendor">
                     {t('breakdown.byVendor')}
                   </SelectItem>
-                  <SelectItem value="model">{t('breakdown.byModel')}</SelectItem>
+                  <SelectItem value="model">
+                    {t('breakdown.byModel')}
+                  </SelectItem>
                   <SelectItem value="status">
                     {t('breakdown.byStatus')}
                   </SelectItem>

@@ -1,4 +1,5 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { BotService, BotUsageLogService, ModelCatalogService } from '@app/db';
@@ -47,8 +48,6 @@ export class BotUsageAnalyticsService implements OnModuleInit {
   private pricingCache: Map<string, { input: number; output: number }> =
     new Map();
   private defaultPricing = { input: 1, output: 2 };
-  private lastCacheRefresh: Date | null = null;
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 分钟缓存
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -59,6 +58,15 @@ export class BotUsageAnalyticsService implements OnModuleInit {
 
   async onModuleInit() {
     // 启动时加载定价数据到缓存
+    await this.refreshPricingCache();
+  }
+
+  /**
+   * 定时刷新定价缓存
+   * 每 5 分钟执行一次，避免请求时刷新带来的延迟
+   */
+  @Cron('*/5 * * * *')
+  async scheduledRefreshPricingCache(): Promise<void> {
     await this.refreshPricingCache();
   }
 
@@ -77,12 +85,11 @@ export class BotUsageAnalyticsService implements OnModuleInit {
         });
       }
 
-      this.lastCacheRefresh = new Date();
       this.logger.info(
-        `Model pricing cache refreshed with ${pricings.length} entries`,
+        `[BotUsageAnalytics] Model pricing cache refreshed with ${pricings.length} entries`,
       );
     } catch (error) {
-      this.logger.warn('Failed to refresh pricing cache, using fallback', {
+      this.logger.warn('[BotUsageAnalytics] Failed to refresh pricing cache, using fallback', {
         error,
       });
       // 使用后备定价
@@ -96,141 +103,166 @@ export class BotUsageAnalyticsService implements OnModuleInit {
   }
 
   /**
-   * 检查缓存是否需要刷新
-   */
-  private async ensureCacheValid(): Promise<void> {
-    if (
-      !this.lastCacheRefresh ||
-      Date.now() - this.lastCacheRefresh.getTime() > this.CACHE_TTL_MS
-    ) {
-      await this.refreshPricingCache();
-    }
-  }
-
-  /**
    * 获取 Bot 用量统计
+   * 包含性能监控指标
    */
   async getStats(
     userId: string,
     hostname: string,
     query: UsageStatsQuery,
   ): Promise<UsageStatsResponse> {
-    const bot = await this.botService.get({
-      hostname,
-      createdById: userId,
-    });
+    const startTime = Date.now();
+    let requestCount = 0;
+    try {
+      const bot = await this.botService.get({
+        hostname,
+        createdById: userId,
+      });
 
-    if (!bot) {
-      throw new Error('Bot not found');
+      if (!bot) {
+        throw new Error('Bot not found');
+      }
+
+      const { startDate, endDate } = this.getDateRange(
+        query.period,
+        query.startDate,
+        query.endDate,
+      );
+
+      const where: Prisma.BotUsageLogWhereInput = {
+        botId: bot.id,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      };
+
+      // 使用 BotUsageLogService 聚合查询
+      const [aggregation, errorCount] = await Promise.all([
+        this.botUsageLogService.aggregateStats(where),
+        this.botUsageLogService.countErrors(where),
+      ]);
+
+      requestCount = aggregation.requestCount;
+      const requestTokens = aggregation.totalRequestTokens;
+      const responseTokens = aggregation.totalResponseTokens;
+      const successCount = requestCount - errorCount;
+      const errorRate = requestCount > 0 ? errorCount / requestCount : 0;
+      const avgDurationMs = aggregation.avgDurationMs;
+
+      // 计算预估成本
+      const estimatedCost = await this.calculateCost(bot.id, startDate, endDate);
+
+      return {
+        totalTokens: requestTokens + responseTokens,
+        requestTokens,
+        responseTokens,
+        requestCount,
+        successCount,
+        errorCount,
+        errorRate: Math.round(errorRate * 10000) / 100, // 保留两位小数的百分比
+        avgDurationMs: avgDurationMs ? Math.round(avgDurationMs) : null,
+        estimatedCost: Math.round(estimatedCost * 100) / 100,
+      };
+    } finally {
+      const duration = Date.now() - startTime;
+      this.logger.info('[BotUsageAnalytics] getStats completed', {
+        userId,
+        hostname,
+        duration,
+        requestCount,
+      });
     }
-
-    const { startDate, endDate } = this.getDateRange(
-      query.period,
-      query.startDate,
-      query.endDate,
-    );
-
-    const where: Prisma.BotUsageLogWhereInput = {
-      botId: bot.id,
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    };
-
-    // 使用 BotUsageLogService 聚合查询
-    const [aggregation, errorCount] = await Promise.all([
-      this.botUsageLogService.aggregateStats(where),
-      this.botUsageLogService.countErrors(where),
-    ]);
-
-    const requestTokens = aggregation.totalRequestTokens;
-    const responseTokens = aggregation.totalResponseTokens;
-    const requestCount = aggregation.requestCount;
-    const successCount = requestCount - errorCount;
-    const errorRate = requestCount > 0 ? errorCount / requestCount : 0;
-    const avgDurationMs = aggregation.avgDurationMs;
-
-    // 计算预估成本
-    const estimatedCost = await this.calculateCost(bot.id, startDate, endDate);
-
-    return {
-      totalTokens: requestTokens + responseTokens,
-      requestTokens,
-      responseTokens,
-      requestCount,
-      successCount,
-      errorCount,
-      errorRate: Math.round(errorRate * 10000) / 100, // 保留两位小数的百分比
-      avgDurationMs: avgDurationMs ? Math.round(avgDurationMs) : null,
-      estimatedCost: Math.round(estimatedCost * 100) / 100,
-    };
   }
 
   /**
    * 获取 Bot 用量趋势
+   * 包含性能监控指标
    */
   async getTrend(
     userId: string,
     hostname: string,
     query: UsageTrendQuery,
   ): Promise<UsageTrendResponse> {
-    const bot = await this.botService.get({
-      hostname,
-      createdById: userId,
-    });
+    const startTime = Date.now();
+    try {
+      const bot = await this.botService.get({
+        hostname,
+        createdById: userId,
+      });
 
-    if (!bot) {
-      throw new Error('Bot not found');
+      if (!bot) {
+        throw new Error('Bot not found');
+      }
+
+      const { startDate, endDate, granularity } = query;
+
+      // 根据粒度生成时间桶
+      const dataPoints = await this.aggregateByTimeBucket(
+        bot.id,
+        startDate,
+        endDate,
+        granularity,
+      );
+
+      return { dataPoints };
+    } finally {
+      const duration = Date.now() - startTime;
+      this.logger.info('[BotUsageAnalytics] getTrend completed', {
+        userId,
+        hostname,
+        duration,
+        granularity: query.granularity,
+      });
     }
-
-    const { startDate, endDate, granularity } = query;
-
-    // 根据粒度生成时间桶
-    const dataPoints = await this.aggregateByTimeBucket(
-      bot.id,
-      startDate,
-      endDate,
-      granularity,
-    );
-
-    return { dataPoints };
   }
 
   /**
    * 获取 Bot 用量分组统计
+   * 包含性能监控指标
    */
   async getBreakdown(
     userId: string,
     hostname: string,
     query: UsageBreakdownQuery,
   ): Promise<UsageBreakdownResponse> {
-    const bot = await this.botService.get({
-      hostname,
-      createdById: userId,
-    });
+    const startTime = Date.now();
+    try {
+      const bot = await this.botService.get({
+        hostname,
+        createdById: userId,
+      });
 
-    if (!bot) {
-      throw new Error('Bot not found');
+      if (!bot) {
+        throw new Error('Bot not found');
+      }
+
+      const { startDate, endDate } = this.getDateRange(
+        'month',
+        query.startDate,
+        query.endDate,
+      );
+
+      const where: Prisma.BotUsageLogWhereInput = {
+        botId: bot.id,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      };
+
+      const groups = await this.aggregateByGroup(where, query.groupBy);
+
+      return { groups };
+    } finally {
+      const duration = Date.now() - startTime;
+      this.logger.info('[BotUsageAnalytics] getBreakdown completed', {
+        userId,
+        hostname,
+        duration,
+        groupBy: query.groupBy,
+      });
     }
-
-    const { startDate, endDate } = this.getDateRange(
-      'month',
-      query.startDate,
-      query.endDate,
-    );
-
-    const where: Prisma.BotUsageLogWhereInput = {
-      botId: bot.id,
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    };
-
-    const groups = await this.aggregateByGroup(where, query.groupBy);
-
-    return { groups };
   }
 
   /**
@@ -380,15 +412,13 @@ export class BotUsageAnalyticsService implements OnModuleInit {
 
   /**
    * 计算成本
+   * 使用定时刷新的缓存，无需在请求时检查缓存有效性
    */
   private async calculateCost(
     botId: string,
     startDate: Date,
     endDate: Date,
   ): Promise<number> {
-    // 确保缓存有效
-    await this.ensureCacheValid();
-
     // 使用 BotUsageLogService 按模型聚合成本
     const result = await this.botUsageLogService.aggregateCostByModel(
       botId,

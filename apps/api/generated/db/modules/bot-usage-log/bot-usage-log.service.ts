@@ -4,7 +4,8 @@ import { PrismaService } from '@app/prisma';
 import { TransactionalServiceBase } from '@app/shared-db';
 import { HandlePrismaError, DbOperationType } from '@/utils/prisma-error.util';
 import { AppConfig } from '@/config/validation';
-import type { Prisma, BotUsageLog } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import type { BotUsageLog } from '@prisma/client';
 
 @Injectable()
 export class BotUsageLogService extends TransactionalServiceBase {
@@ -350,8 +351,12 @@ export class BotUsageLogService extends TransactionalServiceBase {
   }
 
   /**
-   * 按分组聚合查询（原生 SQL）
+   * 按分组聚合查询
    * 用于生成分组统计数据
+   *
+   * 优化说明：
+   * - vendor 和 model 使用 Prisma groupBy（安全、类型安全）
+   * - status 使用 $queryRaw（因为需要 CASE 表达式，但参数化处理）
    */
   @HandlePrismaError(DbOperationType.QUERY)
   async aggregateByGroup(
@@ -365,58 +370,67 @@ export class BotUsageLogService extends TransactionalServiceBase {
     responseTokens: number;
     requestCount: number;
   }>> {
-    let groupColumn: string;
-    switch (groupBy) {
-      case 'vendor':
-        groupColumn = 'vendor';
-        break;
-      case 'model':
-        groupColumn = 'model';
-        break;
-      case 'status':
-        groupColumn =
-          "CASE WHEN status_code >= 400 OR error_message IS NOT NULL THEN 'error' ELSE 'success' END";
-        break;
+    // 构建 where 条件
+    const where: Prisma.BotUsageLogWhereInput = { botId };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = startDate;
+      if (endDate) where.createdAt.lte = endDate;
     }
 
-    const params: unknown[] = [botId];
-    let paramIndex = 2;
+    // 对于 vendor 和 model，使用 Prisma groupBy（类型安全）
+    if (groupBy === 'vendor' || groupBy === 'model') {
+      const result = await this.getReadClient().botUsageLog.groupBy({
+        by: [groupBy],
+        where,
+        _sum: {
+          requestTokens: true,
+          responseTokens: true,
+        },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          _count: {
+            id: 'desc',
+          },
+        },
+      });
 
-    let sql = `
-      SELECT
-        ${groupColumn} as group_key,
-        SUM(request_tokens) as request_tokens,
-        SUM(response_tokens) as response_tokens,
-        COUNT(*) as request_count
-      FROM b_usage_log
-      WHERE bot_id = $1::uuid
-    `;
-
-    if (startDate) {
-      sql += ` AND created_at >= $${paramIndex}`;
-      params.push(startDate);
-      paramIndex++;
+      return result.map((row) => ({
+        groupKey: row[groupBy] || 'unknown',
+        requestTokens: row._sum.requestTokens || 0,
+        responseTokens: row._sum.responseTokens || 0,
+        requestCount: row._count.id,
+      }));
     }
 
-    if (endDate) {
-      sql += ` AND created_at <= $${paramIndex}`;
-      params.push(endDate);
-      paramIndex++;
-    }
-
-    sql += `
-      GROUP BY ${groupColumn}
-      ORDER BY request_count DESC
-    `;
-
-    const result = await this.getReadClient().$queryRawUnsafe<
+    // 对于 status，使用安全的参数化查询
+    // groupBy 已限制为 'status'，CASE 表达式是静态的，无 SQL 注入风险
+    const result = await this.getReadClient().$queryRaw<
       Array<{
-        group_key: string | null;
+        group_key: string;
         request_tokens: bigint | null;
         response_tokens: bigint | null;
         request_count: bigint;
       }>
-    >(sql, ...params);
+    >`
+      SELECT
+        CASE
+          WHEN status_code >= 400 OR error_message IS NOT NULL
+          THEN 'error'
+          ELSE 'success'
+        END as group_key,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens,
+        COUNT(*) as request_count
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        ${startDate ? Prisma.sql`AND created_at >= ${startDate}` : Prisma.empty}
+        ${endDate ? Prisma.sql`AND created_at <= ${endDate}` : Prisma.empty}
+      GROUP BY group_key
+      ORDER BY request_count DESC
+    `;
 
     return result.map((row) => ({
       groupKey: row.group_key || 'unknown',
