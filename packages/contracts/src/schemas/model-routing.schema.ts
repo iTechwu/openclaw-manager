@@ -5,6 +5,7 @@ import {
   ModelRoutingTypeSchema,
   type ModelRoutingType,
 } from './prisma-enums.generated';
+import { ModelApiTypeSchema, type ModelApiType } from './model-api-type-support.schema';
 
 // ============================================================================
 // Routing Target Schema
@@ -16,6 +17,8 @@ import {
 export const RoutingTargetSchema = z.object({
   providerKeyId: z.string().uuid(),
   model: z.string().min(1),
+  /** 首选协议类型（可选） */
+  preferredApiType: ModelApiTypeSchema.nullable().optional(),
 });
 
 export type RoutingTarget = z.infer<typeof RoutingTargetSchema>;

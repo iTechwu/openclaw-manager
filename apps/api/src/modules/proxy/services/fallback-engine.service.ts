@@ -217,11 +217,27 @@ export class FallbackEngineService implements OnModuleDestroy {
   }
 
   /**
-   * 从 vendor 推断协议
+   * 从 vendor 和首选协议推断协议
+   *
+   * @param vendor - 供应商名称
+   * @param preferredApiType - 用户配置的首选协议
+   * @param supportedApiTypes - 模型支持的协议列表
+   * @returns 推断的协议类型
    */
   private inferProtocol(
     vendor?: string,
+    preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null,
+    supportedApiTypes?: ('openai' | 'anthropic' | 'gemini')[],
   ): 'openai-compatible' | 'anthropic-native' {
+    // 优先使用用户配置的首选协议
+    if (preferredApiType === 'anthropic') {
+      // 验证是否支持
+      if (!supportedApiTypes || supportedApiTypes.includes('anthropic')) {
+        return 'anthropic-native';
+      }
+    }
+
+    // 回退到默认逻辑：只有 Anthropic 使用原生协议
     return vendor === 'anthropic' ? 'anthropic-native' : 'openai-compatible';
   }
 
@@ -415,13 +431,21 @@ export class FallbackEngineService implements OnModuleDestroy {
    * 主模型作为链首，其余按 vendor 多样性排列
    *
    * @param botId Bot ID
-   * @param availableModels Bot 的可用模型（包含 isPrimary）
+   * @param availableModels Bot 的可用模型（包含 isPrimary 和协议配置）
    * @param chainId 可选的链 ID，如果未提供则自动生成
    * @returns 生成的 Fallback 链
    */
   buildDynamicFallbackChain(
     botId: string,
-    availableModels: { model: string; vendor: string; isPrimary: boolean }[],
+    availableModels: {
+      model: string;
+      vendor: string;
+      isPrimary: boolean;
+      /** 用户配置的首选协议 */
+      preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null;
+      /** 模型支持的协议列表 */
+      supportedApiTypes?: ('openai' | 'anthropic' | 'gemini')[];
+    }[],
     chainId?: string,
   ): FallbackChain {
     if (availableModels.length === 0) {
@@ -439,7 +463,11 @@ export class FallbackEngineService implements OnModuleDestroy {
       models.push({
         vendor: primaryModel.vendor,
         model: primaryModel.model,
-        protocol: this.inferProtocol(primaryModel.vendor),
+        protocol: this.inferProtocol(
+          primaryModel.vendor,
+          primaryModel.preferredApiType,
+          primaryModel.supportedApiTypes,
+        ),
       });
     }
 
@@ -453,7 +481,11 @@ export class FallbackEngineService implements OnModuleDestroy {
         models.push({
           vendor: m.vendor,
           model: m.model,
-          protocol: this.inferProtocol(m.vendor),
+          protocol: this.inferProtocol(
+            m.vendor,
+            m.preferredApiType,
+            m.supportedApiTypes,
+          ),
         });
         usedVendors.add(m.vendor);
       }
@@ -466,7 +498,11 @@ export class FallbackEngineService implements OnModuleDestroy {
         models.push({
           vendor: m.vendor,
           model: m.model,
-          protocol: this.inferProtocol(m.vendor),
+          protocol: this.inferProtocol(
+            m.vendor,
+            m.preferredApiType,
+            m.supportedApiTypes,
+          ),
         });
       }
     }
@@ -490,12 +526,18 @@ export class FallbackEngineService implements OnModuleDestroy {
    * 为 bot 注册动态 Fallback 链（替代硬编码默认链）
    *
    * @param botId Bot ID
-   * @param availableModels Bot 的可用模型
+   * @param availableModels Bot 的可用模型（包含协议配置）
    * @returns 注册的 chainId
    */
   registerBotFallbackChain(
     botId: string,
-    availableModels: { model: string; vendor: string; isPrimary: boolean }[],
+    availableModels: {
+      model: string;
+      vendor: string;
+      isPrimary: boolean;
+      preferredApiType?: 'openai' | 'anthropic' | 'gemini' | null;
+      supportedApiTypes?: ('openai' | 'anthropic' | 'gemini')[];
+    }[],
   ): string {
     const chain = this.buildDynamicFallbackChain(botId, availableModels);
     this.fallbackChains.set(chain.chainId, chain);

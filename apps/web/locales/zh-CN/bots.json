@@ -795,7 +795,21 @@
           "create": "创建"
         }
       },
-      "cancel": "取消"
+      "cancel": "取消",
+      "protocol": {
+        "label": "API 协议",
+        "select": "选择协议",
+        "recommended": "推荐",
+        "recommendationHint": "推荐原因：{reason}",
+        "types": {
+          "openai": "OpenAI 兼容",
+          "anthropic": "Anthropic",
+          "gemini": "Google Gemini",
+          "openaiDesc": "标准 OpenAI API 协议，适用于通用场景",
+          "anthropicDesc": "Anthropic Messages API，支持 Extended Thinking",
+          "geminiDesc": "Google Gemini 原生 API 协议"
+        }
+      }
     },
     "channels": {
       "title": "消息渠道",

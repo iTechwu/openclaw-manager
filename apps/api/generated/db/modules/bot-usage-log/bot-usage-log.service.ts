@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import { PrismaService } from '@app/prisma';
 import { TransactionalServiceBase } from '@app/shared-db';
 import { HandlePrismaError, DbOperationType } from '@/utils/prisma-error.util';
@@ -14,6 +16,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
   constructor(
     prisma: PrismaService,
     private readonly config: ConfigService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     super(prisma);
     this.appConfig = config.getOrThrow<AppConfig>('app');
@@ -301,6 +304,10 @@ export class BotUsageLogService extends TransactionalServiceBase {
   /**
    * 按时间桶聚合查询（原生 SQL）
    * 用于生成趋势数据
+   *
+   * 优化说明：
+   * - 使用 timezone-aware date_trunc 确保结果一致性
+   * - 利用 b_usage_log_bot_id_created_at_idx 索引优化查询性能
    */
   @HandlePrismaError(DbOperationType.QUERY)
   async aggregateByTimeBucket(
@@ -318,6 +325,16 @@ export class BotUsageLogService extends TransactionalServiceBase {
     const truncFormat =
       granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
 
+    // Debug: Log the query parameters
+    this.logger.info('[BotUsageLogService] aggregateByTimeBucket query params', {
+      botId,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      truncFormat,
+    });
+
+    // 使用 timezone-aware date_trunc 确保 UTC 时区的一致性
+    // created_at 是 timestamptz 类型，AT TIME ZONE 'UTC' 转换为 UTC 时区后再截断
     const result = await this.getReadClient().$queryRaw<
       Array<{
         bucket: Date;
@@ -328,7 +345,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
       }>
     >`
       SELECT
-        date_trunc(${truncFormat}, created_at) as bucket,
+        date_trunc(${truncFormat}, created_at AT TIME ZONE 'UTC') as bucket,
         SUM(request_tokens) as request_tokens,
         SUM(response_tokens) as response_tokens,
         COUNT(*) as request_count,
@@ -340,6 +357,12 @@ export class BotUsageLogService extends TransactionalServiceBase {
       GROUP BY bucket
       ORDER BY bucket ASC
     `;
+
+    // Debug: Log the raw result
+    this.logger.info('[BotUsageLogService] aggregateByTimeBucket result', {
+      resultCount: result.length,
+      firstBucket: result[0],
+    });
 
     return result.map((row) => ({
       bucket: row.bucket,
