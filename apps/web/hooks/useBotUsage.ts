@@ -33,7 +33,7 @@ interface UsageTrendParams {
  */
 interface UsageBreakdownParams {
   hostname: string;
-  groupBy?: 'vendor' | 'model' | 'status';
+  groupBy?: 'vendor' | 'model' | 'status' | 'protocol';
   startDate?: string;
   endDate?: string;
 }

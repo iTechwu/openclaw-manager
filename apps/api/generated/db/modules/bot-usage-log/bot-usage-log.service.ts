@@ -364,7 +364,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
    * 用于生成分组统计数据
    *
    * 优化说明：
-   * - vendor 和 model 使用 Prisma groupBy（安全、类型安全）
+   * - vendor、model、protocol 使用 Prisma groupBy（安全、类型安全）
    * - status 使用 $queryRaw（因为需要 CASE 表达式，但参数化处理）
    */
   @HandlePrismaError(DbOperationType.QUERY)
@@ -372,7 +372,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
     botId: string,
     startDate: Date | undefined,
     endDate: Date | undefined,
-    groupBy: 'vendor' | 'model' | 'status',
+    groupBy: 'vendor' | 'model' | 'status' | 'protocol',
   ): Promise<Array<{
     groupKey: string;
     requestTokens: number;
@@ -387,7 +387,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
       if (endDate) where.createdAt.lte = endDate;
     }
 
-    // 对于 vendor 和 model，使用 Prisma groupBy（类型安全）
+    // 对于 vendor、model、protocol，使用 Prisma groupBy（类型安全）
     if (groupBy === 'vendor' || groupBy === 'model') {
       const result = await this.getReadClient().botUsageLog.groupBy({
         by: [groupBy],
@@ -408,6 +408,33 @@ export class BotUsageLogService extends TransactionalServiceBase {
 
       return result.map((row) => ({
         groupKey: row[groupBy] || 'unknown',
+        requestTokens: row._sum.requestTokens || 0,
+        responseTokens: row._sum.responseTokens || 0,
+        requestCount: row._count.id,
+      }));
+    }
+
+    // 对于 protocol，使用 protocolType 字段
+    if (groupBy === 'protocol') {
+      const result = await this.getReadClient().botUsageLog.groupBy({
+        by: ['protocolType'],
+        where,
+        _sum: {
+          requestTokens: true,
+          responseTokens: true,
+        },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          _count: {
+            id: 'desc',
+          },
+        },
+      });
+
+      return result.map((row) => ({
+        groupKey: row.protocolType || 'unknown',
         requestTokens: row._sum.requestTokens || 0,
         responseTokens: row._sum.responseTokens || 0,
         requestCount: row._count.id,

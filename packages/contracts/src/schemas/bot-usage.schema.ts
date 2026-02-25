@@ -70,7 +70,7 @@ export type UsageTrendResponse = z.infer<typeof UsageTrendResponseSchema>;
  * 用量分组查询参数
  */
 export const UsageBreakdownQuerySchema = z.object({
-  groupBy: z.enum(['vendor', 'model', 'status']).default('vendor'),
+  groupBy: z.enum(['vendor', 'model', 'status', 'protocol']).default('vendor'),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
 });

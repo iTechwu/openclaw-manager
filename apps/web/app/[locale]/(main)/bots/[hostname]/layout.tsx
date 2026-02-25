@@ -1,16 +1,16 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
 import { useBot } from '@/hooks/useBots';
 import {
   useBotStatusSSE,
-  type BotStatusEvent,
   type BotHealthEvent,
+  type BotStatusEvent,
 } from '@/hooks/useBotStatusSSE';
-import { BotSidebar } from './components/bot-sidebar';
+import { botChannelClient, botModelClient } from '@/lib/api/contracts';
 import { Skeleton } from '@repo/ui';
-import { botModelClient, botChannelClient } from '@/lib/api/contracts';
+import { useParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { BotSidebar } from './components/bot-sidebar';
 
 export default function BotDetailLayout({
   children,
@@ -84,7 +84,7 @@ export default function BotDetailLayout({
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-3.5rem)]">
+      <div className="flex h-full -mx-6">
         {/* 侧边栏骨架屏 */}
         <aside className="w-64 border-r bg-card p-4">
           <Skeleton className="h-8 w-24 mb-4" />
@@ -105,7 +105,7 @@ export default function BotDetailLayout({
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-full -mx-6">
       {/* 侧边栏导航 */}
       <BotSidebar
         hostname={hostname}

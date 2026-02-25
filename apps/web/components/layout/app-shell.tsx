@@ -1,8 +1,8 @@
 'use client';
 
-import { SidebarProvider, SidebarInset } from '@repo/ui';
-import { AppSidebar } from './app-sidebar';
+import { SidebarInset, SidebarProvider } from '@repo/ui';
 import { AppNavbar } from './app-navbar';
+import { AppSidebar } from './app-sidebar';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ export function AppShell({ children }: AppShellProps) {
           <AppSidebar />
           <SidebarInset className="bg-background">
             <main className="flex h-full flex-1 flex-col overflow-hidden">
-              <div className="container mx-auto h-full max-w-6xl flex-1 overflow-auto p-6">
+              <div className="container mx-auto h-full max-w-6xl flex-1 overflow-auto px-6">
                 {children}
               </div>
             </main>

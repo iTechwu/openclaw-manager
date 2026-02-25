@@ -32,7 +32,9 @@
     "byHour": "By hour",
     "byDay": "By day",
     "inputToken": "Input Token",
-    "outputToken": "Output Token"
+    "outputToken": "Output Token",
+    "requests": "Requests",
+    "cost": "Cost"
   },
   "breakdown": {
     "title": "Usage Distribution",
@@ -40,6 +42,7 @@
     "byVendor": "By Provider",
     "byModel": "By Model",
     "byStatus": "By Status",
+    "byProtocol": "By Protocol",
     "requests": "requests",
     "tokens": "tokens"
   },

@@ -25,13 +25,20 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from '@repo/ui';
 import {
   Activity,
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
+  Building2,
+  CheckCircle,
   Clock,
+  Cpu,
   DollarSign,
   RefreshCw,
   TrendingUp,
@@ -94,6 +101,10 @@ function StatCard({
  * 性能优化：
  * - 数据采样：超过 100 个点时自动采样，减少 DOM 节点
  * - useMemo：缓存计算结果，避免重复计算
+ *
+ * 交互功能：
+ * - Hover：高亮柱状图 + 显示 Tooltip
+ * - Click：选中状态 + 显示详细数据卡片
  */
 function SimpleTrendChart({
   data,
@@ -112,6 +123,9 @@ function SimpleTrendChart({
   inputLabel: string;
   outputLabel: string;
 }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
   // 数据采样：超过 100 个点时采样，减少渲染压力
   const sampledData = useMemo(() => {
     if (!data || data.length <= 100) return data;
@@ -128,6 +142,17 @@ function SimpleTrendChart({
     );
   }, [sampledData]);
 
+  // 格式化时间戳显示
+  const formatTimestamp = (timestamp: Date) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   // 缓存图表柱状条渲染
   const chartBars = useMemo(() => {
     if (!sampledData || maxValue === 0) return null;
@@ -135,27 +160,85 @@ function SimpleTrendChart({
     return sampledData.map((point, index) => {
       const requestHeight = (point.requestTokens / maxValue) * 100;
       const responseHeight = (point.responseTokens / maxValue) * 100;
+      const isHovered = hoveredIndex === index;
+      const isSelected = selectedIndex === index;
+      const isActive = isHovered || isSelected;
 
       return (
-        <div
-          key={index}
-          className="flex flex-1 flex-col justify-end h-full"
-          title={`${new Date(point.timestamp).toLocaleDateString()}\n${inputLabel}: ${point.requestTokens.toLocaleString()}\n${outputLabel}: ${point.responseTokens.toLocaleString()}`}
-        >
-          <div className="flex w-full items-end gap-0.5 h-full">
+        <Tooltip key={index}>
+          <TooltipTrigger asChild>
             <div
-              className="flex-1 rounded-t bg-blue-500 transition-all min-h-[2px]"
-              style={{ height: `${requestHeight}%` }}
-            />
-            <div
-              className="flex-1 rounded-t bg-green-500 transition-all min-h-[2px]"
-              style={{ height: `${responseHeight}%` }}
-            />
-          </div>
-        </div>
+              className={`flex flex-1 flex-col justify-end h-full cursor-pointer transition-all duration-200 ${
+                isActive ? 'scale-105 z-10' : ''
+              }`}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() =>
+                setSelectedIndex(selectedIndex === index ? null : index)
+              }
+            >
+              <div className="flex w-full items-end gap-0.5 h-full">
+                <div
+                  className={`flex-1 rounded-t transition-all duration-200 min-h-[2px] ${
+                    isActive
+                      ? 'bg-blue-600 shadow-lg shadow-blue-500/50'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                  style={{ height: `${requestHeight}%` }}
+                />
+                <div
+                  className={`flex-1 rounded-t transition-all duration-200 min-h-[2px] ${
+                    isActive
+                      ? 'bg-green-600 shadow-lg shadow-green-500/50'
+                      : 'bg-green-500 hover:bg-green-600'
+                  }`}
+                  style={{ height: `${responseHeight}%` }}
+                />
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            className="bg-popover text-popover-foreground border shadow-lg"
+            sideOffset={8}
+          >
+            <div className="space-y-1.5 px-1 py-0.5">
+              <div className="font-medium text-xs">
+                {formatTimestamp(point.timestamp)}
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="h-2 w-2 rounded bg-blue-500" />
+                <span>
+                  {inputLabel}: {point.requestTokens.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="h-2 w-2 rounded bg-green-500" />
+                <span>
+                  {outputLabel}: {point.responseTokens.toLocaleString()}
+                </span>
+              </div>
+              <div className="border-t pt-1 mt-1 text-xs font-medium">
+                总计:{' '}
+                {(point.requestTokens + point.responseTokens).toLocaleString()}
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     });
-  }, [sampledData, maxValue, inputLabel, outputLabel]);
+  }, [
+    sampledData,
+    maxValue,
+    hoveredIndex,
+    selectedIndex,
+    inputLabel,
+    outputLabel,
+  ]);
+
+  // 获取选中的数据点
+  const selectedPoint =
+    selectedIndex !== null ? sampledData?.[selectedIndex] : null;
 
   if (loading) {
     return (
@@ -176,6 +259,61 @@ function SimpleTrendChart({
   return (
     <div className="w-full">
       <div className="flex h-[280px] w-full items-end gap-1">{chartBars}</div>
+
+      {/* 选中数据详情卡片 */}
+      {selectedPoint && (
+        <div className="mt-4 p-4 rounded-lg border bg-muted/50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
+              <span className="font-medium text-sm">
+                {formatTimestamp(selectedPoint.timestamp)}
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedIndex(null)}
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              点击取消选择
+            </button>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <div className="h-2 w-2 rounded bg-blue-500" />
+                <span className="text-xs text-muted-foreground">
+                  {inputLabel}
+                </span>
+              </div>
+              <div className="font-bold text-lg">
+                {selectedPoint.requestTokens.toLocaleString()}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <div className="h-2 w-2 rounded bg-green-500" />
+                <span className="text-xs text-muted-foreground">
+                  {outputLabel}
+                </span>
+              </div>
+              <div className="font-bold text-lg">
+                {selectedPoint.responseTokens.toLocaleString()}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <span className="text-xs text-muted-foreground">总计</span>
+              </div>
+              <div className="font-bold text-lg text-primary">
+                {(
+                  selectedPoint.requestTokens + selectedPoint.responseTokens
+                ).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-2 flex justify-center gap-4 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded bg-blue-500" />
@@ -198,6 +336,7 @@ function BreakdownList({
   loading,
   noDataText,
   requestsLabel,
+  groupBy,
 }: {
   data: Array<{
     key: string;
@@ -210,7 +349,50 @@ function BreakdownList({
   loading?: boolean;
   noDataText: string;
   requestsLabel: string;
+  groupBy: 'vendor' | 'model' | 'status' | 'protocol';
 }) {
+  // Get icon based on groupBy type and key value
+  const getIcon = (key: string) => {
+    if (groupBy === 'vendor') {
+      return Building2;
+    } else if (groupBy === 'model') {
+      return Cpu;
+    } else if (groupBy === 'status') {
+      return key === 'success' ? CheckCircle : AlertCircle;
+    } else if (groupBy === 'protocol') {
+      return Zap;
+    }
+    return Activity;
+  };
+
+  // Get icon color based on groupBy type and key value
+  const getIconColor = (key: string) => {
+    if (groupBy === 'vendor') {
+      return 'text-blue-500';
+    } else if (groupBy === 'model') {
+      return 'text-purple-500';
+    } else if (groupBy === 'status') {
+      return key === 'success' ? 'text-green-500' : 'text-red-500';
+    } else if (groupBy === 'protocol') {
+      return 'text-amber-500';
+    }
+    return 'text-muted-foreground';
+  };
+
+  // Get background color for percentage bar
+  const getBarColor = (key: string) => {
+    if (groupBy === 'vendor') {
+      return 'bg-blue-500';
+    } else if (groupBy === 'model') {
+      return 'bg-purple-500';
+    } else if (groupBy === 'status') {
+      return key === 'success' ? 'bg-green-500' : 'bg-red-500';
+    } else if (groupBy === 'protocol') {
+      return 'bg-amber-500';
+    }
+    return 'bg-primary';
+  };
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -229,27 +411,45 @@ function BreakdownList({
 
   return (
     <div className="space-y-3">
-      {data.map((item) => (
-        <div
-          key={item.key}
-          className="flex items-center justify-between rounded-lg border p-3"
-        >
-          <div className="flex-1">
-            <div className="font-medium">{item.key}</div>
-            <div className="text-muted-foreground text-sm">
-              {item.requestCount.toLocaleString()} {requestsLabel} ·{' '}
-              {(item.requestTokens + item.responseTokens).toLocaleString()}{' '}
-              tokens
+      {data.map((item) => {
+        const Icon = getIcon(item.key);
+        const iconColor = getIconColor(item.key);
+        const barColor = getBarColor(item.key);
+
+        return (
+          <div
+            key={item.key}
+            className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex-1 flex items-center gap-3">
+              <div className={`p-2 rounded-md bg-muted ${iconColor}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">{item.key}</div>
+                <div className="text-muted-foreground text-sm">
+                  {item.requestCount.toLocaleString()} {requestsLabel} ·{' '}
+                  {(item.requestTokens + item.responseTokens).toLocaleString()}{' '}
+                  tokens
+                </div>
+                {/* Percentage bar */}
+                <div className="mt-1.5 h-1.5 w-full max-w-[200px] rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+                    style={{ width: `${item.percentage}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-medium">{item.percentage.toFixed(1)}%</div>
+              <div className="text-muted-foreground text-sm">
+                ${item.estimatedCost.toFixed(2)}
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-medium">{item.percentage.toFixed(1)}%</div>
-            <div className="text-muted-foreground text-sm">
-              ${item.estimatedCost.toFixed(2)}
-            </div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -263,7 +463,7 @@ export default function BotUsagePage() {
   const t = useTranslations('usage');
 
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
-  const [groupBy, setGroupBy] = useState<'vendor' | 'model' | 'status'>(
+  const [groupBy, setGroupBy] = useState<'vendor' | 'model' | 'status' | 'protocol'>(
     'vendor',
   );
 
@@ -466,13 +666,15 @@ export default function BotUsagePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SimpleTrendChart
-                data={trend?.dataPoints || []}
-                loading={trendLoading}
-                noDataText={t('noData')}
-                inputLabel={t('trend.inputToken')}
-                outputLabel={t('trend.outputToken')}
-              />
+              <TooltipProvider>
+                <SimpleTrendChart
+                  data={trend?.dataPoints || []}
+                  loading={trendLoading}
+                  noDataText={t('noData')}
+                  inputLabel={t('trend.inputToken')}
+                  outputLabel={t('trend.outputToken')}
+                />
+              </TooltipProvider>
             </CardContent>
           </Card>
         </TabsContent>
@@ -487,7 +689,7 @@ export default function BotUsagePage() {
               <Select
                 value={groupBy}
                 onValueChange={(v) =>
-                  setGroupBy(v as 'vendor' | 'model' | 'status')
+                  setGroupBy(v as 'vendor' | 'model' | 'status' | 'protocol')
                 }
               >
                 <SelectTrigger className="w-32">
@@ -503,6 +705,9 @@ export default function BotUsagePage() {
                   <SelectItem value="status">
                     {t('breakdown.byStatus')}
                   </SelectItem>
+                  <SelectItem value="protocol">
+                    {t('breakdown.byProtocol')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </CardHeader>
@@ -512,6 +717,7 @@ export default function BotUsagePage() {
                 loading={breakdownLoading}
                 noDataText={t('noData')}
                 requestsLabel={t('breakdown.requests')}
+                groupBy={groupBy}
               />
             </CardContent>
           </Card>

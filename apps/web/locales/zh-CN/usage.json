@@ -32,7 +32,9 @@
     "byHour": "按小时",
     "byDay": "按天",
     "inputToken": "输入 Token",
-    "outputToken": "输出 Token"
+    "outputToken": "输出 Token",
+    "requests": "请求数",
+    "cost": "成本"
   },
   "breakdown": {
     "title": "用量分布",
@@ -40,6 +42,7 @@
     "byVendor": "按提供商",
     "byModel": "按模型",
     "byStatus": "按状态",
+    "byProtocol": "按协议",
     "requests": "次请求",
     "tokens": "tokens"
   },

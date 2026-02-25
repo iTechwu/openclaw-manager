@@ -376,7 +376,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
    */
   private async aggregateByGroup(
     where: Prisma.BotUsageLogWhereInput,
-    groupBy: 'vendor' | 'model' | 'status',
+    groupBy: 'vendor' | 'model' | 'status' | 'protocol',
   ): Promise<BreakdownGroup[]> {
     const botId = where.botId as string;
     const startDate = (where.createdAt as { gte?: Date })?.gte;
