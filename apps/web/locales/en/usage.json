@@ -21,7 +21,27 @@
     "estimatedCost": "Estimated Cost",
     "costDescription": "Based on model pricing",
     "avgResponseTime": "Avg Response Time",
-    "basedOnRequests": "Based on {count} requests"
+    "basedOnRequests": "Based on {count} requests",
+    "performance": "Performance"
+  },
+  "insights": {
+    "title": "Data Insights",
+    "noInsights": "Not enough data to generate insights",
+    "peakUsage": "Peak usage at {time}",
+    "errorRateHigh": "High error rate detected",
+    "errorRateNormal": "Error rate is normal",
+    "costWarning": "Cost increased by {percent}% compared to previous period",
+    "costStable": "Cost is stable",
+    "topModel": "Top model: {model}",
+    "avgTokensPerRequest": "Avg {count} tokens/request",
+    "comparedToYesterday": "vs yesterday",
+    "comparedToLastWeek": "vs last week",
+    "comparedToLastMonth": "vs last month",
+    "trend": {
+      "up": "Increased",
+      "down": "Decreased",
+      "stable": "Stable"
+    }
   },
   "tabs": {
     "trend": "Trend",
@@ -34,7 +54,10 @@
     "inputToken": "Input Token",
     "outputToken": "Output Token",
     "requests": "Requests",
-    "cost": "Cost"
+    "cost": "Cost",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetZoom": "Reset zoom"
   },
   "breakdown": {
     "title": "Usage Distribution",
@@ -44,11 +67,27 @@
     "byStatus": "By Status",
     "byProtocol": "By Protocol",
     "requests": "requests",
-    "tokens": "tokens"
+    "tokens": "tokens",
+    "sortBy": "Sort by",
+    "sortOptions": {
+      "count": "Request count",
+      "tokens": "Token count",
+      "cost": "Cost"
+    }
+  },
+  "export": {
+    "title": "Export",
+    "csv": "Export CSV",
+    "json": "Export JSON"
   },
   "chart": {
     "input": "Input",
     "output": "Output",
     "date": "Date"
+  },
+  "alerts": {
+    "warning": "Warning",
+    "errorRateWarning": "Error rate exceeds {rate}% threshold",
+    "costWarning": "Daily cost exceeds ${amount}"
   }
 }

@@ -254,11 +254,60 @@ async getStats(userId: string, hostname: string, query: UsageStatsQuery) {
 - [x] ~~重构 `aggregateByGroup` 移除 `$queryRawUnsafe`~~ ✅ **已完成 (2025-02-24)**
 - [x] ~~前端图表添加数据采样和虚拟化~~ ✅ **已完成 (2025-02-24)**
 - [x] ~~添加性能监控指标~~ ✅ **已完成 (2025-02-24)**
+- [x] ~~前端 UI/UX 优化（数据洞察、交互增强、视觉层次）~~ ✅ **已完成 (2025-02-25)**
 - [ ] 考虑添加 Redis 缓存层（高频访问场景）
 
 ---
 
 ## 🔄 变更日志
+
+### 2025-02-25 - 前端 UI/UX 全面优化
+
+**变更内容**：
+
+1. **数据洞察区域**
+   - 新增 `InsightsPanel` 组件，自动分析并展示关键发现
+   - 显示：峰值使用时间、错误率状态、平均 tokens/请求、最常用模型
+   - 使用彩色 Badge 区分 info/warning/success 类型
+
+2. **统计卡片增强**
+   - 新增 `trend` 和 `trendValue` 属性支持趋势指示
+   - 新增 `status` 属性支持状态颜色（success/warning/error）
+   - Error Rate 卡片根据值显示不同边框颜色
+
+3. **布局结构优化**
+   - 将「平均响应时间」整合到统计卡片区域（5 列布局）
+   - 移除底部单独的响应时间卡片
+
+4. **交互功能增强**
+   - 趋势图支持缩放（Zoom In/Out/Reset）
+   - 分组统计支持排序（按请求数、Token 数、成本）
+   - 新增导出功能（CSV/JSON 格式）
+
+5. **视觉层次优化**
+   - 新增 `AlertBanner` 组件，错误率超过阈值时显示警告
+   - Error Rate 卡片根据错误率显示不同颜色（绿色 < 5% < 黄色 < 10% < 红色）
+   - 统一使用颜色编码区分不同状态
+
+**修改文件**：
+- `apps/web/app/[locale]/(main)/bots/[hostname]/usage/page.tsx`
+- `apps/web/locales/en/usage.json`
+- `apps/web/locales/zh-CN/usage.json`
+
+**新增国际化 Key**：
+- `insights.*` - 数据洞察相关文案
+- `breakdown.sortBy`, `breakdown.sortOptions.*` - 排序相关
+- `export.*` - 导出功能相关
+- `alerts.*` - 警告横幅相关
+- `stats.performance` - 性能卡片
+
+**优势**：
+1. 用户可以快速获取数据洞察，无需手动分析
+2. 异常状态一目了然（错误率高亮、警告横幅）
+3. 更灵活的数据交互（缩放、排序、导出）
+4. 更好的信息层次和视觉引导
+
+---
 
 ### 2025-02-24 - 性能监控指标
 

@@ -295,13 +295,14 @@ export class ProxyService {
       // 记录使用日志（包含 token 使用量和耗时）
       await this.logUsage(
         botId,
-        effectiveApiType,
+        urlApiType, // 实际提供商名称（从 URL 解析）
         keyId,
         statusCode,
         path,
         tokenUsage,
         undefined,
         responseTimeMs,
+        effectiveApiType, // 协议类型
       );
 
       // 检查配额并发送通知（异步，不阻塞响应）
@@ -321,13 +322,14 @@ export class ProxyService {
       // 记录失败日志
       await this.logUsage(
         botId,
-        effectiveApiType,
+        urlApiType, // 实际提供商名称（从 URL 解析）
         keyId,
         null,
         path,
         null,
         errorMessage,
         durationMs,
+        effectiveApiType, // 协议类型
       );
 
       return { success: false, error: `Upstream error: ${errorMessage}` };
@@ -552,13 +554,14 @@ export class ProxyService {
         // 记录使用日志
         await this.logUsage(
           botId,
-          effectiveApiType,
+          candidate.vendor, // 实际提供商名称
           candidate.providerKeyId,
           statusCode,
           path,
           tokenUsage,
           undefined,
           responseTimeMs,
+          effectiveApiType, // 协议类型
         );
 
         // 检查配额
@@ -592,13 +595,14 @@ export class ProxyService {
         if (rawResponse.headersSent) {
           await this.logUsage(
             botId,
-            candidate.apiType,
+            candidate.vendor, // 实际提供商名称
             candidate.providerKeyId,
             null,
             path,
             null,
             errorMessage,
             durationMs,
+            candidate.apiType, // 协议类型
           );
           return { success: false, error: `Upstream error: ${errorMessage}` };
         }
@@ -606,13 +610,14 @@ export class ProxyService {
         // 记录失败日志
         await this.logUsage(
           botId,
-          candidate.apiType,
+          candidate.vendor, // 实际提供商名称
           candidate.providerKeyId,
           null,
           path,
           null,
           errorMessage,
           durationMs,
+          candidate.apiType, // 协议类型
         );
 
         // 最后一个 provider 也失败了
@@ -667,6 +672,7 @@ export class ProxyService {
     tokenUsage?: TokenUsage | null,
     errorMessage?: string,
     durationMs?: number,
+    protocolType?: string,
   ): Promise<void> {
     try {
       await this.botUsageLogService.create({
@@ -680,6 +686,7 @@ export class ProxyService {
         responseTokens: tokenUsage?.responseTokens ?? null,
         errorMessage: errorMessage || null,
         durationMs: durationMs ?? null,
+        protocolType: protocolType || null,
       });
     } catch (error) {
       this.logger.error('Failed to log usage:', error);

@@ -21,7 +21,27 @@
     "estimatedCost": "预估成本",
     "costDescription": "基于模型定价估算",
     "avgResponseTime": "平均响应时间",
-    "basedOnRequests": "基于 {count} 次请求"
+    "basedOnRequests": "基于 {count} 次请求",
+    "performance": "性能"
+  },
+  "insights": {
+    "title": "数据洞察",
+    "noInsights": "数据不足以生成洞察",
+    "peakUsage": "峰值使用时间: {time}",
+    "errorRateHigh": "检测到高错误率",
+    "errorRateNormal": "错误率正常",
+    "costWarning": "成本相比上一周期增长 {percent}%",
+    "costStable": "成本稳定",
+    "topModel": "最常用模型: {model}",
+    "avgTokensPerRequest": "平均 {count} tokens/请求",
+    "comparedToYesterday": "较昨日",
+    "comparedToLastWeek": "较上周",
+    "comparedToLastMonth": "较上月",
+    "trend": {
+      "up": "上升",
+      "down": "下降",
+      "stable": "稳定"
+    }
   },
   "tabs": {
     "trend": "趋势",
@@ -34,7 +54,10 @@
     "inputToken": "输入 Token",
     "outputToken": "输出 Token",
     "requests": "请求数",
-    "cost": "成本"
+    "cost": "成本",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetZoom": "重置缩放"
   },
   "breakdown": {
     "title": "用量分布",
@@ -44,11 +67,27 @@
     "byStatus": "按状态",
     "byProtocol": "按协议",
     "requests": "次请求",
-    "tokens": "tokens"
+    "tokens": "tokens",
+    "sortBy": "排序方式",
+    "sortOptions": {
+      "count": "请求数量",
+      "tokens": "Token 数量",
+      "cost": "成本"
+    }
+  },
+  "export": {
+    "title": "导出",
+    "csv": "导出 CSV",
+    "json": "导出 JSON"
   },
   "chart": {
     "input": "输入",
     "output": "输出",
     "date": "日期"
+  },
+  "alerts": {
+    "warning": "警告",
+    "errorRateWarning": "错误率超过 {rate}% 阈值",
+    "costWarning": "日均成本超过 ${amount}"
   }
 }
