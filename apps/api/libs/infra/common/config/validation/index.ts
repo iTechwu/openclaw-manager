@@ -25,6 +25,22 @@ export {
 } from './env.validation';
 export type { EnvConfig, EnvValidationResult } from './env.validation';
 
+// 导出便捷的环境变量访问服务
+export {
+  getEnv,
+  getEnvWithDefault,
+  hasEnv,
+  getNodeEnv,
+  isProduction,
+  isDevelopment,
+  getProjectRoot,
+  dockerConfig,
+  s3Config,
+  featureConfig,
+  buildConfig,
+  clearEnvCache,
+} from '../env-config.service';
+
 // ============================================================================
 // YAML Configuration Validation
 // ============================================================================
@@ -143,6 +159,7 @@ export {
   wechatSchema,
   agentxSchema,
   openaiSchema,
+  // ipInfoSchema - 使用 yaml.validation 的 ipInfoConfigSchema (合并自 keys/config.json)
   // Functions
   validateKeysConfig,
   validateKeysConfigSafe,

@@ -448,8 +448,7 @@ export class WorkspaceService {
       // 确保 channels.feishu.accounts 结构存在
       const channels =
         (existingConfig.channels as Record<string, unknown>) || {};
-      const feishuConfig =
-        (channels.feishu as Record<string, unknown>) || {};
+      const feishuConfig = (channels.feishu as Record<string, unknown>) || {};
       const feishuAccounts =
         (feishuConfig.accounts as Record<string, FeishuChannelConfig>) || {};
 
@@ -1132,7 +1131,8 @@ export class WorkspaceService {
       const configToWrite = {
         channels: channelsConfig,
         _meta: {
-          description: 'Channels configuration for OpenClaw - merged at container startup',
+          description:
+            'Channels configuration for OpenClaw - merged at container startup',
           generatedAt: new Date().toISOString(),
           isolationKey,
         },

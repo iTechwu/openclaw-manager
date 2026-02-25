@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import { PrismaService } from '@app/prisma';
 import { TransactionalServiceBase } from '@app/shared-db';
 import { HandlePrismaError, DbOperationType } from '@/utils/prisma-error.util';
 import { AppConfig } from '@/config/validation';
-import type { Prisma, BotUsageLog } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import type { BotUsageLog } from '@prisma/client';
 
 @Injectable()
 export class BotUsageLogService extends TransactionalServiceBase {
@@ -13,6 +16,7 @@ export class BotUsageLogService extends TransactionalServiceBase {
   constructor(
     prisma: PrismaService,
     private readonly config: ConfigService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     super(prisma);
     this.appConfig = config.getOrThrow<AppConfig>('app');
@@ -241,5 +245,260 @@ export class BotUsageLogService extends TransactionalServiceBase {
       avgLatencyMs,
       targetStats,
     };
+  }
+
+  /**
+   * 用量统计聚合查询
+   * 返回指定时间范围内的总用量统计
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateStats(
+    where: Prisma.BotUsageLogWhereInput,
+  ): Promise<{
+    totalRequestTokens: number;
+    totalResponseTokens: number;
+    totalDurationMs: number;
+    requestCount: number;
+    avgDurationMs: number | null;
+  }> {
+    const result = await this.getReadClient().botUsageLog.aggregate({
+      where,
+      _sum: {
+        requestTokens: true,
+        responseTokens: true,
+        durationMs: true,
+      },
+      _count: {
+        id: true,
+      },
+      _avg: {
+        durationMs: true,
+      },
+    });
+
+    return {
+      totalRequestTokens: result._sum.requestTokens || 0,
+      totalResponseTokens: result._sum.responseTokens || 0,
+      totalDurationMs: result._sum.durationMs || 0,
+      requestCount: result._count.id,
+      avgDurationMs: result._avg.durationMs,
+    };
+  }
+
+  /**
+   * 错误计数查询
+   * 返回指定条件下的错误请求数量
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async countErrors(
+    where: Prisma.BotUsageLogWhereInput,
+  ): Promise<number> {
+    return this.getReadClient().botUsageLog.count({
+      where: {
+        ...where,
+        OR: [{ statusCode: { gte: 400 } }, { errorMessage: { not: null } }],
+      },
+    });
+  }
+
+  /**
+   * 按时间桶聚合查询（原生 SQL）
+   * 用于生成趋势数据
+   *
+   * 优化说明：
+   * - 使用 timezone-aware date_trunc 确保结果一致性
+   * - 利用 b_usage_log_bot_id_created_at_idx 索引优化查询性能
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateByTimeBucket(
+    botId: string,
+    startDate: Date,
+    endDate: Date,
+    granularity: 'hour' | 'day' | 'week',
+  ): Promise<Array<{
+    bucket: Date;
+    requestTokens: number;
+    responseTokens: number;
+    requestCount: number;
+    errorCount: number;
+  }>> {
+    const truncFormat =
+      granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
+
+    // Debug: Log the query parameters
+    this.logger.info('[BotUsageLogService] aggregateByTimeBucket query params', {
+      botId,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      truncFormat,
+    });
+
+    // 使用 timezone-aware date_trunc 确保 UTC 时区的一致性
+    // created_at 是 timestamptz 类型，AT TIME ZONE 'UTC' 转换为 UTC 时区后再截断
+    const result = await this.getReadClient().$queryRaw<
+      Array<{
+        bucket: Date;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+        request_count: bigint;
+        error_count: bigint;
+      }>
+    >`
+      SELECT
+        date_trunc(${truncFormat}, created_at AT TIME ZONE 'UTC') as bucket,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens,
+        COUNT(*) as request_count,
+        COUNT(*) FILTER (WHERE status_code >= 400 OR error_message IS NOT NULL) as error_count
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY bucket
+      ORDER BY bucket ASC
+    `;
+
+    // Debug: Log the raw result
+    this.logger.info('[BotUsageLogService] aggregateByTimeBucket result', {
+      resultCount: result.length,
+      firstBucket: result[0],
+    });
+
+    return result.map((row) => ({
+      bucket: row.bucket,
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+      requestCount: Number(row.request_count),
+      errorCount: Number(row.error_count),
+    }));
+  }
+
+  /**
+   * 按分组聚合查询
+   * 用于生成分组统计数据
+   *
+   * 优化说明：
+   * - vendor 和 model 使用 Prisma groupBy（安全、类型安全）
+   * - status 使用 $queryRaw（因为需要 CASE 表达式，但参数化处理）
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateByGroup(
+    botId: string,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
+    groupBy: 'vendor' | 'model' | 'status',
+  ): Promise<Array<{
+    groupKey: string;
+    requestTokens: number;
+    responseTokens: number;
+    requestCount: number;
+  }>> {
+    // 构建 where 条件
+    const where: Prisma.BotUsageLogWhereInput = { botId };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = startDate;
+      if (endDate) where.createdAt.lte = endDate;
+    }
+
+    // 对于 vendor 和 model，使用 Prisma groupBy（类型安全）
+    if (groupBy === 'vendor' || groupBy === 'model') {
+      const result = await this.getReadClient().botUsageLog.groupBy({
+        by: [groupBy],
+        where,
+        _sum: {
+          requestTokens: true,
+          responseTokens: true,
+        },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          _count: {
+            id: 'desc',
+          },
+        },
+      });
+
+      return result.map((row) => ({
+        groupKey: row[groupBy] || 'unknown',
+        requestTokens: row._sum.requestTokens || 0,
+        responseTokens: row._sum.responseTokens || 0,
+        requestCount: row._count.id,
+      }));
+    }
+
+    // 对于 status，使用安全的参数化查询
+    // groupBy 已限制为 'status'，CASE 表达式是静态的，无 SQL 注入风险
+    const result = await this.getReadClient().$queryRaw<
+      Array<{
+        group_key: string;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+        request_count: bigint;
+      }>
+    >`
+      SELECT
+        CASE
+          WHEN status_code >= 400 OR error_message IS NOT NULL
+          THEN 'error'
+          ELSE 'success'
+        END as group_key,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens,
+        COUNT(*) as request_count
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        ${startDate ? Prisma.sql`AND created_at >= ${startDate}` : Prisma.empty}
+        ${endDate ? Prisma.sql`AND created_at <= ${endDate}` : Prisma.empty}
+      GROUP BY group_key
+      ORDER BY request_count DESC
+    `;
+
+    return result.map((row) => ({
+      groupKey: row.group_key || 'unknown',
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+      requestCount: Number(row.request_count),
+    }));
+  }
+
+  /**
+   * 按模型聚合成本查询（原生 SQL）
+   * 用于计算总成本
+   */
+  @HandlePrismaError(DbOperationType.QUERY)
+  async aggregateCostByModel(
+    botId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Array<{
+    model: string | null;
+    requestTokens: number;
+    responseTokens: number;
+  }>> {
+    const result = await this.getReadClient().$queryRaw<
+      Array<{
+        model: string | null;
+        request_tokens: bigint | null;
+        response_tokens: bigint | null;
+      }>
+    >`
+      SELECT
+        model,
+        SUM(request_tokens) as request_tokens,
+        SUM(response_tokens) as response_tokens
+      FROM b_usage_log
+      WHERE bot_id = ${botId}::uuid
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY model
+    `;
+
+    return result.map((row) => ({
+      model: row.model,
+      requestTokens: Number(row.request_tokens || 0),
+      responseTokens: Number(row.response_tokens || 0),
+    }));
   }
 }

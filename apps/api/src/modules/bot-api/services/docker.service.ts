@@ -12,6 +12,7 @@ import type {
   BotType,
 } from '@repo/contracts';
 import { normalizeModelName } from '@/utils/model-normalizer';
+import { dockerConfig } from '@/common/config/validation';
 
 export interface ContainerInfo {
   id: string;
@@ -66,31 +67,38 @@ export class DockerService implements OnModuleInit {
   private readonly dataVolumeName: string | null;
   private readonly secretsVolumeName: string | null;
   private readonly openclawVolumeName: string | null;
+  /**
+   * Container resource limits
+   * Configured via BOT_CONTAINER_CPU_LIMIT and BOT_CONTAINER_MEMORY_LIMIT environment variables
+   */
+  private readonly containerCpuLimit: number;
+  private readonly containerMemoryLimit: number;
 
   constructor(private readonly configService: ConfigService) {
-    // Initialize bot images for each type
-    // Image is configured via BOT_IMAGE_<TYPE> environment variable
+    // Initialize bot images for each type (使用类型安全的环境变量配置)
     this.botImages = {
-      GATEWAY: process.env.BOT_IMAGE_GATEWAY || 'openclaw:latest',
-      TOOL_SANDBOX:
-        process.env.BOT_IMAGE_TOOL_SANDBOX || 'openclaw-sandbox:bookworm-slim',
-      BROWSER_SANDBOX:
-        process.env.BOT_IMAGE_BROWSER_SANDBOX ||
-        'openclaw-sandbox-browser:bookworm-slim',
+      GATEWAY: dockerConfig.images.gateway,
+      TOOL_SANDBOX: dockerConfig.images.toolSandbox,
+      BROWSER_SANDBOX: dockerConfig.images.browserSandbox,
     };
     this.logger.log(
       `Bot images configured: GATEWAY=${this.botImages.GATEWAY}, TOOL_SANDBOX=${this.botImages.TOOL_SANDBOX}, BROWSER_SANDBOX=${this.botImages.BROWSER_SANDBOX}`,
     );
 
-    // 环境变量为字符串，需显式转换为 number，否则 Prisma Int 字段会校验失败
-    const portStartRaw = process.env.BOT_PORT_START || 9200;
-    this.portStart =
-      typeof portStartRaw === 'number'
-        ? portStartRaw
-        : Number(portStartRaw) || 9200;
-    const dataDir = process.env.BOT_DATA_DIR || '/data/bots';
-    const secretsDir = process.env.BOT_SECRETS_DIR || '/data/secrets';
-    const openclawDir = process.env.BOT_OPENCLAW_DIR || '/data/openclaw';
+    // Container resource limits
+    this.containerCpuLimit = dockerConfig.limits.cpu;
+    this.containerMemoryLimit = dockerConfig.limits.memory;
+    this.logger.log(
+      `Container resource limits: CPU=${this.containerCpuLimit} cores, Memory=${(this.containerMemoryLimit / 1024 / 1024 / 1024).toFixed(1)}GB`,
+    );
+
+    // 端口配置
+    this.portStart = dockerConfig.portStart;
+
+    // 目录配置
+    const dataDir = dockerConfig.directories.data;
+    const secretsDir = dockerConfig.directories.secrets;
+    const openclawDir = dockerConfig.directories.openclaw;
 
     // 统一规范为绝对路径，避免 Docker 把相对路径当作 volume 名称（从而报类似 "includes invalid characters"）
     this.dataDir = isAbsolute(dataDir) ? dataDir : join(process.cwd(), dataDir);
@@ -102,10 +110,9 @@ export class DockerService implements OnModuleInit {
       : join(process.cwd(), openclawDir);
 
     // Volume names for containerized deployment
-    // When set, bot containers will mount from these named volumes instead of host paths
-    this.dataVolumeName = process.env.DATA_VOLUME_NAME || null;
-    this.secretsVolumeName = process.env.SECRETS_VOLUME_NAME || null;
-    this.openclawVolumeName = process.env.OPENCLAW_VOLUME_NAME || null;
+    this.dataVolumeName = dockerConfig.volumes.data || null;
+    this.secretsVolumeName = dockerConfig.volumes.secrets || null;
+    this.openclawVolumeName = dockerConfig.volumes.openclaw || null;
   }
 
   /**
@@ -469,9 +476,16 @@ export class DockerService implements OnModuleInit {
       Binds: binds,
       RestartPolicy: { Name: 'unless-stopped' },
       NetworkMode: networkMode,
+      // Resource limits to prevent single bot from consuming too many resources
+      // CpuQuota: 100000 = 1 CPU (microseconds per 100ms period)
+      CpuQuota: this.containerCpuLimit * 100000,
+      // Memory limit in bytes
+      Memory: this.containerMemoryLimit,
+      // MemorySwap = Memory means no swap usage
+      MemorySwap: this.containerMemoryLimit,
     };
 
-    // BROWSER_SANDBOX needs additional ports and shared memory for Chrome
+    // BROWSER_SANDBOX needs additional ports, shared memory, and higher resource limits for Chrome
     if (botType === 'BROWSER_SANDBOX') {
       // Add extra ports for browser sandbox:
       // - CDP (Chrome DevTools Protocol) on port+1
@@ -488,8 +502,12 @@ export class DockerService implements OnModuleInit {
       ];
       // Chrome needs 2GB shared memory
       hostConfig.ShmSize = 2 * 1024 * 1024 * 1024; // 2GB
+      // Browser sandbox needs higher resource limits (4 CPU, 8GB memory)
+      hostConfig.CpuQuota = 400000; // 4 CPU
+      hostConfig.Memory = 8 * 1024 * 1024 * 1024; // 8GB
+      hostConfig.MemorySwap = 8 * 1024 * 1024 * 1024;
       this.logger.log(
-        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}`,
+        `BROWSER_SANDBOX configured with extra ports: CDP=${options.port + 1}, VNC=${options.port + 2}, noVNC=${options.port + 3}, CPU=4, Memory=8GB`,
       );
     }
 

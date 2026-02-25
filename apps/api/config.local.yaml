@@ -4,7 +4,6 @@ app:
   version: '2.1.0'
   apiVersion: '1' # API 版本号
   minClientVersion: '0.0.1' # 最低兼容前端版本
-  port: 3200
   logger: true
   transport: 'TCP'
   domain: 'xica.ai'
@@ -32,9 +31,7 @@ app:
 uploadConfig:
   chrunkSize: 8388608 #1024 * 1024 * 8
 
-ipinfo:
-  url: 'https://ipinfo.io'
-  token: 'f23c2d43721815'
+# ipinfo 配置已移至 keys/config.json
 
 # 功能开关配置
 # Provider 说明:
@@ -107,17 +104,15 @@ rateLimit:
     userIds: [] # 管理员用户 ID
     apiKeys: [] # 内部服务 API Key
 
-pinecone:
-  apiKey: 'cd14c373-cf91-4857-bdba-8384386193d5'
+# pinecone.apiKey 已移至环境变量 PINECONE_API_KEY
 
-# jwt 配置
-jwt:
-  secret: '0EHAmnd9i82n'
-  expireIn: 3600
+# jwt 配置已移至环境变量:
+#   - JWT_SECRET
+#   - JWT_EXPIRE_IN
 
-crypto:
-  key: 'ypV324cCAwEAAQ=='
-  iv: 'MIICIjANBgkqhkiG'
+# crypto 配置已移至环境变量:
+#   - CRYPTO_KEY
+#   - CRYPTO_IV
 
 cdn:
   cn:

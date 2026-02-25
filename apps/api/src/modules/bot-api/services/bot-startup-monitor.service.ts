@@ -155,10 +155,7 @@ export class BotStartupMonitorService implements OnModuleDestroy {
         });
 
         // 更新状态为 running
-        await this.botService.update(
-          { id: task.botId },
-          { status: 'running' },
-        );
+        await this.botService.update({ id: task.botId }, { status: 'running' });
 
         // 通过 SSE 推送状态变化
         this.botSseService.sendToUser(task.userId, 'bot_status_changed', {

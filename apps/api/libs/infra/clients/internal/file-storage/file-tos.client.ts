@@ -402,8 +402,11 @@ export class FileTosClient extends FileS3Client {
           this.logger.warn('Failed to parse audio info as JSON', {
             fileKey,
             content: audioInfoJson,
+            error:
+              parseError instanceof Error
+                ? parseError.message
+                : String(parseError),
           });
-          console.log('techwu parseError', fileKey, audioInfoJson, parseError);
           throw new Error('Failed to parse audio info as JSON');
         }
 

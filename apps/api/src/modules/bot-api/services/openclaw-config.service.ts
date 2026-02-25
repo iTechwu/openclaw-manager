@@ -11,9 +11,12 @@ import {
   getAnthropicModelId,
   getModelLayer,
   shouldRecommendAnthropic,
+  SandboxModeSchema,
+  DEFAULT_SANDBOX_MODE,
   type OpenclawNativeProviderConfig,
   type ModelApiType,
   type ModelLayer,
+  type SandboxMode,
 } from '@repo/contracts';
 
 /**
@@ -84,6 +87,14 @@ export interface OpenclawConfigOptions {
    * 默认: false
    */
   preferStats?: boolean;
+  /**
+   * Sandbox mode - determines how OpenClaw creates sandbox containers
+   * - session: Create a new sandbox for each session (highest isolation, most resources)
+   * - agent: Create a sandbox for each agent (medium isolation)
+   * - shared: All sessions share one sandbox (lowest isolation, least resources)
+   * Default: 'session'
+   */
+  sandboxMode?: SandboxMode;
 }
 
 /**
@@ -153,10 +164,15 @@ export class OpenclawConfigService {
     } = options;
 
     // 获取模型层级（如果未指定，从配置中获取）
-    const modelLayer = primaryModel.layer ?? getModelLayer(primaryModel.vendor, primaryModel.modelId);
+    const modelLayer =
+      primaryModel.layer ??
+      getModelLayer(primaryModel.vendor, primaryModel.modelId);
 
     // 第二层（研究 Agent）：优先使用 Anthropic 协议
-    if (modelLayer === 'research' && primaryModel.preferredApiType === 'anthropic') {
+    if (
+      modelLayer === 'research' &&
+      primaryModel.preferredApiType === 'anthropic'
+    ) {
       this.logger.info(
         `[OpenClaw Config] Using research layer (anthropic protocol) for model ${primaryModel.modelId}`,
       );
@@ -236,9 +252,11 @@ export class OpenclawConfigService {
     proxyUrl: string,
     proxyToken: string,
     gatewayToken: string,
+    sandboxMode: SandboxMode = DEFAULT_SANDBOX_MODE,
   ): OpenclawConfigResult {
     // 获取 Anthropic 协议下的模型标识符
-    const anthropicModelId = getAnthropicModelId(model.vendor, model.modelId) ?? model.modelId;
+    const anthropicModelId =
+      getAnthropicModelId(model.vendor, model.modelId) ?? model.modelId;
 
     // 构建 Proxy Anthropic 端点
     const proxyEndpoint = proxyUrl ? proxyUrl.replace(/\/$/, '') : '';
@@ -295,6 +313,11 @@ export class OpenclawConfigService {
             ],
           },
         },
+      },
+
+      // Sandbox 配置 - 容器隔离模式
+      sandbox: {
+        mode: sandboxMode,
       },
 
       // Agent 配置 - 启用 Extended Thinking
@@ -360,9 +383,14 @@ export class OpenclawConfigService {
   /**
    * 获取第二层（研究 Agent）的 Fallback 模型列表
    */
-  private getResearchLayerFallbacks(modelId: string): Array<{ modelId: string; vendor: string }> {
+  private getResearchLayerFallbacks(
+    modelId: string,
+  ): Array<{ modelId: string; vendor: string }> {
     // 定义第二层模型的 Fallback 链
-    const researchFallbackMap: Record<string, Array<{ modelId: string; vendor: string }>> = {
+    const researchFallbackMap: Record<
+      string,
+      Array<{ modelId: string; vendor: string }>
+    > = {
       // Claude 系列 Fallback
       'claude-opus-4-20250514': [
         { modelId: 'claude-sonnet-4-20250514', vendor: 'anthropic' },
@@ -410,6 +438,7 @@ export class OpenclawConfigService {
     proxyUrl: string,
     proxyToken: string,
     gatewayToken: string,
+    sandboxMode: SandboxMode = DEFAULT_SANDBOX_MODE,
   ): OpenclawConfigResult {
     // 构建 proxy provider ID（如 proxy-anthropic, proxy-zai）
     const nativeProviderId = `proxy-${nativeConfig.openclawProviderId}`;
@@ -506,6 +535,11 @@ export class OpenclawConfigService {
         },
       },
 
+      // Sandbox 配置 - 容器隔离模式
+      sandbox: {
+        mode: sandboxMode,
+      },
+
       // Agent 配置
       agents: {
         defaults: {
@@ -577,6 +611,7 @@ export class OpenclawConfigService {
         options.proxyUrl,
         options.proxyToken,
         gatewayToken,
+        options.sandboxMode,
       );
     }
 
@@ -600,6 +635,11 @@ export class OpenclawConfigService {
       // 模型配置
       models: {
         providers: this.buildProvidersConfig(nativeConfig, providerKey),
+      },
+
+      // Sandbox 配置 - 容器隔离模式
+      sandbox: {
+        mode: options.sandboxMode ?? DEFAULT_SANDBOX_MODE,
       },
 
       // Agent 配置
@@ -664,6 +704,7 @@ export class OpenclawConfigService {
     proxyUrl: string,
     proxyToken: string,
     gatewayToken: string,
+    sandboxMode: SandboxMode = DEFAULT_SANDBOX_MODE,
   ): OpenclawConfigResult {
     // Proxy 模式下使用 openai provider 通过 proxy
     const modelRef = `openai/${model.modelId}`;
@@ -697,6 +738,11 @@ export class OpenclawConfigService {
             models: [],
           },
         },
+      },
+
+      // Sandbox 配置 - 容器隔离模式
+      sandbox: {
+        mode: sandboxMode,
       },
 
       // Agent 配置
@@ -786,7 +832,7 @@ export class OpenclawConfigService {
     // 如果有自定义 baseUrl
     if (providerKey.baseUrl) {
       providers[nativeConfig.openclawProviderId] = {
-        ...providers[nativeConfig.openclawProviderId] as object,
+        ...(providers[nativeConfig.openclawProviderId] as object),
         baseUrl: providerKey.baseUrl,
       };
     }
@@ -828,7 +874,9 @@ export class OpenclawConfigService {
     // 写入配置（格式化 JSON）
     await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
 
-    this.logger.info(`[OpenClaw Config] Configuration written to ${configPath}`);
+    this.logger.info(
+      `[OpenClaw Config] Configuration written to ${configPath}`,
+    );
 
     return configPath;
   }
@@ -836,7 +884,9 @@ export class OpenclawConfigService {
   /**
    * 读取现有配置
    */
-  async readConfigFile(openclawDir: string): Promise<Record<string, unknown> | null> {
+  async readConfigFile(
+    openclawDir: string,
+  ): Promise<Record<string, unknown> | null> {
     const configPath = path.join(openclawDir, 'openclaw.json');
 
     try {

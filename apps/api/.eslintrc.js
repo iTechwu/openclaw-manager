@@ -44,8 +44,29 @@ module.exports = {
       },
     },
   },
-  ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules'],
+  ignorePatterns: [
+    '.eslintrc.js',
+    'dist',
+    'node_modules',
+    'generated', // 自动生成的代码
+    'scripts', // 独立脚本
+    'prisma/seed.ts', // 种子数据脚本
+    '**/*.spec.ts', // 测试文件
+    '**/test-*.ts', // 测试连接脚本
+    'libs/infra/common/config/**', // 配置加载阶段（Logger 未初始化）
+    'src/app.module.ts', // 应用启动阶段
+    'src/main.ts', // 应用入口
+  ],
   rules: {
+    // ============================================
+    // 禁止使用 console.* (强制使用 Winston Logger)
+    // ============================================
+    'no-console': [
+      'error',
+      {
+        allow: ['warn', 'error'], // 仅允许 console.warn/error 用于启动阶段
+      },
+    ],
     // ============================================
     // TypeScript 规则
     // ============================================

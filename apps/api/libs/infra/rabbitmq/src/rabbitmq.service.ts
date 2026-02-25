@@ -10,9 +10,6 @@ import * as amqplib from 'amqplib';
 
 import { RABBITMQ_CONNECTION, RabbitmqConnection } from './dto/rabbitmq.dto';
 import { RedisService } from '@app/redis';
-import { PrismaService } from '@app/prisma';
-import stringUtil from '@/utils/string.util';
-import objectUtil from '@/utils/object.util';
 import enviroment from '@/utils/enviroment.util';
 
 interface MessageHandler {
@@ -39,7 +36,6 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     @Inject(RABBITMQ_CONNECTION)
     private readonly rabbitmqConnection: RabbitmqConnection,
     private readonly redis: RedisService,
-    private readonly prisma: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 

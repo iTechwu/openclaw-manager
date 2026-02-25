@@ -672,7 +672,12 @@ export class ModelVerificationService {
       modelCatalogId: item.modelCatalogId,
       supportedApiTypes: item.supportedApiTypes ?? ['openai'],
       preferredApiType: item.preferredApiType ?? null,
-      modelLayer: (item.modelCatalog?.modelLayer as 'production' | 'research' | 'both' | null) ?? null,
+      modelLayer:
+        (item.modelCatalog?.modelLayer as
+          | 'production'
+          | 'research'
+          | 'both'
+          | null) ?? null,
       capabilityTags:
         item.modelCatalog?.capabilityTags?.map((mct: any) => ({
           id: mct.capabilityTag?.id ?? mct.capabilityTagId,

@@ -1090,7 +1090,9 @@ export class BotApiService {
         detail: { hostname },
       });
 
-      this.logger.log(`Bot container started, waiting for initialization: ${hostname}`);
+      this.logger.log(
+        `Bot container started, waiting for initialization: ${hostname}`,
+      );
       return { success: true, status: 'starting' };
     } catch (error) {
       this.logger.error(`Failed to start bot ${hostname}:`, error);

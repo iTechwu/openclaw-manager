@@ -64,7 +64,7 @@ import type {
   RoutingSuggestionResult,
   SuggestedRoutingRule,
 } from '@repo/contracts';
-import { EnhancedModelSelector } from './enhanced-model-selector';
+import { EnhancedModelSelector, type ExtendedRoutingTarget } from './enhanced-model-selector';
 import { FallbackChainSelector } from './fallback-chain-selector';
 import { CostStrategySelector } from './cost-strategy-selector';
 import type { EnhancedModelInfo } from '@/hooks/useRoutingConfig';
@@ -816,20 +816,34 @@ export function ModelRoutingConfig({ hostname }: ModelRoutingConfigProps) {
     target,
     onChange,
     label,
+    showProtocolSelector: showProtocol = false,
   }: {
     target: RoutingTarget;
     onChange: (target: RoutingTarget) => void;
     label: string;
+    showProtocolSelector?: boolean;
   }) => {
+    // Convert RoutingTarget to ExtendedRoutingTarget for internal use
+    const extendedTarget: ExtendedRoutingTarget = {
+      ...target,
+      preferredApiType: (target as ExtendedRoutingTarget).preferredApiType ?? null,
+    };
+
+    const handleChange = (newTarget: ExtendedRoutingTarget) => {
+      // Pass the extended target with preferredApiType to onChange
+      onChange(newTarget as RoutingTarget);
+    };
+
     return (
       <EnhancedModelSelector
         providers={botProviders}
         enhancedModels={enhancedModels}
-        value={target.providerKeyId && target.model ? target : null}
-        onChange={onChange}
+        value={extendedTarget.providerKeyId && extendedTarget.model ? extendedTarget : null}
+        onChange={handleChange}
         label={label}
         showAvailability={true}
         showCapabilities={true}
+        showProtocolSelector={showProtocol}
       />
     );
   };

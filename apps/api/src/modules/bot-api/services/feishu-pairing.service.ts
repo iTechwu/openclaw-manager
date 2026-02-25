@@ -6,9 +6,16 @@ import * as path from 'path';
 import { DockerService } from './docker.service';
 import { WorkspaceService } from './workspace.service';
 import { EncryptionService } from './encryption.service';
-import { BotService, BotChannelService, FeishuPairingRecordService } from '@app/db';
+import {
+  BotService,
+  BotChannelService,
+  FeishuPairingRecordService,
+} from '@app/db';
 import { FeishuClientService } from '@app/clients/internal/feishu';
-import type { FeishuCredentials, FeishuChannelConfig } from '@app/clients/internal/feishu';
+import type {
+  FeishuCredentials,
+  FeishuChannelConfig,
+} from '@app/clients/internal/feishu';
 import type {
   FeishuPairingListResponse,
   FeishuPairingRequestItem,
@@ -170,7 +177,7 @@ export class FeishuPairingService {
       return {
         success: false,
         message:
-          'Feishu Open ID is required. Please provide the user\'s Feishu Open ID from the bot\'s response message.',
+          "Feishu Open ID is required. Please provide the user's Feishu Open ID from the bot's response message.",
       };
     }
 
@@ -247,26 +254,35 @@ export class FeishuPairingService {
         );
 
         // 尝试获取用户信息（异步，不阻塞）
-        this.fetchAndSaveUserInfo(existingRecord.id, botChannel.id, feishuOpenId).catch(
-          (error) => {
-            this.logger.warn('[FeishuPairing] Failed to fetch user info', {
-              feishuOpenId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          },
-        );
+        this.fetchAndSaveUserInfo(
+          existingRecord.id,
+          botChannel.id,
+          feishuOpenId,
+        ).catch((error) => {
+          this.logger.warn('[FeishuPairing] Failed to fetch user info', {
+            feishuOpenId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
 
         // 同步到文件系统
         await this.syncToFileSync(userId, hostname);
 
         // 在 OpenClaw 内部批准配对
-        const openclawResult = await this.approvePairingInOpenClaw(userId, hostname, code);
+        const openclawResult = await this.approvePairingInOpenClaw(
+          userId,
+          hostname,
+          code,
+        );
         if (!openclawResult.success) {
-          this.logger.warn('[FeishuPairing] OpenClaw approve failed, but database updated', {
-            hostname,
-            code,
-            error: openclawResult.message,
-          });
+          this.logger.warn(
+            '[FeishuPairing] OpenClaw approve failed, but database updated',
+            {
+              hostname,
+              code,
+              error: openclawResult.message,
+            },
+          );
         }
 
         return {
@@ -299,26 +315,35 @@ export class FeishuPairingService {
         );
 
         // 尝试获取用户信息（异步，不阻塞）
-        this.fetchAndSaveUserInfo(softDeletedRecord.id, botChannel.id, feishuOpenId).catch(
-          (error) => {
-            this.logger.warn('[FeishuPairing] Failed to fetch user info', {
-              feishuOpenId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          },
-        );
+        this.fetchAndSaveUserInfo(
+          softDeletedRecord.id,
+          botChannel.id,
+          feishuOpenId,
+        ).catch((error) => {
+          this.logger.warn('[FeishuPairing] Failed to fetch user info', {
+            feishuOpenId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
 
         // 同步到文件系统
         await this.syncToFileSync(userId, hostname);
 
         // 在 OpenClaw 内部批准配对
-        const openclawResult = await this.approvePairingInOpenClaw(userId, hostname, code);
+        const openclawResult = await this.approvePairingInOpenClaw(
+          userId,
+          hostname,
+          code,
+        );
         if (!openclawResult.success) {
-          this.logger.warn('[FeishuPairing] OpenClaw approve failed, but database updated', {
-            hostname,
-            code,
-            error: openclawResult.message,
-          });
+          this.logger.warn(
+            '[FeishuPairing] OpenClaw approve failed, but database updated',
+            {
+              hostname,
+              code,
+              error: openclawResult.message,
+            },
+          );
         }
 
         return {
@@ -341,26 +366,35 @@ export class FeishuPairingService {
       });
 
       // 尝试获取用户信息（异步，不阻塞）
-      this.fetchAndSaveUserInfo(newRecord.id, botChannel.id, feishuOpenId).catch(
-        (error) => {
-          this.logger.warn('[FeishuPairing] Failed to fetch user info', {
-            feishuOpenId,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        },
-      );
+      this.fetchAndSaveUserInfo(
+        newRecord.id,
+        botChannel.id,
+        feishuOpenId,
+      ).catch((error) => {
+        this.logger.warn('[FeishuPairing] Failed to fetch user info', {
+          feishuOpenId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
 
       // 同步到文件系统
       await this.syncToFileSync(userId, hostname);
 
       // 在 OpenClaw 内部批准配对
-      const openclawResult = await this.approvePairingInOpenClaw(userId, hostname, code);
+      const openclawResult = await this.approvePairingInOpenClaw(
+        userId,
+        hostname,
+        code,
+      );
       if (!openclawResult.success) {
-        this.logger.warn('[FeishuPairing] OpenClaw approve failed, but database updated', {
-          hostname,
-          code,
-          error: openclawResult.message,
-        });
+        this.logger.warn(
+          '[FeishuPairing] OpenClaw approve failed, but database updated',
+          {
+            hostname,
+            code,
+            error: openclawResult.message,
+          },
+        );
       }
 
       this.logger.info('[FeishuPairing] Pairing approved', {
@@ -424,7 +458,8 @@ export class FeishuPairingService {
 
       // 解密凭证 - 将 Uint8Array 转换为 Buffer
       const credentialsBuffer = Buffer.from(channel.credentialsEncrypted);
-      const decryptedCredentials = this.encryptionService.decrypt(credentialsBuffer);
+      const decryptedCredentials =
+        this.encryptionService.decrypt(credentialsBuffer);
       const credentials = JSON.parse(decryptedCredentials) as FeishuCredentials;
 
       // 获取渠道配置
@@ -432,7 +467,10 @@ export class FeishuPairingService {
         (channel.config as Record<string, unknown>) || {};
 
       // 创建飞书客户端
-      const client = this.feishuClientService.createApiClient(credentials, config);
+      const client = this.feishuClientService.createApiClient(
+        credentials,
+        config,
+      );
 
       // 获取用户信息
       const userInfo = await client.getUserInfo(feishuOpenId);
@@ -445,7 +483,8 @@ export class FeishuPairingService {
         {
           userName: userInfo.name,
           userNameEn: userInfo.en_name,
-          userAvatarUrl: userInfo.avatar?.avatar_240 || userInfo.avatar?.avatar_72,
+          userAvatarUrl:
+            userInfo.avatar?.avatar_240 || userInfo.avatar?.avatar_72,
           userEmail: userInfo.email,
           userMobile: userInfo.mobile,
           userInfoRaw: userInfoJson,
@@ -650,10 +689,7 @@ export class FeishuPairingService {
       ...(config.dmPolicy !== undefined && { dmPolicy: config.dmPolicy }),
     };
 
-    await this.botChannelDb.update(
-      { id: channel.id },
-      { config: newConfig },
-    );
+    await this.botChannelDb.update({ id: channel.id }, { config: newConfig });
 
     this.logger.info('[FeishuPairing] Config updated', {
       hostname,
@@ -729,7 +765,9 @@ export class FeishuPairingService {
             feishuOpenId: fileRequest.platformUserId,
             status: fileRequest.status.toUpperCase() as PairingStatus,
             expiresAt: new Date(fileRequest.expiresAt),
-            approvedAt: fileRequest.approvedAt ? new Date(fileRequest.approvedAt) : undefined,
+            approvedAt: fileRequest.approvedAt
+              ? new Date(fileRequest.approvedAt)
+              : undefined,
             approvedById: fileRequest.approvedBy,
             bot: { connect: { id: botId } },
             botChannel: { connect: { id: botChannelId } },
@@ -790,16 +828,22 @@ export class FeishuPairingService {
     );
 
     // 转换数据库记录为文件格式
-    const feishuRequests: OpenclawPairingRequest[] = dbRecords.map((record) => ({
-      code: record.code,
-      platform: 'feishu',
-      platformUserId: record.feishuOpenId,
-      createdAt: record.createdAt.toISOString(),
-      expiresAt: record.expiresAt.toISOString(),
-      status: record.status.toLowerCase() as 'pending' | 'approved' | 'rejected' | 'expired',
-      approvedAt: record.approvedAt?.toISOString(),
-      approvedBy: record.approvedById,
-    }));
+    const feishuRequests: OpenclawPairingRequest[] = dbRecords.map(
+      (record) => ({
+        code: record.code,
+        platform: 'feishu',
+        platformUserId: record.feishuOpenId,
+        createdAt: record.createdAt.toISOString(),
+        expiresAt: record.expiresAt.toISOString(),
+        status: record.status.toLowerCase() as
+          | 'pending'
+          | 'approved'
+          | 'rejected'
+          | 'expired',
+        approvedAt: record.approvedAt?.toISOString(),
+        approvedBy: record.approvedById,
+      }),
+    );
 
     // 合并并写入文件
     const newData: OpenclawPairingFile = {
@@ -852,7 +896,8 @@ export class FeishuPairingService {
 
       return { success: false, message: result.trim() || 'Unknown result' };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.warn('[FeishuPairing] Failed to approve in OpenClaw', {
         hostname,
         code,
@@ -865,11 +910,16 @@ export class FeishuPairingService {
   /**
    * 通知 OpenClaw 进程重新加载配对配置
    */
-  private async notifyPairingReload(userId: string, hostname: string): Promise<void> {
+  private async notifyPairingReload(
+    userId: string,
+    hostname: string,
+  ): Promise<void> {
     const { containerId } = await this.getBotInfo(userId, hostname);
 
     if (!containerId) {
-      this.logger.debug('[FeishuPairing] Container not running, skipping reload notification');
+      this.logger.debug(
+        '[FeishuPairing] Container not running, skipping reload notification',
+      );
       return;
     }
 
@@ -880,12 +930,16 @@ export class FeishuPairingService {
         'pkill -USR1 -f openclaw || true',
       );
 
-      this.logger.debug('[FeishuPairing] Sent reload signal to OpenClaw process', {
-        hostname,
-        result: result.trim() || 'no output',
-      });
+      this.logger.debug(
+        '[FeishuPairing] Sent reload signal to OpenClaw process',
+        {
+          hostname,
+          result: result.trim() || 'no output',
+        },
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.warn('[FeishuPairing] Failed to send reload signal', {
         hostname,
         error: errorMessage,
@@ -925,13 +979,17 @@ export class FeishuPairingService {
    */
   private async getBotInfo(userId: string, hostname: string) {
     const bot = await this.getBot(userId, hostname);
-    const isolationKey = this.workspaceService.getIsolationKeyForBot(userId, hostname);
+    const isolationKey = this.workspaceService.getIsolationKeyForBot(
+      userId,
+      hostname,
+    );
 
     const containerName = `clawbot-manager-${isolationKey}`;
     let containerId: string | null = null;
 
     try {
-      const containerInfo = await this.dockerService.getContainerInfo(containerName);
+      const containerInfo =
+        await this.dockerService.getContainerInfo(containerName);
       if (containerInfo?.running) {
         containerId = containerName;
       }

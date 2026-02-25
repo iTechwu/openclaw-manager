@@ -139,9 +139,52 @@ export async function initConfig() {
     }
 
     // 读取 YAML 配置文件内容
-    const rawConfig = yaml.load(readFileSync(configPath, 'utf8'));
+    const rawConfig = yaml.load(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
     if (enviroment.isProduction()) {
       console.log('✅ Config loaded successfully, validating...');
+    }
+
+    // 合并环境变量到配置 (环境变量优先级更高)
+    // JWT 配置 (从环境变量读取)
+    if (process.env.JWT_SECRET) {
+      rawConfig.jwt = {
+        secret: process.env.JWT_SECRET,
+        expireIn: parseInt(process.env.JWT_EXPIRE_IN || '3600', 10),
+      };
+    }
+
+    // Crypto 配置 (从环境变量读取)
+    if (process.env.CRYPTO_KEY && process.env.CRYPTO_IV) {
+      rawConfig.crypto = {
+        key: process.env.CRYPTO_KEY,
+        iv: process.env.CRYPTO_IV,
+      };
+    }
+
+    // App port (从环境变量读取)
+    if (process.env.API_PORT) {
+      if (!rawConfig.app) {
+        rawConfig.app = {};
+      }
+      (rawConfig.app as Record<string, unknown>).port = parseInt(process.env.API_PORT, 10);
+    }
+
+    // Pinecone API Key (从环境变量读取)
+    if (process.env.PINECONE_API_KEY) {
+      rawConfig.pinecone = { apiKey: process.env.PINECONE_API_KEY };
+    }
+
+    // 尝试从 keys/config.json 读取 ipinfo 配置并合并
+    const keysConfigPath = path.join(projectRoot, 'keys', 'config.json');
+    if (existsSync(keysConfigPath)) {
+      try {
+        const keysRawConfig = JSON.parse(readFileSync(keysConfigPath, 'utf8'));
+        if (keysRawConfig.ipinfo) {
+          rawConfig.ipinfo = keysRawConfig.ipinfo;
+        }
+      } catch {
+        // Ignore errors reading keys config during yaml config loading
+      }
     }
 
     // 使用 Zod 验证配置

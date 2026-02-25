@@ -140,8 +140,12 @@ export class GlmResponseTransformerService {
       newDelta.reasoning_content.length > 0
     ) {
       const reasoningText = newDelta.reasoning_content
-        .filter((item): item is { type: string; text: string } =>
-          item && typeof item === 'object' && item.type === 'text' && typeof item.text === 'string'
+        .filter(
+          (item): item is { type: string; text: string } =>
+            item &&
+            typeof item === 'object' &&
+            item.type === 'text' &&
+            typeof item.text === 'string',
         )
         .map((item) => item.text)
         .join('');
@@ -188,7 +192,9 @@ export class GlmResponseTransformerService {
         Array.isArray(newMessage.content) &&
         newMessage.content.length === 0
       ) {
-        newMessage.content = [{ type: 'text', text: newMessage.reasoning_content as string }];
+        newMessage.content = [
+          { type: 'text', text: newMessage.reasoning_content as string },
+        ];
         modified = true;
       }
     }

@@ -792,7 +792,21 @@
           "create": "Create"
         }
       },
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "protocol": {
+        "label": "API Protocol",
+        "select": "Select protocol",
+        "recommended": "Recommended",
+        "recommendationHint": "Recommendation: {reason}",
+        "types": {
+          "openai": "OpenAI Compatible",
+          "anthropic": "Anthropic",
+          "gemini": "Google Gemini",
+          "openaiDesc": "Standard OpenAI API protocol for general use",
+          "anthropicDesc": "Anthropic Messages API with Extended Thinking support",
+          "geminiDesc": "Google Gemini native API protocol"
+        }
+      }
     },
     "channels": {
       "title": "Message Channels",

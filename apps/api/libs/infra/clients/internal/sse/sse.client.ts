@@ -1,7 +1,9 @@
 import { RedisService } from '@app/redis';
 import objectUtil from '@/utils/object.util';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import {
   interval,
   Observable,
@@ -22,6 +24,7 @@ export class SseClient {
   constructor(
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
   async publish(
@@ -143,7 +146,7 @@ export class SseClient {
 
   // 定向发送消息给特定客户端
   sendToClient(clientId: string, data: any, unregister: boolean = false): void {
-    console.log('techwu sendToClient', data);
+    this.logger.debug('SSE sendToClient', { clientId, dataType: typeof data });
     this.clients.forEach((client) => {
       if (client.id === clientId) {
         client.stream.next(data);

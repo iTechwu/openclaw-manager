@@ -176,8 +176,9 @@ COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
 
-# Environment
+# Environment - Build-time defaults (can be overridden at runtime)
 ENV NODE_ENV=production
+ENV TZ=Asia/Shanghai
 ENV PORT=3200
 
 EXPOSE 3200
@@ -218,8 +219,9 @@ COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/packages/validators/dist ./packages/validators/dist
 
-# Environment
+# Environment - Build-time defaults (can be overridden at runtime)
 ENV NODE_ENV=production
+ENV TZ=Asia/Shanghai
 ENV PORT=3000
 
 EXPOSE 3000

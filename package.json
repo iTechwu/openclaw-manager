@@ -41,7 +41,14 @@
     "docker:push:sandbox": "docker tag ${BOT_IMAGE_TOOL_SANDBOX:-openclaw-sandbox:bookworm-slim} ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox:${DOCKER_IMAGE_TAG:-latest} && docker push ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox:${DOCKER_IMAGE_TAG:-latest}",
     "docker:push:browser": "docker tag ${BOT_IMAGE_BROWSER_SANDBOX:-openclaw-sandbox-browser:bookworm-slim} ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox-browser:${DOCKER_IMAGE_TAG:-latest} && docker push ${DOCKER_REGISTRY:-uhub.service.ucloud.cn/pardx}/openclaw-sandbox-browser:${DOCKER_IMAGE_TAG:-latest}",
     "docker:build:push:all": "pnpm docker:build:all && pnpm docker:push:all",
-    "docker:login": "docker login ${DOCKER_REGISTRY:-uhub.service.ucloud.cn}"
+    "docker:login": "docker login ${DOCKER_REGISTRY:-uhub.service.ucloud.cn}",
+    "prod:up": "docker compose -f docker-compose.prod.yml up -d",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "prod:ps": "docker compose -f docker-compose.prod.yml ps",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "prod:logs:api": "docker compose -f docker-compose.prod.yml logs -f api",
+    "prod:restart": "docker compose -f docker-compose.prod.yml restart",
+    "prod:pull": "docker compose -f docker-compose.prod.yml pull"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

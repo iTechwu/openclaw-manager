@@ -244,7 +244,9 @@ export class ModelResolverService implements OnModuleDestroy {
     return candidates.map(({ availability: c, providerKey: pk }) => {
       // 从 ModelAvailability 读取协议配置
       const preferredApiType = c.preferredApiType as ModelApiType | null;
-      const supportedApiTypes = (c.supportedApiTypes as ModelApiType[]) || ['openai'];
+      const supportedApiTypes = (c.supportedApiTypes as ModelApiType[]) || [
+        'openai',
+      ];
       const apiTypeBaseUrls = c.apiTypeBaseUrls as ApiTypeBaseUrlConfig | null;
 
       // 计算 effectiveApiType

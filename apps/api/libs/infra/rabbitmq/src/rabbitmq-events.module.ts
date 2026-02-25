@@ -8,8 +8,10 @@
 import { Module } from '@nestjs/common';
 import * as Rabbitmq from 'amqplib';
 import { ConfigModule } from '@nestjs/config';
-import enviroment from '@/utils/enviroment.util';
+import { createContextLogger } from '@/utils/logger-standalone.util';
 import { RabbitmqEventsService } from './rabbitmq-events.service';
+
+const logger = createContextLogger('RabbitmqEventsModule');
 
 // 独立的连接令牌
 export const RABBITMQ_EVENTS_CONNECTION = 'RABBITMQ_EVENTS_CONNECTION';
@@ -37,8 +39,8 @@ export interface RabbitmqEventsConnection {
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
-            console.log(
-              `[Events] Attempting to connect to RabbitMQ Events (attempt ${attempt}/${maxRetries})`,
+            logger.info(
+              `Attempting to connect to RabbitMQ Events (attempt ${attempt}/${maxRetries})`,
             );
 
             const connection = await Rabbitmq.connect(rabbitmqEventsUrl, {
@@ -48,26 +50,17 @@ export interface RabbitmqEventsConnection {
               reconnectBackoffTime: 1000,
             });
 
-            if (enviroment.isProduction()) {
-              console.log(
-                '✅ [Events] RabbitMQ Events connection established successfully',
-              );
-            } else {
-              console.log(
-                `✅ [Events] RabbitMQ Events connection established: ${rabbitmqEventsUrl}`,
-              );
-            }
+            logger.info('RabbitMQ Events connection established successfully');
 
             // 设置连接错误监听
             connection.on('error', (error) => {
-              console.error(
-                '[Events] RabbitMQ Events connection error:',
-                error,
-              );
+              logger.error('RabbitMQ Events connection error', {
+                error: error.message,
+              });
             });
 
             connection.on('close', () => {
-              console.warn('⚠️  [Events] RabbitMQ Events connection closed');
+              logger.warn('RabbitMQ Events connection closed');
             });
 
             return {
@@ -75,9 +68,7 @@ export interface RabbitmqEventsConnection {
               close: async () => {
                 try {
                   await connection.close();
-                  console.log(
-                    '✅ [Events] RabbitMQ Events connection closed gracefully',
-                  );
+                  logger.info('RabbitMQ Events connection closed gracefully');
                 } catch (error) {
                   // 忽略已关闭的连接错误
                   if (
@@ -86,42 +77,44 @@ export interface RabbitmqEventsConnection {
                       !error.message.includes('Connection closed') &&
                       !error.message.includes('IllegalOperationError'))
                   ) {
-                    console.error(
-                      '❌ [Events] Error closing RabbitMQ Events connection:',
-                      error,
-                    );
+                    logger.error('Error closing RabbitMQ Events connection', {
+                      error:
+                        error instanceof Error ? error.message : String(error),
+                    });
                   }
                 }
               },
             };
           } catch (error) {
             lastError = error as Error;
-            console.error(
-              `[Events] RabbitMQ Events connection attempt ${attempt}/${maxRetries} failed:`,
-              error,
+            logger.error(
+              `RabbitMQ Events connection attempt ${attempt}/${maxRetries} failed`,
+              {
+                error: lastError.message,
+              },
             );
 
             if (attempt < maxRetries) {
-              console.log(`[Events] Retrying in ${retryDelay}ms...`);
+              logger.info(`Retrying in ${retryDelay}ms...`);
               await new Promise((resolve) => setTimeout(resolve, retryDelay));
             }
           }
         }
 
-        console.error(
-          '[Events] Failed to establish RabbitMQ Events connection after all retries',
+        logger.error(
+          'Failed to establish RabbitMQ Events connection after all retries',
         );
 
         // 如果连接失败,返回一个 fallback 对象而不是抛出错误
         // 这样系统可以继续运行,只是事件功能不可用
-        console.warn(
-          '⚠️  [Events] RabbitMQ Events service is unavailable, events will not be published',
+        logger.warn(
+          'RabbitMQ Events service is unavailable, events will not be published',
         );
 
         return {
           connection: null as any,
           close: async () => {
-            console.log('[Events] No RabbitMQ Events connection to close');
+            logger.info('No RabbitMQ Events connection to close');
           },
         };
       },

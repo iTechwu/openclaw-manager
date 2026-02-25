@@ -351,6 +351,8 @@ pnpm dev:api          # Backend only
 
 ## 🐳 Docker Deployment
 
+### Development Deployment
+
 ```bash
 ./scripts/start-clawbot.sh
 ```
@@ -360,6 +362,24 @@ Uses `docker-compose.yml` to start API and Web services. After health check pass
 - API: http://localhost:13100/api
 
 > AI proxy functionality (keyring-proxy) is integrated into the API service, available via `/api/v1/:vendor/*` endpoints.
+
+### Production Deployment
+
+For production deployment with security enhancements and resource limits, see [单机多Bot架构部署方案.md](./docs/单机多Bot架构部署方案.md).
+
+Key features of production deployment:
+- **Docker Socket Proxy** — Restricts Docker API access for security
+- **Container Resource Limits** — CPU and memory limits per Bot container
+- **External Services** — PostgreSQL and Redis as external services
+- **Network Isolation** — Separate internal and external networks
+
+```bash
+# Quick production commands
+pnpm prod:up      # Start services
+pnpm prod:ps      # Check status
+pnpm prod:logs    # View logs
+pnpm prod:down    # Stop services
+```
 
 ---
 

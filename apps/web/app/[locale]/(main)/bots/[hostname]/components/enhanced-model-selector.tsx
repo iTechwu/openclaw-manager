@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Badge,
@@ -11,6 +11,11 @@ import {
   PopoverTrigger,
   Button,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@repo/ui';
 import {
   Search,
@@ -18,8 +23,16 @@ import {
   Clock,
   DollarSign,
   ChevronDown,
+  Zap,
+  Sparkles,
+  Info,
 } from 'lucide-react';
 import type { RoutingTarget } from '@repo/contracts';
+import type { ModelApiType } from '@repo/contracts';
+import {
+  getModelSupportedApiTypes,
+  shouldRecommendAnthropic,
+} from '@repo/contracts';
 import type { EnhancedModelInfo } from '@/hooks/useRoutingConfig';
 
 interface ModelOption {
@@ -38,6 +51,12 @@ interface ModelOption {
     name: string;
     tagType?: string;
   }>;
+  /** 支持的协议类型 */
+  supportedApiTypes: ModelApiType[];
+  /** 是否推荐 Anthropic 协议 */
+  recommendAnthropic: boolean;
+  /** 推荐原因 */
+  recommendReason?: string;
 }
 
 /**
@@ -50,14 +69,22 @@ interface ProviderInfo {
   allowedModels: string[];
 }
 
+/**
+ * Extended RoutingTarget with protocol preference
+ */
+export interface ExtendedRoutingTarget extends RoutingTarget {
+  preferredApiType?: ModelApiType | null;
+}
+
 interface EnhancedModelSelectorProps {
   providers: ProviderInfo[];
-  value: RoutingTarget | null;
-  onChange: (target: RoutingTarget) => void;
+  value: ExtendedRoutingTarget | null;
+  onChange: (target: ExtendedRoutingTarget) => void;
   enhancedModels?: EnhancedModelInfo[];
   showAvailability?: boolean;
   showPricing?: boolean;
   showCapabilities?: boolean;
+  showProtocolSelector?: boolean;
   label?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -67,6 +94,7 @@ interface EnhancedModelSelectorProps {
  * Enhanced Model Selector Component
  * Allows direct model selection without requiring provider selection first.
  * Shows model availability, pricing, and capability tags.
+ * When showProtocolSelector is true, also shows protocol selector for multi-protocol models.
  */
 export function EnhancedModelSelector({
   providers,
@@ -76,6 +104,7 @@ export function EnhancedModelSelector({
   showAvailability = true,
   showPricing = false,
   showCapabilities = false,
+  showProtocolSelector = false,
   label,
   placeholder,
   disabled = false,
@@ -83,6 +112,9 @@ export function EnhancedModelSelector({
   const t = useTranslations('bots.detail.modelRouting');
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedProtocol, setSelectedProtocol] = useState<ModelApiType | null>(
+    value?.preferredApiType ?? null,
+  );
 
   // Build flat list of all available models from providers
   const modelOptions: ModelOption[] = useMemo(() => {
@@ -102,6 +134,18 @@ export function EnhancedModelSelector({
         if (seenModels.has(uniqueKey)) return;
         seenModels.add(uniqueKey);
 
+        // Get supported API types for this model
+        const supportedApiTypes = getModelSupportedApiTypes(
+          provider.vendor,
+          modelId,
+        );
+
+        // Check if Anthropic protocol is recommended
+        const recommendation = shouldRecommendAnthropic(
+          provider.vendor,
+          modelId,
+        );
+
         options.push({
           model: modelId,
           vendor: provider.vendor,
@@ -111,6 +155,9 @@ export function EnhancedModelSelector({
           lastVerifiedAt: enhancedInfo?.lastVerifiedAt ?? null,
           pricing: enhancedInfo?.pricing ?? null,
           capabilityTags: enhancedInfo?.capabilityTags ?? [],
+          supportedApiTypes,
+          recommendAnthropic: recommendation.recommend,
+          recommendReason: recommendation.reason,
         });
       });
     });
@@ -158,14 +205,44 @@ export function EnhancedModelSelector({
 
   const handleSelect = useCallback(
     (option: ModelOption) => {
+      // Determine the initial protocol preference
+      let initialProtocol: ModelApiType | null = null;
+
+      if (option.supportedApiTypes.length > 1) {
+        // If model supports multiple protocols, check for recommendation
+        if (option.recommendAnthropic && option.supportedApiTypes.includes('anthropic')) {
+          initialProtocol = 'anthropic';
+        } else {
+          // Default to first supported protocol
+          initialProtocol = option.supportedApiTypes[0] ?? null;
+        }
+      }
+
+      setSelectedProtocol(initialProtocol);
+
       onChange({
         providerKeyId: option.providerKeyId,
         model: option.model,
+        preferredApiType: initialProtocol,
       });
       setIsOpen(false);
       setSearchQuery('');
     },
     [onChange],
+  );
+
+  // Handle protocol change
+  const handleProtocolChange = useCallback(
+    (protocol: ModelApiType | null) => {
+      setSelectedProtocol(protocol);
+      if (value) {
+        onChange({
+          ...value,
+          preferredApiType: protocol,
+        });
+      }
+    },
+    [value, onChange],
   );
 
   const formatPrice = (price: number) => {
@@ -345,6 +422,52 @@ export function EnhancedModelSelector({
           </ScrollArea>
         </PopoverContent>
       </Popover>
+
+      {/* Protocol Selector - shown when model supports multiple protocols */}
+      {showProtocolSelector && selectedModel && selectedModel.supportedApiTypes.length > 1 && (
+        <div className="mt-3 p-3 border rounded-md bg-muted/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="size-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{t('protocol.label')}</span>
+            {selectedModel.recommendAnthropic && (
+              <Badge variant="secondary" className="text-xs">
+                <Sparkles className="size-3 mr-1" />
+                {t('protocol.recommended')}
+              </Badge>
+            )}
+          </div>
+          <Select
+            value={selectedProtocol ?? undefined}
+            onValueChange={(v) => handleProtocolChange(v as ModelApiType)}
+            disabled={disabled}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t('protocol.select')} />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedModel.supportedApiTypes.map((apiType) => (
+                <SelectItem key={apiType} value={apiType}>
+                  <div className="flex items-center gap-2">
+                    <span>{t(`protocol.types.${apiType}`)}</span>
+                    {apiType === 'anthropic' && selectedModel.recommendAnthropic && (
+                      <Sparkles className="size-3 text-primary" />
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* Recommendation hint */}
+          {selectedModel.recommendAnthropic && selectedModel.recommendReason && (
+            <div className="flex items-start gap-2 mt-2 p-2 bg-primary/5 rounded">
+              <Info className="size-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                {t('protocol.recommendationHint', { reason: selectedModel.recommendReason })}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

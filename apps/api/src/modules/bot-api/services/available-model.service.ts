@@ -904,7 +904,9 @@ export class AvailableModelService {
     }>;
   } | null> {
     // 1. 获取 ProviderKey
-    const providerKey = await this.providerKeyService.get({ id: providerKeyId });
+    const providerKey = await this.providerKeyService.get({
+      id: providerKeyId,
+    });
     if (!providerKey) {
       return null;
     }
@@ -920,25 +922,31 @@ export class AvailableModelService {
       availabilities.map(async (availability) => {
         // 获取 ModelCatalog 信息（如果有）
         const catalog = availability.modelCatalogId
-          ? await this.modelCatalogService.get({ id: availability.modelCatalogId })
+          ? await this.modelCatalogService.get({
+              id: availability.modelCatalogId,
+            })
           : null;
 
         // Cast supportedApiTypes to ModelApiType[]
-        const supportedApiTypes = (availability.supportedApiTypes ?? ['openai']) as (
-          | 'openai'
-          | 'anthropic'
-          | 'gemini'
-        )[];
+        const supportedApiTypes = (availability.supportedApiTypes ?? [
+          'openai',
+        ]) as ('openai' | 'anthropic' | 'gemini')[];
 
         // 解析 apiTypeBaseUrls（JSON 字段）
         let apiTypeBaseUrls: Record<string, string | null> | null = null;
         if (availability.apiTypeBaseUrls) {
           try {
-            apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+            apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<
+              string,
+              string | null
+            >;
           } catch {
-            this.logger.warn('[AvailableModel] Failed to parse apiTypeBaseUrls', {
-              modelId: availability.id,
-            });
+            this.logger.warn(
+              '[AvailableModel] Failed to parse apiTypeBaseUrls',
+              {
+                modelId: availability.id,
+              },
+            );
           }
         }
 
@@ -946,8 +954,15 @@ export class AvailableModelService {
           modelId: availability.id,
           modelName: availability.model,
           supportedApiTypes,
-          preferredApiType: (availability.preferredApiType as 'openai' | 'anthropic' | 'gemini') ?? null,
-          layer: (catalog?.modelLayer ?? 'production') as 'production' | 'research' | 'both',
+          preferredApiType:
+            (availability.preferredApiType as
+              | 'openai'
+              | 'anthropic'
+              | 'gemini') ?? null,
+          layer: (catalog?.modelLayer ?? 'production') as
+            | 'production'
+            | 'research'
+            | 'both',
           recommendAnthropic: catalog?.recommendAnthropic ?? false,
           recommendReason: catalog?.recommendReason ?? null,
           anthropicModelId: catalog?.anthropicModelId ?? null,
@@ -993,7 +1008,9 @@ export class AvailableModelService {
     await this.modelAvailabilityService.update({ id: modelId }, updateData);
 
     // 2. 如果有 ModelCatalog，更新层级和 Anthropic 模型 ID
-    const availability = await this.modelAvailabilityService.get({ id: modelId });
+    const availability = await this.modelAvailabilityService.get({
+      id: modelId,
+    });
     if (availability?.modelCatalogId) {
       const catalogUpdateData: Record<string, unknown> = {};
       if (layer) {
@@ -1011,10 +1028,14 @@ export class AvailableModelService {
       }
     }
 
-    this.logger.info(
-      '[AvailableModel] Updated model protocol config',
-      { providerKeyId, modelId, supportedApiTypes, preferredApiType, layer, apiTypeBaseUrls },
-    );
+    this.logger.info('[AvailableModel] Updated model protocol config', {
+      providerKeyId,
+      modelId,
+      supportedApiTypes,
+      preferredApiType,
+      layer,
+      apiTypeBaseUrls,
+    });
   }
 
   /**
@@ -1030,7 +1051,10 @@ export class AvailableModelService {
       anthropicModelId?: string | null;
       apiTypeBaseUrls?: Record<string, string | null> | null;
     }>,
-  ): Promise<{ updated: number; errors: Array<{ modelId: string; error: string }> }> {
+  ): Promise<{
+    updated: number;
+    errors: Array<{ modelId: string; error: string }>;
+  }> {
     let updated = 0;
     const errors: Array<{ modelId: string; error: string }> = [];
 
@@ -1047,7 +1071,8 @@ export class AvailableModelService {
         );
         updated++;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         errors.push({ modelId: model.modelId, error: errorMessage });
         this.logger.error(
           '[AvailableModel] Failed to update model protocol config',
@@ -1056,10 +1081,11 @@ export class AvailableModelService {
       }
     }
 
-    this.logger.info(
-      '[AvailableModel] Batch updated model protocol config',
-      { providerKeyId, updated, errorCount: errors.length },
-    );
+    this.logger.info('[AvailableModel] Batch updated model protocol config', {
+      providerKeyId,
+      updated,
+      errorCount: errors.length,
+    });
 
     return { updated, errors };
   }
@@ -1090,7 +1116,10 @@ export class AvailableModelService {
 
     // 2. 检查协议级别配置
     if (availability.apiTypeBaseUrls) {
-      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<string, string | null>;
+      const apiTypeBaseUrls = availability.apiTypeBaseUrls as Record<
+        string,
+        string | null
+      >;
       if (apiTypeBaseUrls[apiType]) {
         return apiTypeBaseUrls[apiType];
       }

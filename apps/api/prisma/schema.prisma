@@ -374,10 +374,14 @@ enum HealthStatus {
 
 /// Bot 类型 - Bot 容器类型
 /// 决定使用哪种 Docker 镜像运行 Bot
+///
+/// 注意：TOOL_SANDBOX 和 BROWSER_SANDBOX 类型目前为预留类型
+/// Sandbox 容器由 OpenClaw Gateway 根据 sandbox.mode 配置动态创建
+/// 参见: docs/单机多Bot架构-设计审查与优化建议.md
 enum BotType {
-  GATEWAY         // 主 Gateway bot（默认）- 使用 openclaw:local 镜像
-  TOOL_SANDBOX    // 工具沙箱容器 - 使用 openclaw-sandbox 镜像
-  BROWSER_SANDBOX // 浏览器沙箱容器 - 使用 openclaw-sandbox-browser 镜像，支持 VNC
+  GATEWAY         // 主 Gateway bot（默认）- 使用 openclaw:local 镜像，完整的 OpenClaw 运行时
+  TOOL_SANDBOX    // [预留] 工具沙箱容器 - 使用 openclaw-sandbox:bookworm-slim 镜像（未来用于独立 Sandbox Pool）
+  BROWSER_SANDBOX // [预留] 浏览器沙箱容器 - 使用 openclaw-sandbox-browser:bookworm-slim 镜像，支持 VNC（未来用于独立 Browser Pool）
 
   @@map("bot_type")
 }

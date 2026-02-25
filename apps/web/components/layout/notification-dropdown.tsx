@@ -6,27 +6,27 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Badge,
   ScrollArea,
 } from '@repo/ui';
-import { Bell, CheckCheck, Loader2, ExternalLink } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { messageApi } from '@/lib/api/contracts/client';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
+import { cn } from '@repo/ui/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQueryOptions = any;
 
 /**
  * NotificationDropdown - 通知下拉组件
- * 显示用户的消息通知，支持标记已读
+ * 显示用户的消息通知，支持标记已读和展开查看全部内容
  */
 export function NotificationDropdown() {
   const t = useTranslations('common.notifications');
@@ -34,6 +34,7 @@ export function NotificationDropdown() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Avoid Radix-generated ids on server so SSR and client HTML match (hydration-safe).
   useEffect(() => {
@@ -96,11 +97,30 @@ export function NotificationDropdown() {
     });
   };
 
-  const getMessageContent = (content: any): string => {
+  const getMessageContent = (content: unknown): string => {
     if (typeof content === 'string') return content;
-    if (content?.message) return content.message;
-    if (content?.text) return content.text;
+    if (typeof content === 'object' && content !== null) {
+      const c = content as Record<string, unknown>;
+      if (c.message) return String(c.message);
+      if (c.text) return String(c.text);
+      if (c.title) {
+        const title = String(c.title);
+        const body = c.body ? `\n${String(c.body)}` : '';
+        const description = c.description ? `\n${String(c.description)}` : '';
+        return `${title}${body}${description}`;
+      }
+      return JSON.stringify(content);
+    }
     return JSON.stringify(content);
+  };
+
+  const toggleExpand = (id: string, isRead: boolean, messageId: string) => {
+    // 如果未读，先标记为已读
+    if (!isRead) {
+      handleMarkAsRead([messageId]);
+    }
+    // 切换展开状态
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   // Placeholder until mounted so Radix never runs on server (avoids non-deterministic id).
@@ -163,33 +183,67 @@ export function NotificationDropdown() {
               <span className="text-sm">{t('empty')}</span>
             </div>
           ) : (
-            messages.map((item) => (
-              <DropdownMenuItem
-                key={item.id}
-                className="flex flex-col items-start gap-1 p-3 cursor-pointer"
-                onClick={() => {
-                  if (!item.isRead) {
-                    handleMarkAsRead([item.message.id]);
-                  }
-                }}
-              >
-                <div className="flex items-start justify-between w-full gap-2">
-                  <span
-                    className={`text-sm font-medium line-clamp-2 ${
-                      item.isRead ? 'text-muted-foreground' : ''
-                    }`}
+            <div className="flex flex-col">
+              {messages.map((item) => {
+                const isExpanded = expandedId === item.id;
+                const content = getMessageContent(item.message.content);
+                const isLongContent = content.length > 60;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      'flex flex-col gap-1 p-3 cursor-pointer hover:bg-accent transition-colors border-b last:border-b-0',
+                      !item.isRead && 'bg-primary/5',
+                    )}
+                    onClick={() => toggleExpand(item.id, item.isRead, item.message.id)}
                   >
-                    {getMessageContent(item.message.content)}
-                  </span>
-                  {!item.isRead && (
-                    <div className="size-2 rounded-full bg-primary shrink-0 mt-1.5" />
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {formatTime(item.createdAt)}
-                </span>
-              </DropdownMenuItem>
-            ))
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                        {!item.isRead && (
+                          <div className="size-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                        )}
+                        <span
+                          className={cn(
+                            'text-sm flex-1',
+                            item.isRead ? 'text-muted-foreground' : 'font-medium',
+                            !isExpanded && isLongContent && 'line-clamp-2',
+                          )}
+                        >
+                          {content}
+                        </span>
+                      </div>
+                      {isLongContent && (
+                        <button
+                          type="button"
+                          className="shrink-0 p-0.5 hover:bg-muted rounded transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(item.id, item.isRead, item.message.id);
+                          }}
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="size-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="size-4 text-muted-foreground" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between pl-4">
+                      <span className="text-xs text-muted-foreground">
+                        {formatTime(item.createdAt)}
+                      </span>
+                      {item.isRead && item.readAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {t('readAt', { time: formatTime(item.readAt) })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </ScrollArea>
         {messages.length > 0 && (

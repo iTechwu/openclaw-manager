@@ -268,7 +268,8 @@ export class UpstreamService {
               for (const line of lines) {
                 if (line.startsWith('data:')) {
                   const data = line.slice(5).trim();
-                  const transformed = this.glmTransformer.transformSseEventData(data);
+                  const transformed =
+                    this.glmTransformer.transformSseEventData(data);
                   transformedLines.push(`data: ${transformed}`);
                 } else {
                   transformedLines.push(line);
@@ -280,7 +281,10 @@ export class UpstreamService {
               rawResponse.write(transformedBuffer);
 
               // 收集转换后的数据用于 token 提取
-              if (totalBufferSize + transformedBuffer.length <= MAX_BUFFER_SIZE) {
+              if (
+                totalBufferSize + transformedBuffer.length <=
+                MAX_BUFFER_SIZE
+              ) {
                 responseChunks.push(transformedBuffer);
                 totalBufferSize += transformedBuffer.length;
               }
@@ -293,7 +297,8 @@ export class UpstreamService {
                 totalBufferSize += chunk.length;
               } else {
                 // 超过限制时，丢弃旧数据，保留最新的
-                const overflow = totalBufferSize + chunk.length - MAX_BUFFER_SIZE;
+                const overflow =
+                  totalBufferSize + chunk.length - MAX_BUFFER_SIZE;
                 while (overflow > 0 && responseChunks.length > 0) {
                   const first = responseChunks[0];
                   if (first.length <= overflow) {

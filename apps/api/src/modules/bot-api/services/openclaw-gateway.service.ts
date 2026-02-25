@@ -158,13 +158,7 @@ export class OpenclawGatewayService {
       });
     }
 
-    return this.pushConfigUpdate(
-      userId,
-      hostname,
-      port,
-      gatewayToken,
-      updates,
-    );
+    return this.pushConfigUpdate(userId, hostname, port, gatewayToken, updates);
   }
 
   /**
@@ -192,13 +186,7 @@ export class OpenclawGatewayService {
       },
     ];
 
-    return this.pushConfigUpdate(
-      userId,
-      hostname,
-      port,
-      gatewayToken,
-      updates,
-    );
+    return this.pushConfigUpdate(userId, hostname, port, gatewayToken, updates);
   }
 
   /**
@@ -224,13 +212,7 @@ export class OpenclawGatewayService {
       },
     ];
 
-    return this.pushConfigUpdate(
-      userId,
-      hostname,
-      port,
-      gatewayToken,
-      updates,
-    );
+    return this.pushConfigUpdate(userId, hostname, port, gatewayToken, updates);
   }
 
   /**
@@ -316,10 +298,9 @@ export class OpenclawGatewayService {
       const success = response.status === 200;
 
       if (success) {
-        this.logger.info(
-          `[OpenClawGateway] Config reloaded successfully`,
-          { hostname },
-        );
+        this.logger.info(`[OpenClawGateway] Config reloaded successfully`, {
+          hostname,
+        });
       }
 
       return {
