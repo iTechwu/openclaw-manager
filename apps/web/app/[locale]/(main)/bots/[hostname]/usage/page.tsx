@@ -139,16 +139,16 @@ function SimpleTrendChart({
       return (
         <div
           key={index}
-          className="flex flex-1 flex-col items-center gap-1"
+          className="flex flex-1 flex-col justify-end h-full"
           title={`${new Date(point.timestamp).toLocaleDateString()}\n${inputLabel}: ${point.requestTokens.toLocaleString()}\n${outputLabel}: ${point.responseTokens.toLocaleString()}`}
         >
-          <div className="flex w-full flex-1 items-end gap-0.5">
+          <div className="flex w-full items-end gap-0.5 h-full">
             <div
-              className="flex-1 rounded-t bg-blue-500 transition-all"
+              className="flex-1 rounded-t bg-blue-500 transition-all min-h-[2px]"
               style={{ height: `${requestHeight}%` }}
             />
             <div
-              className="flex-1 rounded-t bg-green-500 transition-all"
+              className="flex-1 rounded-t bg-green-500 transition-all min-h-[2px]"
               style={{ height: `${responseHeight}%` }}
             />
           </div>
@@ -174,8 +174,8 @@ function SimpleTrendChart({
   }
 
   return (
-    <div className="h-[300px] w-full">
-      <div className="flex h-full items-end gap-1">{chartBars}</div>
+    <div className="w-full">
+      <div className="flex h-[280px] w-full items-end gap-1">{chartBars}</div>
       <div className="mt-2 flex justify-center gap-4 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded bg-blue-500" />

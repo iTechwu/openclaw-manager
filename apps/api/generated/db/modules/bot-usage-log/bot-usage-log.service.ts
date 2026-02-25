@@ -325,14 +325,6 @@ export class BotUsageLogService extends TransactionalServiceBase {
     const truncFormat =
       granularity === 'hour' ? 'hour' : granularity === 'day' ? 'day' : 'week';
 
-    // Debug: Log the query parameters
-    this.logger.info('[BotUsageLogService] aggregateByTimeBucket query params', {
-      botId,
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      truncFormat,
-    });
-
     // 使用 timezone-aware date_trunc 确保 UTC 时区的一致性
     // created_at 是 timestamptz 类型，AT TIME ZONE 'UTC' 转换为 UTC 时区后再截断
     const result = await this.getReadClient().$queryRaw<
@@ -357,12 +349,6 @@ export class BotUsageLogService extends TransactionalServiceBase {
       GROUP BY bucket
       ORDER BY bucket ASC
     `;
-
-    // Debug: Log the raw result
-    this.logger.info('[BotUsageLogService] aggregateByTimeBucket result', {
-      resultCount: result.length,
-      firstBucket: result[0],
-    });
 
     return result.map((row) => ({
       bucket: row.bucket,

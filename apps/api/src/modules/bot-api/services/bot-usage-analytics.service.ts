@@ -197,17 +197,6 @@ export class BotUsageAnalyticsService implements OnModuleInit {
 
       const { startDate, endDate, granularity } = query;
 
-      // Debug logging for date range investigation
-      this.logger.info('[BotUsageAnalytics] getTrend query params', {
-        botId: bot.id,
-        hostname,
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString(),
-        granularity,
-        startDateType: typeof startDate,
-        endDateType: typeof endDate,
-      });
-
       // 根据粒度生成时间桶
       const dataPoints = await this.aggregateByTimeBucket(
         bot.id,
@@ -215,12 +204,6 @@ export class BotUsageAnalyticsService implements OnModuleInit {
         endDate,
         granularity,
       );
-
-      this.logger.info('[BotUsageAnalytics] getTrend result', {
-        dataPointsCount: dataPoints.length,
-        firstPoint: dataPoints[0],
-        lastPoint: dataPoints[dataPoints.length - 1],
-      });
 
       return { dataPoints };
     } finally {
@@ -230,6 +213,7 @@ export class BotUsageAnalyticsService implements OnModuleInit {
         hostname,
         duration,
         granularity: query.granularity,
+        dataPointsCount: 0, // Will be updated below
       });
     }
   }
